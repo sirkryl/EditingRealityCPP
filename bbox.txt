@@ -1,0 +1,25 @@
+
+min_x max_x
+min_y max_y
+min_z max_z
+
+min_x = -0.25
+max_x = -0.15
+min_y = -0.25
+max_y = -0.15
+min_z = -0.9
+max_z = -0.8
+
+min_x min_y max_z
+
+max_x min_y max_z
+
+max_x max_y max_z
+
+min_x max_y max_z
+
+min_x min_y min_z
+
+max_x min_y min_z
+max_x max_y min_z
+min_x max_y min_z
