@@ -1,8 +1,8 @@
 #include "common.h"
 #include "openGLWin.h"
 #include "openGLCamera.h"
+#include <gl/glew.h>
 
-#include <glm/gtx/rotate_vector.hpp>
 
 const float PI = float(atan(1.0)*4.0);
 

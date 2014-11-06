@@ -355,7 +355,7 @@ void CKinectFusionExplorer::HandleCompletedFrame()
 			EnableWindow(hButton, FALSE);
 			hButton = GetDlgItem(m_hWnd, IDC_VOXELS_Z_640);
 			EnableWindow(hButton, FALSE);
-
+			cDebug::DbgOut(_T("<= 1 gb"));
 			if (Is64BitApp() == FALSE)
 			{
 				// Also disable 512 voxel resolution in one arbitrary axis on 32bit machines
@@ -365,6 +365,7 @@ void CKinectFusionExplorer::HandleCompletedFrame()
 		}
 		else if (pFrame->m_deviceMemory <= 2 * Mebi)  // 2GB
 		{
+			cDebug::DbgOut(_T("<= 2 gb"));
 			if (Is64BitApp() == FALSE)
 			{
 				// Disable 640 voxel resolution in one arbitrary axis on 32bit machines
@@ -807,8 +808,7 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 		m_processor.SetParams(m_params);
 
 		INuiFusionColorMesh *mesh = nullptr;
-		HRESULT hr = m_processor.CalculateMesh(&mesh, 2);
-
+		HRESULT hr = m_processor.CalculateMesh(&mesh, 3);
 		if (SUCCEEDED(hr))
 		{
 			// Save mesh

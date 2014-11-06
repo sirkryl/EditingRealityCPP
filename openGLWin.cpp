@@ -7,7 +7,7 @@
 
 WNDPROC oldEditProc;
 
-HWND editKSearchHandle, editMinClustersHandle, editMaxClustersHandle, editNonHandle, editSmoothnessHandle, editCurvatureHandle, editFillHoleHandle;
+HWND editKSearchHandle, editMinClustersHandle, editMaxClustersHandle, editNonHandle, editSmoothnessHandle, editCurvatureHandle, editFillHoleHandle, editRemoveComponentHandle;
 HWND statusHandle;
 
 TCHAR Keys::kp[256] = { 0 };
@@ -339,6 +339,9 @@ void InitializeGLUIControls()
 	editFillHoleHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_FILLHOLES);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editFillHoleHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
 
+	editRemoveComponentHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_REMOVESEGMENTS);
+	oldEditProc = (WNDPROC)SetWindowLongPtr(editRemoveComponentHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
+
 	statusHandle = GetDlgItem(openGLWin.glWindowParent, IDC_IM_STATUS);
 	HFONT hFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
 	SendMessage(statusHandle, WM_SETFONT, (WPARAM)hFont, 0);
@@ -351,7 +354,12 @@ void InitializeGLUIControls()
 		TRUE,
 		MAKELPARAM(MIN_RG_KSEARCH_VALUE, MAX_RG_KSEARCH_VALUE));
 
-
+	SendDlgItemMessage(
+		openGLWin.glWindowParent,
+		IDC_SLIDER_REMOVESEGMENTS,
+		TBM_SETRANGE,
+		TRUE,
+		MAKELPARAM(MIN_REMOVESEGMENTS_VALUE, MAX_REMOVESEGMENTS_VALUE));
 
 	SendDlgItemMessage(
 		openGLWin.glWindowParent,
@@ -419,7 +427,7 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_BUTTON_RG_RESETVALUES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.segmentValuesChanged = true;
-		openGLWin.kSearchValue = 50;
+		openGLWin.kSearchValue = 20;
 		openGLWin.minClusterSize = 100;
 		openGLWin.maxClusterSize = 1000;
 		openGLWin.numberOfNeighbors = 30;
@@ -461,12 +469,23 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	}
 	if (IDC_BUTTON_RG_EXTERNALPREVIEW == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
-		ShowPCLViewer();
+		//ShowPCLViewer();
 	}
 	if (IDC_BUTTON_WALL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		cDebug::DbgOut(L"select wall: ");
 		SelectWallObject();
+	}
+	if (IDC_BUTTON_MLS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		cDebug::DbgOut(L"select MLS: ");
+		//MLS();
+	}
+	if (IDC_BUTTON_REMOVESEGMENTS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		cDebug::DbgOut(L"select Remove Segments: ");
+		int size = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_REMOVESEGMENTS, NULL, FALSE);
+		RemoveSmallComponents(size);
 	}
 	if (IDC_BUTTON_RESETWALL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -499,7 +518,13 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 		//m_processor.ResetReconstruction();
 	}
 
-
+	if (IDC_BUTTON_CLEANMESH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		cDebug::DbgOut(L"clean mesh", 0);
+		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, L"Cleaning mesh..");
+		CleanMesh();
+		//m_processor.ResetReconstruction();
+	}
 	if (IDC_BUTTON_RG_PREVIEW == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, L"Preparing region growth segmentation preview...");
@@ -525,6 +550,10 @@ void ResetEditControls()
 	SetDlgItemInt(openGLWin.glWindowParent,
 		IDC_EDIT_RG_KSEARCHVALUE,
 		openGLWin.kSearchValue,
+		FALSE);
+	SetDlgItemInt(openGLWin.glWindowParent,
+		IDC_EDIT_REMOVESEGMENTS,
+		openGLWin.maxComponentSize,
 		FALSE);
 	SetDlgItemInt(openGLWin.glWindowParent,
 		IDC_EDIT_FILLHOLES,
@@ -573,6 +602,13 @@ void ResetSliders()
 		TBM_SETPOS,
 		TRUE,
 		(UINT)openGLWin.kSearchValue);
+
+	SendDlgItemMessage(
+		openGLWin.glWindowParent,
+		IDC_SLIDER_REMOVESEGMENTS,
+		TBM_SETPOS,
+		TRUE,
+		(UINT)openGLWin.maxComponentSize);
 
 	SendDlgItemMessage(
 		openGLWin.glWindowParent,
@@ -637,11 +673,11 @@ void UpdateSliderText()
 
 	strs.str(L"");
 	concLabel = L"";
-	strs << openGLWin.maxClusterSize;
+	strs << openGLWin.maxComponentSize;
 	concLabel.append(strs.str());
 	//WCHAR str[MAX_PATH];
 	//swprintf_s(str, ARRAYSIZE(str), L"%4.2fm", openGLWin.kSearchValue);
-	SetDlgItemText(openGLWin.glWindowParent, IDC_TEXT_RG_MAXCLUSTERSIZE, concLabel.c_str());
+	SetDlgItemText(openGLWin.glWindowParent, IDC_TEXT_RG_MINCLUSTERSIZE, concLabel.c_str());
 
 	strs.str(L"");
 	concLabel = L"";
@@ -679,6 +715,17 @@ void UpdateGLHSliders()
 		SetDlgItemInt(openGLWin.glWindowParent,
 			IDC_EDIT_RG_KSEARCHVALUE,
 			openGLWin.kSearchValue,
+			FALSE);
+	}
+
+	int maxComponetSizePos = (int)SendDlgItemMessage(openGLWin.glWindowParent, IDC_SLIDER_REMOVESEGMENTS, TBM_GETPOS, 0, 0);
+
+	if (maxComponetSizePos >= MIN_REMOVESEGMENTS_VALUE && maxComponetSizePos <= MAX_REMOVESEGMENTS_VALUE)
+	{
+		openGLWin.maxComponentSize = maxComponetSizePos;
+		SetDlgItemInt(openGLWin.glWindowParent,
+			IDC_EDIT_REMOVESEGMENTS,
+			openGLWin.maxComponentSize,
 			FALSE);
 	}
 
@@ -772,6 +819,20 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						TBM_SETPOS,
 						TRUE,
 						(UINT)openGLWin.kSearchValue);
+				}
+			}
+			else if (wnd == editRemoveComponentHandle)
+			{
+				int maxComponentSize = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_REMOVESEGMENTS, NULL, FALSE);
+				if (maxComponentSize >= MIN_REMOVESEGMENTS_VALUE && maxComponentSize <= MAX_REMOVESEGMENTS_VALUE)
+				{
+					openGLWin.maxComponentSize = maxComponentSize;
+					SendDlgItemMessage(
+						openGLWin.glWindowParent,
+						IDC_SLIDER_REMOVESEGMENTS,
+						TBM_SETPOS,
+						TRUE,
+						(UINT)openGLWin.maxComponentSize);
 				}
 			}
 			else if (wnd == editMinClustersHandle)

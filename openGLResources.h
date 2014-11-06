@@ -5,6 +5,8 @@
 
 #define MIN_RG_KSEARCH_VALUE 1
 #define MAX_RG_KSEARCH_VALUE 100
+#define MIN_REMOVESEGMENTS_VALUE 10
+#define MAX_REMOVESEGMENTS_VALUE 10000
 #define MIN_RG_MINCLUSTER 10
 #define MAX_RG_MINCLUSTER 10000
 #define MIN_RG_MAXCLUSTER 1 // multiply by 1000
@@ -13,7 +15,7 @@
 #define MAX_RG_NEIGHBORS 100
 #define MIN_RG_SMOOTHNESS 10 // divide by 10
 #define MAX_RG_SMOOTHNESS 200 // divide by 10
-#define MIN_RG_CURVATURE 10 // divide by 10
+#define MIN_RG_CURVATURE 1 // divide by 10
 #define MAX_RG_CURVATURE 100 // divide by 10
 #define MIN_FILLHOLES 1 // multiply by 100
 #define MAX_FILLHOLES 1000 // multiply by 100
@@ -35,6 +37,9 @@
 #define IDC_BUTTON_FILLHOLES            1105
 #define IDC_BUTTON_WALL                 1110
 #define IDC_BUTTON_RESETWALL            1111
+#define IDC_BUTTON_MLS                  1113
+#define IDC_BUTTON_REMOVESEGMENTS       1114
+#define IDC_BUTTON_CLEANMESH            1117
 
 #define IDC_EDIT_BACKGROUND_RED         1067
 #define IDC_EDIT_BACKGROUND_GREEN       1071
@@ -46,6 +51,7 @@
 #define IDC_EDIT_RG_NON                 1102
 #define IDC_EDIT_RG_SMOOTHNESS          1103
 #define IDC_EDIT_RG_CURVATURE           1104
+#define IDC_EDIT_REMOVESEGMENTS         1115
 
 #define IDC_SLIDER_RG_KSEARCH_VALUE     1069
 #define IDC_SLIDER_RG_MINCLUSTERSIZE    1075
@@ -54,6 +60,7 @@
 #define IDC_SLIDER_RG_SMOOTHNESS        1078
 #define IDC_SLIDER_RG_CURVATURE         1079
 #define IDC_SLIDER_FILLHOLES            1100
+#define IDC_SLIDER_REMOVESEGMENTS       1116
 
 #define IDC_IM_STATUS                   1106
 

@@ -7,9 +7,9 @@ class VCGEdge;
 
 struct VCGUsedTypes : public vcg::UsedTypes<	vcg::Use<VCGVertex>::AsVertexType, vcg::Use<VCGEdge>::AsEdgeType, vcg::Use<VCGFace>::AsFaceType>{};
 
-class VCGVertex : public vcg::Vertex< VCGUsedTypes, vcg::vertex::VFAdj, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::Color4b, vcg::vertex::BitFlags  >{};
+class VCGVertex : public vcg::Vertex< VCGUsedTypes, vcg::vertex::VEAdj, vcg::vertex::Mark, vcg::vertex::VFAdj, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::Color4b, vcg::vertex::BitFlags >{};
 class VCGEdge : public vcg::Edge<   VCGUsedTypes> {};
-class VCGFace : public vcg::Face<   VCGUsedTypes, vcg::face::VFAdj, vcg::face::FFAdj, vcg::face::VertexRef, vcg::face::BitFlags > {};
+class VCGFace : public vcg::Face<   VCGUsedTypes, vcg::face::VFAdj, vcg::face::FFAdj, vcg::face::VertexRef, vcg::face::BitFlags, vcg::face::Normal3f, vcg::face::Mark > {};
 class VCGMesh : public vcg::tri::TriMesh< std::vector<VCGVertex>, std::vector<VCGFace>, std::vector<VCGEdge> > {};
 
 class VCGMeshContainer
@@ -19,6 +19,7 @@ public:
 	~VCGMeshContainer();
 
 	void LoadMesh(const char* filename);
+	void LoadMesh(std::vector<float> vertices, std::vector<GLuint> indices, std::vector<float> normals);
 	void GenerateVAO();
 	void GenerateBOs();
 
@@ -36,19 +37,23 @@ public:
 
 	//just temporary to create multiple visible meshs from the same file
 	void SetTranslation(glm::vec3 trans);
-
+	void UpdateBuffers();
 	void SetSelected(bool val);
 	void SetColorCode(int value);
 	void SetAngleX(bool positive);
 	void SetAngleY(bool positive);
 	void SetAngleZ(bool positive);
 	void SetScale(bool positive);
+	int MergeCloseVertices(float threshold);
+	void LaplacianSmooth(int step);
+	void RemoveNonManifoldFace();
 	glm::vec3 GetCenterPoint();
 	int RemoveSmallComponents(int compSize);
 	int FillHoles(int holeSize);
 	void ResetSelectedTransformation();
 	void CleanAndParse(std::vector<float> &startingVertices, std::vector<GLuint> &startingIndices, std::vector<float> &startingNormals);
 	std::vector<float> GetVertices();
+	std::vector<float> GetNormals();
 	std::vector<GLuint> GetIndices();
 	float GetLowestZ();
 	int GetNumberOfVertices();
@@ -68,6 +73,7 @@ private:
 	std::vector<GLuint> bBoxIndices;
 	std::vector<float> vertices;
 	std::vector<GLuint> indices;
+	std::vector<float> normals;
 	std::vector<float> storedColors;
 
 	int vertNum;

@@ -23,26 +23,144 @@ void VCGMeshContainer::LoadMesh(const char* filename)
 {
 	vcg::tri::io::ImporterPLY<VCGMesh>::Open(currentMesh, filename);
 
+	/*
+	vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
+	vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromFF(currentMesh);
+	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalizedPerFace(currentMesh);
+	vcg::tri::UpdateBounding<VCGMesh>::Box(currentMesh);
+	vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
+	vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromNone(currentMesh);*/
+	
+	RemoveNonManifoldFace();
+	LARGE_INTEGER frequency;        // ticks per second
+	LARGE_INTEGER t1, t2;           // ticks
+	double elapsedTime;
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&t1);
+	QueryPerformanceCounter(&t2);
+
+	float threshold = 0.005f;
+	int total = MergeCloseVertices(threshold);
+
+	cDebug::DbgOut(_T("Merged close vertices: "), total);
+	QueryPerformanceCounter(&t2);
+	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
+	cDebug::DbgOut(L"Merged close vertices in ", elapsedTime);
+
+	//int stepSmoothNum = 3;
+	//size_t cnt = vcg::tri::UpdateSelection<VCGMesh>::VertexFromFaceStrict(currentMesh);
+	//vcg::tri::Smooth<VCGMesh>::VertexCoordLaplacian(currentMesh, stepSmoothNum, cnt>0);
+	LaplacianSmooth(3);
+	CleanMesh();
+	RemoveSmallComponents(1);
+	CleanMesh();
+	ParseData();
+}
+
+void VCGMeshContainer::RemoveNonManifoldFace()
+{
+	vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
+	vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromFF(currentMesh);
+	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalizedPerFace(currentMesh);
+	vcg::tri::UpdateBounding<VCGMesh>::Box(currentMesh);
+	vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
+	vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromNone(currentMesh);
+	int test = vcg::tri::Clean<VCGMesh>::RemoveNonManifoldFace(currentMesh);
+	cDebug::DbgOut(_T("Removed non manifold faces: "), test);
+}
+
+void VCGMeshContainer::LaplacianSmooth(int step)
+{
+	vcg::tri::Smooth<VCGMesh>::VertexCoordLaplacian(currentMesh, step, false, false);
+}
+
+int VCGMeshContainer::MergeCloseVertices(float threshold)
+{
+	return vcg::tri::Clean<VCGMesh>::MergeCloseVertex(currentMesh, threshold);
+}
+
+void VCGMeshContainer::LoadMesh(std::vector<float> inputVertices, std::vector<GLuint> inputIndices, std::vector<float> inputNormals)
+{
+	currentMesh.Clear();
+	vertices.clear();
+	indices.clear();
+	vcg::tri::Allocator<VCGMesh>::AddVertices(currentMesh, inputVertices.size() / 6);
+
+	int vertCount = 0;
+	for (int i = 0; i < vertices.size(); i += 6)
+	{
+		currentMesh.vert[vertCount].P() = vcg::Point3f(inputVertices[i], inputVertices[i + 1], inputVertices[i + 2]);
+		currentMesh.vert[vertCount].C() = vcg::Color4b((int)(inputVertices[i + 3] * 255.0f), (int)(inputVertices[i + 4] * 255.0f), (int)(inputVertices[i + 5] * 255.0f), 255);
+		vertCount++;
+
+	}
+
+	vcg::tri::Allocator<VCGMesh>::AddFaces(currentMesh, inputIndices.size() / 3);
+
+	int faceCount = 0;
+	for (int i = 0; i<inputIndices.size(); i += 3){
+		currentMesh.face[faceCount].V(0) = &currentMesh.vert[inputIndices[i]];
+		currentMesh.face[faceCount].V(1) = &currentMesh.vert[inputIndices[i + 1]];
+		currentMesh.face[faceCount].V(2) = &currentMesh.vert[inputIndices[i + 2]];
+		faceCount++;
+	}
 	CleanMesh();
 	ParseData();
 }
 
 void VCGMeshContainer::CleanMesh()
 {
-	if (currentMesh.vn > 1000)
-	{
+	//if (currentMesh.vn > 1000)
+	//{
 		//std::pair<int,int> comps = vcg::tri::Clean<VCGMesh>::RemoveSmallConnectedComponentsDiameter(currentMesh, 0.003f);
 		//cDebug::DbgOut(_T("Removed components: "), comps.second);
+		vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
+		vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromFF(currentMesh);
+		vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalizedPerFace(currentMesh);
+		vcg::tri::UpdateBounding<VCGMesh>::Box(currentMesh);
+		vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
+		vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromNone(currentMesh);
+		
+		//vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalizedPerFace(currentMesh);
+
+		
+		
+		
+		//cDebug::DbgOut(_T("Removed small components: "), delInfo.first);
+		//cDebug::DbgOut(_T("Removed small components: "), delInfo.second);
+		
+
+		
+		//vcg::tri::Smooth<VCGMesh>::FaceNormalLaplacianFF(currentMesh);
+		
+		//float maniThresh = 1.0f;
+
+		//while (vcg::tri::Clean<VCGMesh>::CountNonManifoldVertexFF(currentMesh) > 0)
+		//{
+			//cDebug::DbgOut(_T("here "), test);
+
+			//int maniVert = vcg::tri::Clean<VCGMesh>::RemoveNonManifoldVertex(currentMesh);
+			//cDebug::DbgOut(_T("Removed non manifold vertices: "), maniVert);
+		//}
+		
+		
+		
 
 		int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(currentMesh);
 		cDebug::DbgOut(_T("Removed duplicates: "), dup);
 		int dupFa = vcg::tri::Clean<VCGMesh>::RemoveDuplicateFace(currentMesh);
-		cDebug::DbgOut(_T("Removed dupliacte faces: "), dupFa);
+		cDebug::DbgOut(_T("Removed duplicate faces: "), dupFa);
 		int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(currentMesh);
 		cDebug::DbgOut(_T("Removed unreferenced: "), unref);
 		int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(currentMesh);
 		cDebug::DbgOut(_T("Removed degenerate faces: "), deg);
+		int zero = vcg::tri::Clean<VCGMesh>::RemoveZeroAreaFace(currentMesh);
+		cDebug::DbgOut(_T("Removed zero area faces: "), zero);
 
+		/*int minCC = 1;
+		std::pair<int, int> delInfo = vcg::tri::Clean<VCGMesh>::RemoveSmallConnectedComponentsSize(currentMesh, minCC);
+		cDebug::DbgOut(_T("Removed small components: "), delInfo.first);
+		cDebug::DbgOut(_T("Removed small components: "), delInfo.second);*/
 		//int holes = vcg::tri::Hole<VCGMesh>::EarCuttingFill<vcg::tri::TrivialEar<VCGMesh> >(currentMesh, 20, false);
 		//cDebug::DbgOut(_T("Removed holes: "), deg);
 		//vcg::tri::UpdateBounding<VCGMesh>::Box(currentMesh);
@@ -51,7 +169,7 @@ void VCGMeshContainer::CleanMesh()
 		Grid.Init(currentMesh.bbox, 10, 10);
 		Grid.AddMesh(currentMesh);
 		Grid.ExtractMesh(currentMesh);*/
-	}
+	//}
 	vcg::tri::RequirePerVertexNormal(currentMesh);
 	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(currentMesh);
 	
@@ -241,6 +359,7 @@ void VCGMeshContainer::ParseData()
 {
 	vertices.clear();
 	indices.clear();
+	normals.clear();
 	lowerBounds.x = 99999.0f;
 	lowerBounds.y = 99999.0f;
 	lowerBounds.z = 99999.0f;
@@ -266,6 +385,7 @@ void VCGMeshContainer::ParseData()
 		{
 			float tmpFloat = (*vi).P()[dim];
 			vertices.push_back(tmpFloat);
+			normals.push_back((*vi).N()[dim]);
 			bBoxVertices.push_back(tmpFloat);
 			lowerBounds[dim] = min(lowerBounds[dim], tmpFloat);
 			upperBounds[dim] = max(upperBounds[dim], tmpFloat);
@@ -540,7 +660,6 @@ void VCGMeshContainer::ConvertToVCG(std::vector<float> inputVertices, std::vecto
 		currentMesh.face[faceCount].V(2) = &currentMesh.vert[inputIndices[i + 2]];
 		faceCount++;
 	}
-
 	/*vcg::tri::UpdateTopology<VCGMesh>::FaceFace(newMesh);
 	vcg::tri::updateflags<vcgmesh>::faceborderfromff(newmesh);
 	int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(newMesh);
@@ -974,19 +1093,26 @@ int VCGMeshContainer::RemoveSmallComponents(int compSize)
 	std::pair<int, int> compCnt = vcg::tri::Clean<VCGMesh>::RemoveSmallConnectedComponentsSize(currentMesh, compSize);
 
 	cDebug::DbgOut(_T("Removed components:"), compCnt.second);
-	if (currentMesh.vn > 1000)
-	{
+	//if (currentMesh.vn > 1000)
+	//{
 		int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(currentMesh);
 		cDebug::DbgOut(_T("Removed duplicates:"), dup);
 		int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(currentMesh);
 		cDebug::DbgOut(_T("Removed unreferenced:"), unref);
 		int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(currentMesh);
 		cDebug::DbgOut(_T("Removed degenerate faces:"), deg);
-	}
+	//}
 	vcg::tri::RequirePerVertexNormal(currentMesh);
 	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(currentMesh);
-	ParseData();
+	
 
+	
+
+	return compCnt.second;
+}
+
+void VCGMeshContainer::UpdateBuffers()
+{
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1002,48 +1128,33 @@ int VCGMeshContainer::RemoveSmallComponents(int compSize)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbIBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, bBoxIndices.size() * sizeof(GLuint), &bBoxIndices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	return compCnt.second;
 }
 
 int VCGMeshContainer::FillHoles(int holeSize)
 {
+	
 	vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
 	vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
+	
+	//cDebug::DbgOut(L"Closed holes2: ", 1);
 	int holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingIntersectionFill<vcg::tri::SelfIntersectionEar<VCGMesh> >(currentMesh, holeSize, false);
 	
 	cDebug::DbgOut(L"Closed holes: ", holeCnt);
 	//holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingFill<vcg::tri::MinimumWeightEar< VCGMesh> >(currentMesh, 10000, false);
 	//cDebug::DbgOut(L"Closed holes: ", holeCnt);
 	//vcg::tri::Hole<VCGMesh>::EarCuttingFill<vcg::tri::TrivialEar<VCGMesh> >(currentMesh, holeSize, false);
-	if (currentMesh.vn > 1000)
-	{
-		int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(currentMesh);
-		cDebug::DbgOut(_T("Removed duplicates:"), dup);
-		int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(currentMesh);
-		cDebug::DbgOut(_T("Removed unreferenced:"), unref);
-		int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(currentMesh);
-		cDebug::DbgOut(_T("Removed degenerate faces:"), deg);
-	}
+	//if (currentMesh.vn > 1000)
+	//{
+	int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(currentMesh);
+	cDebug::DbgOut(_T("Removed duplicates:"), dup);
+	int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(currentMesh);
+	cDebug::DbgOut(_T("Removed unreferenced:"), unref);
+	int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(currentMesh);
+	cDebug::DbgOut(_T("Removed degenerate faces:"), deg);
+	//}
 	vcg::tri::RequirePerVertexNormal(currentMesh);
 	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(currentMesh);
-	ParseData();
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, bbVBO);
-	glBufferData(GL_ARRAY_BUFFER, bBoxVertices.size() * sizeof(float), &bBoxVertices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, bBoxIndices.size() * sizeof(GLuint), &bBoxIndices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	
 
 	return holeCnt;
 }
@@ -1079,6 +1190,11 @@ std::vector<float> VCGMeshContainer::GetVertices()
 	return vertices;
 }
 
+std::vector<float> VCGMeshContainer::GetNormals()
+{
+	return normals;
+}
+
 std::vector<GLuint> VCGMeshContainer::GetIndices()
 {
 	return indices;
@@ -1096,6 +1212,9 @@ int VCGMeshContainer::GetNumberOfIndices()
 
 void VCGMeshContainer::CleanAndParse(std::vector<float> &startingVertices, std::vector<GLuint> &startingIndices, std::vector<float> &startingNormals)
 {
+	startingVertices.clear();
+	startingIndices.clear();
+	startingNormals.clear();
 	CleanMesh();
 	std::clock_t start;
 	double duration;

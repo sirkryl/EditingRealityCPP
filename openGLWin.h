@@ -19,18 +19,19 @@ public:
 	bool previewMode = false;
 
 	//segmentation values
-	int kSearchValue = 50;
+	int kSearchValue = 20;
 	int minClusterSize = 100;
 	int maxClusterSize = 1000;
 	int numberOfNeighbors = 30;
 	double smoothnessThreshold = 100;
 	double curvatureThreshold = 10;
+	int maxComponentSize = 100;
 
 	//flag indicating whether a segmentation value has been changed or not
 	bool segmentValuesChanged = false;
 
 	//hole filling values
-	int holeSize = 100;
+	int holeSize = 1;
 
 	//checkbox values
 	bool helpingVisuals = false;
@@ -109,9 +110,11 @@ void ResetCameraPosition();
 void ToggleWireFrame();
 void ToggleBoundingBoxes();
 void FillHoles();
-void RemoveSmallComponents();
+//void MLS();
+void RemoveSmallComponents(int size);
 void StartSegmentation();
-void ShowPCLViewer();
+//void ShowPCLViewer();
+void CleanMesh();
 
 void ToggleColorSelectedObject();
 void SelectWallObject();

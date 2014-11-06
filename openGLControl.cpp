@@ -6,7 +6,7 @@
 #include "openGLControl.h"
 #include <gl/wglew.h>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <glm/gtx/rotate_vector.hpp>
 bool OpenGLControl::bClassRegistered = false, OpenGLControl::bGlewInitialized = false;
 
 OpenGLControl::OpenGLControl()

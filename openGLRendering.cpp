@@ -27,6 +27,10 @@ DWORD sThreadId;
 std::vector<VCGMeshContainer*> meshData;
 std::vector<VCGMeshContainer*> meshData_segTmp;
 
+std::vector<float> startingVertices;
+std::vector<GLuint> startingIndices;
+std::vector<float> startingNormals;
+
 //helper objects
 VCGMeshContainer mesh;
 
@@ -447,29 +451,43 @@ void RenderHelpingVisuals()
 #pragma region
 int WINAPI SegThreadMain()
 {
-	if (meshData_segTmp.size() > 0)
+	if (meshData_segTmp.size() > 0 && openGLWin.segmentValuesChanged)
 	{
-		for (vector <VCGMeshContainer*>::iterator mI = meshData_segTmp.begin(); mI != meshData_segTmp.end(); ++mI)
+		int cnt = 0;
+		for (int i = pclSegmenter.GetPlaneClusterCount()-1; i < meshData_segTmp.size(); i++)
 		{
-			(*mI)->ClearMesh();
+			meshData_segTmp[i]->ClearMesh();
 		}
-		meshData_segTmp.clear();
+		meshData_segTmp.erase(meshData_segTmp.begin() + pclSegmenter.GetPlaneClusterCount(), meshData_segTmp.end());
+		/*for (vector <VCGMeshContainer*>::iterator mI = meshData_segTmp.begin(); mI != meshData_segTmp.end(); ++mI)
+		{
+			if (pclSegmenter.IsPlaneSegmented())
+				if (cnt < pclSegmenter.GetPlaneClusterCount()) 
+					continue;
+			(*mI)->ClearMesh();
+			cnt++;
+		}
+		meshData_segTmp.clear();*/
 	}
 	//UNCOMMENT FRO HERE FOR SEGMENTATION
-	std::vector<float> startingVertices;
-	std::vector<GLuint> startingIndices;
-	std::vector<float> startingNormals;
 
 	LARGE_INTEGER frequency;        // ticks per second
 	LARGE_INTEGER t1, t2;           // ticks
 	double elapsedTime;
 	if (meshData.size() == 1)
 	{
-		meshData[0]->CleanAndParse(startingVertices, startingIndices, startingNormals);
+		if (!pclSegmenter.IsMainCloudInitialized())
+			meshData[0]->CleanAndParse(startingVertices, startingIndices, startingNormals);
 	}
 
 	else
 	{
+		std::wstringstream ws;
+		ws << L"Can't segment mesh, as it is already segmented.";
+		wstring statusMsg(ws.str());
+		const TCHAR *c_str = statusMsg.c_str();
+		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+		return 0;
 		switch (openGLWin.testMode)
 		{
 		case 0:
@@ -489,20 +507,55 @@ int WINAPI SegThreadMain()
 	QueryPerformanceFrequency(&frequency);
 	QueryPerformanceCounter(&t1);
 	QueryPerformanceCounter(&t2);
-	pclSegmenter.ConvertToCloud(startingVertices, startingIndices, startingNormals);
+	if (!pclSegmenter.IsMainCloudInitialized())
+		pclSegmenter.ConvertToCloud(startingVertices, startingIndices, startingNormals);
 	QueryPerformanceCounter(&t2);
 	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
 	cDebug::DbgOut(L"Converted to cloud in ", elapsedTime);
 
 	//pclSegmenter.PlaneSegmentation();
 	//pclSegmenter.EuclideanSegmentation();
+	cDebug::DbgOut(L"before plane segmentation ", elapsedTime);
+	VCGMeshContainer *mesh;
 
+	if (!pclSegmenter.IsPlaneSegmented())
+	{
+		pclSegmenter.PlaneSegmentation();
+		pclSegmenter.PlaneIndexEstimation();
+		for (int i = 0; i < pclSegmenter.GetPlaneClusterCount(); i++)
+		{
+			std::vector<float> clusterVertices;
+			std::vector<GLuint> clusterIndices;
+			pclSegmenter.ConvertToTriangleMesh(i, startingVertices, clusterVertices, clusterIndices);
+			cDebug::DbgOut(L"Converted Plane Mesh #", i);
+			mesh = new VCGMeshContainer;
+			mesh->SetColorCode(i + 1);
+			//mesh->ParseData(clusterVertices, clusterIndices);
+			wallIndex = i + 1;
+			mesh->ConvertToVCG(clusterVertices, clusterIndices);
+			//int total = mesh->MergeCloseVertices(0.005f);
+			//cDebug::DbgOut(_T("Merged close vertices: "), total);
+			//cDebug::DbgOut(L"indices: ", (int)mesh->GetVertices().size());
+			//cDebug::DbgOut(L"vertices: " + (int)mesh->GetIndices().size());
+			
+			mesh->CleanMesh();
+			mesh->RemoveNonManifoldFace();
+			mesh->ParseData();
+			cDebug::DbgOut(L"indices: ", (int)mesh->GetVertices().size());
+			cDebug::DbgOut(L"vertices: " + (int)mesh->GetIndices().size());
+			meshData_segTmp.push_back(mesh);
+		}
+	}
 
 	if (openGLWin.segmentationMode == REGION_GROWTH_SEGMENTATION)
 	{
 		if (!showColoredSegments || openGLWin.previewMode || openGLWin.segmentValuesChanged)
 		{
+			
+			//meshData_segTmp[0]->CleanAndParse(startingVertices, startingIndices, startingNormals);
+			//pclSegmenter.ConvertToCloud(startingVertices, startingIndices, startingNormals);
 			pclSegmenter.RegionGrowingSegmentation();
+
 			openGLWin.segmentValuesChanged = false;
 		}
 		if (openGLWin.previewMode)
@@ -524,22 +577,25 @@ int WINAPI SegThreadMain()
 
 	//elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
 	//cDebug::DbgOut(L"Time for map creation ", elapsedTime);
-	VCGMeshContainer *mesh;
-	cDebug::DbgOut(L"Number of clusters: ", pclSegmenter.GetClusterCount());
+	cDebug::DbgOut(L"Number of clusters: ", pclSegmenter.GetRegionClusterCount());
 	QueryPerformanceFrequency(&frequency);
 	QueryPerformanceCounter(&t1);
 	QueryPerformanceCounter(&t2);
-	for (int i = 0; i < pclSegmenter.GetClusterCount(); i++)
+	for (int i = 0; i < pclSegmenter.GetRegionClusterCount(); i++)
 	{
 		std::vector<float> clusterVertices;
 		std::vector<GLuint> clusterIndices;
 		pclSegmenter.ConvertToTriangleMesh(i, startingVertices, clusterVertices, clusterIndices);
 		//cDebug::DbgOut(L"Converted Triangle Mesh #",i);
 		mesh = new VCGMeshContainer;
-		mesh->SetColorCode(i + 1);
+		mesh->SetColorCode(i+pclSegmenter.GetPlaneClusterCount() + 1);
 		//mesh->ParseData(clusterVertices, clusterIndices);
 		mesh->ConvertToVCG(clusterVertices, clusterIndices);
+		//int total = mesh->MergeCloseVertices(0.005f);
+		//cDebug::DbgOut(_T("Merged close vertices: "), total);
+		
 		mesh->CleanMesh();
+		mesh->RemoveNonManifoldFace();
 		mesh->ParseData();
 		meshData_segTmp.push_back(mesh);
 	}
@@ -551,7 +607,7 @@ int WINAPI SegThreadMain()
 	segFinished = true;
 	std::wstringstream ws;
 	ws << L"Segmented mesh in ";
-	ws << pclSegmenter.GetClusterCount();
+	ws << pclSegmenter.GetRegionClusterCount();
 	ws << L" clusters.";
 	wstring statusMsg(ws.str());
 	const TCHAR *c_str = statusMsg.c_str();
@@ -685,15 +741,58 @@ void LoadClusterData()
 	pclSegmenter.coloredCloudReady = false;
 }
 
-void ShowPCLViewer()
+/*void ShowPCLViewer()
 {
 	if (pclSegmenter.GetClusterCount() > 0)
 		pclSegmenter.ShowViewer();
-}
+}*/
 
 #pragma endregion segmentation related
 
 #pragma region
+
+/*
+void MLS()
+{
+	std::vector<float> startingVertices;
+	std::vector<GLuint> startingIndices;
+	std::vector<float> startingNormals;
+	VCGMeshContainer *mesh;
+
+	if (meshData.size() == 1)
+	{
+		
+		meshData_segTmp.push_back(mesh);
+		pclSegmenter.MovingLeastSquares(meshData[0]->GetVertices(), meshData[0]->GetNormals(), startingVertices, startingIndices, startingNormals);
+		meshData[0]->ClearMesh();
+		meshData.clear();
+		//meshData[0]->LoadMesh(startingVertices, startingIndices, startingNormals);
+		mesh = new VCGMeshContainer;
+		mesh->SetColorCode(1);
+		//mesh->ParseData(clusterVertices, clusterIndices);
+		mesh->ConvertToVCG(startingVertices, startingIndices);
+		mesh->CleanMesh();
+		mesh->ParseData();
+		meshData.push_back(mesh);
+		//meshData[0]->LoadMesh(startingVertices, startingIndices, startingNormals);
+	}
+
+	numberOfVertices = 0;
+	numberOfFaces = 0;
+	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		(*mI)->GenerateBOs();
+		numberOfVertices += (*mI)->GetNumberOfVertices();
+		numberOfFaces += (*mI)->GetNumberOfIndices() / 3;
+
+	}
+	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		(*mI)->GenerateVAO();
+
+	}
+}*/
+
 void FillHoles()
 {
 	int cnt = 0;
@@ -705,12 +804,16 @@ void FillHoles()
 		cnt++;
 		if ((*mI)->GetNumberOfVertices() <= 1000)
 		{
+			numberOfVertices += (*mI)->GetNumberOfVertices();
+			numberOfFaces += (*mI)->GetNumberOfIndices() / 3;
 			cDebug::DbgOut(L"no hole filling #", cnt);
 			continue;
 		}
 		cDebug::DbgOut(L"fill hole #", cnt);
 		holeCnt += (*mI)->FillHoles(openGLWin.holeSize * 100);
-
+		(*mI)->RemoveNonManifoldFace();
+		(*mI)->ParseData();
+		(*mI)->UpdateBuffers();
 		numberOfVertices += (*mI)->GetNumberOfVertices();
 		numberOfFaces += (*mI)->GetNumberOfIndices() / 3;
 
@@ -734,8 +837,7 @@ void FillHoles()
 	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
 }
 
-//unfortunately not yet working
-void RemoveSmallComponents()
+void RemoveSmallComponents(int size)
 {
 	int cnt = 0;
 	int cmpCnt = 0;
@@ -745,8 +847,9 @@ void RemoveSmallComponents()
 	{
 		cnt++;
 		cDebug::DbgOut(L"remove components #", cnt);
-		cmpCnt += (*mI)->RemoveSmallComponents(300);
-
+		cmpCnt += (*mI)->RemoveSmallComponents(size);
+		(*mI)->ParseData();
+		(*mI)->UpdateBuffers();
 		numberOfVertices += (*mI)->GetNumberOfVertices();
 		numberOfFaces += (*mI)->GetNumberOfIndices() / 3;
 	}
@@ -758,13 +861,29 @@ void RemoveSmallComponents()
 	const TCHAR *c_str = statusMsg.c_str();
 	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
 }
+
+void CleanMesh()
+{
+	numberOfVertices = 0;
+	numberOfFaces = 0;
+	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		(*mI)->CleanMesh();
+		(*mI)->ParseData();
+		(*mI)->GenerateBOs();
+		(*mI)->GenerateVAO();
+
+		numberOfVertices += (*mI)->GetNumberOfVertices();
+		numberOfFaces += (*mI)->GetNumberOfIndices() / 3;
+	}
+}
 #pragma endregion mesh optimizations
 
 void Initialize(LPVOID lpParam)
 {
 	VCGMeshContainer *mesh = new VCGMeshContainer;
 	mesh->SetColorCode(1);
-
+	
 	switch (openGLWin.testMode)
 	{
 	case 0: 
@@ -772,6 +891,8 @@ void Initialize(LPVOID lpParam)
 		break;
 	case 1:
 		mesh->LoadMesh("data\\models\\testScene.ply");
+		
+		//mesh->LoadMesh("data\\models\\testScene.ply");
 		break;
 	case 2:
 		mesh->LoadMesh("data\\models\\cube.ply");
