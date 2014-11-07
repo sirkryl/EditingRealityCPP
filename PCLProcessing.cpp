@@ -58,7 +58,7 @@ bool PCLProcessor::PlaneSegmentation() {
 	
 	segmentation.setMethodType(pcl::SAC_RANSAC);
 	// Set the maximum allowed distance to the model.
-	segmentation.setDistanceThreshold(0.1);
+	segmentation.setDistanceThreshold(0.05);
 	// Enable model coefficient refinement (optional).
 	segmentation.setOptimizeCoefficients(true);
 

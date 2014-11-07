@@ -32,9 +32,10 @@ public:
 	void DrawBB();
 
 	void AttachToCursor(glm::vec3 nearPoint, glm::vec3 farPoint);
+	bool GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output);
 	bool CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output);
 	void TranslateVerticesToPoint(glm::vec3 point);
-
+	void TemporaryTranslateVerticesToPoint(glm::vec3 point);
 	//just temporary to create multiple visible meshs from the same file
 	void SetTranslation(glm::vec3 trans);
 	void UpdateBuffers();
@@ -61,6 +62,7 @@ public:
 	void ConvertToVCG(std::vector<float> inputVertices, std::vector<GLuint> inputIndices);
 	void ToggleSelectedColor(bool flag);
 	int GetColorCode();
+	void TogglePreviewSelection(bool flag);
 	glm::vec3 GetUpperBounds();
 	glm::vec3 GetLowerBounds();
 	
@@ -76,6 +78,7 @@ private:
 	std::vector<float> normals;
 	std::vector<float> storedColors;
 
+	glm::mat4 storedTranslation;
 	int vertNum;
 
 	GLuint vbo;
@@ -98,6 +101,7 @@ private:
 	float angleZ = 0;
 	float scaleFactor = 1.0f;
 
+	bool previewSelection = false;
 	bool isSelected = false;
 	bool colorSelection = false;
 	//just temporary to create multiple visible meshs from the same file

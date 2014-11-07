@@ -52,7 +52,7 @@ void VCGMeshContainer::LoadMesh(const char* filename)
 	//vcg::tri::Smooth<VCGMesh>::VertexCoordLaplacian(currentMesh, stepSmoothNum, cnt>0);
 	LaplacianSmooth(3);
 	CleanMesh();
-	RemoveSmallComponents(1);
+	RemoveSmallComponents(500);
 	CleanMesh();
 	ParseData();
 }
@@ -360,6 +360,9 @@ void VCGMeshContainer::ParseData()
 	vertices.clear();
 	indices.clear();
 	normals.clear();
+
+	bBoxVertices.clear();
+	bBoxIndices.clear();
 	lowerBounds.x = 99999.0f;
 	lowerBounds.y = 99999.0f;
 	lowerBounds.z = 99999.0f;
@@ -430,8 +433,10 @@ void VCGMeshContainer::ParseData()
 	
 
 	centerPoint.x = (lowerBounds.x + upperBounds.x) / 2.0f;
-	centerPoint.y = (lowerBounds.y + upperBounds.y) / 2.0f;
-	centerPoint.z = (lowerBounds.z + upperBounds.z) / 2.0f;
+	//centerPoint.y = (lowerBounds.y + upperBounds.y) / 2.0f;
+	centerPoint.y = lowerBounds.y;
+	//centerPoint.z = (lowerBounds.z + upperBounds.z) / 2.0f;
+	centerPoint.z = lowerBounds.z;
 	originTransform = glm::translate(glm::mat4(1.0), -centerPoint);
 
 	/*bBoxVertices.push_back(lowerBounds.x - 0.01f);
@@ -764,7 +769,7 @@ void VCGMeshContainer::Draw()
 	shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
 	shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
 	glm::mat4 modelMatrix;
-	if (!isSelected)
+	if (!isSelected || previewSelection)
 	{
 		modelMatrix = glm::translate(glm::mat4(1.0), translation);
 	}
@@ -787,7 +792,7 @@ void VCGMeshContainer::DrawBB()
 	shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
 	shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
 	glm::mat4 modelMatrix;
-	if (!isSelected)
+	if (!isSelected || previewSelection)
 	{
 		modelMatrix = glm::translate(glm::mat4(1.0), translation);
 	}
@@ -809,6 +814,114 @@ void VCGMeshContainer::AttachToCursor(glm::vec3 nearPoint, glm::vec3 farPoint)
 	selectTranslation.z = nearPoint.z + (0.005f / 10.0f) * (farPoint.z - nearPoint.z);//(0.50f / 10.0f) * (farPoint.z - nearPoint.z);
 
 	cursorTranslation = glm::translate(glm::mat4(1.0), selectTranslation);
+}
+
+void VCGMeshContainer::TemporaryTranslateVerticesToPoint(glm::vec3 point)
+{
+	//glm::vec3 oldLowBounds;
+	//oldLowBounds.z = lowerBounds.z;
+	lowerBounds = glm::vec3(9999.0f, 9999.0f, 9999.0f);
+	upperBounds = glm::vec3(-9999.0f, -9999.0f, -9999.0f);
+
+	/*glm::mat4 originTransform = glm::translate(glm::mat4(1.0), -centerPoint);
+	glm::mat4 xRotation = glm::mat4(1.0f);
+	glm::mat4 yRotation = glm::mat4(1.0f);
+	glm::mat4 zRotation = glm::mat4(1.0f);
+	glm::mat4 scaleMatrix = glm::mat4(1.0f);
+	if (angleX != 0)
+	xRotation = glm::rotate(glm::mat4(1.0), angleX, glm::vec3(1.0f, 0.0f, 0.0f));
+	if (angleY != 0)
+	yRotation = glm::rotate(glm::mat4(1.0), angleY, glm::vec3(0.0f, 1.0f, 0.0f));
+	if (angleZ != 0)
+	zRotation = glm::rotate(glm::mat4(1.0), angleZ, glm::vec3(0.0f, 0.0f, 1.0f));
+	if (scaleFactor != 1.0f)
+	scaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(scaleFactor, scaleFactor, scaleFactor));*/
+
+	//originTransform = glm::translate(glm::mat4(1.0), -GetCenterPoint());
+	float lowestZ = GetLowestZ();
+
+	for (int i = 0; i < vertices.size(); i += 6)
+	{
+		glm::vec4 tmp = glm::vec4(vertices[i], vertices[i + 1], vertices[i + 2], 1.0f);
+
+
+		tmp = (-storedTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
+
+		vertices[i] = tmp.x;
+		vertices[i + 1] = tmp.y;
+		vertices[i + 2] = tmp.z + abs(centerPoint.z - lowestZ);
+
+		upperBounds.x = max(upperBounds.x, vertices[i]);
+		lowerBounds.x = min(lowerBounds.x, vertices[i]);
+		upperBounds.y = max(upperBounds.y, vertices[i + 1]);
+		lowerBounds.y = min(lowerBounds.y, vertices[i + 2]);
+		upperBounds.z = max(upperBounds.z, vertices[i + 2]);
+		lowerBounds.z = min(lowerBounds.z, vertices[i + 2]);
+		/*vertices[i] = vertices[i] - centerPoint.x;
+		vertices[i] = point.x - vertices[i];
+		upperBounds.x = max(upperBounds.x, vertices[i]);
+		lowerBounds.x = min(lowerBounds.x, vertices[i]);
+		vertices[i + 1] = vertices[i + 1] - centerPoint.y;
+		vertices[i+1] = point.y - vertices[i+1];
+		upperBounds.y = max(upperBounds.y, vertices[i + 1]);
+		lowerBounds.y = min(lowerBounds.y, vertices[i + 2]);
+		vertices[i + 2] = vertices[i + 2] - centerPoint.z;// + (centerPoint.z - oldLowBounds.z));
+		vertices[i + 2] = point.z - vertices[i + 2];
+		upperBounds.z = max(upperBounds.z, vertices[i + 2]);
+		lowerBounds.z = min(lowerBounds.z, vertices[i + 2]);*/
+	}
+	for (int i = 0; i < bBoxVertices.size(); i += 6)
+	{
+		glm::vec4 tmp = glm::vec4(bBoxVertices[i], bBoxVertices[i + 1], bBoxVertices[i + 2], 1.0f);
+
+
+		tmp = (-storedTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
+
+		bBoxVertices[i] = tmp.x;
+		bBoxVertices[i + 1] = tmp.y;
+		bBoxVertices[i + 2] = tmp.z + abs(centerPoint.z - lowestZ);
+
+		/*bBoxVertices[i] = bBoxVertices[i] - centerPoint.x;
+		bBoxVertices[i] = point.x - bBoxVertices[i];
+		bBoxVertices[i + 1] = bBoxVertices[i + 1] - centerPoint.y;
+		bBoxVertices[i + 1] = point.y - bBoxVertices[i + 1];
+		bBoxVertices[i + 2] = bBoxVertices[i + 2] - centerPoint.z;// +(centerPoint.z - oldLowBounds.z));
+		bBoxVertices[i + 2] = point.z - bBoxVertices[i + 2];*/
+	}
+
+	angleX = 0;
+	angleY = 0;
+	angleZ = 0;
+	scaleFactor = 1.0f;
+	xRotation = glm::mat4(1.0);
+	yRotation = glm::mat4(1.0);
+	zRotation = glm::mat4(1.0);
+	scaleMatrix = glm::mat4(1.0);
+	/*upperBounds.x = upperBounds.x - centerPoint.x;
+	upperBounds.x = point.x - upperBounds.x;
+	upperBounds.y = upperBounds.y - centerPoint.y;
+	upperBounds.y = point.y - upperBounds.y;
+	upperBounds.z = upperBounds.z - centerPoint.z;
+	upperBounds.z = point.z - upperBounds.z;
+	lowerBounds.x = lowerBounds.x - centerPoint.x;
+	lowerBounds.x = point.x - lowerBounds.x;
+	lowerBounds.y = lowerBounds.y - centerPoint.y;
+	lowerBounds.y = point.y - lowerBounds.y;
+	lowerBounds.z = lowerBounds.z - centerPoint.z;
+	lowerBounds.z = point.z - lowerBounds.z;*/
+
+	centerPoint.x = point.x;
+	centerPoint.y = point.y;
+	centerPoint.z = point.z + abs(centerPoint.z - lowestZ);
+	//centerPoint = point;
+	originTransform = glm::translate(glm::mat4(1.0), -centerPoint);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, bbVBO);
+	glBufferData(GL_ARRAY_BUFFER, bBoxVertices.size() * sizeof(float), &bBoxVertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point)
@@ -841,6 +954,7 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point)
 		
 
 		glm::mat4 newTranslation = glm::translate(glm::mat4(1.0), point);
+		storedTranslation = newTranslation;
 		tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
 
 		vertices[i] = tmp.x;
@@ -947,13 +1061,130 @@ float VCGMeshContainer::GetLowestZ()
 			lowestZ = currentPoint.z;
 		}
 	}
-	cDebug::DbgOut(L"lowestZ: ", lowestZ);
+	//cDebug::DbgOut(L"lowestZ: ", lowestZ);
 	return lowestZ;
+}
+
+bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output)
+{
+	glm::vec3 rayDirection = glm::normalize(farPoint - nearPoint);
+	
+	/*float tMin = (lowerBounds.x - nearPoint.x) / rayDirection.x;
+	float tMax = (upperBounds.x - nearPoint.x) / rayDirection.x;
+
+
+	if (tMin > tMax)
+	{
+		float tmp = tMin;
+		tMin = tMax;
+		tMax = tmp;
+	}
+
+	float tyMin = (lowerBounds.y - nearPoint.y) / rayDirection.y;
+	float tyMax = (upperBounds.y - nearPoint.y) / rayDirection.y;
+
+	if (tyMin > tyMax)
+	{
+		float tmp = tyMin;
+		tyMin = tyMax;
+		tyMax = tyMin;
+	}
+
+	if ((tMin > tyMax) || (tyMin > tMax))
+		return false;
+
+	if (tyMin > tMin)
+		tMin = tyMin;
+	if (tyMax < tMax)
+		tMax = tyMax;
+
+	float tzMin = (lowerBounds.z - nearPoint.z) / rayDirection.z;
+	float tzMax = (upperBounds.z - nearPoint.z) / rayDirection.z;
+
+	if (tzMin < tzMax)
+	{
+		float tmp = tzMin;
+		tzMin = tzMax;
+		tzMax = tzMin;
+	}
+
+	if ((tMin > tzMax) || (tzMin > tMax))
+		return false;
+
+	if (tzMin > tMin)
+		tMin = tzMin;
+
+	if (tzMax < tMax)
+		tMax = tzMax;*/
+
+	glm::vec3 dirfrac;
+	// r.dir is unit direction vector of ray
+	dirfrac.x = 1.0f / rayDirection.x;
+	dirfrac.y = 1.0f / rayDirection.y;
+	dirfrac.z = 1.0f / rayDirection.z;
+	// lb is the corner of AABB with minimal coordinates - left bottom, rt is maximal corner
+	// r.org is origin of ray
+	float t;
+	float t1 = (lowerBounds.x - nearPoint.x)*dirfrac.x;
+	float t2 = (upperBounds.x - nearPoint.x)*dirfrac.x;
+	float t3 = (lowerBounds.y - nearPoint.y)*dirfrac.y;
+	float t4 = (upperBounds.y - nearPoint.y)*dirfrac.y;
+	float t5 = (lowerBounds.z - nearPoint.z)*dirfrac.z;
+	float t6 = (upperBounds.z - nearPoint.z)*dirfrac.z;
+
+	float tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
+	float tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
+
+	// if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behing us
+	if (tmax < 0)
+	{
+		t = tmax;
+		return false;
+	}
+
+	// if tmin > tmax, ray doesn't intersect AABB
+	if (tmin > tmax)
+	{
+		t = tmax;
+		return false;
+	}
+
+	t = tmin;
+
+	glm::vec3 minPoint;
+	float minDistance = std::numeric_limits<float>::max();
+	for (int i = 0; i < vertices.size(); i += 6)
+	{
+		glm::vec3 point(vertices[i], vertices[i + 1], vertices[i + 2]);
+		glm::vec3 v = farPoint - nearPoint;
+		glm::vec3 w = point - nearPoint;
+
+		double c1 = glm::dot(w, v);
+		double c2 = glm::dot(v, v);
+		double b = c1 / c2;
+		glm::vec3 dd(v.x * b, v.y * b, v.z * b);
+		glm::vec3 Pb = nearPoint + dd;
+		float distance = glm::distance(point, Pb);
+		if (distance < minDistance)
+		{
+			minDistance = distance;
+			minPoint.x = point.x;
+			minPoint.y = point.y;
+			minPoint.z = point.z;
+		}
+	}
+	output = minPoint;
+	return true;
 }
 
 bool VCGMeshContainer::CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output)
 {
-	glm::vec3 nearToCenter = centerPoint - nearPoint;
+	glm::vec3 realCenter;
+
+	realCenter.x = (upperBounds.x + lowerBounds.x) / 2.0f;
+	realCenter.y = (upperBounds.y + lowerBounds.y) / 2.0f;
+	realCenter.z = (upperBounds.z + lowerBounds.z) / 2.0f;
+	glm::vec3 nearToCenter = realCenter - nearPoint;
 
 	glm::vec3 rayDirection = glm::normalize(farPoint - nearPoint);
 
@@ -1075,8 +1306,6 @@ void VCGMeshContainer::SetSelected(bool val)
 	isSelected = val;
 }
 
-
-//not working yet..see comments for exception position
 int VCGMeshContainer::RemoveSmallComponents(int compSize)
 {
 	vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
@@ -1154,10 +1383,11 @@ int VCGMeshContainer::FillHoles(int holeSize)
 	//}
 	vcg::tri::RequirePerVertexNormal(currentMesh);
 	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(currentMesh);
-	
-
+	RemoveNonManifoldFace();
+	LaplacianSmooth(3);
 	return holeCnt;
 }
+
 void VCGMeshContainer::ResetSelectedTransformation()
 {
 	scaleFactor = 1.0f;
@@ -1173,6 +1403,11 @@ void VCGMeshContainer::ResetSelectedTransformation()
 int VCGMeshContainer::GetColorCode()
 {
 	return colorCode;
+}
+
+void VCGMeshContainer::TogglePreviewSelection(bool flag)
+{
+	previewSelection = flag;
 }
 
 glm::vec3 VCGMeshContainer::GetUpperBounds()

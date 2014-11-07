@@ -31,6 +31,7 @@ std::vector<float> startingVertices;
 std::vector<GLuint> startingIndices;
 std::vector<float> startingNormals;
 
+
 //helper objects
 VCGMeshContainer mesh;
 
@@ -70,6 +71,8 @@ int selectedIndex = -1;
 
 //index of wall object
 int wallIndex = -1;
+
+int previewIndex = -1;
 
 //first time something happened flags
 bool firstRayCast = false;
@@ -185,6 +188,8 @@ void RayCast(glm::vec3* v1, glm::vec3* v2)
 	*v1 = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 0.0f), glCamera.GetViewMatrix(), *openGLWin.glControl.GetProjectionMatrix(), viewport);
 	*v2 = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 1.0f), glCamera.GetViewMatrix(), *openGLWin.glControl.GetProjectionMatrix(), viewport);
 	nearPoint = *v1;
+	//cDebug::DbgOut(L"nearPoint.x : ", nearPoint.x);
+	//cDebug::DbgOut(L"nearPoint.y: ", nearPoint.y);
 	if (openGLWin.helpingVisuals)
 	{
 		InitializeRayVisual();
@@ -193,12 +198,81 @@ void RayCast(glm::vec3* v1, glm::vec3* v2)
 	}
 
 }
+bool PlacingPreview()
+{
+	/*bool result = false;
+	std::wstringstream ws;
+	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		(*mI)->DrawBB();
+	}
+	int tmpIndex = GetColorUnderCursor();
+	if (tmpIndex > -1 && tmpIndex <= meshData.size())
+	{
+		//cDebug::DbgOut(L"jep", tmpIndex);
+		ws << L"Selecting object #";
+		ws << tmpIndex;
+		glm::vec3 v1, v2;
+		RayCast(&v1, &v2);
+		meshData[tmpIndex - 1]->GetHitPoint(v1, v2, hitPoint);
+		meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
+		meshData[selectedIndex - 1]->TogglePreviewSelection(true);
+		result = true;
+	}
+	wstring statusMsg(ws.str());
+	const TCHAR *c_str = statusMsg.c_str();
+	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	return result;*/
+	glm::vec3 v1, v2;
+	RayCast(&v1, &v2);
+	int index = 0;
+	float maxZ = -1000.0f;
+	int sIndex = -1;
+	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		if (index != selectedIndex - 1)
+		{
+			glm::vec3 tmpHit;
+			if ((*mI)->GetHitPoint(v1, v2, tmpHit))
+			{
+				//float cMaxZ = (*mI)->GetUpperBounds().z;
+				float cMaxZ = tmpHit.z;
+				//cDebug::DbgOut(L"Collision found", index);
+				//cDebug::DbgOut(L"zWert ist ", cMaxZ);
+				if (cMaxZ > maxZ)
+				{
+
+					hitPoint = tmpHit;
+					sIndex = index;
+					maxZ = cMaxZ;
+				}
+
+			}
+		}
+		index++;
+	}
+	if (sIndex != -1)
+	{
+		//cDebug::DbgOut(L"Collision chosen", sIndex);
+		//hitPoint.z = meshData[sIndex]->GetUpperBounds().z;
+		meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
+		meshData[selectedIndex - 1]->TogglePreviewSelection(true);
+		return true;
+	}
+	return false;
+}
 
 void ProcessSelectedObject()
 {
-	glm::vec3 v1, v2;
-	RayCast(&v1, &v2);
-	meshData[selectedIndex - 1]->AttachToCursor(v1, v2);
+	if (!PlacingPreview())
+	{
+		meshData[selectedIndex - 1]->TogglePreviewSelection(false);
+		//cDebug::DbgOut(L"false apparently", 1);
+		glm::vec3 v1, v2;
+		RayCast(&v1, &v2);
+		meshData[selectedIndex - 1]->AttachToCursor(v1, v2);
+	}
 	if (Keys::GetKeyState('X'))
 	{
 		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
@@ -296,6 +370,7 @@ void ProcessPicking()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+
 void ProcessPlacing()
 {
 	glm::vec3 v1, v2;
@@ -308,7 +383,7 @@ void ProcessPlacing()
 		if (index != selectedIndex - 1)
 		{
 			glm::vec3 tmpHit;
-			if ((*mI)->CheckCollision(v1, v2, tmpHit))
+			if ((*mI)->GetHitPoint(v1, v2, tmpHit))
 			{
 				//float cMaxZ = (*mI)->GetUpperBounds().z;
 				float cMaxZ = tmpHit.z;
@@ -430,7 +505,7 @@ void RenderHelpingVisuals()
 	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
 
 	glBindVertexArray(pointVAO);
-	glPointSize(100.0f);
+	glPointSize(10.0f);
 	glDrawArrays(GL_POINTS, 0, pointVertices.size());
 	glBindVertexArray(0);
 
@@ -541,8 +616,8 @@ int WINAPI SegThreadMain()
 			mesh->CleanMesh();
 			mesh->RemoveNonManifoldFace();
 			mesh->ParseData();
-			cDebug::DbgOut(L"indices: ", (int)mesh->GetVertices().size());
-			cDebug::DbgOut(L"vertices: " + (int)mesh->GetIndices().size());
+			//cDebug::DbgOut(L"vertices: ", (int)mesh->GetNumberOfVertices());
+			//cDebug::DbgOut(L"indices: " + (int)mesh->GetNumberOfIndices());
 			meshData_segTmp.push_back(mesh);
 		}
 	}
@@ -811,7 +886,6 @@ void FillHoles()
 		}
 		cDebug::DbgOut(L"fill hole #", cnt);
 		holeCnt += (*mI)->FillHoles(openGLWin.holeSize * 100);
-		(*mI)->RemoveNonManifoldFace();
 		(*mI)->ParseData();
 		(*mI)->UpdateBuffers();
 		numberOfVertices += (*mI)->GetNumberOfVertices();
@@ -870,8 +944,7 @@ void CleanMesh()
 	{
 		(*mI)->CleanMesh();
 		(*mI)->ParseData();
-		(*mI)->GenerateBOs();
-		(*mI)->GenerateVAO();
+		(*mI)->UpdateBuffers();
 
 		numberOfVertices += (*mI)->GetNumberOfVertices();
 		numberOfFaces += (*mI)->GetNumberOfIndices() / 3;
