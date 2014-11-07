@@ -234,6 +234,7 @@ bool PlacingPreview()
 			glm::vec3 v1, v2;
 			RayCast(&v1, &v2);
 			glm::vec3 tmpPoint;
+			int orientation = meshData[tmpIndex - 1]->GetOrientation();
 			meshData[tmpIndex - 1]->GetHitPoint(v1, v2, tmpPoint, snapToVertex);
 			hitPoint = tmpPoint;
 			/*if (tmpPoint.z <= hitPoint.z || previewIndex == tmpIndex)
@@ -241,7 +242,7 @@ bool PlacingPreview()
 				hitPoint = tmpPoint;
 				previewIndex = tmpIndex;
 			}*/
-			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
+			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint, orientation);
 			meshData[selectedIndex - 1]->TogglePreviewSelection(true);
 			result = true;
 		}
@@ -285,7 +286,8 @@ bool PlacingPreview()
 		{
 			//cDebug::DbgOut(L"Collision chosen", sIndex);
 			//hitPoint.z = meshData[sIndex]->GetUpperBounds().z;
-			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
+			int orientation = meshData[sIndex - 1]->GetOrientation();
+			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint, orientation);
 			meshData[selectedIndex - 1]->TogglePreviewSelection(true);
 			return true;
 		}
@@ -367,7 +369,7 @@ void ProcessPicking()
 	int cnt = 0;
 	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
-		if (cnt != wallIndex - 1)
+		if (cnt != wallIndex - 1 && !(*mI)->IsWall())
 			(*mI)->DrawBB();
 		cnt++;
 	}
@@ -425,6 +427,7 @@ void ProcessPlacing()
 			glm::vec3 v1, v2;
 			RayCast(&v1, &v2);
 			glm::vec3 tmpPoint;
+			int orientation = meshData[tmpIndex - 1]->GetOrientation();
 			meshData[tmpIndex - 1]->GetHitPoint(v1, v2, tmpPoint, snapToVertex);
 			hitPoint = tmpPoint;
 			/*if (tmpPoint.z <= hitPoint.z || previewIndex == tmpIndex)
@@ -433,7 +436,7 @@ void ProcessPlacing()
 			previewIndex = tmpIndex;
 			}*/
 			meshData[selectedIndex - 1]->SetSelected(false);
-			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
+			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint, orientation);
 			selectedIndex = -1;
 		}
 		else
@@ -482,7 +485,8 @@ void ProcessPlacing()
 			cDebug::DbgOut(L"Collision chosen", sIndex);
 			meshData[selectedIndex - 1]->SetSelected(false);
 			//hitPoint.z = meshData[sIndex]->GetUpperBounds().z;
-			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
+			int orientation = meshData[sIndex - 1]->GetOrientation();
+			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint, orientation);
 			selectedIndex = -1;
 		}
 		else
@@ -501,6 +505,7 @@ void SelectWallObject()
 {
 	if (selectedIndex != -1)
 	{
+		meshData[selectedIndex - 1]->SetWall(true);
 		wallIndex = selectedIndex;
 		if (openGLWin.colorSelection)
 			meshData[selectedIndex - 1]->ToggleSelectedColor(false);
@@ -511,6 +516,10 @@ void SelectWallObject()
 
 void ResetWallObject()
 {
+	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		(*mI)->SetWall(false);
+	}
 	if (wallIndex != -1)
 		wallIndex = -1;
 }
@@ -683,6 +692,9 @@ int WINAPI SegThreadMain()
 			mesh = new VCGMeshContainer;
 			mesh->SetColorCode(i + 1);
 			//mesh->ParseData(clusterVertices, clusterIndices);
+			mesh->SetWall(true);
+			mesh->SetPlaneParameters(pclSegmenter.planeCoefficients[i]->values[0], pclSegmenter.planeCoefficients[i]->values[1],
+				pclSegmenter.planeCoefficients[i]->values[2], pclSegmenter.planeCoefficients[i]->values[3]);
 			wallIndex = i + 1;
 			mesh->ConvertToVCG(clusterVertices, clusterIndices);
 			//int total = mesh->MergeCloseVertices(0.005f);
@@ -1164,7 +1176,7 @@ void Render(LPVOID lpParam)
 		int cnt = 0;
 		for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 		{
-			if (cnt != wallIndex-1)
+			if (cnt != wallIndex-1 && !(*mI)->IsWall())
 				(*mI)->DrawBB();
 			cnt++;
 		}

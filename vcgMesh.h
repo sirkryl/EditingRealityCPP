@@ -34,7 +34,7 @@ public:
 	void AttachToCursor(glm::vec3 nearPoint, glm::vec3 farPoint, int distance);
 	bool GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output, bool snapToVertex);
 	bool CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output);
-	void TranslateVerticesToPoint(glm::vec3 point);
+	void TranslateVerticesToPoint(glm::vec3 point, int orien);
 	void TemporaryTranslateVerticesToPoint(glm::vec3 point);
 	//just temporary to create multiple visible meshs from the same file
 	void SetTranslation(glm::vec3 trans);
@@ -57,6 +57,12 @@ public:
 	std::vector<float> GetNormals();
 	std::vector<GLuint> GetIndices();
 	float GetLowestZ();
+	float GetLowestY();
+	void SetWall(bool flag);
+	void SetPlaneParameters(float x, float y, float z, float d);
+	void SetSnapTransform(int orien);
+	int GetOrientation();
+	bool IsWall();
 	int GetNumberOfVertices();
 	int GetNumberOfIndices();
 	void ConvertToVCG(std::vector<float> inputVertices, std::vector<GLuint> inputIndices);
@@ -77,7 +83,9 @@ private:
 	std::vector<GLuint> indices;
 	std::vector<float> normals;
 	std::vector<float> storedColors;
-
+	float planeParameters[4];
+	int orientation = -1; 
+	// -1 = no plane, 0 = x, 1 = y, 2 = z
 	glm::mat4 storedTranslation;
 	int vertNum;
 
@@ -88,6 +96,8 @@ private:
 	GLuint ibo;
 	GLuint vao;
 
+	int snapOrientation = -1;
+	glm::mat4 snapTransform = glm::mat4(1.0f);
 	glm::mat4 originTransform = glm::mat4(1.0f);
 	glm::mat4 xRotation = glm::mat4(1.0f);
 	glm::mat4 yRotation = glm::mat4(1.0f);
@@ -104,12 +114,16 @@ private:
 	bool previewSelection = false;
 	bool isSelected = false;
 	bool colorSelection = false;
+	bool isWall = false;
 	//just temporary to create multiple visible meshs from the same file
 	glm::vec3 translation;
 
 	glm::vec3 centerPoint;
 	glm::vec3 upperBounds;
 	glm::vec3 lowerBounds;
+
+	glm::vec3 originalUpperBounds;
+	glm::vec3 originalLowerBounds;
 	
 	int colorCode;
 };

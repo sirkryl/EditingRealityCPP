@@ -28,13 +28,17 @@ public:
 	int GetRegionClusterCount();
 	int GetPlaneClusterCount();
 	int GetCloudSize();
+	std::vector<pcl::ModelCoefficients::Ptr> planeCoefficients;
 private:
+	
 	int clusterCount = 0;
 	bool isPlaneSegmented = false;
 	int clusterIndexCount = 0;
 	int procIndexCount = 0;
+	bool closeViewer = false;
+	bool isWall = false;
 	std::vector<pcl::PointIndices> segmentedClusterIndices;
-	std::vector<pcl::PointIndices> planeCloudIndices;
+	std::vector<pcl::PointIndices::Ptr> planeCloudIndices;
 	
 	void KeyDown(const pcl::visualization::KeyboardEvent &keyEvent, void* viewer_void);
 	std::vector<int> CalculateIndicesForCluster(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud);

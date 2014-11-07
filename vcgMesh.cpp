@@ -431,12 +431,17 @@ void VCGMeshContainer::ParseData()
 	//bbox
 
 	
-
+	originalLowerBounds.x = lowerBounds.x;
+	originalLowerBounds.y = lowerBounds.y;
+	originalLowerBounds.z = lowerBounds.z;
+	originalUpperBounds.x = upperBounds.x;
+	originalUpperBounds.y = upperBounds.y;
+	originalUpperBounds.z = upperBounds.z;
 	centerPoint.x = (lowerBounds.x + upperBounds.x) / 2.0f;
-	//centerPoint.y = (lowerBounds.y + upperBounds.y) / 2.0f;
-	centerPoint.y = lowerBounds.y;
-	//centerPoint.z = (lowerBounds.z + upperBounds.z) / 2.0f;
-	centerPoint.z = lowerBounds.z;
+	centerPoint.y = (lowerBounds.y + upperBounds.y) / 2.0f;
+	//centerPoint.y = lowerBounds.y;
+	centerPoint.z = (lowerBounds.z + upperBounds.z) / 2.0f;
+	//centerPoint.z = lowerBounds.z;
 	originTransform = glm::translate(glm::mat4(1.0), -centerPoint);
 
 	/*bBoxVertices.push_back(lowerBounds.x - 0.01f);
@@ -925,10 +930,29 @@ void VCGMeshContainer::TemporaryTranslateVerticesToPoint(glm::vec3 point)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point)
+void VCGMeshContainer::SetSnapTransform(int orien)
+{
+	glm::vec3 snapPoint;
+	snapPoint.x = centerPoint.x;
+	snapPoint.y = centerPoint.y;
+	snapPoint.z = centerPoint.z;
+	/*if (orien == 0)
+		snapPoint.x = lowerBounds.x - 0.01f;
+	else if (orien == 1)
+		snapPoint.y = abs(centerPoint.y - GetLowestY());// 0.01f;// +abs(snapPoint.y - lowerBounds.y);
+	else if (orien == 2)
+		snapPoint.z = lowerBounds.z + 0.01f;
+		*/
+	snapOrientation = orien;
+	snapTransform = glm::translate(glm::mat4(1.0), -snapPoint);
+}
+
+void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, int orien)
 {
 	//glm::vec3 oldLowBounds;
 	//oldLowBounds.z = lowerBounds.z;
+	if (snapOrientation != orien)
+		SetSnapTransform(orien);
 	lowerBounds = glm::vec3(9999.0f, 9999.0f, 9999.0f);
 	upperBounds = glm::vec3(-9999.0f, -9999.0f, -9999.0f);
 
@@ -947,6 +971,7 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point)
 		scaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(scaleFactor, scaleFactor, scaleFactor));*/
 
 	//originTransform = glm::translate(glm::mat4(1.0), -GetCenterPoint());
+	
 	float lowestZ = GetLowestZ();
 
 	for (int i = 0; i < vertices.size(); i+=6)
@@ -956,12 +981,14 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point)
 
 		glm::mat4 newTranslation = glm::translate(glm::mat4(1.0), point);
 		storedTranslation = newTranslation;
-		tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
-
+		//tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
+		if (orien == -1)
+			tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
+		else
+			tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * snapTransform) * tmp;
 		vertices[i] = tmp.x;
-		vertices[i + 1] = tmp.y;
-		vertices[i + 2] = tmp.z + abs(centerPoint.z - lowestZ);
-
+		vertices[i + 1] = tmp.y;// abs(centerPoint.y - snapPoint.y);
+		vertices[i + 2] = tmp.z;// +abs(snapPoint.z - lowestZ);
 		upperBounds.x = max(upperBounds.x, vertices[i]);
 		lowerBounds.x = min(lowerBounds.x, vertices[i]);
 		upperBounds.y = max(upperBounds.y, vertices[i + 1]);
@@ -987,11 +1014,14 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point)
 
 
 		glm::mat4 newTranslation = glm::translate(glm::mat4(1.0), point);
-		tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
-
+		//tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
+		if (orien == -1)
+			tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
+		else
+			tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * snapTransform) * tmp;
 		bBoxVertices[i] = tmp.x;
-		bBoxVertices[i + 1] = tmp.y;
-		bBoxVertices[i + 2] = tmp.z + abs(centerPoint.z - lowestZ);
+		bBoxVertices[i + 1] = tmp.y;// + abs(centerPoint.y - snapPoint.y);
+		bBoxVertices[i + 2] = tmp.z;// +abs(snapPoint.z - lowestZ);
 
 		/*bBoxVertices[i] = bBoxVertices[i] - centerPoint.x;
 		bBoxVertices[i] = point.x - bBoxVertices[i];
@@ -1024,7 +1054,8 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point)
 
 	centerPoint.x = point.x;
 	centerPoint.y = point.y;
-	centerPoint.z = point.z + abs(centerPoint.z - lowestZ);
+	centerPoint.z = point.z;// +abs(centerPoint.z - lowestZ);
+	snapTransform = glm::translate(glm::mat4(1.0), -centerPoint);
 	//centerPoint = point;
 	originTransform = glm::translate(glm::mat4(1.0), -centerPoint);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -1064,6 +1095,24 @@ float VCGMeshContainer::GetLowestZ()
 	}
 	//cDebug::DbgOut(L"lowestZ: ", lowestZ);
 	return lowestZ;
+}
+
+float VCGMeshContainer::GetLowestY()
+{
+	float lowestY = std::numeric_limits<float>::max();
+	for (int i = 0; i <= vertices.size(); i += 6)
+	{
+		glm::vec4 currentPoint = glm::vec4(vertices[i], vertices[i + 1], vertices[i + 2], 1.0f);
+
+
+		//currentPoint = (scaleMatrix * zRotation * yRotation * xRotation) * currentPoint;
+		if (currentPoint.y <= lowestY)
+		{
+			lowestY = currentPoint.y;
+		}
+	}
+	//cDebug::DbgOut(L"lowestZ: ", lowestZ);
+	return lowestY;
 }
 
 bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output, bool snapToVertex)
@@ -1496,6 +1545,58 @@ void VCGMeshContainer::ResetSelectedTransformation()
 	yRotation = glm::mat4(1.0f);
 	zRotation = glm::mat4(1.0f);
 	scaleMatrix = glm::mat4(1.0f);
+}
+
+void VCGMeshContainer::SetPlaneParameters(float x, float y, float z, float d)
+{
+	planeParameters[0] = x;
+	planeParameters[1] = y;
+	planeParameters[2] = z;
+	planeParameters[3] = d;
+
+	int max = distance(planeParameters, max_element(planeParameters, planeParameters + 3));
+	int min = distance(planeParameters, min_element(planeParameters, planeParameters + 3));
+
+	/*cDebug::DbgOut(L"max Value: ", planeParameters[max]);
+	cDebug::DbgOut(L"min Value: ", planeParameters[min]);
+	cDebug::DbgOut(L"max Position: ", max);
+	cDebug::DbgOut(L"min Position: ", min);*/
+
+	int pos = 0;
+	if (abs(max) > abs(min))
+		pos = max;
+	else
+		pos = min;
+
+	orientation = pos;
+}
+
+int VCGMeshContainer::GetOrientation()
+{
+	if (isWall)
+	{
+		/*switch (orientation)
+		{
+		case 0: cDebug::DbgOut(L"x Direction", 1);
+			break;
+		case 1: cDebug::DbgOut(L"y Direction", 1);
+			break;
+		case 2: cDebug::DbgOut(L"z Direction", 1);
+			break;
+		}*/
+		return orientation;
+	}
+	else return -1;
+}
+
+void VCGMeshContainer::SetWall(bool flag)
+{
+	isWall = flag;
+}
+
+bool VCGMeshContainer::IsWall()
+{
+	return isWall;
 }
 
 int VCGMeshContainer::GetColorCode()
