@@ -807,11 +807,12 @@ void VCGMeshContainer::DrawBB()
 
 }
 
-void VCGMeshContainer::AttachToCursor(glm::vec3 nearPoint, glm::vec3 farPoint)
+void VCGMeshContainer::AttachToCursor(glm::vec3 nearPoint, glm::vec3 farPoint, int distance)
 {
-	selectTranslation.x = nearPoint.x + (0.005f / 10.0f) * (farPoint.x - nearPoint.x); //(0.50f / 10.0f) * (farPoint.x - nearPoint.x);
-	selectTranslation.y = nearPoint.y + (0.005f / 10.0f) * (farPoint.y - nearPoint.y); //- 1.5f; //(0.50f / 10.0f) * (farPoint.y - nearPoint.y);
-	selectTranslation.z = nearPoint.z + (0.005f / 10.0f) * (farPoint.z - nearPoint.z);//(0.50f / 10.0f) * (farPoint.z - nearPoint.z);
+	float carryDistance = (float)distance / 1000.0f;
+	selectTranslation.x = nearPoint.x + (carryDistance / 10.0f) * (farPoint.x - nearPoint.x); //(0.50f / 10.0f) * (farPoint.x - nearPoint.x);
+	selectTranslation.y = nearPoint.y + (carryDistance / 10.0f) * (farPoint.y - nearPoint.y); //- 1.5f; //(0.50f / 10.0f) * (farPoint.y - nearPoint.y);
+	selectTranslation.z = nearPoint.z + (carryDistance / 10.0f) * (farPoint.z - nearPoint.z);//(0.50f / 10.0f) * (farPoint.z - nearPoint.z);
 
 	cursorTranslation = glm::translate(glm::mat4(1.0), selectTranslation);
 }
@@ -1065,7 +1066,7 @@ float VCGMeshContainer::GetLowestZ()
 	return lowestZ;
 }
 
-bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output)
+bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output, bool snapToVertex)
 {
 	glm::vec3 rayDirection = glm::normalize(farPoint - nearPoint);
 	
@@ -1151,30 +1152,127 @@ bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm:
 
 	t = tmin;
 
-	glm::vec3 minPoint;
-	float minDistance = std::numeric_limits<float>::max();
-	for (int i = 0; i < vertices.size(); i += 6)
-	{
-		glm::vec3 point(vertices[i], vertices[i + 1], vertices[i + 2]);
-		glm::vec3 v = farPoint - nearPoint;
-		glm::vec3 w = point - nearPoint;
+	//glm::vec3 vA = farPoint - nearPoint;
+	//glm::vec3 distance(vA.x * t, vA.y * t, vA.z * t);
+	//glm::vec3 rayPoint = nearPoint + distance;
+	//output = rayPoint;
+	//return true;
 
-		double c1 = glm::dot(w, v);
+	if (snapToVertex)
+	{
+
+		glm::vec3 minPoint;
+		glm::vec3 v = farPoint - nearPoint;
 		double c2 = glm::dot(v, v);
-		double b = c1 / c2;
-		glm::vec3 dd(v.x * b, v.y * b, v.z * b);
-		glm::vec3 Pb = nearPoint + dd;
-		float distance = glm::distance(point, Pb);
-		if (distance < minDistance)
+		float minDistance = std::numeric_limits<float>::max();
+		int index = -1;
+		for (int i = 0; i < vertices.size(); i += 6)
 		{
-			minDistance = distance;
-			minPoint.x = point.x;
-			minPoint.y = point.y;
-			minPoint.z = point.z;
+			glm::vec3 point(vertices[i], vertices[i + 1], vertices[i + 2]);
+		
+			glm::vec3 w = point - nearPoint;
+
+			double c1 = glm::dot(w, v);
+		
+			double b = c1 / c2;
+			glm::vec3 dd(v.x * b, v.y * b, v.z * b);
+			glm::vec3 Pb = nearPoint + dd;
+			float distance = glm::distance(point, Pb);
+			if (distance < minDistance)
+			{
+				minDistance = distance;
+				index = i*6;
+				minPoint.x = point.x;
+				minPoint.y = point.y;
+				minPoint.z = point.z;
+			}
+		}
+		output = minPoint;
+	}
+	else
+	{
+		float u, v, tX;
+		for (int i = 0; i < indices.size(); i += 3)
+		{
+			glm::vec3 v0;
+			v0.x = vertices[indices[i] * 6];
+			v0.y = vertices[indices[i] * 6 + 1];
+			v0.z = vertices[indices[i] * 6 + 2];
+			glm::vec3 v1;
+			v1.x = vertices[indices[i + 1] * 6];
+			v1.y = vertices[indices[i + 1] * 6 + 1];
+			v1.z = vertices[indices[i + 1] * 6 + 2];
+			glm::vec3 v2;
+			v2.x = vertices[indices[i + 2] * 6];
+			v2.y = vertices[indices[i + 2] * 6 + 1];
+			v2.z = vertices[indices[i + 2] * 6 + 2];
+			glm::vec3 edge1 = v1 - v0;
+			glm::vec3 edge2 = v2 - v0;
+			glm::vec3 pVec = glm::cross(rayDirection, edge2);
+			float det = glm::dot(edge1, pVec);
+			if (det > -0.00001f && det < 0.00001f)
+				continue;
+			float invDet = 1 / det;
+			glm::vec3 tVec = nearPoint - v0;
+			u = glm::dot(tVec, pVec) * invDet;
+			if (u < 0.0f || u > 1.0f)
+				continue;
+			glm::vec3 qVec = glm::cross(tVec, edge1);
+			v = glm::dot(rayDirection, qVec) * invDet;
+			if (v < 0.0f || u + v > 1.0f)
+				continue;
+			tX = glm::dot(edge2, qVec) * invDet;
+		}
+		glm::vec3 minPoint = nearPoint + rayDirection * tX;
+		output = minPoint;
+	}
+	return true;
+
+	/*triangle intersection
+	int cnnt = 0;
+	float u, v, tX;
+	for (int i = 0; i < indices.size(); i += 3)
+	{
+		glm::vec3 v0;
+		v0.x = vertices[indices[i]*6];
+		v0.y = vertices[indices[i]*6+1];
+		v0.z = vertices[indices[i]*6+2];
+		glm::vec3 v1;
+		v1.x = vertices[indices[i+1]*6];
+		v1.y = vertices[indices[i + 1] * 6 + 1];
+		v1.z = vertices[indices[i + 1] * 6 + 2];
+		glm::vec3 v2;
+		v2.x = vertices[indices[i + 2] * 6];
+		v2.y = vertices[indices[i + 2] * 6 + 1];
+		v2.z = vertices[indices[i + 2] * 6 + 2];
+		glm::vec3 edge1 = v1 - v0;
+		glm::vec3 edge2 = v2 - v0;
+		glm::vec3 pVec = glm::cross(rayDirection, edge2);
+		float det = glm::dot(edge1, pVec);
+		if (det > -0.00001f && det < 0.00001f)
+			continue;
+		float invDet = 1 / det;
+		glm::vec3 tVec = nearPoint - v0;
+		u = glm::dot(tVec, pVec) * invDet;
+		if (u < 0.0f || u > 1.0f)
+			continue;
+		glm::vec3 qVec = glm::cross(tVec, edge1);
+		v = glm::dot(rayDirection, qVec) * invDet;
+		if (v < 0.0f || u + v > 1.0f)
+			continue;
+		tX = glm::dot(edge2, qVec) * invDet;
+
+		if (tX > 0.00001f)
+		{
+			cnnt++;
+			break;
 		}
 	}
+	cDebug::DbgOut(L"Count: ", cnnt);
+	glm::vec3 minPoint = nearPoint + rayDirection * tX;
 	output = minPoint;
-	return true;
+	return true;*/
+	
 }
 
 bool VCGMeshContainer::CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output)

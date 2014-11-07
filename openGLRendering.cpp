@@ -6,9 +6,9 @@
 #include "openGLText.h"
 #include "openGLWin.h"
 #include "PCLProcessing.h"
+#include <boost/timer.hpp>
 #include "Resource.h"
 #include "vcgMesh.h"
-
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <vcg/complex/complex.h>
@@ -22,6 +22,9 @@
 //thread related
 HANDLE segmentationThread;
 DWORD sThreadId;
+boost::thread preview_Thread;
+
+bool previewThreadActive = false;
 
 //mesh storage
 std::vector<VCGMeshContainer*> meshData;
@@ -86,6 +89,8 @@ bool initColoredSegments = false;
 //toggle different modes
 bool showBB = false;
 bool wireFrameMode = false;
+bool snapToVertex = true;
+bool placeWithRaycast = false;
 
 //segmentation flags
 bool segFinished = false;
@@ -116,6 +121,16 @@ void ToggleBoundingBoxes()
 	showBB = !showBB;
 }
 
+void ToggleRaycastPlacing()
+{
+	placeWithRaycast = !placeWithRaycast;
+}
+
+void ToggleSnapToVertex()
+{
+	snapToVertex = !snapToVertex;
+}
+
 void SetBackgroundColor(int redValue, int greenValue, int blueValue)
 {
 	bgRed = redValue / 255.0f;
@@ -141,7 +156,7 @@ int GetColorUnderCursor()
 	BYTE colorByte[4];
 	glReadPixels(cursorPos.x, cursorPos.y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, colorByte);
 	int output = colorCoding::ColorToInt(colorByte[0], colorByte[1], colorByte[2]);
-	if (output == RGB_BLACK)
+	if (colorByte[0] == bgRed && colorByte[1] == bgGreen && colorByte[2] == bgBlue)
 		return -1;
 	return output;
 }
@@ -200,130 +215,150 @@ void RayCast(glm::vec3* v1, glm::vec3* v2)
 }
 bool PlacingPreview()
 {
-	/*bool result = false;
-	std::wstringstream ws;
-	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	if (!placeWithRaycast)
 	{
-		(*mI)->DrawBB();
+		bool result = false;
+		std::wstringstream ws;
+		int cnt = 1;
+		for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+		{
+			if (cnt != selectedIndex)
+				(*mI)->DrawBB();
+			cnt++;
+		}
+		int tmpIndex = GetColorUnderCursor();
+		if (tmpIndex > -1 && tmpIndex <= meshData.size())
+		{
+			ws << L"Selecting object #";
+			ws << tmpIndex;
+			glm::vec3 v1, v2;
+			RayCast(&v1, &v2);
+			glm::vec3 tmpPoint;
+			meshData[tmpIndex - 1]->GetHitPoint(v1, v2, tmpPoint, snapToVertex);
+			hitPoint = tmpPoint;
+			/*if (tmpPoint.z <= hitPoint.z || previewIndex == tmpIndex)
+			{
+				hitPoint = tmpPoint;
+				previewIndex = tmpIndex;
+			}*/
+			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
+			meshData[selectedIndex - 1]->TogglePreviewSelection(true);
+			result = true;
+		}
+		wstring statusMsg(ws.str());
+		const TCHAR *c_str = statusMsg.c_str();
+		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		return result;
 	}
-	int tmpIndex = GetColorUnderCursor();
-	if (tmpIndex > -1 && tmpIndex <= meshData.size())
+	else
 	{
-		//cDebug::DbgOut(L"jep", tmpIndex);
-		ws << L"Selecting object #";
-		ws << tmpIndex;
 		glm::vec3 v1, v2;
 		RayCast(&v1, &v2);
-		meshData[tmpIndex - 1]->GetHitPoint(v1, v2, hitPoint);
-		meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
-		meshData[selectedIndex - 1]->TogglePreviewSelection(true);
-		result = true;
-	}
-	wstring statusMsg(ws.str());
-	const TCHAR *c_str = statusMsg.c_str();
-	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	return result;*/
-	glm::vec3 v1, v2;
-	RayCast(&v1, &v2);
-	int index = 0;
-	float maxZ = -1000.0f;
-	int sIndex = -1;
-	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
-	{
-		if (index != selectedIndex - 1)
+		int index = 0;
+		float maxZ = -1000.0f;
+		int sIndex = -1;
+		for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 		{
-			glm::vec3 tmpHit;
-			if ((*mI)->GetHitPoint(v1, v2, tmpHit))
+			if (index != selectedIndex - 1)
 			{
-				//float cMaxZ = (*mI)->GetUpperBounds().z;
-				float cMaxZ = tmpHit.z;
-				//cDebug::DbgOut(L"Collision found", index);
-				//cDebug::DbgOut(L"zWert ist ", cMaxZ);
-				if (cMaxZ > maxZ)
+				glm::vec3 tmpHit;
+				if ((*mI)->GetHitPoint(v1, v2, tmpHit, snapToVertex))
 				{
+					//float cMaxZ = (*mI)->GetUpperBounds().z;
+					float cMaxZ = tmpHit.z;
+					//cDebug::DbgOut(L"Collision found", index);
+					//cDebug::DbgOut(L"zWert ist ", cMaxZ);
+					if (cMaxZ > maxZ)
+					{
 
-					hitPoint = tmpHit;
-					sIndex = index;
-					maxZ = cMaxZ;
+						hitPoint = tmpHit;
+						sIndex = index;
+						maxZ = cMaxZ;
+					}
+
 				}
-
 			}
+			index++;
 		}
-		index++;
+		if (sIndex != -1)
+		{
+			//cDebug::DbgOut(L"Collision chosen", sIndex);
+			//hitPoint.z = meshData[sIndex]->GetUpperBounds().z;
+			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
+			meshData[selectedIndex - 1]->TogglePreviewSelection(true);
+			return true;
+		}
+		return false;
 	}
-	if (sIndex != -1)
-	{
-		//cDebug::DbgOut(L"Collision chosen", sIndex);
-		//hitPoint.z = meshData[sIndex]->GetUpperBounds().z;
-		meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
-		meshData[selectedIndex - 1]->TogglePreviewSelection(true);
-		return true;
-	}
-	return false;
 }
 
 void ProcessSelectedObject()
 {
-	if (!PlacingPreview())
-	{
-		meshData[selectedIndex - 1]->TogglePreviewSelection(false);
-		//cDebug::DbgOut(L"false apparently", 1);
-		glm::vec3 v1, v2;
-		RayCast(&v1, &v2);
-		meshData[selectedIndex - 1]->AttachToCursor(v1, v2);
-	}
-	if (Keys::GetKeyState('X'))
-	{
-		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
-		if (openGLWin.wheelDelta < 0)
+	//Sleep(10);
+	//while (previewThreadActive)
+	//{
+		//cDebug::DbgOut(L"ahoi", 1);
+		//boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+		if (!PlacingPreview())
 		{
-			meshData[selectedIndex - 1]->SetAngleX(false);
+			meshData[selectedIndex - 1]->TogglePreviewSelection(false);
+			//cDebug::DbgOut(L"false apparently", 1);
+			glm::vec3 v1, v2;
+			RayCast(&v1, &v2);
+			meshData[selectedIndex - 1]->AttachToCursor(v1, v2, openGLWin.carryDistance);
 		}
-		else if (openGLWin.wheelDelta > 0)
+		if (Keys::GetKeyState('X'))
 		{
-			meshData[selectedIndex - 1]->SetAngleX(true);
+			//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
+			if (openGLWin.wheelDelta < 0)
+			{
+				meshData[selectedIndex - 1]->SetAngleX(false);
+			}
+			else if (openGLWin.wheelDelta > 0)
+			{
+				meshData[selectedIndex - 1]->SetAngleX(true);
+			}
 		}
-	}
-	if (Keys::GetKeyState('Y'))
-	{
-		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
-		if (openGLWin.wheelDelta < 0)
+		if (Keys::GetKeyState('Y'))
 		{
-			meshData[selectedIndex - 1]->SetAngleY(false);
-		}
-		else if (openGLWin.wheelDelta > 0)
-		{
-			meshData[selectedIndex - 1]->SetAngleY(true);
-		}
+			//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
+			if (openGLWin.wheelDelta < 0)
+			{
+				meshData[selectedIndex - 1]->SetAngleY(false);
+			}
+			else if (openGLWin.wheelDelta > 0)
+			{
+				meshData[selectedIndex - 1]->SetAngleY(true);
+			}
 
-	}
-	if (Keys::GetKeyState('Z'))
-	{
-		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
-		if (openGLWin.wheelDelta < 0)
-		{
-			meshData[selectedIndex - 1]->SetAngleZ(false);
 		}
-		else if (openGLWin.wheelDelta > 0)
+		if (Keys::GetKeyState('Z'))
 		{
-			meshData[selectedIndex - 1]->SetAngleZ(true);
+			//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
+			if (openGLWin.wheelDelta < 0)
+			{
+				meshData[selectedIndex - 1]->SetAngleZ(false);
+			}
+			else if (openGLWin.wheelDelta > 0)
+			{
+				meshData[selectedIndex - 1]->SetAngleZ(true);
+			}
 		}
-	}
-	if (Keys::GetKeyState('U'))
-	{
-		if (openGLWin.wheelDelta < 0)
+		if (Keys::GetKeyState('U'))
 		{
-			meshData[selectedIndex - 1]->SetScale(false);
-		}
-		else if (openGLWin.wheelDelta > 0)
-		{
-			meshData[selectedIndex - 1]->SetScale(true);
+			if (openGLWin.wheelDelta < 0)
+			{
+				meshData[selectedIndex - 1]->SetScale(false);
+			}
+			else if (openGLWin.wheelDelta > 0)
+			{
+				meshData[selectedIndex - 1]->SetScale(true);
+			}
+			openGLWin.wheelDelta = 0;
 		}
 		openGLWin.wheelDelta = 0;
-	}
-	openGLWin.wheelDelta = 0;
-
+	//}
 }
 
 void ProcessPicking()
@@ -370,50 +405,92 @@ void ProcessPicking()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-
 void ProcessPlacing()
 {
-	glm::vec3 v1, v2;
-	RayCast(&v1, &v2);
-	int index = 0;
-	float maxZ = -1000.0f;
-	int sIndex = -1;
-	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	if (!placeWithRaycast)
 	{
-		if (index != selectedIndex - 1)
+		std::wstringstream ws;
+		int cnt = 1;
+		for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 		{
-			glm::vec3 tmpHit;
-			if ((*mI)->GetHitPoint(v1, v2, tmpHit))
-			{
-				//float cMaxZ = (*mI)->GetUpperBounds().z;
-				float cMaxZ = tmpHit.z;
-				cDebug::DbgOut(L"Collision found", index);
-				cDebug::DbgOut(L"zWert ist ", cMaxZ);
-				if (cMaxZ > maxZ)
-				{
-
-					hitPoint = tmpHit;
-					sIndex = index;
-					maxZ = cMaxZ;
-				}
-
-			}
+			if (cnt != selectedIndex)
+				(*mI)->DrawBB();
+			cnt++;
 		}
-		index++;
-	}
-	if (sIndex != -1)
-	{
-		cDebug::DbgOut(L"Collision chosen", sIndex);
-		meshData[selectedIndex - 1]->SetSelected(false);
-		//hitPoint.z = meshData[sIndex]->GetUpperBounds().z;
-		meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
-		selectedIndex = -1;
+		int tmpIndex = GetColorUnderCursor();
+		if (tmpIndex > -1 && tmpIndex <= meshData.size())
+		{
+			ws << L"Selecting object #";
+			ws << tmpIndex;
+			glm::vec3 v1, v2;
+			RayCast(&v1, &v2);
+			glm::vec3 tmpPoint;
+			meshData[tmpIndex - 1]->GetHitPoint(v1, v2, tmpPoint, snapToVertex);
+			hitPoint = tmpPoint;
+			/*if (tmpPoint.z <= hitPoint.z || previewIndex == tmpIndex)
+			{
+			hitPoint = tmpPoint;
+			previewIndex = tmpIndex;
+			}*/
+			meshData[selectedIndex - 1]->SetSelected(false);
+			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
+			selectedIndex = -1;
+		}
+		else
+		{
+			meshData[selectedIndex - 1]->SetSelected(false);
+			meshData[selectedIndex - 1]->ResetSelectedTransformation();
+			selectedIndex = -1;
+		}
+		wstring statusMsg(ws.str());
+		const TCHAR *c_str = statusMsg.c_str();
+		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 	else
 	{
-		meshData[selectedIndex - 1]->SetSelected(false);
-		meshData[selectedIndex - 1]->ResetSelectedTransformation();
-		selectedIndex = -1;
+		glm::vec3 v1, v2;
+		RayCast(&v1, &v2);
+		int index = 0;
+		float maxZ = -1000.0f;
+		int sIndex = -1;
+		for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+		{
+			if (index != selectedIndex - 1)
+			{
+				glm::vec3 tmpHit;
+				if ((*mI)->GetHitPoint(v1, v2, tmpHit, snapToVertex))
+				{
+					//float cMaxZ = (*mI)->GetUpperBounds().z;
+					float cMaxZ = tmpHit.z;
+					cDebug::DbgOut(L"Collision found", index);
+					cDebug::DbgOut(L"zWert ist ", cMaxZ);
+					if (cMaxZ > maxZ)
+					{
+
+						hitPoint = tmpHit;
+						sIndex = index;
+						maxZ = cMaxZ;
+					}
+
+				}
+			}
+			index++;
+		}
+		if (sIndex != -1)
+		{
+			cDebug::DbgOut(L"Collision chosen", sIndex);
+			meshData[selectedIndex - 1]->SetSelected(false);
+			//hitPoint.z = meshData[sIndex]->GetUpperBounds().z;
+			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint);
+			selectedIndex = -1;
+		}
+		else
+		{
+			meshData[selectedIndex - 1]->SetSelected(false);
+			meshData[selectedIndex - 1]->ResetSelectedTransformation();
+			selectedIndex = -1;
+		}
 	}
 }
 
@@ -1059,8 +1136,15 @@ void Render(LPVOID lpParam)
 	//process currently selected object (attach to cursor, rotation/scaling etc.)
 	if (selectedIndex != -1 && !openGLWin.colorSelection)
 	{
+		/*if (!previewThreadActive)
+		{
+			previewThreadActive = true;
+			if (!preview_Thread.joinable())
+				preview_Thread = boost::thread(ProcessSelectedObject);
+		}*/
 		ProcessSelectedObject();
 	}
+	//else previewThreadActive = false;
 
 	//draw every mesh
 	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)

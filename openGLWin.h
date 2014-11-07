@@ -26,6 +26,7 @@ public:
 	double smoothnessThreshold = 100;
 	double curvatureThreshold = 10;
 	int maxComponentSize = 100;
+	int carryDistance = 5;
 
 	//flag indicating whether a segmentation value has been changed or not
 	bool segmentValuesChanged = false;
@@ -109,6 +110,8 @@ void CombineAndExport();
 void ResetCameraPosition();
 void ToggleWireFrame();
 void ToggleBoundingBoxes();
+void ToggleRaycastPlacing();
+void ToggleSnapToVertex();
 void FillHoles();
 //void MLS();
 void RemoveSmallComponents(int size);

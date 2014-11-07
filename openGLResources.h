@@ -19,6 +19,8 @@
 #define MAX_RG_CURVATURE 100 // divide by 10
 #define MIN_FILLHOLES 1 // multiply by 100
 #define MAX_FILLHOLES 1000 // multiply by 100
+#define MIN_CARRYDISTANCE 1
+#define MAX_CARRYDISTANCE 20
 
 #define IDC_CHECK_SHOWBB                1093
 #define IDC_CHECK_WIREFRAME             1094
@@ -26,6 +28,8 @@
 #define IDC_CHECK_FREECAMERA            1108
 #define IDC_CHECK_COLORSELECTION        1109
 #define IDC_CHECK_HELPINGVISUALS        1112
+#define IDC_CHECK_PLACING_RAYCAST       1119
+#define IDC_CHECK_PLACING_SNAPTOVERTEX  1122
 
 #define IDC_BUTTON_RESETCAMERA          1068
 #define IDC_BUTTON_EXPORT               1070
@@ -52,6 +56,7 @@
 #define IDC_EDIT_RG_SMOOTHNESS          1103
 #define IDC_EDIT_RG_CURVATURE           1104
 #define IDC_EDIT_REMOVESEGMENTS         1115
+#define IDC_EDIT_SELECTION_DISTANCE     1120
 
 #define IDC_SLIDER_RG_KSEARCH_VALUE     1069
 #define IDC_SLIDER_RG_MINCLUSTERSIZE    1075
@@ -61,6 +66,7 @@
 #define IDC_SLIDER_RG_CURVATURE         1079
 #define IDC_SLIDER_FILLHOLES            1100
 #define IDC_SLIDER_REMOVESEGMENTS       1116
+#define IDC_SLIDER_SELECTION_DISTANCE   1118
 
 #define IDC_IM_STATUS                   1106
 

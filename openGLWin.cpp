@@ -7,7 +7,7 @@
 
 WNDPROC oldEditProc;
 
-HWND editKSearchHandle, editMinClustersHandle, editMaxClustersHandle, editNonHandle, editSmoothnessHandle, editCurvatureHandle, editFillHoleHandle, editRemoveComponentHandle;
+HWND editKSearchHandle, editMinClustersHandle, editCarryDistanceHandle, editMaxClustersHandle, editNonHandle, editSmoothnessHandle, editCurvatureHandle, editFillHoleHandle, editRemoveComponentHandle;
 HWND statusHandle;
 
 TCHAR Keys::kp[256] = { 0 };
@@ -342,6 +342,13 @@ void InitializeGLUIControls()
 	editRemoveComponentHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_REMOVESEGMENTS);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editRemoveComponentHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
 
+	editCarryDistanceHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_SELECTION_DISTANCE);
+	oldEditProc = (WNDPROC)SetWindowLongPtr(editCarryDistanceHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
+
+	HWND hCheck = GetDlgItem(openGLWin.glWindowParent, IDC_CHECK_PLACING_SNAPTOVERTEX);
+
+	PostMessage(hCheck, BM_SETCHECK, BST_CHECKED, 0);
+
 	statusHandle = GetDlgItem(openGLWin.glWindowParent, IDC_IM_STATUS);
 	HFONT hFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
 	SendMessage(statusHandle, WM_SETFONT, (WPARAM)hFont, 0);
@@ -360,6 +367,13 @@ void InitializeGLUIControls()
 		TBM_SETRANGE,
 		TRUE,
 		MAKELPARAM(MIN_REMOVESEGMENTS_VALUE, MAX_REMOVESEGMENTS_VALUE));
+
+	SendDlgItemMessage(
+		openGLWin.glWindowParent,
+		IDC_SLIDER_SELECTION_DISTANCE,
+		TBM_SETRANGE,
+		TRUE,
+		MAKELPARAM(MIN_CARRYDISTANCE, MAX_CARRYDISTANCE));
 
 	SendDlgItemMessage(
 		openGLWin.glWindowParent,
@@ -452,6 +466,16 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	{
 		// Toggle our internal state for near mode
 		ToggleColorSelectedObject();
+	}
+	if (IDC_CHECK_PLACING_RAYCAST == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		// Toggle our internal state for near mode
+		ToggleRaycastPlacing();
+	}
+	if (IDC_CHECK_PLACING_SNAPTOVERTEX == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		// Toggle our internal state for near mode
+		ToggleSnapToVertex();
 	}
 	if (IDC_CHECK_SHOWBB == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -556,6 +580,10 @@ void ResetEditControls()
 		openGLWin.maxComponentSize,
 		FALSE);
 	SetDlgItemInt(openGLWin.glWindowParent,
+		IDC_EDIT_SELECTION_DISTANCE,
+		openGLWin.carryDistance,
+		FALSE);
+	SetDlgItemInt(openGLWin.glWindowParent,
 		IDC_EDIT_FILLHOLES,
 		openGLWin.holeSize * 100,
 		FALSE);
@@ -609,6 +637,13 @@ void ResetSliders()
 		TBM_SETPOS,
 		TRUE,
 		(UINT)openGLWin.maxComponentSize);
+
+	SendDlgItemMessage(
+		openGLWin.glWindowParent,
+		IDC_SLIDER_SELECTION_DISTANCE,
+		TBM_SETPOS,
+		TRUE,
+		(UINT)openGLWin.carryDistance);
 
 	SendDlgItemMessage(
 		openGLWin.glWindowParent,
@@ -729,6 +764,18 @@ void UpdateGLHSliders()
 			FALSE);
 	}
 
+	int carryDistancePos = (int)SendDlgItemMessage(openGLWin.glWindowParent, IDC_SLIDER_SELECTION_DISTANCE, TBM_GETPOS, 0, 0);
+
+	if (carryDistancePos >= MIN_CARRYDISTANCE && carryDistancePos <= MAX_CARRYDISTANCE)
+	{
+		openGLWin.carryDistance = carryDistancePos;
+		SetDlgItemInt(openGLWin.glWindowParent,
+			IDC_EDIT_SELECTION_DISTANCE,
+			openGLWin.carryDistance,
+			FALSE);
+	}
+
+
 	int minClusterPos = (int)SendDlgItemMessage(openGLWin.glWindowParent, IDC_SLIDER_RG_MINCLUSTERSIZE, TBM_GETPOS, 0, 0);
 
 	if (minClusterPos >= MIN_RG_MINCLUSTER && minClusterPos <= MAX_RG_MINCLUSTER)
@@ -833,6 +880,20 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						TBM_SETPOS,
 						TRUE,
 						(UINT)openGLWin.maxComponentSize);
+				}
+			}
+			else if (wnd == editCarryDistanceHandle)
+			{
+				int carryDistance = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_SELECTION_DISTANCE, NULL, FALSE);
+				if (carryDistance >= MIN_CARRYDISTANCE && carryDistance <= MAX_CARRYDISTANCE)
+				{
+					openGLWin.carryDistance = carryDistance;
+					SendDlgItemMessage(
+						openGLWin.glWindowParent,
+						IDC_SLIDER_SELECTION_DISTANCE,
+						TBM_SETPOS,
+						TRUE,
+						(UINT)openGLWin.carryDistance);
 				}
 			}
 			else if (wnd == editMinClustersHandle)

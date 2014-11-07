@@ -31,8 +31,8 @@ public:
 	void Draw();
 	void DrawBB();
 
-	void AttachToCursor(glm::vec3 nearPoint, glm::vec3 farPoint);
-	bool GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output);
+	void AttachToCursor(glm::vec3 nearPoint, glm::vec3 farPoint, int distance);
+	bool GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output, bool snapToVertex);
 	bool CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output);
 	void TranslateVerticesToPoint(glm::vec3 point);
 	void TemporaryTranslateVerticesToPoint(glm::vec3 point);
