@@ -345,9 +345,9 @@ void InitializeGLUIControls()
 	editCarryDistanceHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_SELECTION_DISTANCE);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editCarryDistanceHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
 
-	HWND hCheck = GetDlgItem(openGLWin.glWindowParent, IDC_CHECK_PLACING_SNAPTOVERTEX);
+	//HWND hCheck = GetDlgItem(openGLWin.glWindowParent, IDC_CHECK_PLACING_SNAPTOVERTEX);
 
-	PostMessage(hCheck, BM_SETCHECK, BST_CHECKED, 0);
+	//PostMessage(hCheck, BM_SETCHECK, BST_CHECKED, 0);
 
 	statusHandle = GetDlgItem(openGLWin.glWindowParent, IDC_IM_STATUS);
 	HFONT hFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));

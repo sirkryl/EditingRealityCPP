@@ -32,9 +32,9 @@ public:
 	void DrawBB();
 
 	void AttachToCursor(glm::vec3 nearPoint, glm::vec3 farPoint, int distance);
-	bool GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output, bool snapToVertex);
+	bool GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output, glm::vec3 &outputNormal, bool snapToVertex);
 	bool CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output);
-	void TranslateVerticesToPoint(glm::vec3 point, int orien);
+	void TranslateVerticesToPoint(glm::vec3 point, std::vector<int> orien);
 	void TemporaryTranslateVerticesToPoint(glm::vec3 point);
 	//just temporary to create multiple visible meshs from the same file
 	void SetTranslation(glm::vec3 trans);
@@ -60,8 +60,8 @@ public:
 	float GetLowestY();
 	void SetWall(bool flag);
 	void SetPlaneParameters(float x, float y, float z, float d);
-	void SetSnapTransform(int orien);
-	int GetOrientation();
+	void SetSnapTransform(std::vector<int> orien);
+	std::vector<int> GetOrientation();
 	bool IsWall();
 	int GetNumberOfVertices();
 	int GetNumberOfIndices();
@@ -72,11 +72,14 @@ public:
 	glm::vec3 GetUpperBounds();
 	glm::vec3 GetLowerBounds();
 	
+	
 	void ClearMesh();
 private:
 	VCGMesh currentMesh;
 
 	glm::vec3 FindClosestPoint(glm::vec3 inputPoint);
+	glm::vec3 offSet;
+	glm::vec3 snapPoint;
 	std::vector<float> bBoxVertices;
 	std::vector<GLuint> bBoxIndices;
 	std::vector<float> vertices;
@@ -84,7 +87,7 @@ private:
 	std::vector<float> normals;
 	std::vector<float> storedColors;
 	float planeParameters[4];
-	int orientation = -1; 
+	std::vector<int> orientation;
 	// -1 = no plane, 0 = x, 1 = y, 2 = z
 	glm::mat4 storedTranslation;
 	int vertNum;
@@ -96,7 +99,7 @@ private:
 	GLuint ibo;
 	GLuint vao;
 
-	int snapOrientation = -1;
+	std::vector<int> snapOrientation;
 	glm::mat4 snapTransform = glm::mat4(1.0f);
 	glm::mat4 originTransform = glm::mat4(1.0f);
 	glm::mat4 xRotation = glm::mat4(1.0f);

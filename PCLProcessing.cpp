@@ -75,7 +75,7 @@ bool PCLProcessor::PlaneSegmentation() {
 		pcl::PointIndices::Ptr inlierIndices(new pcl::PointIndices);
 		segmentation.segment(*inlierIndices, *coefficients);
 
-		if (inlierIndices->indices.size() <= mainCloud->points.size()/30)
+		if (inlierIndices->indices.size() <= mainCloud->points.size()/20)
 		{
 			cDebug::DbgOut(L"too few ", (int)inlierIndices->indices.size());
 			break;
@@ -100,11 +100,9 @@ bool PCLProcessor::PlaneSegmentation() {
 		extract.setNegative(false);
 		extract.filter(*inlierPoints);
 		pcl::PointIndices::Ptr testIndices(new pcl::PointIndices);
-		//extract.getRemovedIndices(*testIndices);
-		//extract.setIndices(testIndices);
-		//extract.filter(*cloudWithoutPlane);
+		
 
-		boost::shared_ptr<pcl::visualization::PCLVisualizer> PV2(new pcl::visualization::PCLVisualizer("Plane Viewer 2"));
+		/*boost::shared_ptr<pcl::visualization::PCLVisualizer> PV2(new pcl::visualization::PCLVisualizer("Plane Viewer 2"));
 		PV2->setBackgroundColor(0, 0, 0);
 		PV2->addPointCloud(inlierPoints, "Plane Windows 2");
 		PV2->registerKeyboardCallback(&PCLProcessor::KeyDown, *this);
@@ -115,7 +113,8 @@ bool PCLProcessor::PlaneSegmentation() {
 				break;
 			PV2->spinOnce(100);
 			boost::this_thread::sleep(boost::posix_time::microseconds(100000));
-		}
+		}*/
+		isWall = true;
 		closeViewer = false;
 
 		for (int i = 0; i < inlierIndices->indices.size(); i++)

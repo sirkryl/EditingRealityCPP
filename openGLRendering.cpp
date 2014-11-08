@@ -89,7 +89,7 @@ bool initColoredSegments = false;
 //toggle different modes
 bool showBB = false;
 bool wireFrameMode = false;
-bool snapToVertex = true;
+bool snapToVertex = false;
 bool placeWithRaycast = false;
 
 //segmentation flags
@@ -203,18 +203,52 @@ void RayCast(glm::vec3* v1, glm::vec3* v2)
 	*v1 = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 0.0f), glCamera.GetViewMatrix(), *openGLWin.glControl.GetProjectionMatrix(), viewport);
 	*v2 = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 1.0f), glCamera.GetViewMatrix(), *openGLWin.glControl.GetProjectionMatrix(), viewport);
 	nearPoint = *v1;
-	//cDebug::DbgOut(L"nearPoint.x : ", nearPoint.x);
-	//cDebug::DbgOut(L"nearPoint.y: ", nearPoint.y);
 	if (openGLWin.helpingVisuals)
 	{
 		InitializeRayVisual();
 		if (!firstRayCast)
 			firstRayCast = true;
 	}
-
+	
 }
+
+void GetRayOrientation(glm::vec3 v1, glm::vec3 v2, glm::vec3 normal, std::vector<int> &orientation)
+{
+	orientation.push_back(0);
+	orientation.push_back(0);
+	orientation.push_back(0);
+	if (abs(normal.z) > 0.5f)
+	{
+		if (abs(v2.z - v1.z) > 700)
+		{
+			if (v2.z < v1.z)
+				orientation[2] = 1;
+			else
+				orientation[2] = -1;
+		}
+	}
+	if (normal.y > 0.5f)
+		orientation[1] = 1;
+	//else if (normal.y < -0.5f)
+	//	orientation[1] = -1;
+	//else
+		orientation[1] = 1;
+
+	if (abs(normal.x) > 0.5f)
+	{
+		if (abs(v2.x - v1.x) > 900)
+		{
+			if (v2.x < v1.x)
+				orientation[0] = 1;
+			else
+				orientation[0] = -1;
+		}
+	}
+}
+
 bool PlacingPreview()
 {
+	glm::vec3 tmpNormal;
 	if (!placeWithRaycast)
 	{
 		bool result = false;
@@ -234,8 +268,11 @@ bool PlacingPreview()
 			glm::vec3 v1, v2;
 			RayCast(&v1, &v2);
 			glm::vec3 tmpPoint;
-			int orientation = meshData[tmpIndex - 1]->GetOrientation();
-			meshData[tmpIndex - 1]->GetHitPoint(v1, v2, tmpPoint, snapToVertex);
+			std::vector<int> orientation = meshData[tmpIndex - 1]->GetOrientation();
+			
+			
+			meshData[tmpIndex - 1]->GetHitPoint(v1, v2, tmpPoint, tmpNormal,snapToVertex);
+			GetRayOrientation(v1, v2, tmpNormal, orientation);
 			hitPoint = tmpPoint;
 			/*if (tmpPoint.z <= hitPoint.z || previewIndex == tmpIndex)
 			{
@@ -264,7 +301,8 @@ bool PlacingPreview()
 			if (index != selectedIndex - 1)
 			{
 				glm::vec3 tmpHit;
-				if ((*mI)->GetHitPoint(v1, v2, tmpHit, snapToVertex))
+				
+				if ((*mI)->GetHitPoint(v1, v2, tmpHit, tmpNormal, snapToVertex))
 				{
 					//float cMaxZ = (*mI)->GetUpperBounds().z;
 					float cMaxZ = tmpHit.z;
@@ -286,7 +324,8 @@ bool PlacingPreview()
 		{
 			//cDebug::DbgOut(L"Collision chosen", sIndex);
 			//hitPoint.z = meshData[sIndex]->GetUpperBounds().z;
-			int orientation = meshData[sIndex - 1]->GetOrientation();
+			std::vector<int> orientation = meshData[sIndex - 1]->GetOrientation();
+			GetRayOrientation(v1, v2, tmpNormal, orientation);
 			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint, orientation);
 			meshData[selectedIndex - 1]->TogglePreviewSelection(true);
 			return true;
@@ -297,7 +336,6 @@ bool PlacingPreview()
 
 void ProcessSelectedObject()
 {
-	//Sleep(10);
 	//while (previewThreadActive)
 	//{
 		//cDebug::DbgOut(L"ahoi", 1);
@@ -305,7 +343,7 @@ void ProcessSelectedObject()
 		if (!PlacingPreview())
 		{
 			meshData[selectedIndex - 1]->TogglePreviewSelection(false);
-			//cDebug::DbgOut(L"false apparently", 1);
+			
 			glm::vec3 v1, v2;
 			RayCast(&v1, &v2);
 			meshData[selectedIndex - 1]->AttachToCursor(v1, v2, openGLWin.carryDistance);
@@ -409,6 +447,7 @@ void ProcessPicking()
 
 void ProcessPlacing()
 {
+	glm::vec3 tmpNormal;
 	if (!placeWithRaycast)
 	{
 		std::wstringstream ws;
@@ -427,8 +466,11 @@ void ProcessPlacing()
 			glm::vec3 v1, v2;
 			RayCast(&v1, &v2);
 			glm::vec3 tmpPoint;
-			int orientation = meshData[tmpIndex - 1]->GetOrientation();
-			meshData[tmpIndex - 1]->GetHitPoint(v1, v2, tmpPoint, snapToVertex);
+			
+			std::vector<int> orientation = meshData[tmpIndex - 1]->GetOrientation();
+			
+			meshData[tmpIndex - 1]->GetHitPoint(v1, v2, tmpPoint, tmpNormal, snapToVertex);
+			GetRayOrientation(v1, v2, tmpNormal, orientation);
 			hitPoint = tmpPoint;
 			/*if (tmpPoint.z <= hitPoint.z || previewIndex == tmpIndex)
 			{
@@ -462,7 +504,7 @@ void ProcessPlacing()
 			if (index != selectedIndex - 1)
 			{
 				glm::vec3 tmpHit;
-				if ((*mI)->GetHitPoint(v1, v2, tmpHit, snapToVertex))
+				if ((*mI)->GetHitPoint(v1, v2, tmpHit, tmpNormal, snapToVertex))
 				{
 					//float cMaxZ = (*mI)->GetUpperBounds().z;
 					float cMaxZ = tmpHit.z;
@@ -485,7 +527,8 @@ void ProcessPlacing()
 			cDebug::DbgOut(L"Collision chosen", sIndex);
 			meshData[selectedIndex - 1]->SetSelected(false);
 			//hitPoint.z = meshData[sIndex]->GetUpperBounds().z;
-			int orientation = meshData[sIndex - 1]->GetOrientation();
+			std::vector<int> orientation = meshData[sIndex - 1]->GetOrientation();
+			GetRayOrientation(v1, v2, tmpNormal, orientation);
 			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint, orientation);
 			selectedIndex = -1;
 		}
@@ -693,8 +736,7 @@ int WINAPI SegThreadMain()
 			mesh->SetColorCode(i + 1);
 			//mesh->ParseData(clusterVertices, clusterIndices);
 			mesh->SetWall(true);
-			mesh->SetPlaneParameters(pclSegmenter.planeCoefficients[i]->values[0], pclSegmenter.planeCoefficients[i]->values[1],
-				pclSegmenter.planeCoefficients[i]->values[2], pclSegmenter.planeCoefficients[i]->values[3]);
+			
 			wallIndex = i + 1;
 			mesh->ConvertToVCG(clusterVertices, clusterIndices);
 			//int total = mesh->MergeCloseVertices(0.005f);
@@ -705,6 +747,8 @@ int WINAPI SegThreadMain()
 			mesh->CleanMesh();
 			mesh->RemoveNonManifoldFace();
 			mesh->ParseData();
+			mesh->SetPlaneParameters(pclSegmenter.planeCoefficients[i]->values[0], pclSegmenter.planeCoefficients[i]->values[1],
+				pclSegmenter.planeCoefficients[i]->values[2], pclSegmenter.planeCoefficients[i]->values[3]);
 			//cDebug::DbgOut(L"vertices: ", (int)mesh->GetNumberOfVertices());
 			//cDebug::DbgOut(L"indices: " + (int)mesh->GetNumberOfIndices());
 			meshData_segTmp.push_back(mesh);
@@ -974,6 +1018,7 @@ void FillHoles()
 			continue;
 		}
 		cDebug::DbgOut(L"fill hole #", cnt);
+		(*mI)->ConvertToVCG();
 		holeCnt += (*mI)->FillHoles(openGLWin.holeSize * 100);
 		(*mI)->ParseData();
 		(*mI)->UpdateBuffers();
