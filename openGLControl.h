@@ -21,6 +21,9 @@ public:
 	static void RegisterSimpleOpenGLClass(HINSTANCE hInstance);
 	static void UnregisterSimpleOpenGLClass(HINSTANCE hInstance);
 
+	void SetOffSetWidth(int offsetX);
+	void SetOffSetHeight(int offsetY);
+
 	void MakeCurrent();
 	void SwapBuffers();
 
@@ -44,7 +47,7 @@ private:
 	static bool bClassRegistered;
 	static bool bGlewInitialized;
 	int iMajorVersion, iMinorVersion;
-
+	int offSetWidth, offSetHeight = 0;
 	// Used for FPS calculation
 	int iFPSCount, iCurrentFPS;
 	clock_t tLastSecond;

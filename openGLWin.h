@@ -17,12 +17,13 @@ public:
 	//segmentation mode flags
 	int segmentationMode = -1;
 	bool previewMode = false;
-
+	bool wallSelection = false;
+	bool isWall = false;
 	//segmentation values
 	int kSearchValue = 20;
-	int minClusterSize = 100;
+	int minClusterSize = 1000;
 	int maxClusterSize = 1000;
-	int numberOfNeighbors = 30;
+	int numberOfNeighbors = 20;
 	double smoothnessThreshold = 100;
 	double curvatureThreshold = 10;
 	int maxComponentSize = 100;
@@ -61,7 +62,12 @@ public:
 	HINSTANCE GetInstance();
 
 	//cursor and/or mouse related methods
+	bool IsMouseInHandle();
 	bool IsMouseInOpenGLWindow();
+
+	void ShowConfirmationButtons(bool flag);
+	void InitWallConfirmation();
+
 
 	//thread related methods
 	bool StartOpenGLThread(HWND parentWin, HINSTANCE currHInstance, KinectFusionProcessor* proc);
@@ -94,6 +100,7 @@ extern OpenGLWin openGLWin;
 //open gl threads
 int WINAPI GLViewportThreadMain();
 LRESULT CALLBACK GLViewportProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK DebugDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 //process UI
@@ -104,6 +111,8 @@ void UpdateSliderText();
 void UpdateGLHSliders();
 void ResetEditControls();
 void ResetSliders();
+void MoveButtonsOnResize();
+void ToggleDebugControls();
 
 //all defined in openGLRendering.cpp
 void CombineAndExport();
@@ -112,16 +121,19 @@ void ToggleWireFrame();
 void ToggleBoundingBoxes();
 void ToggleRaycastPlacing();
 void ToggleSnapToVertex();
-void FillHoles();
+void FillHoles(int holeSize);
 //void MLS();
 void RemoveSmallComponents(int size);
 void StartSegmentation();
 //void ShowPCLViewer();
 void CleanMesh();
 
+
 void ToggleColorSelectedObject();
 void SelectWallObject();
 void ResetWallObject();
+void LoadInput();
+
 
 //main render functions, defined in openGLRendering.cpp
 void Initialize(LPVOID);

@@ -10,6 +10,7 @@
 using namespace std;
 
 #include <gl/glew.h>
+#include <GL/glut.h>
 #include <glm/glm.hpp>
 
 namespace cDebug {
@@ -62,3 +63,4 @@ namespace cDebug {
 		OutputDebugString(c_str);
 	}
 }
+	extern wstring statusMsg;

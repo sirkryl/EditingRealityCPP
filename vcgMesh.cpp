@@ -19,8 +19,11 @@ VCGMeshContainer::VCGMeshContainer() {
 
 VCGMeshContainer::~VCGMeshContainer() { }
 
+
+
 void VCGMeshContainer::LoadMesh(const char* filename)
 {
+	statusMsg = L"Loading mesh data";
 	vcg::tri::io::ImporterPLY<VCGMesh>::Open(currentMesh, filename);
 
 	/*
@@ -30,7 +33,7 @@ void VCGMeshContainer::LoadMesh(const char* filename)
 	vcg::tri::UpdateBounding<VCGMesh>::Box(currentMesh);
 	vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
 	vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromNone(currentMesh);*/
-	
+	statusMsg = L"Simplifying mesh";
 	RemoveNonManifoldFace();
 	LARGE_INTEGER frequency;        // ticks per second
 	LARGE_INTEGER t1, t2;           // ticks
@@ -50,10 +53,14 @@ void VCGMeshContainer::LoadMesh(const char* filename)
 	//int stepSmoothNum = 3;
 	//size_t cnt = vcg::tri::UpdateSelection<VCGMesh>::VertexFromFaceStrict(currentMesh);
 	//vcg::tri::Smooth<VCGMesh>::VertexCoordLaplacian(currentMesh, stepSmoothNum, cnt>0);
+	statusMsg = L"Smoothing mesh";
 	LaplacianSmooth(3);
+	statusMsg = L"Cleaning mesh";
 	CleanMesh();
-	RemoveSmallComponents(500);
+	statusMsg = L"Removing small components";
+	RemoveSmallComponents(currentMesh.vn/100);
 	CleanMesh();
+	statusMsg = L"Parsing data for interaction";
 	ParseData();
 	snapOrientation.clear();
 	orientation.clear();
@@ -593,7 +600,6 @@ void VCGMeshContainer::ParseData()
 //not really necessary right now
 void VCGMeshContainer::ConvertToVCG()
 {
-
 	currentMesh.Clear();
 	vcg::tri::Allocator<VCGMesh>::AddVertices(currentMesh, vertices.size() / 6);
 

@@ -180,6 +180,7 @@ bool OpenGLControl::InitOpenGL(HINSTANCE hInstance, HWND* a_hWnd, int iMajorVers
 	return true;
 }
 
+
 /*-----------------------------------------------
 
 Name:	ResizeOpenGLViewportFull
@@ -193,13 +194,22 @@ Result:	Resizes viewport to full window.
 void OpenGLControl::ResizeOpenGLViewportFull(int width, int height)
 {
 	if(hWnd == NULL)return;
-	RECT rRect; GetClientRect(*hWnd, &rRect);
-	glViewport(0, 0, rRect.right, rRect.bottom);
+	//RECT rRect; GetClientRect(*hWnd, &rRect);
+	
+	glViewport(offSetWidth, offSetHeight*2, width - 2*offSetWidth, (height-offSetHeight*2));
+	//glViewport(0, 0, width-offSetWidth, height);
+	
+	//SetProjection3D(45.0f, float(width) / float(height), 0.1f, 1000.0f);
+	//SetOrtho2D(width, height);
+	SetWindowPos(*hWnd, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 	//glViewport(0, 0, width, height);
 	//iViewportWidth = width;
 	//iViewportHeight = height;
-	iViewportWidth = rRect.right;
-	iViewportHeight = rRect.bottom;
+	iViewportWidth = width;// -2 * offSetWidth;
+	iViewportHeight = height;// -2 * offSetHeight;
+	
+	
+	
 }
 
 /*-----------------------------------------------
@@ -217,6 +227,16 @@ Result:	Calculates projection matrix and stores it.
 void OpenGLControl::SetProjection3D(float fFOV, float fAspectRatio, float fNear, float fFar)
 {
 	mProjection = glm::perspective(fFOV, fAspectRatio, fNear, fFar);
+}
+
+void OpenGLControl::SetOffSetWidth(int offsetX)
+{
+	offSetWidth = offsetX;
+}
+
+void OpenGLControl::SetOffSetHeight(int offsetY)
+{
+	offSetHeight = offsetY;
 }
 
 /*-----------------------------------------------

@@ -5,18 +5,25 @@
 
 #pragma region
 
+void drawButtonRed(DRAWITEMSTRUCT *dis, HWND hwnd);
+void drawButtonBlue(DRAWITEMSTRUCT *dis, HWND hwnd);
+HWND hButtonYes, hButtonNo, hButtonExport;
+HWND hTextWalls;
+std::vector<HWND*> buttons;
 WNDPROC oldEditProc;
-
+HBRUSH hBackground = CreateSolidBrush(RGB(0, 0, 0));
 HWND editKSearchHandle, editMinClustersHandle, editCarryDistanceHandle, editMaxClustersHandle, editNonHandle, editSmoothnessHandle, editCurvatureHandle, editFillHoleHandle, editRemoveComponentHandle;
 HWND statusHandle;
-
+HWND debugHandle;
+int debugWidth = 0;
 TCHAR Keys::kp[256] = { 0 };
 
 const char className[] = "OpenGLWindow";
 
 bool winDestroyed = false;
-
+bool winResized = false;
 #pragma endregion variables
+
 
 #pragma region
 
@@ -102,11 +109,23 @@ float OpenGLWin::SpeedOptimizedFloat(float fVal)
 
 #pragma region
 
+HANDLE hbitmap;
+
 bool OpenGLWin::CreateOpenGLWindow()
 {
+	/*char *argv[] = { "arg" };
+	int argc = 1; // must/should match the number of strings in argv
+
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+	glutInitWindowPosition(0, 0);
+	glutInitWindowSize(300, 300);
+	glutCreateWindow("here");
+	glutDisplayFunc(&display);
+	glutMainLoop();*/
 	HWND hWndApp = CreateDialogParamW(
 		appInstance,
-		MAKEINTRESOURCE(IDD_OPENGL),
+		MAKEINTRESOURCE(IDD_INTERACTION),
 		nullptr,
 		(DLGPROC)GLDlgProc,
 		reinterpret_cast<LPARAM>(this));
@@ -129,11 +148,11 @@ bool OpenGLWin::CreateOpenGLWindow()
 	wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 	ATOM ClassAtom = RegisterClassExW(&wc);
 
-	//RECT r = { 0, 0, 1024, 768 };
-	//GetClientRect(parent, &r);
+	RECT r = { 0, 0, 1024, 768 };
+	GetClientRect(parent, &r);
 
 	HWND hWnd = CreateWindowExW(WS_EX_APPWINDOW, (LPCTSTR)MAKELONG(ClassAtom, 0), L"", WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VISIBLE,
-		0, 0, width, height, hWndApp,
+		0, 0, r.right, r.bottom, hWndApp,
 		NULL, appInstance, NULL);
 
 	if (hWnd == NULL)
@@ -143,6 +162,54 @@ bool OpenGLWin::CreateOpenGLWindow()
 		return false;
 	}
 	glWindowHandle = hWnd;
+
+
+	hButtonExport = CreateWindowEx(0, L"Button", L"Export", WS_CHILD | WS_VISIBLE | BS_BITMAP, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_EXPORT, appInstance, 0);
+	hbitmap = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BUTTON), IMAGE_BITMAP, 84, 36, LR_DEFAULTCOLOR);
+	hButtonYes = CreateWindowEx(0, L"Button", L"Yes", WS_CHILD | WS_VISIBLE | BS_BITMAP, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_YES, appInstance, 0);
+	hButtonNo = CreateWindowEx(0, L"Button", L"No", WS_CHILD | WS_VISIBLE | BS_BITMAP, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_NO, appInstance, 0);
+	//hTextWalls = CreateWindowEx(0, L"Text", L"Is this (part of) a floor/wall?", WS_CHILD | WS_VISIBLE | BS_BITMAP, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_NO, appInstance, 0);
+
+	HFONT hf;
+	HDC hdc;
+	long lfHeight;
+
+	hdc = GetDC(NULL);
+	lfHeight = -MulDiv(20, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+	ReleaseDC(NULL, hdc);
+
+	hf = CreateFont(lfHeight, 0, 0, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, L"Segoe UI");
+	SendMessage(hButtonYes, WM_SETFONT, (WPARAM)hf, TRUE);
+	SendMessage(hButtonNo, WM_SETFONT, (WPARAM)hf, TRUE);
+	SendMessage(hButtonExport, WM_SETFONT, (WPARAM)hf, TRUE);
+	//CreateDialogParam(appInstance, MAKEINTRESOURCE(IDD_DEBUG), hWnd, (DLGPROC)GLDlgProc, (appInstance, MAKEINTRESOURCE(IDD_DEBUG), hWnd, (DLGPROC)GLDlgProc)
+	ShowWindow(hButtonYes, SW_HIDE);
+	ShowWindow(hButtonNo, SW_HIDE);
+	
+	buttons.push_back(&hButtonYes);
+	buttons.push_back(&hButtonNo);
+	buttons.push_back(&hButtonExport);
+	buttons.push_back(&hTextWalls);
+
+
+
+	//debugHandle = CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, MAKEINTRESOURCE(IDD_DEBUG), L"Debug", WS_CHILD | WS_VISIBLE | DS_CONTROL, 50, 50, 300, 300, hWnd, 0, appInstance, 0);
+	debugHandle = CreateDialog(appInstance, MAKEINTRESOURCE(IDD_DEBUG), hWnd, (DLGPROC)DebugDlgProc);
+	ShowWindow(debugHandle, SW_HIDE);
+
+	hTextWalls = GetDlgItem(openGLWin.glWindowParent, IDC_STATIC_WALL);
+	SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
+	SendMessage(hTextWalls, WM_SETFONT, (WPARAM)hf, TRUE);
+	ShowWindow(hTextWalls, SW_HIDE);
+	ShowWindow(hWndApp, SW_SHOWMAXIMIZED);
+
+
+	//SendMessage(d, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hbitmap);
+	
+	//hbit = LoadBitmap(hInstance, L"Bit");
+	//SendMessage(d, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hbit);
+
+
 	return true;
 }
 
@@ -175,23 +242,84 @@ DWORD OpenGLWin::GetThreadID()
 	return threadId;
 }
 
+int WINAPI LoadMeshThread()
+{
+	LoadInput();
+	return 0;
+}
+
 LRESULT CALLBACK GLViewportProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	//openGLWin.SetWheelDelta(0);
 	PAINTSTRUCT ps;
+	DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT*)lParam;
 	switch (msg)
 	{
 	case WM_PAINT:
 		BeginPaint(hWnd, &ps);
 		EndPaint(hWnd, &ps);
 		break;
-
 	case WM_CLOSE:
 		PostQuitMessage(0);
 		break;
+	case WM_COMMAND:
+		if (IDC_BUTTON_YES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			openGLWin.wallSelection = false;
+			openGLWin.isWall = true;
+			openGLWin.ShowConfirmationButtons(false);
+			ShowWindow(hTextWalls, SW_HIDE);
+			openGLWin.glControl.SetOffSetHeight(0);
+			openGLWin.glControl.SetOffSetWidth(0);
+			openGLWin.glControl.ResizeOpenGLViewportFull(openGLWin.glControl.GetViewportWidth(), openGLWin.glControl.GetViewportHeight());
 
+		}
+		if (IDC_BUTTON_NO == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			openGLWin.wallSelection = false;
+			openGLWin.isWall = false;
+			openGLWin.ShowConfirmationButtons(false);
+			ShowWindow(hTextWalls, SW_HIDE);
+			openGLWin.glControl.SetOffSetHeight(0);
+			openGLWin.glControl.SetOffSetWidth(0);
+			openGLWin.glControl.ResizeOpenGLViewportFull(openGLWin.glControl.GetViewportWidth(), openGLWin.glControl.GetViewportHeight());
+		}
+		if (IDC_BUTTON_EXPORT == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, L"Combing and exporting all meshes..");
+			CombineAndExport();
+		}
+		break;
+	/*case WM_DRAWITEM:
+	{
+		switch (dis->CtlID){
+		case BTNRED: 
+			HDC hdc1 = GetDC(hWnd);
+			HDC hdc2 = CreateCompatibleDC(hdc1);
+			SelectObject(hdc2, hbitmap);
+			BitBlt(hdc1, 50, 50, 84, 36, hdc2, 0, 0, SRCCOPY);
+			SetTextColor(hdc1, RGB(255, 255, 255));
+			DeleteObject(hdc2);
+			ReleaseDC(hWnd, hdc1);
+			break;
+		}
+		if (dis->itemState & ODS_SELECTED) InvertRect(dis->hDC, &dis->rcItem); 
+
+		return TRUE;
+	}
+	case WM_CTLCOLORBTN:
+	{
+		HDC hdcStatic = (HDC)wParam;
+		SetTextColor(hdcStatic, RGB(255, 255, 255));
+		SetBkColor(hdcStatic, RGB(0, 0, 0));
+		return (INT_PTR)CreateSolidBrush(RGB(0, 0, 0));
+	}*/
+	case WM_CREATE:
+		
+		break;
 	case WM_ACTIVATE:
 	{
+
 						switch (LOWORD(wParam))
 						{
 						case WA_ACTIVE:
@@ -210,11 +338,11 @@ LRESULT CALLBACK GLViewportProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		openGLWin.wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 		break;
 	case WM_SIZE:
-		openGLWin.glControl.ResizeOpenGLViewportFull(openGLWin.width, openGLWin.height);
+		openGLWin.glControl.ResizeOpenGLViewportFull(LOWORD(lParam), HIWORD(lParam));
 		openGLWin.glControl.SetProjection3D(45.0f, float(LOWORD(lParam)) / float(HIWORD(lParam)), 0.1f, 1000.0f);
 		openGLWin.glControl.SetOrtho2D(LOWORD(lParam), HIWORD(lParam));
+		MoveButtonsOnResize();
 		break;
-
 	default:
 		return DefWindowProc(hWnd, msg, wParam, lParam);
 	}
@@ -225,20 +353,24 @@ int WINAPI GLViewportThreadMain()
 {
 	if (!openGLWin.CreateOpenGLWindow())
 	{
+		
 		MessageBox(0, L"Can't create OpenGL Window",
 			L"ERROR!", MB_OK);
 		return -1;
 	}
-	/*HWND glWindowHandle = CreateWindowExW(WS_EX_NOPARENTNOTIFY, (LPCTSTR)MAKELONG(ClassAtom, 0), L"", WS_CHILD,
-	0, 0, 640, 480, parent,
-	NULL, hInstance, NULL);*/
+	
 
 	if (!openGLWin.glControl.InitOpenGL(openGLWin.GetInstance(), &openGLWin.glWindowHandle, 3, 3, Initialize, Render, Release, openGLWin.processor, &openGLWin.glControl))
 	{
 		MessageBox(0, L"Error with initOpenGL",
 			L"ERROR!", MB_OK);
 	}
-	openGLWin.glControl.ResizeOpenGLViewportFull(openGLWin.width, openGLWin.height);
+	DWORD threads;
+	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&LoadMeshThread, 0, 0, &threads);
+
+	RECT rRect; GetClientRect(GetParent(openGLWin.glWindowHandle), &rRect);
+	openGLWin.glControl.ResizeOpenGLViewportFull(rRect.right, rRect.bottom);
+	MoveButtonsOnResize();
 	//appMain.bAppActive = true;
 	ShowWindow(openGLWin.glWindowHandle, SW_SHOW);
 	UpdateWindow(openGLWin.glWindowHandle);
@@ -256,10 +388,8 @@ int WINAPI GLViewportThreadMain()
 
 		openGLWin.UpdateTimer();
 
-		//OutputDebugStringW(L"Timer updated\n");
 		openGLWin.glControl.Render(&openGLWin.glControl);
-		//OutputDebugStringW(L"OpenGL rendered\n");
-		Sleep(10);
+		//Sleep(10);
 
 	}
 	openGLWin.ShutdownWindow();
@@ -286,15 +416,73 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 	case WM_INITDIALOG:
 		if (openGLWin.glWindowParent == NULL)
 			openGLWin.glWindowParent = hWnd;
-		InitializeGLUIControls();
+		//InitializeGLUIControls();
 		break;
 	case WM_CLOSE:
 		winDestroyed = true;
+		DestroyWindow(debugHandle);
+		DestroyWindow(hWnd);
+		
+		break;
+	case WM_DESTROY:
+		break;
+	
+		// Handle button press
+	case WM_COMMAND:
+		//GLProcessUI(wParam, lParam);
+		break;
+	case WM_CTLCOLORSTATIC:
+		if ((HWND)lParam == hTextWalls)
+		{
+			HDC hdc = reinterpret_cast<HDC>(wParam);
+			SetBkMode((HDC)wParam, TRANSPARENT);
+			SetTextColor(hdc, RGB(255,255,255));
+			
+			return (LRESULT)CreateSolidBrush(RGB(0,0,0));
+
+		}
+		break;
+		// Handle sliders
+	case  WM_HSCROLL:
+		//UpdateGLHSliders();
+		break;
+	case WM_MOUSEWHEEL:
+		openGLWin.wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+		break;
+	case WM_SIZE:
+		openGLWin.glControl.ResizeOpenGLViewportFull(LOWORD(lParam), HIWORD(lParam));
+		openGLWin.glControl.SetProjection3D(45.0f, float(LOWORD(lParam)) / float(HIWORD(lParam)), 0.1f, 1000.0f);
+		openGLWin.glControl.SetOrtho2D(LOWORD(lParam), HIWORD(lParam));
+		MoveButtonsOnResize();
+		break;
+	case WM_NOTIFY:
+		break;
+	}
+
+	return FALSE;
+}
+
+/// <summary>
+/// Handle windows messages for the class instance
+/// </summary>
+/// <param name="hWnd">window message is for</param>
+/// <param name="uMsg">message</param>
+/// <param name="wParam">message data</param>
+/// <param name="lParam">additional message data</param>
+/// <returns>result of message processing</returns>
+LRESULT CALLBACK DebugDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+	case WM_INITDIALOG:
+		InitializeGLUIControls();
+		break;
+	case WM_CLOSE:
 		DestroyWindow(hWnd);
 		break;
 	case WM_DESTROY:
 		break;
-
+	
 		// Handle button press
 	case WM_COMMAND:
 		GLProcessUI(wParam, lParam);
@@ -305,12 +493,8 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		UpdateGLHSliders();
 		break;
 	case WM_MOUSEWHEEL:
-		openGLWin.wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 		break;
 	case WM_SIZE:
-		openGLWin.glControl.ResizeOpenGLViewportFull(openGLWin.width, openGLWin.height);
-		openGLWin.glControl.SetProjection3D(45.0f, float(LOWORD(lParam)) / float(HIWORD(lParam)), 0.1f, 1000.0f);
-		openGLWin.glControl.SetOrtho2D(LOWORD(lParam), HIWORD(lParam));
 		break;
 	case WM_NOTIFY:
 		break;
@@ -318,31 +502,32 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 
 	return FALSE;
 }
+
 #pragma endregion Window Thread
 
 #pragma region
 
 void InitializeGLUIControls()
 {
-	editKSearchHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_RG_KSEARCHVALUE);
+	editKSearchHandle = GetDlgItem(debugHandle, IDC_EDIT_RG_KSEARCHVALUE);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editKSearchHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
-	editMinClustersHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_RG_MINCLUSTERSIZE);
+	editMinClustersHandle = GetDlgItem(debugHandle, IDC_EDIT_RG_MINCLUSTERSIZE);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editMinClustersHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
-	editMaxClustersHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_RG_MAXCLUSTERSIZE);
+	editMaxClustersHandle = GetDlgItem(debugHandle, IDC_EDIT_RG_MAXCLUSTERSIZE);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editMaxClustersHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
-	editNonHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_RG_NON);
+	editNonHandle = GetDlgItem(debugHandle, IDC_EDIT_RG_NON);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editNonHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
-	editSmoothnessHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_RG_SMOOTHNESS);
+	editSmoothnessHandle = GetDlgItem(debugHandle, IDC_EDIT_RG_SMOOTHNESS);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editSmoothnessHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
-	editCurvatureHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_RG_CURVATURE);
+	editCurvatureHandle = GetDlgItem(debugHandle, IDC_EDIT_RG_CURVATURE);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editCurvatureHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
-	editFillHoleHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_FILLHOLES);
+	editFillHoleHandle = GetDlgItem(debugHandle, IDC_EDIT_FILLHOLES);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editFillHoleHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
 
-	editRemoveComponentHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_REMOVESEGMENTS);
+	editRemoveComponentHandle = GetDlgItem(debugHandle, IDC_EDIT_REMOVESEGMENTS);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editRemoveComponentHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
 
-	editCarryDistanceHandle = GetDlgItem(openGLWin.glWindowParent, IDC_EDIT_SELECTION_DISTANCE);
+	editCarryDistanceHandle = GetDlgItem(debugHandle, IDC_EDIT_SELECTION_DISTANCE);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editCarryDistanceHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
 
 	//HWND hCheck = GetDlgItem(openGLWin.glWindowParent, IDC_CHECK_PLACING_SNAPTOVERTEX);
@@ -355,28 +540,28 @@ void InitializeGLUIControls()
 	ResetEditControls();
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_RG_KSEARCH_VALUE,
 		TBM_SETRANGE,
 		TRUE,
 		MAKELPARAM(MIN_RG_KSEARCH_VALUE, MAX_RG_KSEARCH_VALUE));
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_REMOVESEGMENTS,
 		TBM_SETRANGE,
 		TRUE,
 		MAKELPARAM(MIN_REMOVESEGMENTS_VALUE, MAX_REMOVESEGMENTS_VALUE));
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_SELECTION_DISTANCE,
 		TBM_SETRANGE,
 		TRUE,
 		MAKELPARAM(MIN_CARRYDISTANCE, MAX_CARRYDISTANCE));
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_RG_MINCLUSTERSIZE,
 		TBM_SETRANGE,
 		TRUE,
@@ -386,7 +571,7 @@ void InitializeGLUIControls()
 
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_RG_MAXCLUSTERSIZE,
 		TBM_SETRANGE,
 		TRUE,
@@ -395,7 +580,7 @@ void InitializeGLUIControls()
 
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_RG_NON,
 		TBM_SETRANGE,
 		TRUE,
@@ -404,7 +589,7 @@ void InitializeGLUIControls()
 
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_RG_SMOOTHNESS,
 		TBM_SETRANGE,
 		TRUE,
@@ -413,14 +598,14 @@ void InitializeGLUIControls()
 
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_RG_CURVATURE,
 		TBM_SETRANGE,
 		TRUE,
 		MAKELPARAM(MIN_RG_CURVATURE, MAX_RG_CURVATURE));
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_FILLHOLES,
 		TBM_SETRANGE,
 		TRUE,
@@ -436,7 +621,7 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	{
 		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, L"Filling holes..");
 		//RemoveSmallComponents();
-		FillHoles();
+		FillHoles(openGLWin.holeSize);
 	}
 	if (IDC_BUTTON_RG_RESETVALUES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -444,7 +629,7 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 		openGLWin.kSearchValue = 20;
 		openGLWin.minClusterSize = 100;
 		openGLWin.maxClusterSize = 1000;
-		openGLWin.numberOfNeighbors = 30;
+		openGLWin.numberOfNeighbors = 20;
 		openGLWin.smoothnessThreshold = 100;
 		openGLWin.curvatureThreshold = 10;
 		ResetEditControls();
@@ -452,6 +637,7 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, L"Region Growth values back to default.");
 
 	}
+	
 	if (IDC_CHECK_WIREFRAME == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		// Toggle our internal state for near mode
@@ -508,7 +694,7 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_BUTTON_REMOVESEGMENTS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		cDebug::DbgOut(L"select Remove Segments: ");
-		int size = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_REMOVESEGMENTS, NULL, FALSE);
+		int size = GetDlgItemInt(debugHandle, IDC_EDIT_REMOVESEGMENTS, NULL, FALSE);
 		RemoveSmallComponents(size);
 	}
 	if (IDC_BUTTON_RESETWALL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
@@ -518,9 +704,9 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_BUTTON_SETBACKGROUND == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//GetDlgItemInt
-		int redValue = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_BACKGROUND_RED, NULL, FALSE);
-		int greenValue = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_BACKGROUND_GREEN, NULL, FALSE);
-		int blueValue = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_BACKGROUND_BLUE, NULL, FALSE);
+		int redValue = GetDlgItemInt(debugHandle, IDC_EDIT_BACKGROUND_RED, NULL, FALSE);
+		int greenValue = GetDlgItemInt(debugHandle, IDC_EDIT_BACKGROUND_GREEN, NULL, FALSE);
+		int blueValue = GetDlgItemInt(debugHandle, IDC_EDIT_BACKGROUND_BLUE, NULL, FALSE);
 		if (redValue >= 0 && redValue <= 255
 			&& greenValue >= 0 && greenValue <= 255
 			&& blueValue >= 0 && blueValue <= 255)
@@ -534,10 +720,10 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	}
 	if (IDC_BUTTON_REGION_GROWTH_SEGMENTATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
-		cDebug::DbgOut(L"Region growth", 0);
 		openGLWin.segmentationMode = REGION_GROWTH_SEGMENTATION;
 		openGLWin.previewMode = false;
 		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, L"Starting region growth segmentation..");
+		SetFocus(openGLWin.glWindowHandle);
 		StartSegmentation();
 		//m_processor.ResetReconstruction();
 	}
@@ -562,61 +748,56 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 		ResetCameraPosition();
 		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, L"Camera Position reset.");
 	}
-	if (IDC_BUTTON_EXPORT == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-	{
-		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, L"Combing and exporting all meshes..");
-		CombineAndExport();
-	}
 }
 
 void ResetEditControls()
 {
-	SetDlgItemInt(openGLWin.glWindowParent,
+	SetDlgItemInt(debugHandle,
 		IDC_EDIT_RG_KSEARCHVALUE,
 		openGLWin.kSearchValue,
 		FALSE);
-	SetDlgItemInt(openGLWin.glWindowParent,
+	SetDlgItemInt(debugHandle,
 		IDC_EDIT_REMOVESEGMENTS,
 		openGLWin.maxComponentSize,
 		FALSE);
-	SetDlgItemInt(openGLWin.glWindowParent,
+	SetDlgItemInt(debugHandle,
 		IDC_EDIT_SELECTION_DISTANCE,
 		openGLWin.carryDistance,
 		FALSE);
-	SetDlgItemInt(openGLWin.glWindowParent,
+	SetDlgItemInt(debugHandle,
 		IDC_EDIT_FILLHOLES,
 		openGLWin.holeSize * 100,
 		FALSE);
-	SetDlgItemInt(openGLWin.glWindowParent,
+	SetDlgItemInt(debugHandle,
 		IDC_EDIT_RG_MINCLUSTERSIZE,
 		openGLWin.minClusterSize,
 		FALSE);
-	SetDlgItemInt(openGLWin.glWindowParent,
+	SetDlgItemInt(debugHandle,
 		IDC_EDIT_RG_MAXCLUSTERSIZE,
 		openGLWin.maxClusterSize * 1000,
 		FALSE);
-	SetDlgItemInt(openGLWin.glWindowParent,
+	SetDlgItemInt(debugHandle,
 		IDC_EDIT_RG_NON,
 		openGLWin.numberOfNeighbors,
 		FALSE);
-	SetDlgItemInt(openGLWin.glWindowParent,
+	SetDlgItemInt(debugHandle,
 		IDC_EDIT_RG_SMOOTHNESS,
 		(UINT)openGLWin.smoothnessThreshold,
 		FALSE);
-	SetDlgItemInt(openGLWin.glWindowParent,
+	SetDlgItemInt(debugHandle,
 		IDC_EDIT_RG_CURVATURE,
 		(UINT)openGLWin.curvatureThreshold,
 		FALSE);
 
-	SetDlgItemInt(openGLWin.glWindowParent,
+	SetDlgItemInt(debugHandle,
 		IDC_EDIT_BACKGROUND_RED,
 		211,
 		FALSE);
-	SetDlgItemInt(openGLWin.glWindowParent,
+	SetDlgItemInt(debugHandle,
 		IDC_EDIT_BACKGROUND_GREEN,
 		211,
 		FALSE);
-	SetDlgItemInt(openGLWin.glWindowParent,
+	SetDlgItemInt(debugHandle,
 		IDC_EDIT_BACKGROUND_BLUE,
 		211,
 		FALSE);
@@ -625,63 +806,63 @@ void ResetEditControls()
 void ResetSliders()
 {
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_RG_KSEARCH_VALUE,
 		TBM_SETPOS,
 		TRUE,
 		(UINT)openGLWin.kSearchValue);
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_REMOVESEGMENTS,
 		TBM_SETPOS,
 		TRUE,
 		(UINT)openGLWin.maxComponentSize);
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_SELECTION_DISTANCE,
 		TBM_SETPOS,
 		TRUE,
 		(UINT)openGLWin.carryDistance);
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_RG_MINCLUSTERSIZE,
 		TBM_SETPOS,
 		TRUE,
 		(UINT)openGLWin.minClusterSize);
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_RG_MAXCLUSTERSIZE,
 		TBM_SETPOS,
 		TRUE,
 		(UINT)openGLWin.maxClusterSize);
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_RG_NON,
 		TBM_SETPOS,
 		TRUE,
 		(UINT)openGLWin.numberOfNeighbors);
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_RG_SMOOTHNESS,
 		TBM_SETPOS,
 		TRUE,
 		(UINT)openGLWin.smoothnessThreshold);
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_RG_CURVATURE,
 		TBM_SETPOS,
 		TRUE,
 		(UINT)openGLWin.curvatureThreshold);
 
 	SendDlgItemMessage(
-		openGLWin.glWindowParent,
+		debugHandle,
 		IDC_SLIDER_FILLHOLES,
 		TBM_SETPOS,
 		TRUE,
@@ -696,7 +877,7 @@ void UpdateSliderText()
 	concLabel.append(strs.str());
 	//WCHAR str[MAX_PATH];
 	//swprintf_s(str, ARRAYSIZE(str), L"%4.2fm", openGLWin.kSearchValue);
-	SetDlgItemText(openGLWin.glWindowParent, IDC_TEXT_RG_KSEARCH_VALUE, concLabel.c_str());
+	SetDlgItemText(debugHandle, IDC_TEXT_RG_KSEARCH_VALUE, concLabel.c_str());
 
 	strs.str(L"");
 	concLabel = L"";
@@ -704,7 +885,7 @@ void UpdateSliderText()
 	concLabel.append(strs.str());
 	//WCHAR str[MAX_PATH];
 	//swprintf_s(str, ARRAYSIZE(str), L"%4.2fm", openGLWin.kSearchValue);
-	SetDlgItemText(openGLWin.glWindowParent, IDC_TEXT_RG_MINCLUSTERSIZE, concLabel.c_str());
+	SetDlgItemText(debugHandle, IDC_TEXT_RG_MINCLUSTERSIZE, concLabel.c_str());
 
 	strs.str(L"");
 	concLabel = L"";
@@ -712,7 +893,7 @@ void UpdateSliderText()
 	concLabel.append(strs.str());
 	//WCHAR str[MAX_PATH];
 	//swprintf_s(str, ARRAYSIZE(str), L"%4.2fm", openGLWin.kSearchValue);
-	SetDlgItemText(openGLWin.glWindowParent, IDC_TEXT_RG_MINCLUSTERSIZE, concLabel.c_str());
+	SetDlgItemText(debugHandle, IDC_TEXT_RG_MINCLUSTERSIZE, concLabel.c_str());
 
 	strs.str(L"");
 	concLabel = L"";
@@ -720,7 +901,7 @@ void UpdateSliderText()
 	concLabel.append(strs.str());
 	//WCHAR str[MAX_PATH];
 	//swprintf_s(str, ARRAYSIZE(str), L"%4.2fm", openGLWin.kSearchValue);
-	SetDlgItemText(openGLWin.glWindowParent, IDC_TEXT_RG_NON, concLabel.c_str());
+	SetDlgItemText(debugHandle, IDC_TEXT_RG_NON, concLabel.c_str());
 
 	strs.str(L"");
 	concLabel = L"";
@@ -728,7 +909,7 @@ void UpdateSliderText()
 	concLabel.append(strs.str());
 	//WCHAR str[MAX_PATH];
 	//swprintf_s(str, ARRAYSIZE(str), L"%4.2fm", openGLWin.kSearchValue);
-	SetDlgItemText(openGLWin.glWindowParent, IDC_TEXT_RG_SMOOTHNESS, concLabel.c_str());
+	SetDlgItemText(debugHandle, IDC_TEXT_RG_SMOOTHNESS, concLabel.c_str());
 
 	strs.str(L"");
 	concLabel = L"";
@@ -736,113 +917,163 @@ void UpdateSliderText()
 	concLabel.append(strs.str());
 	//WCHAR str[MAX_PATH];
 	//swprintf_s(str, ARRAYSIZE(str), L"%4.2fm", openGLWin.kSearchValue);
-	SetDlgItemText(openGLWin.glWindowParent, IDC_TEXT_RG_CURVATURE, concLabel.c_str());
+	SetDlgItemText(debugHandle, IDC_TEXT_RG_CURVATURE, concLabel.c_str());
 }
 
 void UpdateGLHSliders()
 {
 	openGLWin.segmentValuesChanged = true;
-	int kSearchValuePos = (int)SendDlgItemMessage(openGLWin.glWindowParent, IDC_SLIDER_RG_KSEARCH_VALUE, TBM_GETPOS, 0, 0);
+	int kSearchValuePos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_KSEARCH_VALUE, TBM_GETPOS, 0, 0);
 
 	if (kSearchValuePos >= MIN_RG_KSEARCH_VALUE && kSearchValuePos <= MAX_RG_KSEARCH_VALUE)
 	{
 		openGLWin.kSearchValue = kSearchValuePos;
-		SetDlgItemInt(openGLWin.glWindowParent,
+		SetDlgItemInt(debugHandle,
 			IDC_EDIT_RG_KSEARCHVALUE,
 			openGLWin.kSearchValue,
 			FALSE);
 	}
 
-	int maxComponetSizePos = (int)SendDlgItemMessage(openGLWin.glWindowParent, IDC_SLIDER_REMOVESEGMENTS, TBM_GETPOS, 0, 0);
+	int maxComponetSizePos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_REMOVESEGMENTS, TBM_GETPOS, 0, 0);
 
 	if (maxComponetSizePos >= MIN_REMOVESEGMENTS_VALUE && maxComponetSizePos <= MAX_REMOVESEGMENTS_VALUE)
 	{
 		openGLWin.maxComponentSize = maxComponetSizePos;
-		SetDlgItemInt(openGLWin.glWindowParent,
+		SetDlgItemInt(debugHandle,
 			IDC_EDIT_REMOVESEGMENTS,
 			openGLWin.maxComponentSize,
 			FALSE);
 	}
 
-	int carryDistancePos = (int)SendDlgItemMessage(openGLWin.glWindowParent, IDC_SLIDER_SELECTION_DISTANCE, TBM_GETPOS, 0, 0);
+	int carryDistancePos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_SELECTION_DISTANCE, TBM_GETPOS, 0, 0);
 
 	if (carryDistancePos >= MIN_CARRYDISTANCE && carryDistancePos <= MAX_CARRYDISTANCE)
 	{
 		openGLWin.carryDistance = carryDistancePos;
-		SetDlgItemInt(openGLWin.glWindowParent,
+		SetDlgItemInt(debugHandle,
 			IDC_EDIT_SELECTION_DISTANCE,
 			openGLWin.carryDistance,
 			FALSE);
 	}
 
 
-	int minClusterPos = (int)SendDlgItemMessage(openGLWin.glWindowParent, IDC_SLIDER_RG_MINCLUSTERSIZE, TBM_GETPOS, 0, 0);
+	int minClusterPos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_MINCLUSTERSIZE, TBM_GETPOS, 0, 0);
 
 	if (minClusterPos >= MIN_RG_MINCLUSTER && minClusterPos <= MAX_RG_MINCLUSTER)
 	{
 		openGLWin.minClusterSize = minClusterPos;
-		SetDlgItemInt(openGLWin.glWindowParent,
+		SetDlgItemInt(debugHandle,
 			IDC_EDIT_RG_MINCLUSTERSIZE,
 			openGLWin.minClusterSize,
 			FALSE);
 	}
 
-	int maxClusterPos = (int)SendDlgItemMessage(openGLWin.glWindowParent, IDC_SLIDER_RG_MAXCLUSTERSIZE, TBM_GETPOS, 0, 0);
+	int maxClusterPos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_MAXCLUSTERSIZE, TBM_GETPOS, 0, 0);
 
 	if (maxClusterPos >= MIN_RG_MAXCLUSTER && maxClusterPos <= MAX_RG_MAXCLUSTER)
 	{
 		openGLWin.maxClusterSize = maxClusterPos;
-		SetDlgItemInt(openGLWin.glWindowParent,
+		SetDlgItemInt(debugHandle,
 			IDC_EDIT_RG_MAXCLUSTERSIZE,
 			openGLWin.maxClusterSize * 1000,
 			FALSE);
 	}
 
-	int nonPos = (int)SendDlgItemMessage(openGLWin.glWindowParent, IDC_SLIDER_RG_NON, TBM_GETPOS, 0, 0);
+	int nonPos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_NON, TBM_GETPOS, 0, 0);
 
 	if (nonPos >= MIN_RG_NEIGHBORS && nonPos <= MAX_RG_NEIGHBORS)
 	{
 		openGLWin.numberOfNeighbors = nonPos;
-		SetDlgItemInt(openGLWin.glWindowParent,
+		SetDlgItemInt(debugHandle,
 			IDC_EDIT_RG_NON,
 			openGLWin.numberOfNeighbors,
 			FALSE);
 	}
 
-	int smoothnessPos = (int)SendDlgItemMessage(openGLWin.glWindowParent, IDC_SLIDER_RG_SMOOTHNESS, TBM_GETPOS, 0, 0);
+	int smoothnessPos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_SMOOTHNESS, TBM_GETPOS, 0, 0);
 
 	if (smoothnessPos >= MIN_RG_SMOOTHNESS && smoothnessPos <= MAX_RG_SMOOTHNESS)
 	{
 		openGLWin.smoothnessThreshold = smoothnessPos;
-		SetDlgItemInt(openGLWin.glWindowParent,
+		SetDlgItemInt(debugHandle,
 			IDC_EDIT_RG_SMOOTHNESS,
 			(UINT)openGLWin.smoothnessThreshold,
 			FALSE);
 	}
 
-	int curvaturePos = (int)SendDlgItemMessage(openGLWin.glWindowParent, IDC_SLIDER_RG_CURVATURE, TBM_GETPOS, 0, 0);
+	int curvaturePos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_CURVATURE, TBM_GETPOS, 0, 0);
 
 	if (curvaturePos >= MIN_RG_CURVATURE && curvaturePos <= MAX_RG_CURVATURE)
 	{
 		openGLWin.curvatureThreshold = curvaturePos;
-		SetDlgItemInt(openGLWin.glWindowParent,
+		SetDlgItemInt(debugHandle,
 			IDC_EDIT_RG_CURVATURE,
 			(UINT)openGLWin.curvatureThreshold,
 			FALSE);
 	}
 
-	int holeSize = (int)SendDlgItemMessage(openGLWin.glWindowParent, IDC_SLIDER_FILLHOLES, TBM_GETPOS, 0, 0);
+	int holeSize = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_FILLHOLES, TBM_GETPOS, 0, 0);
 
 	if (holeSize >= MIN_FILLHOLES && holeSize <= MAX_FILLHOLES)
 	{
 		openGLWin.holeSize = holeSize;
-		SetDlgItemInt(openGLWin.glWindowParent,
+		SetDlgItemInt(debugHandle,
 			IDC_EDIT_FILLHOLES,
 			openGLWin.holeSize * 100,
 			FALSE);
 	}
 
 	//UpdateSliderText();
+}
+
+void MoveButtonsOnResize()
+{
+	RECT rRect;
+	GetClientRect(debugHandle, &rRect);
+	MoveWindow(debugHandle, openGLWin.glControl.GetViewportWidth() - rRect.right, 0, rRect.right, rRect.bottom, true);
+	MoveWindow(hButtonYes, openGLWin.glControl.GetViewportWidth() / 2 - 175, openGLWin.glControl.GetViewportHeight() - 150, 150, 50, true);
+	MoveWindow(hButtonNo, openGLWin.glControl.GetViewportWidth() / 2 + 25, openGLWin.glControl.GetViewportHeight() - 150, 150, 50, true);
+	MoveWindow(hButtonExport, 50, openGLWin.glControl.GetViewportHeight() - 150, 150, 50, true);
+
+	RECT sRect;
+	GetWindowRect(statusHandle, &sRect);
+	MoveWindow(statusHandle, 0, openGLWin.glControl.GetViewportHeight() - 30, openGLWin.glControl.GetViewportWidth(), 30, true);
+
+	RECT rect;
+	GetClientRect(hTextWalls, &rect);
+	MoveWindow(hTextWalls, openGLWin.glControl.GetViewportWidth() / 2 - 250, openGLWin.glControl.GetViewportHeight() - 200, 500, 40, true);
+	SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
+	
+	InvalidateRect(hTextWalls, &rect, TRUE);
+	MapWindowPoints(hTextWalls, openGLWin.glWindowHandle, (POINT *)&rect, 2);
+	RedrawWindow(hTextWalls, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
+	//MoveWindow(hTextWalls, openGLWin.glControl.GetViewportWidth() / 2 - 100, openGLWin.glControl.GetViewportHeight() - 200, 600, 40, true);
+	//SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
+	//InvalidateRect(hTextWalls, NULL, TRUE);
+}
+
+void ToggleDebugControls()
+{
+	if (IsWindowVisible(debugHandle))
+	{
+		debugWidth = 0;
+		ShowWindow(debugHandle, SW_HIDE);
+	}
+	else
+	{
+		ResetEditControls(); 
+		ResetSliders();
+		RECT dRect;
+		GetClientRect(debugHandle, &dRect);
+		debugWidth = dRect.right;
+		MoveWindow(debugHandle, openGLWin.glControl.GetViewportWidth() - dRect.right, 0, dRect.right, dRect.bottom, false);
+		ShowWindow(debugHandle, SW_SHOW);
+	}
+	RECT rRect;
+	GetClientRect(GetParent(openGLWin.glWindowHandle), &rRect);
+	openGLWin.glControl.ResizeOpenGLViewportFull(rRect.right, rRect.bottom);
+	openGLWin.glControl.SetProjection3D(45.0f, (float)rRect.right / (float)rRect.bottom, 0.1f, 1000.0f);
+	openGLWin.glControl.SetOrtho2D(rRect.right, rRect.bottom);
 }
 
 LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -856,12 +1087,12 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			openGLWin.segmentValuesChanged = true;
 			if (wnd == editKSearchHandle)
 			{
-				int kSearchValue = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_RG_KSEARCHVALUE, NULL, FALSE);
+				int kSearchValue = GetDlgItemInt(debugHandle, IDC_EDIT_RG_KSEARCHVALUE, NULL, FALSE);
 				if (kSearchValue >= MIN_RG_KSEARCH_VALUE && kSearchValue <= MAX_RG_KSEARCH_VALUE)
 				{
 					openGLWin.kSearchValue = kSearchValue;
 					SendDlgItemMessage(
-						openGLWin.glWindowParent,
+						debugHandle,
 						IDC_SLIDER_RG_KSEARCH_VALUE,
 						TBM_SETPOS,
 						TRUE,
@@ -870,12 +1101,12 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			else if (wnd == editRemoveComponentHandle)
 			{
-				int maxComponentSize = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_REMOVESEGMENTS, NULL, FALSE);
+				int maxComponentSize = GetDlgItemInt(debugHandle, IDC_EDIT_REMOVESEGMENTS, NULL, FALSE);
 				if (maxComponentSize >= MIN_REMOVESEGMENTS_VALUE && maxComponentSize <= MAX_REMOVESEGMENTS_VALUE)
 				{
 					openGLWin.maxComponentSize = maxComponentSize;
 					SendDlgItemMessage(
-						openGLWin.glWindowParent,
+						debugHandle,
 						IDC_SLIDER_REMOVESEGMENTS,
 						TBM_SETPOS,
 						TRUE,
@@ -884,12 +1115,12 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			else if (wnd == editCarryDistanceHandle)
 			{
-				int carryDistance = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_SELECTION_DISTANCE, NULL, FALSE);
+				int carryDistance = GetDlgItemInt(debugHandle, IDC_EDIT_SELECTION_DISTANCE, NULL, FALSE);
 				if (carryDistance >= MIN_CARRYDISTANCE && carryDistance <= MAX_CARRYDISTANCE)
 				{
 					openGLWin.carryDistance = carryDistance;
 					SendDlgItemMessage(
-						openGLWin.glWindowParent,
+						debugHandle,
 						IDC_SLIDER_SELECTION_DISTANCE,
 						TBM_SETPOS,
 						TRUE,
@@ -898,12 +1129,12 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			else if (wnd == editMinClustersHandle)
 			{
-				int minClusterSize = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_RG_MINCLUSTERSIZE, NULL, FALSE);
+				int minClusterSize = GetDlgItemInt(debugHandle, IDC_EDIT_RG_MINCLUSTERSIZE, NULL, FALSE);
 				if (minClusterSize >= MIN_RG_MINCLUSTER && minClusterSize <= MAX_RG_MINCLUSTER)
 				{
 					openGLWin.minClusterSize = minClusterSize;
 					SendDlgItemMessage(
-						openGLWin.glWindowParent,
+						debugHandle,
 						IDC_SLIDER_RG_MINCLUSTERSIZE,
 						TBM_SETPOS,
 						TRUE,
@@ -912,12 +1143,12 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			else if (wnd == editMaxClustersHandle)
 			{
-				int maxClusterSize = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_RG_MAXCLUSTERSIZE, NULL, FALSE) / 1000;
+				int maxClusterSize = GetDlgItemInt(debugHandle, IDC_EDIT_RG_MAXCLUSTERSIZE, NULL, FALSE) / 1000;
 				if (maxClusterSize >= MIN_RG_MAXCLUSTER && maxClusterSize <= MAX_RG_MAXCLUSTER)
 				{
 					openGLWin.maxClusterSize = maxClusterSize;
 					SendDlgItemMessage(
-						openGLWin.glWindowParent,
+						debugHandle,
 						IDC_SLIDER_RG_MAXCLUSTERSIZE,
 						TBM_SETPOS,
 						TRUE,
@@ -926,12 +1157,12 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			else if (wnd == editNonHandle)
 			{
-				int numberOfNeighbors = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_RG_NON, NULL, FALSE);
+				int numberOfNeighbors = GetDlgItemInt(debugHandle, IDC_EDIT_RG_NON, NULL, FALSE);
 				if (numberOfNeighbors >= MIN_RG_NEIGHBORS && numberOfNeighbors <= MAX_RG_NEIGHBORS)
 				{
 					openGLWin.numberOfNeighbors = numberOfNeighbors;
 					SendDlgItemMessage(
-						openGLWin.glWindowParent,
+						debugHandle,
 						IDC_SLIDER_RG_NON,
 						TBM_SETPOS,
 						TRUE,
@@ -940,12 +1171,12 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			else if (wnd == editSmoothnessHandle)
 			{
-				int smoothnessThreshold = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_RG_SMOOTHNESS, NULL, FALSE);
+				int smoothnessThreshold = GetDlgItemInt(debugHandle, IDC_EDIT_RG_SMOOTHNESS, NULL, FALSE);
 				if (smoothnessThreshold >= MIN_RG_SMOOTHNESS && smoothnessThreshold <= MAX_RG_SMOOTHNESS)
 				{
 					openGLWin.smoothnessThreshold = smoothnessThreshold;
 					SendDlgItemMessage(
-						openGLWin.glWindowParent,
+						debugHandle,
 						IDC_SLIDER_RG_SMOOTHNESS,
 						TBM_SETPOS,
 						TRUE,
@@ -954,12 +1185,12 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			else if (wnd == editCurvatureHandle)
 			{
-				int curvatureThreshold = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_RG_CURVATURE, NULL, FALSE);
+				int curvatureThreshold = GetDlgItemInt(debugHandle, IDC_EDIT_RG_CURVATURE, NULL, FALSE);
 				if (curvatureThreshold >= MIN_RG_CURVATURE && curvatureThreshold <= MAX_RG_CURVATURE)
 				{
 					openGLWin.curvatureThreshold = curvatureThreshold;
 					SendDlgItemMessage(
-						openGLWin.glWindowParent,
+						debugHandle,
 						IDC_SLIDER_RG_CURVATURE,
 						TBM_SETPOS,
 						TRUE,
@@ -968,19 +1199,19 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			else if (wnd == editFillHoleHandle)
 			{
-				int holeSize = GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_FILLHOLES, NULL, FALSE) / 100;
+				int holeSize = GetDlgItemInt(debugHandle, IDC_EDIT_FILLHOLES, NULL, FALSE) / 100;
 				if (holeSize >= MIN_FILLHOLES && holeSize <= MAX_FILLHOLES)
 				{
 					openGLWin.holeSize = holeSize;
 					SendDlgItemMessage(
-						openGLWin.glWindowParent,
+						debugHandle,
 						IDC_SLIDER_FILLHOLES,
 						TBM_SETPOS,
 						TRUE,
 						(UINT)openGLWin.holeSize);
 				}
 			}
-			//GetDlgItemInt(openGLWin.glWindowParent, IDC_EDIT_BACKGROUND_RED, NULL, FALSE)
+			//GetDlgItemInt(debugHandle, IDC_EDIT_BACKGROUND_RED, NULL, FALSE)
 			//Do your stuff
 			break;  //or return 0; if you don't want to pass it further to def proc
 			//If not your key, skip to default:
@@ -991,18 +1222,64 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+bool OpenGLWin::IsMouseInHandle()
+{
+	POINT pCur;
+	GetCursorPos(&pCur);
+	for (int i = 0; i < buttons.size(); i++)
+	{
+		if (IsWindowVisible(*buttons[i]))
+		{
+			RECT rRect; GetWindowRect(*buttons[i], &rRect);
+			if (pCur.x >= rRect.left && pCur.x <= rRect.right &&
+				pCur.y >= rRect.top && pCur.y <= rRect.bottom)
+				return true;
+		}
+	}
+	return false;
+}
+
 bool OpenGLWin::IsMouseInOpenGLWindow()
 {
 	POINT pCur;
 	GetCursorPos(&pCur);
 	RECT rRect; GetWindowRect(openGLWin.glWindowHandle, &rRect);
 
-	if (pCur.x >= rRect.left && pCur.x <= rRect.right &&
+	if (pCur.x >= rRect.left && pCur.x <= rRect.right-debugWidth &&
 		pCur.y >= rRect.top && pCur.y <= rRect.bottom &&
-		GetActiveWindow() == openGLWin.glWindowParent)
+		GetActiveWindow() == openGLWin.glWindowParent && !IsMouseInHandle())
 		return true;
 	else
 		return false;
 }
+
+void OpenGLWin::InitWallConfirmation()
+{
+	
+	ShowWindow(hTextWalls, SW_SHOW);
+	openGLWin.wallSelection = true;
+	openGLWin.glControl.SetOffSetHeight(100);
+	openGLWin.glControl.SetOffSetWidth(100);
+	RECT rRect; GetClientRect(GetParent(openGLWin.glWindowHandle), &rRect);
+	openGLWin.glControl.ResizeOpenGLViewportFull(rRect.right, rRect.bottom);
+	openGLWin.ShowConfirmationButtons(true);
+	
+}
+
+void OpenGLWin::ShowConfirmationButtons(bool flag)
+{
+	if (flag)
+	{
+		MoveButtonsOnResize();
+		ShowWindow(hButtonYes, SW_SHOW);
+		ShowWindow(hButtonNo, SW_SHOW);
+	}
+	else
+	{
+		ShowWindow(hButtonYes, SW_HIDE);
+		ShowWindow(hButtonNo, SW_HIDE);
+	}
+}
+
 
 #pragma endregion GUI

@@ -789,6 +789,7 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 		interactionMode = true;
 		openGLWin.testMode = 1;
 		openGLWin.StartOpenGLThread(m_hWnd, GetModuleHandle(NULL), &m_processor);
+
 	}
 	if (IDC_BUTTON_TEST_OPENGL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{

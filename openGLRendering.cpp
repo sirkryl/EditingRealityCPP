@@ -11,21 +11,18 @@
 #include "vcgMesh.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <vcg/complex/complex.h>
-#include <vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/algorithms/update/normal.h>
-#include <wrap/io_trimesh/import.h>
-#include <wrap/gl/trimesh.h>
-#include <wrap/io_trimesh/export.h>
+
 
 #pragma region
+
 //thread related
 HANDLE segmentationThread;
 DWORD sThreadId;
 boost::thread preview_Thread;
 
 bool previewThreadActive = false;
-
+bool initialLoading = false;
+wstring statusMsg = L"";
 //mesh storage
 std::vector<VCGMeshContainer*> meshData;
 std::vector<VCGMeshContainer*> meshData_segTmp;
@@ -52,6 +49,7 @@ GLuint pointVBO{ 0 }, pointVAO{ 0 };
 
 //vertices for helper visualizations
 std::vector<float> segVertices;
+std::vector<float> wallVertices;
 std::vector<float> rayVertices;
 std::vector<float> pointVertices;
 
@@ -61,9 +59,9 @@ glm::vec3 nearPoint;
 
 
 //background color
-float bgRed = 0.8f; 
-float bgGreen = 0.8f;
-float bgBlue = 0.8f;
+float bgRed = 0.0f; 
+float bgGreen = 0.0f;
+float bgBlue = 0.0f;
 
 //for info text
 int numberOfVertices = 0;
@@ -77,6 +75,9 @@ int wallIndex = -1;
 
 int previewIndex = -1;
 
+int dotCount = 0;
+const std::vector<wstring> dots = { L".", L"..", L"..." };
+
 //first time something happened flags
 bool firstRayCast = false;
 
@@ -85,6 +86,7 @@ bool initSegmentVBO = false;
 bool initRayVBO = false;
 bool initPointVBO = false;
 bool initColoredSegments = false;
+bool initWallSegment = false;
 
 //toggle different modes
 bool showBB = false;
@@ -95,6 +97,7 @@ bool placeWithRaycast = false;
 //segmentation flags
 bool segFinished = false;
 bool showColoredSegments = false;
+bool segmenting = false;
 
 #pragma endregion variables
 
@@ -244,6 +247,21 @@ void GetRayOrientation(glm::vec3 v1, glm::vec3 v2, glm::vec3 normal, std::vector
 				orientation[0] = -1;
 		}
 	}
+}
+
+int DuplicateMesh(int index)
+{
+	VCGMeshContainer* mesh = new VCGMeshContainer;
+	mesh->SetColorCode(meshData.size() + 1);
+
+	mesh->ConvertToVCG(meshData[index]->GetVertices(), meshData[index]->GetIndices());
+	mesh->ParseData();
+	mesh->GenerateBOs();
+	mesh->GenerateVAO();
+	numberOfVertices += mesh->GetNumberOfVertices();
+	numberOfFaces += mesh->GetNumberOfIndices() / 3;
+	meshData.push_back(mesh);
+	return meshData.size();
 }
 
 bool PlacingPreview()
@@ -407,13 +425,15 @@ void ProcessPicking()
 	int cnt = 0;
 	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
-		if (cnt != wallIndex - 1 && !(*mI)->IsWall())
+		//if (cnt != wallIndex - 1 && !(*mI)->IsWall())
 			(*mI)->DrawBB();
 		cnt++;
 	}
 	int tmpIndex = GetColorUnderCursor();
 	if (tmpIndex > -1 && tmpIndex <= meshData.size())
 	{
+		if (meshData[tmpIndex - 1]->IsWall())
+			return;
 		if (selectedIndex != -1)
 		{
 			if (openGLWin.colorSelection)
@@ -479,7 +499,14 @@ void ProcessPlacing()
 			}*/
 			meshData[selectedIndex - 1]->SetSelected(false);
 			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint, orientation);
-			selectedIndex = -1;
+			if (Keys::GetKeyState('D'))
+			{
+				int newIndex = DuplicateMesh(selectedIndex - 1);
+				selectedIndex = newIndex;
+				meshData[selectedIndex - 1]->SetSelected(true);
+				cDebug::DbgOut(L"pressed D alright");
+			}
+			else selectedIndex = -1;
 		}
 		else
 		{
@@ -658,7 +685,7 @@ int WINAPI SegThreadMain()
 	if (meshData_segTmp.size() > 0 && openGLWin.segmentValuesChanged)
 	{
 		int cnt = 0;
-		for (int i = pclSegmenter.GetPlaneClusterCount()-1; i < meshData_segTmp.size(); i++)
+		for (int i = pclSegmenter.GetPlaneClusterCount(); i < meshData_segTmp.size(); i++)
 		{
 			meshData_segTmp[i]->ClearMesh();
 		}
@@ -707,12 +734,14 @@ int WINAPI SegThreadMain()
 		}
 	}
 	//CleanAndParse("data\\models\\output.ply", startingVertices, startingIndices, startingNormals);
-	cDebug::DbgOut(L"Parsed");
 	QueryPerformanceFrequency(&frequency);
 	QueryPerformanceCounter(&t1);
 	QueryPerformanceCounter(&t2);
 	if (!pclSegmenter.IsMainCloudInitialized())
+	{
+		statusMsg = L"Converting mesh to point cloud";
 		pclSegmenter.ConvertToCloud(startingVertices, startingIndices, startingNormals);
+	}
 	QueryPerformanceCounter(&t2);
 	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
 	cDebug::DbgOut(L"Converted to cloud in ", elapsedTime);
@@ -739,13 +768,16 @@ int WINAPI SegThreadMain()
 			
 			wallIndex = i + 1;
 			mesh->ConvertToVCG(clusterVertices, clusterIndices);
+			
 			//int total = mesh->MergeCloseVertices(0.005f);
 			//cDebug::DbgOut(_T("Merged close vertices: "), total);
 			//cDebug::DbgOut(L"indices: ", (int)mesh->GetVertices().size());
 			//cDebug::DbgOut(L"vertices: " + (int)mesh->GetIndices().size());
-			
+			mesh->RemoveSmallComponents(1000);
 			mesh->CleanMesh();
 			mesh->RemoveNonManifoldFace();
+			mesh->FillHoles((clusterVertices.size()*6)/10);
+			mesh->CleanMesh();
 			mesh->ParseData();
 			mesh->SetPlaneParameters(pclSegmenter.planeCoefficients[i]->values[0], pclSegmenter.planeCoefficients[i]->values[1],
 				pclSegmenter.planeCoefficients[i]->values[2], pclSegmenter.planeCoefficients[i]->values[3]);
@@ -799,11 +831,12 @@ int WINAPI SegThreadMain()
 		mesh->SetColorCode(i+pclSegmenter.GetPlaneClusterCount() + 1);
 		//mesh->ParseData(clusterVertices, clusterIndices);
 		mesh->ConvertToVCG(clusterVertices, clusterIndices);
-		//int total = mesh->MergeCloseVertices(0.005f);
-		//cDebug::DbgOut(_T("Merged close vertices: "), total);
 		
 		mesh->CleanMesh();
 		mesh->RemoveNonManifoldFace();
+		
+		mesh->FillHoles((clusterVertices.size() * 6) / 10);
+		mesh->CleanMesh();
 		mesh->ParseData();
 		meshData_segTmp.push_back(mesh);
 	}
@@ -820,13 +853,56 @@ int WINAPI SegThreadMain()
 	wstring statusMsg(ws.str());
 	const TCHAR *c_str = statusMsg.c_str();
 	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+
 	return 0;
 
 }
 
 void StartSegmentation()
 {
+	segmenting = true;
 	segmentationThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&SegThreadMain, 0, 0, &sThreadId);
+}
+
+void InitializeWallSegment()
+{
+	wallVertices.clear();
+	//segIndices[pclSegmenter.coloredSegmentedCloud->points.size()] = {};
+	for (int i = 0; i < pclSegmenter.wallSegmentCloud->points.size(); i++)
+	{
+		wallVertices.push_back(pclSegmenter.wallSegmentCloud->points[i].x);
+		wallVertices.push_back(pclSegmenter.wallSegmentCloud->points[i].y);
+		wallVertices.push_back(pclSegmenter.wallSegmentCloud->points[i].z);
+		wallVertices.push_back(pclSegmenter.wallSegmentCloud->points[i].r / 255.0f);
+		wallVertices.push_back(pclSegmenter.wallSegmentCloud->points[i].g / 255.0f);
+		wallVertices.push_back(pclSegmenter.wallSegmentCloud->points[i].b / 255.0f);
+		//segIndices[i] = i;
+	}
+	//cDebug::DbgOut(L"init.. points: ", (int)pclSegmenter.wallSegmentCloud->points.size());
+	if (!initSegmentVBO)
+	{
+		glGenBuffers(1, &segmentVBO);
+		glGenVertexArrays(1, &segmentVAO);
+		initSegmentVBO = true;
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, segmentVBO);
+	glBufferData(GL_ARRAY_BUFFER, wallVertices.size() * sizeof(float), &wallVertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindVertexArray(segmentVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, segmentVBO);
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)* 6, reinterpret_cast<void*>(0));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float)* 6, reinterpret_cast<void*>(sizeof(float)* 3));
+
+	std::wstringstream ws;
+	ws << L"Showing wall preview ";
+	wstring statusMsg(ws.str());
+	const TCHAR *c_str = statusMsg.c_str();
+	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+	initWallSegment = true;
 }
 
 void InitializeSegments()
@@ -871,6 +947,41 @@ void InitializeSegments()
 	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
 	initColoredSegments = true;
 	pclSegmenter.coloredCloudReady = false;
+}
+
+void RenderWallSegment()
+{
+	SetBackgroundColor(0, 0, 0);
+	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	//if (!openGLWin.initPreview)
+	//	InitializeSegments();
+	int w = openGLWin.glControl.GetViewportWidth();
+	int h = openGLWin.glControl.GetViewportHeight();
+	shaderColor.UseProgram();
+	shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
+	shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
+	glm::mat4 modelMatrix = glm::mat4(1.0);
+
+	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
+
+	glBindVertexArray(segmentVAO);
+	glPointSize(1.5f);
+	glDrawArrays(GL_POINTS, 0, wallVertices.size());
+	glBindVertexArray(0);
+
+	glUseProgram(0);
+
+	glText.PrepareForRender();
+	glText.RenderText(L"Clusters: ", pclSegmenter.GetClusterCount(), 20, -0.98f, 0.85f, 2.0f / w, 2.0f / h);
+
+	//openGLWin.freeCameraControls = true;
+	//if (openGLWin.freeCameraControls)
+	//	glCamera.Update();
+
+	glEnable(GL_DEPTH_TEST);
+
+	//swap buffers to actually display the changes
+	//openGLWin.glControl.SwapBuffers();
 }
 
 void RenderSegments()
@@ -1001,7 +1112,7 @@ void MLS()
 	}
 }*/
 
-void FillHoles()
+void FillHoles(int holeSize)
 {
 	int cnt = 0;
 	int holeCnt = 0;
@@ -1019,7 +1130,7 @@ void FillHoles()
 		}
 		cDebug::DbgOut(L"fill hole #", cnt);
 		(*mI)->ConvertToVCG();
-		holeCnt += (*mI)->FillHoles(openGLWin.holeSize * 100);
+		holeCnt += (*mI)->FillHoles(holeSize * 100);
 		(*mI)->ParseData();
 		(*mI)->UpdateBuffers();
 		numberOfVertices += (*mI)->GetNumberOfVertices();
@@ -1086,19 +1197,44 @@ void CleanMesh()
 }
 #pragma endregion mesh optimizations
 
-void Initialize(LPVOID lpParam)
+void ShowStatusMsg()
+{
+	int w = openGLWin.glControl.GetViewportWidth();
+	int h = openGLWin.glControl.GetViewportHeight();
+	wstring loadString = statusMsg + L"" + dots[floor(dotCount / 100)];
+	float xPos = 0.0f - statusMsg.size()*0.01f;
+	if (dotCount == 299)
+		dotCount = 0;
+	else
+		dotCount++;
+
+	glText.PrepareForRender();
+	glText.RenderText(loadString, 25, xPos, 0.05f, 2.0f / w, 2.0f / h);
+}
+
+void ShowWallMsg()
+{
+	int w = openGLWin.glControl.GetViewportWidth();
+	int h = openGLWin.glControl.GetViewportHeight();
+	wstring wallString = L"Is this (part of) a floor/wall?";
+
+	glText.PrepareForRender();
+	glText.RenderText(wallString, 25, -0.1f, -0.4f, 2.0f / w, 2.0f / h);
+}
+
+void LoadInput()
 {
 	VCGMeshContainer *mesh = new VCGMeshContainer;
 	mesh->SetColorCode(1);
-	
+
 	switch (openGLWin.testMode)
 	{
-	case 0: 
+	case 0:
 		mesh->LoadMesh("data\\models\\output.ply");
 		break;
 	case 1:
 		mesh->LoadMesh("data\\models\\testScene.ply");
-		
+
 		//mesh->LoadMesh("data\\models\\testScene.ply");
 		break;
 	case 2:
@@ -1107,23 +1243,34 @@ void Initialize(LPVOID lpParam)
 	}
 	meshData.push_back(mesh);
 
-	if (!PrepareShaderPrograms())
-	{
-		PostQuitMessage(0);
-		return;
-	}
+	//openGLWin.segmentationMode = REGION_GROWTH_SEGMENTATION;
+	openGLWin.segmentationMode = EUCLIDEAN_SEGMENTATION;
+	openGLWin.previewMode = false;
+	StartSegmentation();
+}
 
+void GenerateBuffers()
+{
 	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		(*mI)->GenerateBOs();
 		numberOfVertices += (*mI)->GetNumberOfVertices();
 		numberOfFaces += (*mI)->GetNumberOfIndices() / 3;
-		
+
 	}
 	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		(*mI)->GenerateVAO();
 
+	}
+}
+
+void Initialize(LPVOID lpParam)
+{
+	if (!PrepareShaderPrograms())
+	{
+		PostQuitMessage(0);
+		return;
 	}
 	
 	glEnable(GL_DEPTH_TEST);
@@ -1138,17 +1285,21 @@ void Initialize(LPVOID lpParam)
 
 void Render(LPVOID lpParam)
 {
+	//quit window/thread
+	if (Keys::GetKeyStateOnce(VK_ESCAPE))
+		PostQuitMessage(0);
+	//toggle wireframe mode
+	if (Keys::GetKeyStateOnce(VK_F10))
+	{
+		ToggleDebugControls();
+	}
 	//clear window
 	glClearColor(bgRed, bgGreen, bgBlue, 1.0f);
 	glClearDepth(1.0);
 
 	int w = openGLWin.glControl.GetViewportWidth();
 	int h = openGLWin.glControl.GetViewportHeight();
-
-	// Typecast lpParam to OpenGLControl pointer
-	OpenGLControl* oglControl = (OpenGLControl*)lpParam;
-	oglControl->ResizeOpenGLViewportFull(w, h);
-	
+	openGLWin.glControl.ResizeOpenGLViewportFull(w, h);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (wireFrameMode && !showColoredSegments)
@@ -1156,10 +1307,54 @@ void Render(LPVOID lpParam)
 	else 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+	if (openGLWin.wallSelection)
+	{
+		if (!initWallSegment)
+			InitializeWallSegment();
+		//statusMsg = L"Is this a wall?";
+		
+		if (initWallSegment)
+		{
+			RenderWallSegment();
+		}
+		//ShowWallMsg();
+		openGLWin.glControl.SwapBuffers();
+		return;
+	}
+	else if (initWallSegment)
+	{
+		initWallSegment = false;
+		openGLWin.freeCameraControls = false;
+	}
+
+	if (!initialLoading)
+	{
+		if (meshData.size() == 0)
+		{
+			ShowStatusMsg();
+			openGLWin.glControl.SwapBuffers();
+			return;
+		}
+		else if (!initialLoading)
+		{
+			GenerateBuffers();
+			initialLoading = true;
+		}
+	}
+
 	//START SEGMENT
 	if (segFinished)
 	{
+		//cDebug::DbgOut(L"finished?", 1);
+		segmenting = false;
 		LoadClusterData();
+	}
+	if (segmenting)
+	{
+		//cDebug::DbgOut(L"segmenting", 1);
+		ShowStatusMsg();
+		openGLWin.glControl.SwapBuffers();
+		return;
 	}
 
 	if (showColoredSegments)
@@ -1232,7 +1427,7 @@ void Render(LPVOID lpParam)
 
 	//render info text on screen
 	glText.PrepareForRender();
-	glText.RenderText(L"FPS: ", oglControl->GetFPS(), 20, -0.98f, 0.85f, 2.0f / w, 2.0f / h);
+	glText.RenderText(L"FPS: ", openGLWin.glControl.GetFPS(), 20, -0.98f, 0.85f, 2.0f / w, 2.0f / h);
 	glText.RenderText(L"Meshs: ", meshData.size(), 15, -0.98f, 0.75f, 2.0f / w, 2.0f / h);
 	glText.RenderText(L"Verts: ", numberOfVertices, 15, -0.98f, 0.70f, 2.0f / w, 2.0f / h);
 	glText.RenderText(L"Faces: ", numberOfFaces, 15, -0.98f, 0.65f, 2.0f / w, 2.0f / h);
@@ -1241,10 +1436,7 @@ void Render(LPVOID lpParam)
 
 	//handle keyboard input
 
-	//quit window/thread
-	if (Keys::GetKeyStateOnce(VK_ESCAPE))
-		PostQuitMessage(0);
-
+	
 	//toggle show bounding box mode
 	if (Keys::GetKeyStateOnce('B'))
 		ToggleBoundingBoxes();
@@ -1253,6 +1445,7 @@ void Render(LPVOID lpParam)
 	if (Keys::GetKeyStateOnce('Q'))
 		ToggleWireFrame();
 
+	
 	//save combined mesh
 	if (Keys::GetKeyStateOnce('L'))
 	{
@@ -1266,7 +1459,7 @@ void Render(LPVOID lpParam)
 	glEnable(GL_DEPTH_TEST);
 
 	//swap buffers to actually display the changes
-	oglControl->SwapBuffers();
+	openGLWin.glControl.SwapBuffers();
 }
 
 void Release(LPVOID lpParam)

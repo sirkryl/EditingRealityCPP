@@ -22,6 +22,11 @@
 #define MIN_CARRYDISTANCE 1
 #define MAX_CARRYDISTANCE 20
 
+#define IDD_INTERACTION                 2202
+#define IDD_OPENGL                      137
+#define IDB_BUTTON                      141
+#define IDD_DEBUG                       143
+
 #define IDC_CHECK_SHOWBB                1093
 #define IDC_CHECK_WIREFRAME             1094
 #define IDC_CHECK_RG_ESTIMATENORMALS    1107
@@ -44,6 +49,9 @@
 #define IDC_BUTTON_MLS                  1113
 #define IDC_BUTTON_REMOVESEGMENTS       1114
 #define IDC_BUTTON_CLEANMESH            1117
+#define IDC_BUTTON_YES                  9876
+#define IDC_BUTTON_NO                   9877
+
 
 #define IDC_EDIT_BACKGROUND_RED         1067
 #define IDC_EDIT_BACKGROUND_GREEN       1071
@@ -76,6 +84,7 @@
 #define IDC_TEXT_RG_NON                 1083
 #define IDC_TEXT_RG_SMOOTHNESS          1084
 #define IDC_TEXT_RG_CURVATURE           1085
+#define IDC_STATIC_WALL                 1125
 
 //text descriptions for rg slider values
 #define IDC_TEXT                        1086

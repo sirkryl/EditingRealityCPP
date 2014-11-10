@@ -2,12 +2,15 @@
 #include "PCLProcessing.h"
 #include "openGLWin.h"
 #include <pcl/filters/extract_indices.h>
+#include <pcl/filters/passthrough.h>
 //#include <pcl/filters/voxel_grid.h>
 #include "resource.h"
 //#include <pcl/kdtree/kdtree_flann.h>
 //#include <pcl/surface/mls.h>
 #include <unordered_set>
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/common/common.h>
+#include <pcl/segmentation/organized_multi_plane_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 //#include <pcl/surface/gp3.h>
 #include <pcl/ModelCoefficients.h>
@@ -16,6 +19,7 @@
 //#include <pcl/visualization/cloud_viewer.h>
 #include <pcl/segmentation/region_growing.h>
 //#include <pcl/surface/poisson.h>
+#include <pcl/segmentation/conditional_euclidean_clustering.h>
 #include <pcl/features/normal_3d.h>
 //#include <pcl/sample_consensus/method_types.h>
 //#include <pcl/sample_consensus/model_types.h>
@@ -31,6 +35,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudWithoutPlane(new pcl::PointCloud<pcl
 pcl::PointCloud<pcl::Normal>::Ptr cloudWithoutPlaneNormals(new pcl::PointCloud <pcl::Normal>);
 std::vector<pcl::PointIndices::Ptr > cloudWithoutPlaneIndices;
 
+glm::vec3 minPlane(999.0f, 999.0f, 999.0f);
+glm::vec3 maxPlane(-999.0f, -999.0f, -999.0f);
 
 std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr> clusteredClouds;
 std::vector<std::vector<int>> clusteredIndices;
@@ -40,7 +46,7 @@ unordered_map<float, vector<float>> vertexMap;
 
 
 bool PCLProcessor::PlaneSegmentation() {
-	cDebug::DbgOut(L"PLane segmentation! ", 0);
+
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_f(new pcl::PointCloud<pcl::PointXYZRGB>);
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr inlierPoints(new pcl::PointCloud<pcl::PointXYZRGB>);
 	pcl::copyPointCloud(*mainCloud, *cloud_f);
@@ -50,35 +56,60 @@ bool PCLProcessor::PlaneSegmentation() {
 	pcl::PointIndices::Ptr allWallSegmentIndices (new pcl::PointIndices);
 	pcl::PointIndices::Ptr confirmedWallSegmentIndices(new pcl::PointIndices);
 	pcl::PointIndices::Ptr planeSegmentationIndices(new pcl::PointIndices);
+	Eigen::Vector3f segAxis(1, 0, 0);
+	
+	int axisCnt = 0;
 	while (true)
 	{
-	
+		//pcl::search::KdTree<pcl::PointXYZRGB>::Ptr	search(new pcl::search::KdTree<pcl::PointXYZRGB>);
 		// Object for storing the plane model coefficients.
 		pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
 		// Create the segmentation object.
 		pcl::SACSegmentationFromNormals<pcl::PointXYZRGB, pcl::Normal> segmentation;
+		//search->setInputCloud(cloud_f);
 		segmentation.setInputCloud(cloud_f);
 		segmentation.setInputNormals(normals);
+		segmentation.setProbability(0.99);
+		segmentation.setMaxIterations(300);
 		if (planeSegmentationIndices->indices.size() > 0)
 			segmentation.setIndices(planeSegmentationIndices);
-		segmentation.setNormalDistanceWeight(0.02);
-		segmentation.setEpsAngle(0.09);
+		//segmentation.setSamplesMaxDist(0.005, search);
+		segmentation.setAxis(segAxis);
+		segmentation.setNormalDistanceWeight(0.5);
+		segmentation.setEpsAngle(10.0f * (M_PI / 180.0f));
 		// Configure the object to look for a plane.
-		segmentation.setModelType(pcl::SACMODEL_NORMAL_PLANE);
+		segmentation.setModelType(pcl::SACMODEL_NORMAL_PARALLEL_PLANE);// SACMODEL_NORMAL_PLANE);
 		// Use RANSAC method.
 	
 		segmentation.setMethodType(pcl::SAC_RANSAC);
 		// Set the maximum allowed distance to the model.
-		segmentation.setDistanceThreshold(0.05);
+		segmentation.setDistanceThreshold(0.1);
 		// Enable model coefficient refinement (optional).
 		segmentation.setOptimizeCoefficients(true);
 		pcl::PointIndices::Ptr inlierIndices(new pcl::PointIndices);
 		segmentation.segment(*inlierIndices, *coefficients);
-
-		if (inlierIndices->indices.size() <= mainCloud->points.size()/20)
+		
+		statusMsg = L"Trying to detect planes";
+		if (inlierIndices->indices.size() <= mainCloud->points.size()/30)
 		{
-			cDebug::DbgOut(L"too few ", (int)inlierIndices->indices.size());
-			break;
+			if (axisCnt == 0)
+			{
+				segAxis = Eigen::Vector3f(0, 1, 0);
+				axisCnt++;
+				continue;
+			}
+			else if (axisCnt == 1)
+			{
+				segAxis = Eigen::Vector3f(0, 0, 1);
+				axisCnt++;
+				continue;
+			}
+			else if (axisCnt == 2)
+			{
+			
+				cDebug::DbgOut(L"break", 1);
+				break;
+			}
 		}
 			
 
@@ -106,16 +137,19 @@ bool PCLProcessor::PlaneSegmentation() {
 		PV2->setBackgroundColor(0, 0, 0);
 		PV2->addPointCloud(inlierPoints, "Plane Windows 2");
 		PV2->registerKeyboardCallback(&PCLProcessor::KeyDown, *this);
-		PV2->addText("Is this (part of) a floor/wall? (Y/N)", 250, 30, 20,1,1,1);
-		while (!PV2->wasStopped())
+		PV2->addText("Is this (part of) a floor/wall? (Y/N)", 250, 30, 20,1,1,1);*/
+		
+		wallSegmentCloud = inlierPoints;
+		openGLWin.InitWallConfirmation();
+		while (openGLWin.wallSelection)
 		{
-			if (closeViewer)
-				break;
-			PV2->spinOnce(100);
+			//if (!openGLWin.wallSelection)
+			//	break;
+			//PV2->spinOnce(100);
 			boost::this_thread::sleep(boost::posix_time::microseconds(100000));
-		}*/
-		isWall = true;
-		closeViewer = false;
+		}
+		wallSegmentCloud->clear();
+		//closeViewer = false;
 
 		for (int i = 0; i < inlierIndices->indices.size(); i++)
 		{
@@ -134,7 +168,7 @@ bool PCLProcessor::PlaneSegmentation() {
 		//pcl::copyPointCloud(*cloud_f, *cloudWithoutPlane);
 		planeSegmentationIndices = testIndices;
 
-		if (isWall)
+		if (openGLWin.isWall)
 		{
 			pcl::PointIndices::Ptr newIndices(new pcl::PointIndices);
 			for (int i = 0; i < inlierIndices->indices.size(); i++)
@@ -149,6 +183,57 @@ bool PCLProcessor::PlaneSegmentation() {
 			extract.setNegative(true);
 			extract.filter(*cloudWithoutPlane);
 
+			//experimental 
+			//delete outliers (vertices behind wall)
+			Eigen::Vector4f centroid;
+			pcl::compute3DCentroid(*inlierPoints, centroid);
+			pcl::PointXYZRGB min;
+			pcl::PointXYZRGB max;
+			if (axisCnt == 0)
+			{
+				pcl::getMinMax3D(*inlierPoints, min, max);
+				if (centroid.x() < 0)
+					minPlane.x = min.x;
+				else
+					maxPlane.x = max.x;
+			}
+			else if (axisCnt == 1)
+			{
+				pcl::getMinMax3D(*inlierPoints, min, max);
+				if (centroid.y() < 0)
+				{
+					minPlane.y = min.y;
+				}
+				else
+					maxPlane.y = max.y;
+			}
+			else if (axisCnt == 2)
+			{
+				pcl::getMinMax3D(*inlierPoints, min, max);
+				if (centroid.z() < 0)
+					minPlane.z = min.z;
+				else
+					maxPlane.z = max.z;
+			}
+			pcl::PointCloud<pcl::PointXYZRGB>::Ptr testCloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+			pcl::PassThrough<pcl::PointXYZRGB> pass;
+			pass.setInputCloud(cloudWithoutPlane);
+			pass.setFilterFieldName("y");
+			cDebug::DbgOut(L"minPlane y", minPlane.y);
+			pass.setFilterLimits(minPlane.y, 999.0);
+			//pass.setFilterLimitsNegative (true);
+			pass.filter(*testCloud);
+			//experimental end
+
+			/*boost::shared_ptr<pcl::visualization::PCLVisualizer> PV(new pcl::visualization::PCLVisualizer("Plane Viewer"));
+			PV->setBackgroundColor(0, 0, 0);
+			PV->addPointCloud(testCloud, "Plane Windows");
+			while (!PV->wasStopped())
+			{
+			PV->spinOnce(100);
+			boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+			}*/
+
 			if (cloudWithoutPlaneIndices.size() == 0)
 				cloudWithoutPlaneIndices.push_back(newIndices);
 			else
@@ -156,9 +241,9 @@ bool PCLProcessor::PlaneSegmentation() {
 
 			planeCoefficients.push_back(coefficients);
 			planeCloudIndices.push_back(inlierIndices);
-		}
 
-		
+			
+		}
 
 
 		//extract.setNegative(true);
@@ -198,6 +283,13 @@ bool PCLProcessor::PlaneSegmentation() {
 		PV2->spinOnce(100);
 		boost::this_thread::sleep(boost::posix_time::microseconds(100000));
 	}*/
+
+	
+
+
+
+
+
 
 	isPlaneSegmented = true;
 
@@ -426,6 +518,7 @@ bool PCLProcessor::RegionGrowingSegmentation() {
 	LARGE_INTEGER frequency;        // ticks per second
 	LARGE_INTEGER t1, t2;           // ticks
 	double elapsedTime;
+
 	pcl::PointCloud <pcl::Normal>::Ptr estNormals(new pcl::PointCloud <pcl::Normal>);
 	if (openGLWin.estimateNormals)
 	{
@@ -501,7 +594,6 @@ bool PCLProcessor::RegionGrowingSegmentation() {
 	//	boost::this_thread::sleep(boost::posix_time::microseconds(100000));
 	//}
 	reg.setSmoothnessThreshold((openGLWin.smoothnessThreshold / 10.0) / 180.0 * M_PI);
-	
 	reg.setCurvatureThreshold((openGLWin.curvatureThreshold / 10.0));
 	cDebug::DbgOut(L"Smoothness: " + std::to_wstring(reg.getSmoothnessThreshold()));
 	cDebug::DbgOut(L"Curvature: " + std::to_wstring(reg.getCurvatureThreshold()));
@@ -521,50 +613,120 @@ bool PCLProcessor::RegionGrowingSegmentation() {
 
 }
 
+bool
+EnforceCurvatureOrColor(const pcl::PointXYZRGBNormal& point_a, const pcl::PointXYZRGBNormal& point_b, float squared_distance)
+{
+	Eigen::Map<const Eigen::Vector3f> point_a_normal = point_a.normal, point_b_normal = point_b.normal;
+	if ((abs(point_a.r - point_b.r) < 10 && abs(point_a.g - point_b.g) < 10 && abs(point_a.b - point_b.b) < 10)
+		|| fabs(point_a_normal.dot(point_b_normal)) < 0.05)
+		return (true);
+	return (false);
+}
+
 bool PCLProcessor::EuclideanSegmentation() {
-	// Creating the KdTree object for the search method of the extraction
-	pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>);
-	tree->setInputCloud(mainCloud);
+	pcl::search::Search<pcl::PointXYZRGB>::Ptr tree = boost::shared_ptr<pcl::search::Search<pcl::PointXYZRGB> >(new pcl::search::KdTree<pcl::PointXYZRGB>);
 
-	std::vector<pcl::PointIndices> cluster_indices;
-	pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
-	ec.setClusterTolerance(0.05); // 2cm
-	ec.setMinClusterSize(300);
-	ec.setMaxClusterSize(5000000);
-	ec.setSearchMethod(tree);
-	ec.setInputCloud(mainCloud);
-	ec.extract(cluster_indices);
-	int j = 0;
-
-	clusterCount = cluster_indices.size();
-	//clusteredclouds = new pcl::PointCloud<pcl::PointXYZRGB>::Ptr[clusterCount];
-	//clusteredcloudsindices.resize(clusterCount);
-
-	for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin(); it != cluster_indices.end(); ++it)
+	LARGE_INTEGER frequency;        // ticks per second
+	LARGE_INTEGER t1, t2;           // ticks
+	double elapsedTime;
+	pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr mainCloudWithNormals(new pcl::PointCloud<pcl::PointXYZRGBNormal>);
+	pcl::copyPointCloud(*mainCloud, *mainCloudWithNormals);
+	for (int i = 0; i < mainCloudWithNormals->points.size(); i++)
 	{
-		std::vector<int> *tmpClusterIndices(new vector<int>);
+		mainCloudWithNormals->points[i].normal_x = normals->points[i].normal_x;
+		mainCloudWithNormals->points[i].normal_y = normals->points[i].normal_y;
+		mainCloudWithNormals->points[i].normal_z = normals->points[i].normal_z;
+	}
+	pcl::PointCloud <pcl::Normal>::Ptr estNormals(new pcl::PointCloud <pcl::Normal>);
+	if (openGLWin.estimateNormals)
+	{
+		std::wstringstream ws;
+		ws << L"Estimating normals... ";
+		wstring statusMsg(ws.str());
+		const TCHAR *c_str = statusMsg.c_str();
+		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+
+		QueryPerformanceFrequency(&frequency);
+		QueryPerformanceCounter(&t1);
+		QueryPerformanceCounter(&t2);
+		pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> normal_estimator;
+		normal_estimator.setSearchMethod(tree);
+		//if (cloudWithoutPlane->empty())
+		normal_estimator.setInputCloud(mainCloud);
+		//else
+		//	normal_estimator.setInputCloud(cloudWithoutPlane);
+		if (cloudWithoutPlaneIndices.size() > 0)
+			normal_estimator.setIndices(cloudWithoutPlaneIndices[0]);
+		normal_estimator.setKSearch(openGLWin.kSearchValue);
+		//normal_estimator.setRadiusSearch(0.01);
+		normal_estimator.compute(*estNormals);
+
+		QueryPerformanceCounter(&t2);
+		elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
+		cDebug::DbgOut(L"Normal estimation in ", elapsedTime);
+	}
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&t1);
+	QueryPerformanceCounter(&t2);
+	//std::vector<pcl::PointIndices> cluster_indices;
+	segmentedClusterIndices.clear();
+
+	std::wstringstream ws;
+	ws << L"Processing segmentation... ";
+	wstring statusMsg(ws.str());
+	const TCHAR *c_str = statusMsg.c_str();
+	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+
+	//pcl::ConditionalEuclideanClustering<pcl::PointXYZRGBNormal> ec;
+	pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
+	//ec.setConditionFunction(&EnforceCurvatureOrColor);
+	ec.setClusterTolerance(0.01); // 2cm
+	ec.setMinClusterSize(100);
+	ec.setMaxClusterSize(9000000);
+	//ec.setSearchMethod(tree);
+	ec.setInputCloud(mainCloud);
+	if (cloudWithoutPlaneIndices.size() > 0)
+		ec.setIndices(cloudWithoutPlaneIndices[0]);
+	ec.extract(segmentedClusterIndices);
+
+	clusterCount = segmentedClusterIndices.size() + planeCloudIndices.size();
+	QueryPerformanceCounter(&t2);
+	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
+	cDebug::DbgOut(L"Euclidean clustering in ", elapsedTime);
+	
+	boost::shared_ptr<pcl::visualization::PCLVisualizer> PV(new pcl::visualization::PCLVisualizer("Normals Viewer"));
+	PV->setBackgroundColor(0, 0, 0);
+	
+	int cnt = 1;
+	for (std::vector<pcl::PointIndices>::const_iterator it = segmentedClusterIndices.begin(); it != segmentedClusterIndices.end(); ++it)
+	{
 		pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZRGB>);
-
-
-		for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end(); pit++) {
+		for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end(); pit++)
+		{
 			cloud_cluster->points.push_back(mainCloud->points[*pit]); //*
-			//clusteredcloudsindices[j].push_back(*pit);
-			//tmpClusterIndices->push_back(*pit);
 		}
-		//clusteredIndices.push_back(*tmpClusterIndices);
+		for (int i = 0; i < cloud_cluster->points.size(); i++)
+		{
+			cloud_cluster->points[i].r = min(15 * cnt, 255);
+			cloud_cluster->points[i].g = max(255 - 15 * cnt, 15);
+			cloud_cluster->points[i].b = min(0 + 15 * cnt, 15);
+		}
 		cloud_cluster->width = cloud_cluster->points.size();
 		cloud_cluster->height = 1;
 		cloud_cluster->is_dense = true;
-
-		// std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
-
-		CalculateIndicesForCluster(cloud_cluster);
-		clusteredClouds.push_back(cloud_cluster);
-		//clusteredclouds[j] = cloud_cluster;
-
-		j++;
+		//pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGB> single_color(cloud_cluster, fminf(15 * cnt, 255), fmaxf(255 - 25 * cnt, 15), fmaxf(125 - 5 * cnt, 15));
+		PV->addPointCloud(cloud_cluster, "sample"+cnt);
+		cnt++;
+		cDebug::DbgOut(L"cnt: ", cnt);
 	}
+	 while (!PV->wasStopped())
+	{
+			PV->spinOnce(100);
+		boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+}
 
+	//pcl::PointCloud <pcl::PointXYZRGB>::Ptr colored_cloud = reg.getColoredCloud();
+	//ShowViewer();
 	return true;
 }
 
@@ -663,9 +825,14 @@ bool PCLProcessor::ConvertToCloud(std::vector<float> startingVertices, std::vect
 				ws << L"Converting mesh to point cloud... ";
 				ws << percent;
 				ws << L"%";
-				wstring statusMsg(ws.str());
-				const TCHAR *c_str = statusMsg.c_str();
+				wstring statusBarMsg(ws.str());
+				const TCHAR *c_str = statusBarMsg.c_str();
 				SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+				wstringstream strs;
+				strs << percent;
+				statusMsg = L"Converting mesh to point cloud (";
+				statusMsg.append(strs.str());
+				statusMsg.append(L"%)");
 			}
 
 		}
@@ -683,7 +850,7 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<float> al
 	if (cluster->empty()) {
 		return false;
 	}
-
+	clusterIndexCount = 0;
 	//init clusterCount for progress display
 	if (clusterIndexCount == 0)
 	{
@@ -892,16 +1059,19 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<float> al
 		{
 			int percent = (((float)procIndexCount / (float)clusterIndexCount) * 100.0f);
 			std::wstringstream ws;
-			ws << L"Converting cloud to triangle mesh... ";
+			ws << L"Converting cloud to triangle mesh ( ";
 			ws << percent;
-			ws << L"% (";
+			ws << L"% ";
 			ws << clusterIndex + 1;
 			ws << L" of ";
 			ws << clusteredClouds.size();
 			ws << L")";
-			wstring statusMsg(ws.str());
-			const TCHAR *c_str = statusMsg.c_str();
+			wstring statusBarMsg(ws.str());
+			const TCHAR *c_str = statusBarMsg.c_str();
 			SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+
+			statusMsg = L"";
+			statusMsg.append(ws.str());
 		}
 
 	}

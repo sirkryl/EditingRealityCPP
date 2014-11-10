@@ -13,6 +13,7 @@ public:
 	bool RegionGrowingSegmentation();
 	//bool DifferenceOfNormalsSegmentation();
 	pcl::PointCloud <pcl::PointXYZRGB>::ConstPtr coloredSegmentedCloud;
+	pcl::PointCloud <pcl::PointXYZRGB>::Ptr wallSegmentCloud;
 	bool ConvertToCloud(std::vector<float> startingVertices, std::vector<GLuint> startingIndices, std::vector<float> startingNormals);
 	bool ConvertToTriangleMesh(int clusterIndex, std::vector<float> allVertices, std::vector<float> &vertices, std::vector<GLuint> &indices);
 	//bool ConvertPlaneToTriangleMesh(int clusterIndex, std::vector<float> allVertices, std::vector<float> &vertices, std::vector<GLuint> &indices);
@@ -39,7 +40,7 @@ private:
 	bool isWall = false;
 	std::vector<pcl::PointIndices> segmentedClusterIndices;
 	std::vector<pcl::PointIndices::Ptr> planeCloudIndices;
-	
+	//bool EnforceCurvatureOrColor(const pcl::PointXYZRGB& point_a, const pcl::PointXYZRGB& point_b, float squared_distance);
 	void KeyDown(const pcl::visualization::KeyboardEvent &keyEvent, void* viewer_void);
 	std::vector<int> CalculateIndicesForCluster(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud);
 	bool CompareTwoPoints(pcl::PointXYZRGB &ptA, pcl::PointXYZRGB &ptB);
