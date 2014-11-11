@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="KinectFusionExplorer.cpp" />
+    <ClCompile Include="ImageRenderer.cpp">
+      <Filter>KinectFusion</Filter>
+    </ClCompile>
+    <ClCompile Include="KinectFusionHelper.cpp">
+      <Filter>KinectFusion</Filter>
+    </ClCompile>
+    <ClCompile Include="KinectFusionProcessor.cpp">
+      <Filter>KinectFusion</Filter>
+    </ClCompile>
+    <ClCompile Include="KinectFusionProcessorFrame.cpp">
+      <Filter>KinectFusion</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>KinectFusion</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ImageRenderer.h">
+      <Filter>KinectFusion</Filter>
+    </ClInclude>
+    <ClInclude Include="KinectFusionExplorer.h">
+      <Filter>KinectFusion</Filter>
+    </ClInclude>
+    <ClInclude Include="KinectFusionHelper.h">
+      <Filter>KinectFusion</Filter>
+    </ClInclude>
+    <ClInclude Include="KinectFusionParams.h">
+      <Filter>KinectFusion</Filter>
+    </ClInclude>
+    <ClInclude Include="KinectFusionProcessor.h">
+      <Filter>KinectFusion</Filter>
+    </ClInclude>
+    <ClInclude Include="KinectFusionProcessorFrame.h">
+      <Filter>KinectFusion</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>KinectFusion</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>KinectFusion</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>KinectFusion</Filter>
+    </ClInclude>
+    <ClInclude Include="NuiSensorChooserUIResource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\NuiSensorChooser\Images\Allset.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="..\NuiSensorChooser\Images\AllsetBig.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="..\NuiSensorChooser\Images\Error.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="..\NuiSensorChooser\Images\ErrorBig.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="..\NuiSensorChooser\Images\Listening.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="..\NuiSensorChooser\Images\Initializing.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="..\NuiSensorChooser\Images\InitializingBig.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="..\NuiSensorChooser\Images\ListeningBig.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="..\NuiSensorChooser\Images\NoAvailableSensor.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="..\NuiSensorChooser\Images\NoAvailableSensorBig.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="..\NuiSensorChooser\Images\Refresh.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="..\NuiSensorChooser\Images\RefreshClick.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="..\NuiSensorChooser\Images\RefreshOver.bmp">
+      <Filter>External Images</Filter>
+    </None>
+    <None Include="app.ico">
+      <Filter>KinectFusion</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="External Images">
+      <UniqueIdentifier>{697541a1-dc73-475f-87f9-7062382ec036}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header">
+      <UniqueIdentifier>{4a8a765c-9a07-4452-b933-24dee18fb7a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{f311bace-9c94-4f63-9053-6130edab495d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KinectFusion">
+      <UniqueIdentifier>{a1c50c56-a62d-406d-9410-07166ed0ab62}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Images\Allset.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="Images\AllsetBig.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="Images\Error.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="Images\ErrorBig.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="Images\Initializing.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="Images\InitializingBig.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="Images\Listening.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="Images\ListeningBig.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="Images\NoAvailableSensor.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="Images\NoAvailableSensorBig.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="Images\Refresh.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="Images\RefreshClick.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="Images\RefreshOver.bmp">
+      <Filter>KinectFusion</Filter>
+    </Image>
+    <Image Include="images\icon1.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="KinectFusionExplorer-D2D.rc">
+      <Filter>KinectFusion</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
