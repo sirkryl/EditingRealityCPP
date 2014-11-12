@@ -106,5 +106,5 @@ void OpenGLText::CleanUp()
 	glDeleteTextures(1, &fontTexture);
 	glDeleteSamplers(1, &fontSampler);
 	glDeleteBuffers(1, &fontVBO);
-	glDeleteVertexArrays(1, &fontVBO);
+	glDeleteVertexArrays(1, &fontVAO);
 }

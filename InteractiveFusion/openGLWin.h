@@ -4,11 +4,15 @@
 class OpenGLWin
 {
 public:
+	enum Mode { Scanning, Interaction };
+
+	Mode mode;
 	HWND parent;
+	HWND fusionHandle;
 	HWND glWindowHandle;
 	HWND glWindowParent;
 	OpenGLControl glControl;
-	//KinectFusionProcessor* processor;
+	KinectFusionProcessor* processor;
 	HANDLE interactionThread;
 
 	//test mode flag
@@ -55,6 +59,7 @@ public:
 	
 	//window related methods
 	bool CreateOpenGLWindow();
+	void ReleaseOpenGL();
 	void ShutdownWindow();
 	LPCWSTR GetLastErrorStdStr();
 
@@ -71,20 +76,21 @@ public:
 
 	//thread related methods
 	//bool StartOpenGLThread(HWND parentWin, HINSTANCE currHInstance, KinectFusionProcessor* proc);
-	bool StartOpenGLThread(HWND parentWin, HINSTANCE currHInstance);
+	
 	void TerminateThread();
 	DWORD GetThreadID();
-
+	HINSTANCE appInstance;
+	DWORD threadId;
 private:
 	//application variables
-	HINSTANCE appInstance;
+	
 
 	//fps related variables
 	clock_t tLastFrame;
 	float fFrameInterval;
 
 	//thread related variables
-	DWORD threadId;
+	
 
 	
 };
@@ -141,3 +147,5 @@ void Initialize(LPVOID);
 void Render(LPVOID);
 void Release(LPVOID);
 
+void StartOpenGLThread(KinectFusionProcessor* proc, int testMode);
+void CleanUp();

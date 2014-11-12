@@ -1,13 +1,13 @@
 #pragma once
 #include "common.h"
-//#include <KinectFusionProcessor.h>
+#include <KinectFusionProcessor.h>
 
 class OpenGLControl
 {
 public:
 	bool InitOpenGL(HINSTANCE hInstance, HWND* a_hWnd, int iMajorVersion, int iMinorVersion, void(*a_ptrInitScene)(LPVOID), void
-		(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), LPVOID lpParam);
-		//(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), KinectFusionProcessor* proc, LPVOID lpParam);
+		(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), KinectFusionProcessor* proc, LPVOID lpParam);
+		//(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), LPVOID lpParam);
 	
 	void ResizeOpenGLViewportFull(int width, int height);
 	void SetProjection3D(float fFOV, float fAspectRatio, float fNear, float fFar);
@@ -46,7 +46,7 @@ private:
 	HDC hDC;
 	HWND* hWnd;
 	HGLRC hRC;
-	//KinectFusionProcessor* processor;
+	KinectFusionProcessor* processor;
 	static bool bClassRegistered;
 	static bool bGlewInitialized;
 	int iMajorVersion, iMinorVersion;

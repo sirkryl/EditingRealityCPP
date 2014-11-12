@@ -7,6 +7,7 @@
 #include "openGLWin.h"
 #include "PCLProcessing.h"
 #include <boost/timer.hpp>
+#include <boost/ptr_container/ptr_vector.hpp>
 #include "Resource.h"
 #include "vcgMesh.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -23,6 +24,7 @@ bool previewThreadActive = false;
 bool initialLoading = false;
 wstring statusMsg = L"";
 //mesh storage
+//std::vector<VCGMeshContainer*> meshData;
 std::vector<VCGMeshContainer*> meshData;
 std::vector<VCGMeshContainer*> meshData_segTmp;
 
@@ -58,7 +60,7 @@ glm::vec3 nearPoint;
 
 
 //background color
-float bgRed = 0.0f; 
+float bgRed = 0.0f;
 float bgGreen = 0.0f;
 float bgBlue = 0.0f;
 
@@ -211,7 +213,7 @@ void RayCast(glm::vec3* v1, glm::vec3* v2)
 		if (!firstRayCast)
 			firstRayCast = true;
 	}
-	
+
 }
 
 void GetRayOrientation(glm::vec3 v1, glm::vec3 v2, glm::vec3 normal, std::vector<int> &orientation)
@@ -234,7 +236,7 @@ void GetRayOrientation(glm::vec3 v1, glm::vec3 v2, glm::vec3 normal, std::vector
 	//else if (normal.y < -0.5f)
 	//	orientation[1] = -1;
 	//else
-		orientation[1] = 1;
+	orientation[1] = 1;
 
 	if (abs(normal.x) > 0.5f)
 	{
@@ -253,6 +255,7 @@ void DeleteMesh(int index)
 	numberOfVertices -= meshData[index]->GetNumberOfVertices();
 	numberOfFaces -= meshData[index]->GetNumberOfIndices();
 	meshData[index]->ClearMesh();
+	delete meshData[index];
 	meshData.erase(std::remove(meshData.begin(), meshData.end(), meshData[index]), meshData.end());
 }
 
@@ -294,15 +297,15 @@ bool PlacingPreview()
 			RayCast(&v1, &v2);
 			glm::vec3 tmpPoint;
 			std::vector<int> orientation = meshData[tmpIndex - 1]->GetOrientation();
-			
-			
-			meshData[tmpIndex - 1]->GetHitPoint(v1, v2, tmpPoint, tmpNormal,snapToVertex);
+
+
+			meshData[tmpIndex - 1]->GetHitPoint(v1, v2, tmpPoint, tmpNormal, snapToVertex);
 			GetRayOrientation(v1, v2, tmpNormal, orientation);
 			hitPoint = tmpPoint;
 			/*if (tmpPoint.z <= hitPoint.z || previewIndex == tmpIndex)
 			{
-				hitPoint = tmpPoint;
-				previewIndex = tmpIndex;
+			hitPoint = tmpPoint;
+			previewIndex = tmpIndex;
 			}*/
 			meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint, orientation);
 			meshData[selectedIndex - 1]->TogglePreviewSelection(true);
@@ -326,7 +329,7 @@ bool PlacingPreview()
 			if (index != selectedIndex - 1)
 			{
 				glm::vec3 tmpHit;
-				
+
 				if ((*mI)->GetHitPoint(v1, v2, tmpHit, tmpNormal, snapToVertex))
 				{
 					//float cMaxZ = (*mI)->GetUpperBounds().z;
@@ -363,72 +366,72 @@ void ProcessSelectedObject()
 {
 	//while (previewThreadActive)
 	//{
-		//cDebug::DbgOut(L"ahoi", 1);
-		//boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-		if (!PlacingPreview())
-		{
-			meshData[selectedIndex - 1]->TogglePreviewSelection(false);
-			
-			glm::vec3 v1, v2;
-			RayCast(&v1, &v2);
-			meshData[selectedIndex - 1]->AttachToCursor(v1, v2, openGLWin.carryDistance);
-		}
-		if (Keys::GetKeyState(VK_DELETE))
-		{
-			DeleteMesh(selectedIndex-1);
-			selectedIndex = -1;
-			cDebug::DbgOut(L"pressed ENTF alright");
-		}
-		if (Keys::GetKeyState('X'))
-		{
-			//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
-			if (openGLWin.wheelDelta < 0)
-			{
-				meshData[selectedIndex - 1]->SetAngleX(false);
-			}
-			else if (openGLWin.wheelDelta > 0)
-			{
-				meshData[selectedIndex - 1]->SetAngleX(true);
-			}
-		}
-		if (Keys::GetKeyState('Y'))
-		{
-			//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
-			if (openGLWin.wheelDelta < 0)
-			{
-				meshData[selectedIndex - 1]->SetAngleY(false);
-			}
-			else if (openGLWin.wheelDelta > 0)
-			{
-				meshData[selectedIndex - 1]->SetAngleY(true);
-			}
+	//cDebug::DbgOut(L"ahoi", 1);
+	//boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+	if (!PlacingPreview())
+	{
+		meshData[selectedIndex - 1]->TogglePreviewSelection(false);
 
-		}
-		if (Keys::GetKeyState('Z'))
+		glm::vec3 v1, v2;
+		RayCast(&v1, &v2);
+		meshData[selectedIndex - 1]->AttachToCursor(v1, v2, openGLWin.carryDistance);
+	}
+	if (Keys::GetKeyState(VK_DELETE))
+	{
+		DeleteMesh(selectedIndex - 1);
+		selectedIndex = -1;
+		cDebug::DbgOut(L"pressed ENTF alright");
+	}
+	if (Keys::GetKeyState('X'))
+	{
+		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
+		if (openGLWin.wheelDelta < 0)
 		{
-			//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
-			if (openGLWin.wheelDelta < 0)
-			{
-				meshData[selectedIndex - 1]->SetAngleZ(false);
-			}
-			else if (openGLWin.wheelDelta > 0)
-			{
-				meshData[selectedIndex - 1]->SetAngleZ(true);
-			}
+			meshData[selectedIndex - 1]->SetAngleX(false);
 		}
-		if (Keys::GetKeyState('U'))
+		else if (openGLWin.wheelDelta > 0)
 		{
-			if (openGLWin.wheelDelta < 0)
-			{
-				meshData[selectedIndex - 1]->SetScale(false);
-			}
-			else if (openGLWin.wheelDelta > 0)
-			{
-				meshData[selectedIndex - 1]->SetScale(true);
-			}
-			openGLWin.wheelDelta = 0;
+			meshData[selectedIndex - 1]->SetAngleX(true);
+		}
+	}
+	if (Keys::GetKeyState('Y'))
+	{
+		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
+		if (openGLWin.wheelDelta < 0)
+		{
+			meshData[selectedIndex - 1]->SetAngleY(false);
+		}
+		else if (openGLWin.wheelDelta > 0)
+		{
+			meshData[selectedIndex - 1]->SetAngleY(true);
+		}
+
+	}
+	if (Keys::GetKeyState('Z'))
+	{
+		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
+		if (openGLWin.wheelDelta < 0)
+		{
+			meshData[selectedIndex - 1]->SetAngleZ(false);
+		}
+		else if (openGLWin.wheelDelta > 0)
+		{
+			meshData[selectedIndex - 1]->SetAngleZ(true);
+		}
+	}
+	if (Keys::GetKeyState('U'))
+	{
+		if (openGLWin.wheelDelta < 0)
+		{
+			meshData[selectedIndex - 1]->SetScale(false);
+		}
+		else if (openGLWin.wheelDelta > 0)
+		{
+			meshData[selectedIndex - 1]->SetScale(true);
 		}
 		openGLWin.wheelDelta = 0;
+	}
+	openGLWin.wheelDelta = 0;
 	//}
 }
 
@@ -439,7 +442,7 @@ void ProcessPicking()
 	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		//if (cnt != wallIndex - 1 && !(*mI)->IsWall())
-			(*mI)->DrawBB();
+		(*mI)->DrawBB();
 		cnt++;
 	}
 	int tmpIndex = GetColorUnderCursor();
@@ -499,9 +502,9 @@ void ProcessPlacing()
 			glm::vec3 v1, v2;
 			RayCast(&v1, &v2);
 			glm::vec3 tmpPoint;
-			
+
 			std::vector<int> orientation = meshData[tmpIndex - 1]->GetOrientation();
-			
+
 			meshData[tmpIndex - 1]->GetHitPoint(v1, v2, tmpPoint, tmpNormal, snapToVertex);
 			GetRayOrientation(v1, v2, tmpNormal, orientation);
 			hitPoint = tmpPoint;
@@ -635,12 +638,12 @@ void FillPointsToVisualize()
 	}
 	/*if (selectedIndex != -1)
 	{
-		pointVertices.push_back(meshData[selectedIndex - 1]->GetCenterPoint().x);
-		pointVertices.push_back(meshData[selectedIndex - 1]->GetCenterPoint().y);
-		pointVertices.push_back(meshData[selectedIndex - 1]->GetCenterPoint().z);
-		pointVertices.push_back(0.0f);
-		pointVertices.push_back(1.0f);
-		pointVertices.push_back(0.0f);
+	pointVertices.push_back(meshData[selectedIndex - 1]->GetCenterPoint().x);
+	pointVertices.push_back(meshData[selectedIndex - 1]->GetCenterPoint().y);
+	pointVertices.push_back(meshData[selectedIndex - 1]->GetCenterPoint().z);
+	pointVertices.push_back(0.0f);
+	pointVertices.push_back(1.0f);
+	pointVertices.push_back(0.0f);
 	}*/
 
 	if (!initPointVBO)
@@ -701,15 +704,16 @@ int WINAPI SegThreadMain()
 		for (int i = pclSegmenter.GetPlaneClusterCount(); i < meshData_segTmp.size(); i++)
 		{
 			meshData_segTmp[i]->ClearMesh();
+			delete meshData_segTmp[i];
 		}
 		meshData_segTmp.erase(meshData_segTmp.begin() + pclSegmenter.GetPlaneClusterCount(), meshData_segTmp.end());
 		/*for (vector <VCGMeshContainer*>::iterator mI = meshData_segTmp.begin(); mI != meshData_segTmp.end(); ++mI)
 		{
-			if (pclSegmenter.IsPlaneSegmented())
-				if (cnt < pclSegmenter.GetPlaneClusterCount()) 
-					continue;
-			(*mI)->ClearMesh();
-			cnt++;
+		if (pclSegmenter.IsPlaneSegmented())
+		if (cnt < pclSegmenter.GetPlaneClusterCount())
+		continue;
+		(*mI)->ClearMesh();
+		cnt++;
 		}
 		meshData_segTmp.clear();*/
 	}
@@ -778,10 +782,10 @@ int WINAPI SegThreadMain()
 			mesh->SetColorCode(i + 1);
 			//mesh->ParseData(clusterVertices, clusterIndices);
 			mesh->SetWall(true);
-			
+
 			wallIndex = i + 1;
 			mesh->ConvertToVCG(clusterVertices, clusterIndices);
-			
+
 			//int total = mesh->MergeCloseVertices(0.005f);
 			//cDebug::DbgOut(_T("Merged close vertices: "), total);
 			//cDebug::DbgOut(L"indices: ", (int)mesh->GetVertices().size());
@@ -789,7 +793,7 @@ int WINAPI SegThreadMain()
 			mesh->RemoveSmallComponents(1000);
 			mesh->CleanMesh();
 			mesh->RemoveNonManifoldFace();
-			mesh->FillHoles((clusterVertices.size()*6)/10);
+			mesh->FillHoles((clusterVertices.size() * 6) / 10);
 			mesh->CleanMesh();
 			mesh->ParseData();
 			mesh->SetPlaneParameters(pclSegmenter.planeCoefficients[i]->values[0], pclSegmenter.planeCoefficients[i]->values[1],
@@ -804,7 +808,7 @@ int WINAPI SegThreadMain()
 	{
 		if (!showColoredSegments || openGLWin.previewMode || openGLWin.segmentValuesChanged)
 		{
-			
+
 			//meshData_segTmp[0]->CleanAndParse(startingVertices, startingIndices, startingNormals);
 			//pclSegmenter.ConvertToCloud(startingVertices, startingIndices, startingNormals);
 			pclSegmenter.RegionGrowingSegmentation();
@@ -841,13 +845,13 @@ int WINAPI SegThreadMain()
 		pclSegmenter.ConvertToTriangleMesh(i, startingVertices, clusterVertices, clusterIndices);
 		//cDebug::DbgOut(L"Converted Triangle Mesh #",i);
 		mesh = new VCGMeshContainer;
-		mesh->SetColorCode(i+pclSegmenter.GetPlaneClusterCount() + 1);
+		mesh->SetColorCode(i + pclSegmenter.GetPlaneClusterCount() + 1);
 		//mesh->ParseData(clusterVertices, clusterIndices);
 		mesh->ConvertToVCG(clusterVertices, clusterIndices);
-		
+
 		mesh->CleanMesh();
 		mesh->RemoveNonManifoldFace();
-		
+
 		mesh->FillHoles((clusterVertices.size() * 6) / 10);
 		mesh->CleanMesh();
 		mesh->ParseData();
@@ -1036,6 +1040,7 @@ void LoadClusterData()
 	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		(*mI)->ClearMesh();
+		delete *mI;
 	}
 	meshData.clear();
 	for (vector <VCGMeshContainer*>::iterator mI = meshData_segTmp.begin(); mI != meshData_segTmp.end(); ++mI)
@@ -1075,8 +1080,8 @@ void LoadClusterData()
 
 /*void ShowPCLViewer()
 {
-	if (pclSegmenter.GetClusterCount() > 0)
-		pclSegmenter.ShowViewer();
+if (pclSegmenter.GetClusterCount() > 0)
+pclSegmenter.ShowViewer();
 }*/
 
 #pragma endregion segmentation related
@@ -1086,43 +1091,43 @@ void LoadClusterData()
 /*
 void MLS()
 {
-	std::vector<float> startingVertices;
-	std::vector<GLuint> startingIndices;
-	std::vector<float> startingNormals;
-	VCGMeshContainer *mesh;
+std::vector<float> startingVertices;
+std::vector<GLuint> startingIndices;
+std::vector<float> startingNormals;
+VCGMeshContainer *mesh;
 
-	if (meshData.size() == 1)
-	{
-		
-		meshData_segTmp.push_back(mesh);
-		pclSegmenter.MovingLeastSquares(meshData[0]->GetVertices(), meshData[0]->GetNormals(), startingVertices, startingIndices, startingNormals);
-		meshData[0]->ClearMesh();
-		meshData.clear();
-		//meshData[0]->LoadMesh(startingVertices, startingIndices, startingNormals);
-		mesh = new VCGMeshContainer;
-		mesh->SetColorCode(1);
-		//mesh->ParseData(clusterVertices, clusterIndices);
-		mesh->ConvertToVCG(startingVertices, startingIndices);
-		mesh->CleanMesh();
-		mesh->ParseData();
-		meshData.push_back(mesh);
-		//meshData[0]->LoadMesh(startingVertices, startingIndices, startingNormals);
-	}
+if (meshData.size() == 1)
+{
 
-	numberOfVertices = 0;
-	numberOfFaces = 0;
-	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
-	{
-		(*mI)->GenerateBOs();
-		numberOfVertices += (*mI)->GetNumberOfVertices();
-		numberOfFaces += (*mI)->GetNumberOfIndices() / 3;
+meshData_segTmp.push_back(mesh);
+pclSegmenter.MovingLeastSquares(meshData[0]->GetVertices(), meshData[0]->GetNormals(), startingVertices, startingIndices, startingNormals);
+meshData[0]->ClearMesh();
+meshData.clear();
+//meshData[0]->LoadMesh(startingVertices, startingIndices, startingNormals);
+mesh = new VCGMeshContainer;
+mesh->SetColorCode(1);
+//mesh->ParseData(clusterVertices, clusterIndices);
+mesh->ConvertToVCG(startingVertices, startingIndices);
+mesh->CleanMesh();
+mesh->ParseData();
+meshData.push_back(mesh);
+//meshData[0]->LoadMesh(startingVertices, startingIndices, startingNormals);
+}
 
-	}
-	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
-	{
-		(*mI)->GenerateVAO();
+numberOfVertices = 0;
+numberOfFaces = 0;
+for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+{
+(*mI)->GenerateBOs();
+numberOfVertices += (*mI)->GetNumberOfVertices();
+numberOfFaces += (*mI)->GetNumberOfIndices() / 3;
 
-	}
+}
+for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+{
+(*mI)->GenerateVAO();
+
+}
 }*/
 
 void FillHoles(int holeSize)
@@ -1285,14 +1290,14 @@ void Initialize(LPVOID lpParam)
 		PostQuitMessage(0);
 		return;
 	}
-	
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glDepthFunc(GL_LESS);
 	glDepthRange(-1.0f, 1000.0f);
 
 	glText.Initialize("FreeSans.ttf");
-	
+
 	glCamera = OpenGLCamera(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f, 0.1f);
 }
 
@@ -1317,7 +1322,7 @@ void Render(LPVOID lpParam)
 
 	if (wireFrameMode && !showColoredSegments)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	else 
+	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	if (openGLWin.wallSelection)
@@ -1325,7 +1330,7 @@ void Render(LPVOID lpParam)
 		if (!initWallSegment)
 			InitializeWallSegment();
 		//statusMsg = L"Is this a wall?";
-		
+
 		if (initWallSegment)
 		{
 			RenderWallSegment();
@@ -1378,7 +1383,7 @@ void Render(LPVOID lpParam)
 		{
 			RenderSegments();
 			return;
-		}	
+		}
 	}
 	//END SEGMENT
 
@@ -1403,9 +1408,9 @@ void Render(LPVOID lpParam)
 	{
 		/*if (!previewThreadActive)
 		{
-			previewThreadActive = true;
-			if (!preview_Thread.joinable())
-				preview_Thread = boost::thread(ProcessSelectedObject);
+		previewThreadActive = true;
+		if (!preview_Thread.joinable())
+		preview_Thread = boost::thread(ProcessSelectedObject);
 		}*/
 		ProcessSelectedObject();
 	}
@@ -1429,7 +1434,7 @@ void Render(LPVOID lpParam)
 		int cnt = 0;
 		for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 		{
-			if (cnt != wallIndex-1 && !(*mI)->IsWall())
+			if (cnt != wallIndex - 1 && !(*mI)->IsWall())
 				(*mI)->DrawBB();
 			cnt++;
 		}
@@ -1445,11 +1450,11 @@ void Render(LPVOID lpParam)
 	glText.RenderText(L"Verts: ", numberOfVertices, 15, -0.98f, 0.70f, 2.0f / w, 2.0f / h);
 	glText.RenderText(L"Faces: ", numberOfFaces, 15, -0.98f, 0.65f, 2.0f / w, 2.0f / h);
 	glText.RenderText(L"Sel: ", selectedIndex - 1, 15, -0.98f, 0.6f, 2.0f / w, 2.0f / h);
-	
+
 
 	//handle keyboard input
 
-	
+
 	//toggle show bounding box mode
 	if (Keys::GetKeyStateOnce('B'))
 		ToggleBoundingBoxes();
@@ -1458,7 +1463,7 @@ void Render(LPVOID lpParam)
 	if (Keys::GetKeyStateOnce('Q'))
 		ToggleWireFrame();
 
-	
+
 	//save combined mesh
 	if (Keys::GetKeyStateOnce('L'))
 	{
@@ -1490,5 +1495,15 @@ void Release(LPVOID lpParam)
 	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		(*mI)->ClearMesh();
+		delete *mI;
 	}
+	meshData.clear();
+	for (vector <VCGMeshContainer*>::iterator mI = meshData_segTmp.begin(); mI != meshData_segTmp.end(); ++mI)
+	{
+		(*mI)->ClearMesh();
+		delete *mI;
+	}
+	meshData_segTmp.clear();
+
+
 }

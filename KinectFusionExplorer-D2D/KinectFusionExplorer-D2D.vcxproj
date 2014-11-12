@@ -26,7 +26,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v120</PlatformToolset>
@@ -38,7 +38,7 @@
     <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
@@ -68,9 +68,9 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <IncludePath>W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\include;W:\dev\glew\include;W:\dev\glsdk_0_5_2\glm;W:\dev\vcglib;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;$(FLANN_ROOT)\include\;$(QHULL_ROOT)\include;$(VTK_DIR)\include\vtk-6.1;W:\dev\freeglut\include;W:\dev\glsdk_0_5_2\glm;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;..\InteractiveFusion;$(IncludePath)&lt;inherit from parent or project defaults&gt;</IncludePath>
-    <LibraryPath>$(SolutionDir)$(Configuration);$(BOOST_ROOT)\lib;$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;$(LibraryPath)&lt;inherit from parent or project defaults&gt;</LibraryPath>
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(BOOST_ROOT)\include\boost-1_56;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST_ROOT)\lib;$(SolutionDir)$(Configuration);$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -79,8 +79,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\include;W:\dev\glew\include;W:\dev\glsdk_0_5_2\glm;W:\dev\vcglib;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;$(FLANN_ROOT)\include\;$(QHULL_ROOT)\include;$(VTK_DIR)\include\vtk-6.1;W:\dev\freeglut\include;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;..\InteractiveFusion;W:\dev\glsdk_0_5_2\glm;$(IncludePath)&lt;inherit from parent or project defaults&gt;</IncludePath>
-    <LibraryPath>W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\objs\win32\vc2010;W:\dev\glew\lib\Release\Win32;$(SolutionDir)$(Configuration);$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;$(PCL_ROOT)\lib;$(BOOST_ROOT)\lib;$(FLANN_ROOT)\lib;$(QHULL_ROOT)l\lib;$(VTK_DIR)\lib;W:\dev\freeglut\lib;$(SolutionDir)$(Configuration);$(BOOST_ROOT)\lib;$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;W:\dev\freeglut\lib;$(LibraryPath)&lt;inherit from parent or project defaults&gt;</LibraryPath>
+    <IncludePath>$(BOOST_ROOT)\include\boost-1_56;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST_ROOT)\lib;$(SolutionDir)$(Configuration);$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -192,6 +192,7 @@
     <None Include="..\NuiSensorChooser\Images\RefreshOver.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Keys.h" />
     <ClInclude Include="NuiSensorChooserUIResource.h" />
     <ClInclude Include="ImageRenderer.h" />
     <ClInclude Include="Resource.h" />
@@ -205,6 +206,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImageRenderer.cpp" />
+    <ClCompile Include="Keys.cpp" />
     <ClCompile Include="KinectFusionExplorer.cpp" />
     <ClCompile Include="KinectFusionHelper.cpp" />
     <ClCompile Include="KinectFusionProcessor.cpp" />
@@ -215,9 +217,6 @@
     <ResourceCompile Include="KinectFusionExplorer-D2D.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\InteractiveFusion\InteractiveFusion.vcxproj">
-      <Project>{6f52f862-00c7-46ee-85f5-433555306d9f}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\NuiSensorChooser\NuiSensorChooser.vcxproj">
       <Project>{67a64301-c979-4fde-bf65-4b0bfd05700d}</Project>
     </ProjectReference>
@@ -225,6 +224,7 @@
   <ItemGroup>
     <Image Include="Images\Allset.bmp" />
     <Image Include="Images\AllsetBig.bmp" />
+    <Image Include="images\button.bmp" />
     <Image Include="Images\Error.bmp" />
     <Image Include="Images\ErrorBig.bmp" />
     <Image Include="images\icon1.ico" />

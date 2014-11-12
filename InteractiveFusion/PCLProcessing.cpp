@@ -363,7 +363,7 @@ void PCLProcessor::PlaneIndexEstimation()
 	for (std::vector<pcl::PointIndices::Ptr>::const_iterator it = planeCloudIndices.begin(); it != planeCloudIndices.end(); ++it)
 	{
 		pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZRGB>);
-		std::vector<int> *tmpClusterIndices(new vector<int>);
+		//std::vector<int> *tmpClusterIndices(new vector<int>);
 
 		for (std::vector<int>::const_iterator pit = (*it)->indices.begin(); pit != (*it)->indices.end(); pit++) {
 			cloud_cluster->points.push_back(mainCloud->points[*pit]); 
@@ -484,13 +484,13 @@ void PCLProcessor::IndexEstimation()
 	for (std::vector<pcl::PointIndices>::const_iterator it = segmentedClusterIndices.begin(); it != segmentedClusterIndices.end(); ++it)
 	{
 		pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZRGB>);
-		std::vector<int> *tmpClusterIndices(new vector<int>);
+		//std::vector<int> *tmpClusterIndices(new vector<int>);
 
 		for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end(); pit++) {
 			cloud_cluster->points.push_back(mainCloud->points[*pit]); //*
 			//clusteredcloudsindices[j].push_back(*pit);
-			if (j == 0)
-				tmpClusterIndices->push_back(*pit);
+			//if (j == 0)
+			//	tmpClusterIndices->push_back(*pit);
 		}
 		//clusteredIndices.push_back(*tmpClusterIndices);
 		cloud_cluster->width = cloud_cluster->points.size();
@@ -498,9 +498,9 @@ void PCLProcessor::IndexEstimation()
 		cloud_cluster->is_dense = true;
 
 		// std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
-		if (j == 0)
-			clusteredIndices.push_back(*tmpClusterIndices);
-		else
+		//if (j == 0)
+		//	clusteredIndices.push_back(*tmpClusterIndices);
+		//else
 			clusteredIndices.push_back(CalculateIndicesForCluster(cloud_cluster));
 		clusteredClouds.push_back(cloud_cluster);
 		//clusteredclouds[j] = cloud_cluster;
@@ -717,7 +717,6 @@ bool PCLProcessor::EuclideanSegmentation() {
 		//pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGB> single_color(cloud_cluster, fminf(15 * cnt, 255), fmaxf(255 - 25 * cnt, 15), fmaxf(125 - 5 * cnt, 15));
 		//PV->addPointCloud(cloud_cluster, "sample"+cnt);
 		cnt++;
-		cDebug::DbgOut(L"cnt: ", cnt);
 	}
 	/* while (!PV->wasStopped())
 	{

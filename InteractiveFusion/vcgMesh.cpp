@@ -14,7 +14,7 @@
 #include<vcg/complex/algorithms/update/topology.h>
 #include<vcg/complex/algorithms/update/normal.h>
 
-VCGMeshContainer::VCGMeshContainer() { 
+VCGMeshContainer::VCGMeshContainer() {
 }
 
 VCGMeshContainer::~VCGMeshContainer() { }
@@ -58,7 +58,7 @@ void VCGMeshContainer::LoadMesh(const char* filename)
 	statusMsg = L"Cleaning mesh";
 	CleanMesh();
 	statusMsg = L"Removing small components";
-	RemoveSmallComponents(currentMesh.vn/100);
+	RemoveSmallComponents(currentMesh.vn / 100);
 	CleanMesh();
 	statusMsg = L"Parsing data for interaction";
 	ParseData();
@@ -127,67 +127,67 @@ void VCGMeshContainer::CleanMesh()
 {
 	//if (currentMesh.vn > 1000)
 	//{
-		//std::pair<int,int> comps = vcg::tri::Clean<VCGMesh>::RemoveSmallConnectedComponentsDiameter(currentMesh, 0.003f);
-		//cDebug::DbgOut(_T("Removed components: "), comps.second);
-		vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
-		vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromFF(currentMesh);
-		vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalizedPerFace(currentMesh);
-		vcg::tri::UpdateBounding<VCGMesh>::Box(currentMesh);
-		vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
-		vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromNone(currentMesh);
-		
-		//vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalizedPerFace(currentMesh);
+	//std::pair<int,int> comps = vcg::tri::Clean<VCGMesh>::RemoveSmallConnectedComponentsDiameter(currentMesh, 0.003f);
+	//cDebug::DbgOut(_T("Removed components: "), comps.second);
+	vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
+	vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromFF(currentMesh);
+	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalizedPerFace(currentMesh);
+	vcg::tri::UpdateBounding<VCGMesh>::Box(currentMesh);
+	vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
+	vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromNone(currentMesh);
 
-		
-		
-		
-		//cDebug::DbgOut(_T("Removed small components: "), delInfo.first);
-		//cDebug::DbgOut(_T("Removed small components: "), delInfo.second);
-		
+	//vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalizedPerFace(currentMesh);
 
-		
-		//vcg::tri::Smooth<VCGMesh>::FaceNormalLaplacianFF(currentMesh);
-		
-		//float maniThresh = 1.0f;
 
-		//while (vcg::tri::Clean<VCGMesh>::CountNonManifoldVertexFF(currentMesh) > 0)
-		//{
-			//cDebug::DbgOut(_T("here "), test);
 
-			//int maniVert = vcg::tri::Clean<VCGMesh>::RemoveNonManifoldVertex(currentMesh);
-			//cDebug::DbgOut(_T("Removed non manifold vertices: "), maniVert);
-		//}
-		
-		
-		
 
-		int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(currentMesh);
-		cDebug::DbgOut(_T("Removed duplicates: "), dup);
-		int dupFa = vcg::tri::Clean<VCGMesh>::RemoveDuplicateFace(currentMesh);
-		cDebug::DbgOut(_T("Removed duplicate faces: "), dupFa);
-		int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(currentMesh);
-		cDebug::DbgOut(_T("Removed unreferenced: "), unref);
-		int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(currentMesh);
-		cDebug::DbgOut(_T("Removed degenerate faces: "), deg);
-		int zero = vcg::tri::Clean<VCGMesh>::RemoveZeroAreaFace(currentMesh);
-		cDebug::DbgOut(_T("Removed zero area faces: "), zero);
+	//cDebug::DbgOut(_T("Removed small components: "), delInfo.first);
+	//cDebug::DbgOut(_T("Removed small components: "), delInfo.second);
 
-		/*int minCC = 1;
-		std::pair<int, int> delInfo = vcg::tri::Clean<VCGMesh>::RemoveSmallConnectedComponentsSize(currentMesh, minCC);
-		cDebug::DbgOut(_T("Removed small components: "), delInfo.first);
-		cDebug::DbgOut(_T("Removed small components: "), delInfo.second);*/
-		//int holes = vcg::tri::Hole<VCGMesh>::EarCuttingFill<vcg::tri::TrivialEar<VCGMesh> >(currentMesh, 20, false);
-		//cDebug::DbgOut(_T("Removed holes: "), deg);
-		//vcg::tri::UpdateBounding<VCGMesh>::Box(currentMesh);
-		/*vcg::tri::Clustering<VCGMesh, vcg::tri::AverageColorCell<VCGMesh> > Grid;
-		Grid.DuplicateFaceParam = true;
-		Grid.Init(currentMesh.bbox, 10, 10);
-		Grid.AddMesh(currentMesh);
-		Grid.ExtractMesh(currentMesh);*/
+
+
+	//vcg::tri::Smooth<VCGMesh>::FaceNormalLaplacianFF(currentMesh);
+
+	//float maniThresh = 1.0f;
+
+	//while (vcg::tri::Clean<VCGMesh>::CountNonManifoldVertexFF(currentMesh) > 0)
+	//{
+	//cDebug::DbgOut(_T("here "), test);
+
+	//int maniVert = vcg::tri::Clean<VCGMesh>::RemoveNonManifoldVertex(currentMesh);
+	//cDebug::DbgOut(_T("Removed non manifold vertices: "), maniVert);
+	//}
+
+
+
+
+	int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(currentMesh);
+	cDebug::DbgOut(_T("Removed duplicates: "), dup);
+	int dupFa = vcg::tri::Clean<VCGMesh>::RemoveDuplicateFace(currentMesh);
+	cDebug::DbgOut(_T("Removed duplicate faces: "), dupFa);
+	int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(currentMesh);
+	cDebug::DbgOut(_T("Removed unreferenced: "), unref);
+	int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(currentMesh);
+	cDebug::DbgOut(_T("Removed degenerate faces: "), deg);
+	int zero = vcg::tri::Clean<VCGMesh>::RemoveZeroAreaFace(currentMesh);
+	cDebug::DbgOut(_T("Removed zero area faces: "), zero);
+
+	/*int minCC = 1;
+	std::pair<int, int> delInfo = vcg::tri::Clean<VCGMesh>::RemoveSmallConnectedComponentsSize(currentMesh, minCC);
+	cDebug::DbgOut(_T("Removed small components: "), delInfo.first);
+	cDebug::DbgOut(_T("Removed small components: "), delInfo.second);*/
+	//int holes = vcg::tri::Hole<VCGMesh>::EarCuttingFill<vcg::tri::TrivialEar<VCGMesh> >(currentMesh, 20, false);
+	//cDebug::DbgOut(_T("Removed holes: "), deg);
+	//vcg::tri::UpdateBounding<VCGMesh>::Box(currentMesh);
+	/*vcg::tri::Clustering<VCGMesh, vcg::tri::AverageColorCell<VCGMesh> > Grid;
+	Grid.DuplicateFaceParam = true;
+	Grid.Init(currentMesh.bbox, 10, 10);
+	Grid.AddMesh(currentMesh);
+	Grid.ExtractMesh(currentMesh);*/
 	//}
 	vcg::tri::RequirePerVertexNormal(currentMesh);
 	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(currentMesh);
-	
+
 }
 
 void VCGMeshContainer::ParseData(std::vector<float> inputVertices, std::vector<GLuint> inputIndices)
@@ -207,14 +207,14 @@ void VCGMeshContainer::ParseData(std::vector<float> inputVertices, std::vector<G
 
 	//start = std::clock();
 
-	for (int i = 0; i < inputVertices.size(); i+=6)
+	for (int i = 0; i < inputVertices.size(); i += 6)
 	{
 		lowerBounds.x = min(inputVertices[i], lowerBounds.x);
-		lowerBounds.y = min(inputVertices[i+1], lowerBounds.y);
-		lowerBounds.z = min(inputVertices[i+2], lowerBounds.z);
+		lowerBounds.y = min(inputVertices[i + 1], lowerBounds.y);
+		lowerBounds.z = min(inputVertices[i + 2], lowerBounds.z);
 		upperBounds.x = max(inputVertices[i], upperBounds.x);
-		upperBounds.y = max(inputVertices[i+1], upperBounds.y);
-		upperBounds.z = max(inputVertices[i+2], upperBounds.z);
+		upperBounds.y = max(inputVertices[i + 1], upperBounds.y);
+		upperBounds.z = max(inputVertices[i + 2], upperBounds.z);
 		vertices.push_back(inputVertices[i]);
 		vertices.push_back(inputVertices[i + 1]);
 		vertices.push_back(inputVertices[i + 2]);
@@ -225,7 +225,7 @@ void VCGMeshContainer::ParseData(std::vector<float> inputVertices, std::vector<G
 	}
 
 	vertNum = vertices.size() / 6;
-	
+
 	for (int i = 0; i < inputIndices.size(); i++)
 	{
 		indices.push_back(inputIndices[i]);
@@ -448,7 +448,7 @@ void VCGMeshContainer::ParseData()
 
 	//bbox
 
-	
+
 	originalLowerBounds.x = lowerBounds.x;
 	originalLowerBounds.y = lowerBounds.y;
 	originalLowerBounds.z = lowerBounds.z;
@@ -584,16 +584,16 @@ void VCGMeshContainer::ParseData()
 	bBoxIndices.push_back(2);
 	bBoxIndices.push_back(1);*/
 
-	
+
 	//bbox end
 	selectTranslation = glm::vec3(0.0f, 0.0f, 0.0f);
 	translation = glm::vec3(0.0f, 0.0f, 0.0f);
 
-	
+
 
 
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-	
+
 	cDebug::DbgOut(L"parse duration: ", duration);
 }
 
@@ -614,11 +614,11 @@ void VCGMeshContainer::ConvertToVCG()
 		normCount += 3;
 
 	}
-	
+
 	vcg::tri::Allocator<VCGMesh>::AddFaces(currentMesh, indices.size() / 3);
 
 	int faceCount = 0;
-	for (int i = 0; i<indices.size(); i+= 3){
+	for (int i = 0; i<indices.size(); i += 3){
 		currentMesh.face[faceCount].V(0) = &currentMesh.vert[indices[i]];
 		currentMesh.face[faceCount].V(1) = &currentMesh.vert[indices[i + 1]];
 		currentMesh.face[faceCount].V(2) = &currentMesh.vert[indices[i + 2]];
@@ -794,9 +794,9 @@ void VCGMeshContainer::Draw()
 	if (!isSelected || previewSelection)
 	{
 		//if (previewSelection)
-			//modelMatrix = snapTransform * glm::translate(glm::mat4(1.0), translation);
+		//modelMatrix = snapTransform * glm::translate(glm::mat4(1.0), translation);
 		//else
-			modelMatrix = glm::translate(glm::mat4(1.0), translation);
+		modelMatrix = glm::translate(glm::mat4(1.0), translation);
 	}
 	else if (!colorSelection)
 	{
@@ -820,9 +820,9 @@ void VCGMeshContainer::DrawBB()
 	if (!isSelected || previewSelection)
 	{
 		//if (previewSelection)
-			//modelMatrix = snapTransform * glm::translate(glm::mat4(1.0), translation);
+		//modelMatrix = snapTransform * glm::translate(glm::mat4(1.0), translation);
 		//else
-			modelMatrix = glm::translate(glm::mat4(1.0), translation);
+		modelMatrix = glm::translate(glm::mat4(1.0), translation);
 	}
 	else if (!colorSelection)
 	{
@@ -856,7 +856,7 @@ void VCGMeshContainer::SetSnapTransform(std::vector<int> orien)
 		snapPoint.y = orien[1] * offSet.y;
 	if (orien[2] != 0)
 		snapPoint.z = orien[2] * offSet.z;
-		
+
 	snapOrientation = orien;
 	snapTransform = glm::translate(glm::mat4(1.0), snapPoint);
 }
@@ -869,8 +869,8 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 	glm::mat4 snapReverse = glm::mat4(1.0);
 	//if (snapOrientation != orien)
 	//{
-		snapReverse = glm::translate(glm::mat4(1.0), -snapPoint);
-		SetSnapTransform(orien);
+	snapReverse = glm::translate(glm::mat4(1.0), -snapPoint);
+	SetSnapTransform(orien);
 	//}
 	lowerBounds = glm::vec3(9999.0f, 9999.0f, 9999.0f);
 	upperBounds = glm::vec3(-9999.0f, -9999.0f, -9999.0f);
@@ -881,41 +881,41 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 	glm::mat4 zRotation = glm::mat4(1.0f);
 	glm::mat4 scaleMatrix = glm::mat4(1.0f);
 	if (angleX != 0)
-		xRotation = glm::rotate(glm::mat4(1.0), angleX, glm::vec3(1.0f, 0.0f, 0.0f));
+	xRotation = glm::rotate(glm::mat4(1.0), angleX, glm::vec3(1.0f, 0.0f, 0.0f));
 	if (angleY != 0)
-		yRotation = glm::rotate(glm::mat4(1.0), angleY, glm::vec3(0.0f, 1.0f, 0.0f));
+	yRotation = glm::rotate(glm::mat4(1.0), angleY, glm::vec3(0.0f, 1.0f, 0.0f));
 	if (angleZ != 0)
-		zRotation = glm::rotate(glm::mat4(1.0), angleZ, glm::vec3(0.0f, 0.0f, 1.0f));
+	zRotation = glm::rotate(glm::mat4(1.0), angleZ, glm::vec3(0.0f, 0.0f, 1.0f));
 	if (scaleFactor != 1.0f)
-		scaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(scaleFactor, scaleFactor, scaleFactor));*/
+	scaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(scaleFactor, scaleFactor, scaleFactor));*/
 
 	//originTransform = glm::translate(glm::mat4(1.0), -GetCenterPoint());
-	
+
 	float lowestZ = GetLowestZ();
 	glm::mat4 combinedTranslation = (snapTransform * pointTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform);
-	
+
 	int normalCount = 0;
-	for (int i = 0; i < vertices.size(); i+=6)
+	for (int i = 0; i < vertices.size(); i += 6)
 	{
 		glm::vec4 tmp = glm::vec4(vertices[i], vertices[i + 1], vertices[i + 2], 1.0f);
 		glm::vec4 tmpNormal = glm::vec4(normals[normalCount], normals[normalCount + 1], normals[normalCount + 2], 1.0f);
-		
+
 		//tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
 		//if (orien == -1)
-		
+
 		tmpNormal = combinedTranslation * tmpNormal;
 		tmp = combinedTranslation * tmp;
-		
+
 		//if (doSnap)
-			//tmp = snapTransform * snapReverse * tmp;
+		//tmp = snapTransform * snapReverse * tmp;
 		//tmp = snapTransform * tmp;
 
 		vertices[i] = tmp.x;
 		vertices[i + 1] = tmp.y;// abs(centerPoint.y - snapPoint.y);
 		vertices[i + 2] = tmp.z;// +abs(snapPoint.z - lowestZ);
 		normals[normalCount] = tmpNormal.x;
-		normals[normalCount+1] = tmpNormal.y;
-		normals[normalCount+2] = tmpNormal.z;
+		normals[normalCount + 1] = tmpNormal.y;
+		normals[normalCount + 2] = tmpNormal.z;
 		upperBounds.x = max(upperBounds.x, tmp.x);
 		lowerBounds.x = min(lowerBounds.x, tmp.x);
 		upperBounds.y = max(upperBounds.y, tmp.y);
@@ -937,8 +937,8 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 
 		tmp = combinedTranslation * tmp;
 		//if (doSnap)
-			//tmp = snapTransform * snapReverse * tmp;
-			//tmp = snapTransform  * tmp;
+		//tmp = snapTransform * snapReverse * tmp;
+		//tmp = snapTransform  * tmp;
 		//else
 		//	tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * snapTransform) * tmp;
 		bBoxVertices[i] = tmp.x;
@@ -963,10 +963,10 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 	angleY = 0;
 	angleZ = 0;
 	scaleFactor = 1.0f;
-	xRotation = glm::mat4(1.0); 
+	xRotation = glm::mat4(1.0);
 	yRotation = glm::mat4(1.0);
-	zRotation = glm::mat4(1.0); 
-	scaleMatrix = glm::mat4(1.0); 
+	zRotation = glm::mat4(1.0);
+	scaleMatrix = glm::mat4(1.0);
 	/*upperBounds.x = upperBounds.x - centerPoint.x;
 	upperBounds.x = point.x - upperBounds.x;
 	upperBounds.y = upperBounds.y - centerPoint.y;
@@ -979,13 +979,13 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 	lowerBounds.y = point.y - lowerBounds.y;
 	lowerBounds.z = lowerBounds.z - centerPoint.z;
 	lowerBounds.z = point.z - lowerBounds.z;*/
-	
-	
+
+
 	centerPoint.x = (lowerBounds.x + upperBounds.x) / 2.0f;
 	centerPoint.y = (lowerBounds.y + upperBounds.y) / 2.0f;
 	//centerPoint.y = lowerBounds.y;
 	centerPoint.z = (lowerBounds.z + upperBounds.z) / 2.0f;
-	
+
 	offSet.x = (centerPoint.x - lowerBounds.x);
 	offSet.y = (centerPoint.y - lowerBounds.y);
 	offSet.z = (centerPoint.z - lowerBounds.z);
@@ -1009,16 +1009,17 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 
 glm::vec3 VCGMeshContainer::GetCenterPoint()
 {
-	
+
 	if (!isSelected)
 		return centerPoint;
 	else
 	{
-			//glm::vec4 tmpVec = (cursorTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) 
-			//	* glm::vec4(centerPoint.x, centerPoint.y, centerPoint.z, 1.0f);
-			glm::vec4 tmpVec = (scaleMatrix * zRotation * yRotation * xRotation) * glm::vec4(centerPoint.x, centerPoint.y, centerPoint.z, 1.0f);
+		//glm::vec4 tmpVec = (cursorTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) 
+		//	* glm::vec4(centerPoint.x, centerPoint.y, centerPoint.z, 1.0f);
+		glm::vec4 tmpVec = (scaleMatrix * zRotation * yRotation * xRotation) * glm::vec4(centerPoint.x, centerPoint.y, centerPoint.z, 1.0f);
 		return glm::vec3(tmpVec.x, tmpVec.y, tmpVec.z);
-	}}
+	}
+}
 
 float VCGMeshContainer::GetLowestZ()
 {
@@ -1059,16 +1060,16 @@ float VCGMeshContainer::GetLowestY()
 bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output, glm::vec3 &outputNormal, bool snapToVertex)
 {
 	glm::vec3 rayDirection = glm::normalize(farPoint - nearPoint);
-	
+
 	/*float tMin = (lowerBounds.x - nearPoint.x) / rayDirection.x;
 	float tMax = (upperBounds.x - nearPoint.x) / rayDirection.x;
 
 
 	if (tMin > tMax)
 	{
-		float tmp = tMin;
-		tMin = tMax;
-		tMax = tmp;
+	float tmp = tMin;
+	tMin = tMax;
+	tMax = tmp;
 	}
 
 	float tyMin = (lowerBounds.y - nearPoint.y) / rayDirection.y;
@@ -1076,37 +1077,37 @@ bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm:
 
 	if (tyMin > tyMax)
 	{
-		float tmp = tyMin;
-		tyMin = tyMax;
-		tyMax = tyMin;
+	float tmp = tyMin;
+	tyMin = tyMax;
+	tyMax = tyMin;
 	}
 
 	if ((tMin > tyMax) || (tyMin > tMax))
-		return false;
+	return false;
 
 	if (tyMin > tMin)
-		tMin = tyMin;
+	tMin = tyMin;
 	if (tyMax < tMax)
-		tMax = tyMax;
+	tMax = tyMax;
 
 	float tzMin = (lowerBounds.z - nearPoint.z) / rayDirection.z;
 	float tzMax = (upperBounds.z - nearPoint.z) / rayDirection.z;
 
 	if (tzMin < tzMax)
 	{
-		float tmp = tzMin;
-		tzMin = tzMax;
-		tzMax = tzMin;
+	float tmp = tzMin;
+	tzMin = tzMax;
+	tzMax = tzMin;
 	}
 
 	if ((tMin > tzMax) || (tzMin > tMax))
-		return false;
+	return false;
 
 	if (tzMin > tMin)
-		tMin = tzMin;
+	tMin = tzMin;
 
 	if (tzMax < tMax)
-		tMax = tzMax;*/
+	tMax = tzMax;*/
 
 	glm::vec3 dirfrac;
 	// r.dir is unit direction vector of ray
@@ -1159,11 +1160,11 @@ bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm:
 		for (int i = 0; i < vertices.size(); i += 6)
 		{
 			glm::vec3 point(vertices[i], vertices[i + 1], vertices[i + 2]);
-		
+
 			glm::vec3 w = point - nearPoint;
 
 			double c1 = glm::dot(w, v);
-		
+
 			double b = c1 / c2;
 			glm::vec3 dd(v.x * b, v.y * b, v.z * b);
 			glm::vec3 Pb = nearPoint + dd;
@@ -1171,7 +1172,7 @@ bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm:
 			if (distance < minDistance)
 			{
 				minDistance = distance;
-				index = i*6;
+				index = i * 6;
 				minPoint.x = point.x;
 				minPoint.y = point.y;
 				minPoint.z = point.z;
@@ -1218,8 +1219,8 @@ bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm:
 				highestZ = vertices[indices[i] * 6 + 2];
 				tX = glm::dot(edge2, qVec) * invDet;
 				normal.x = normals[indices[i] * 3];
-				normal.y = normals[indices[i] * 3+1];
-				normal.z = normals[indices[i] * 3+2];
+				normal.y = normals[indices[i] * 3 + 1];
+				normal.z = normals[indices[i] * 3 + 2];
 			}
 		}
 		glm::vec3 minPoint = nearPoint + rayDirection * tX;
@@ -1234,46 +1235,46 @@ bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm:
 	float u, v, tX;
 	for (int i = 0; i < indices.size(); i += 3)
 	{
-		glm::vec3 v0;
-		v0.x = vertices[indices[i]*6]; q
-		v0.y = vertices[indices[i]*6+1];
-		v0.z = vertices[indices[i]*6+2];
-		glm::vec3 v1;
-		v1.x = vertices[indices[i+1]*6];
-		v1.y = vertices[indices[i + 1] * 6 + 1];
-		v1.z = vertices[indices[i + 1] * 6 + 2];
-		glm::vec3 v2;
-		v2.x = vertices[indices[i + 2] * 6];
-		v2.y = vertices[indices[i + 2] * 6 + 1];
-		v2.z = vertices[indices[i + 2] * 6 + 2];
-		glm::vec3 edge1 = v1 - v0;
-		glm::vec3 edge2 = v2 - v0;
-		glm::vec3 pVec = glm::cross(rayDirection, edge2);
-		float det = glm::dot(edge1, pVec);
-		if (det > -0.00001f && det < 0.00001f)
-			continue;
-		float invDet = 1 / det;
-		glm::vec3 tVec = nearPoint - v0;
-		u = glm::dot(tVec, pVec) * invDet;
-		if (u < 0.0f || u > 1.0f)
-			continue;
-		glm::vec3 qVec = glm::cross(tVec, edge1);
-		v = glm::dot(rayDirection, qVec) * invDet;
-		if (v < 0.0f || u + v > 1.0f)
-			continue;
-		tX = glm::dot(edge2, qVec) * invDet;
+	glm::vec3 v0;
+	v0.x = vertices[indices[i]*6]; q
+	v0.y = vertices[indices[i]*6+1];
+	v0.z = vertices[indices[i]*6+2];
+	glm::vec3 v1;
+	v1.x = vertices[indices[i+1]*6];
+	v1.y = vertices[indices[i + 1] * 6 + 1];
+	v1.z = vertices[indices[i + 1] * 6 + 2];
+	glm::vec3 v2;
+	v2.x = vertices[indices[i + 2] * 6];
+	v2.y = vertices[indices[i + 2] * 6 + 1];
+	v2.z = vertices[indices[i + 2] * 6 + 2];
+	glm::vec3 edge1 = v1 - v0;
+	glm::vec3 edge2 = v2 - v0;
+	glm::vec3 pVec = glm::cross(rayDirection, edge2);
+	float det = glm::dot(edge1, pVec);
+	if (det > -0.00001f && det < 0.00001f)
+	continue;
+	float invDet = 1 / det;
+	glm::vec3 tVec = nearPoint - v0;
+	u = glm::dot(tVec, pVec) * invDet;
+	if (u < 0.0f || u > 1.0f)
+	continue;
+	glm::vec3 qVec = glm::cross(tVec, edge1);
+	v = glm::dot(rayDirection, qVec) * invDet;
+	if (v < 0.0f || u + v > 1.0f)
+	continue;
+	tX = glm::dot(edge2, qVec) * invDet;
 
-		if (tX > 0.00001f)
-		{
-			cnnt++;
-			break;
-		}
+	if (tX > 0.00001f)
+	{
+	cnnt++;
+	break;
+	}
 	}
 	cDebug::DbgOut(L"Count: ", cnnt);
 	glm::vec3 minPoint = nearPoint + rayDirection * tX;
 	output = minPoint;
 	return true;*/
-	
+
 }
 
 bool VCGMeshContainer::CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output)
@@ -1308,7 +1309,7 @@ bool VCGMeshContainer::CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, g
 	{
 		glm::vec3 minPoint;
 		float minDistance = std::numeric_limits<float>::max();
-		for (int i = 0; i < vertices.size(); i+=6)
+		for (int i = 0; i < vertices.size(); i += 6)
 		{
 			glm::vec3 point(vertices[i], vertices[i + 1], vertices[i + 2]);
 			glm::vec3 v = farPoint - nearPoint;
@@ -1363,9 +1364,9 @@ void VCGMeshContainer::SetScale(bool positive)
 void VCGMeshContainer::SetAngleX(bool positive)
 {
 	if (positive)
-		angleX+=20;
+		angleX += 20;
 	else
-		angleX-=20;
+		angleX -= 20;
 
 	xRotation = glm::rotate(glm::mat4(1.0), angleX, glm::vec3(1.0f, 0.0f, 0.0f));
 }
@@ -1373,9 +1374,9 @@ void VCGMeshContainer::SetAngleX(bool positive)
 void VCGMeshContainer::SetAngleY(bool positive)
 {
 	if (positive)
-		angleY+=20;
+		angleY += 20;
 	else
-		angleY-=20;
+		angleY -= 20;
 
 	yRotation = glm::rotate(glm::mat4(1.0), angleY, glm::vec3(0.0f, 1.0f, 0.0f));
 }
@@ -1386,7 +1387,7 @@ void VCGMeshContainer::SetAngleZ(bool positive)
 		angleZ += 20;
 	else
 		angleZ -= 20;
-	
+
 	zRotation = glm::rotate(glm::mat4(1.0), angleZ, glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
@@ -1423,18 +1424,18 @@ int VCGMeshContainer::RemoveSmallComponents(int compSize)
 	cDebug::DbgOut(_T("Removed components:"), compCnt.second);
 	//if (currentMesh.vn > 1000)
 	//{
-		int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(currentMesh);
-		cDebug::DbgOut(_T("Removed duplicates:"), dup);
-		int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(currentMesh);
-		cDebug::DbgOut(_T("Removed unreferenced:"), unref);
-		int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(currentMesh);
-		cDebug::DbgOut(_T("Removed degenerate faces:"), deg);
+	int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(currentMesh);
+	cDebug::DbgOut(_T("Removed duplicates:"), dup);
+	int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(currentMesh);
+	cDebug::DbgOut(_T("Removed unreferenced:"), unref);
+	int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(currentMesh);
+	cDebug::DbgOut(_T("Removed degenerate faces:"), deg);
 	//}
 	vcg::tri::RequirePerVertexNormal(currentMesh);
 	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(currentMesh);
-	
 
-	
+
+
 
 	return compCnt.second;
 }
@@ -1460,13 +1461,13 @@ void VCGMeshContainer::UpdateBuffers()
 
 int VCGMeshContainer::FillHoles(int holeSize)
 {
-	
+
 	vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
 	vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
-	
+
 	//cDebug::DbgOut(L"Closed holes2: ", 1);
 	int holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingIntersectionFill<vcg::tri::SelfIntersectionEar<VCGMesh> >(currentMesh, holeSize, false);
-	
+
 	cDebug::DbgOut(L"Closed holes: ", holeCnt);
 	//holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingFill<vcg::tri::MinimumWeightEar< VCGMesh> >(currentMesh, 10000, false);
 	//cDebug::DbgOut(L"Closed holes: ", holeCnt);
@@ -1531,11 +1532,11 @@ std::vector<int> VCGMeshContainer::GetOrientation()
 		/*switch (orientation)
 		{
 		case 0: cDebug::DbgOut(L"x Direction", 1);
-			break;
+		break;
 		case 1: cDebug::DbgOut(L"y Direction", 1);
-			break;
+		break;
 		case 2: cDebug::DbgOut(L"z Direction", 1);
-			break;
+		break;
 		}*/
 		return orientation;
 	}

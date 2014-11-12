@@ -6,17 +6,31 @@
 
 // System includes
 #include "stdafx.h"
+#include "Keys.h"
 //#include "win_OpenGLApp.h"
-#include <openGLWin.h>
+//#include <openGLWin.h>
 // Project includes
 #include "resource.h"
 #include "KinectFusionExplorer.h"
 #include "KinectFusionProcessorFrame.h"
 #include "KinectFusionHelper.h"
 
-OpenGLWin openGLWin;
+LRESULT CALLBACK FusionDebugRouter(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+//OpenGLWin openGLWin;
+bool initDone = false;
+float ratio = 480.0f / 640.0f;
 bool debugMode = true;
 bool interactionMode = false;
+HWND hWndApp;
+HWND hButtonTestOne, hButtonTestTwo, hButtonInteractionMode;
+HWND hButtonResetReconstruction;
+HWND fusionDebugHandle;
+HBRUSH bDefaultBrush, bPressedBrush;
+HBRUSH bBackground = CreateSolidBrush(RGB(0, 0, 0));
+HPEN bDefaultPen, bPressedPen;
+HFONT guiFont;
+void(*ptrStartOpenGL)(KinectFusionProcessor*,int);
 #define MIN_DEPTH_DISTANCE_MM 350   // Must be greater than 0
 #define MAX_DEPTH_DISTANCE_MM 8000
 #define MIN_INTEGRATION_WEIGHT 1    // Must be greater than 0
@@ -34,10 +48,12 @@ bool interactionMode = false;
 /// <param name="lpCmdLine">command line arguments</param>
 /// <param name="nCmdShow">whether to display minimized, maximized, or normally</param>
 /// <returns>status</returns>
-int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+//int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(KinectFusionProcessor*, int), HWND &fusionHandle)
 {
 	CKinectFusionExplorer application;
-	application.Run(hInstance, nCmdShow);
+	ptrStartOpenGL = a_ptrStartOpenGL;
+	application.Run(parent, hInstance, 0, fusionHandle);// nCmdShow);
 }
 
 /// <summary>
@@ -83,35 +99,48 @@ CKinectFusionExplorer::~CKinectFusionExplorer()
 /// </summary>
 /// <param name="hInstance">handle to the application instance</param>
 /// <param name="nCmdShow">whether to display minimized, maximized, or normally</param>
-int CKinectFusionExplorer::Run(HINSTANCE hInstance, int nCmdShow)
+int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, HWND &fusionHandle)
 {
 	MSG       msg = { 0 };
 	WNDCLASS  wc = { 0 };
+
 
 	// Dialog custom window class
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.cbWndExtra = DLGWINDOWEXTRA;
 	wc.hInstance = hInstance;
 	wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wc.hIcon = LoadIconW(hInstance, MAKEINTRESOURCE(IDI_APP));
 	wc.lpfnWndProc = DefDlgProcW;
 	wc.lpszClassName = L"KinectFusionExplorerAppDlgWndClass";
-
 	if (!RegisterClassW(&wc))
 	{
 		return 0;
 	}
 
-	// Create main application window
-	HWND hWndApp = CreateDialogParamW(
+	hWndApp = CreateDialogParamW(
 		hInstance,
 		MAKEINTRESOURCE(IDD_APP),
-		nullptr,
+		parent,
 		(DLGPROC)CKinectFusionExplorer::MessageRouter,
 		reinterpret_cast<LPARAM>(this));
 
+	fusionHandle = hWndApp;
+	fusionDebugHandle = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_ADVANCED_OPTIONS), hWndApp, (DLGPROC)FusionDebugRouter);
+	ShowWindow(fusionDebugHandle, SW_HIDE);
 	// Show window
-	ShowWindow(hWndApp, nCmdShow);
+	guiFont = CreateFont(40, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"FreeSans");
+	bDefaultBrush = CreateSolidBrush(RGB(20, 20, 20));
+	bPressedBrush = CreateSolidBrush(RGB(40, 40, 40));
+	bDefaultPen = CreatePen(PS_SOLID, 2, RGB(240, 240, 240));
+	bPressedPen = CreatePen(PS_SOLID, 2, RGB(220, 220, 220));
+	hButtonInteractionMode = CreateWindowEx(0, L"Button", L"Interaction Mode", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWndApp, (HMENU)IDC_BUTTON_INTERACTION_MODE, hInstance, 0);
+	hButtonTestOne = CreateWindowEx(0, L"Button", L"Load Test Interaction", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 250, 150, 50, hWndApp, (HMENU)IDC_BUTTON_TEST_INTERACTION, hInstance, 0);
+	hButtonTestTwo = CreateWindowEx(0, L"Button", L"Test Open GL", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_BUTTON_TEST_OPENGL, hInstance, 0);
+	hButtonResetReconstruction = CreateWindowEx(0, L"Button", L"Reset", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_BUTTON_RESET_RECONSTRUCTION, hInstance, 0);
+	ShowWindow(parent, SW_SHOWMAXIMIZED);
+	ShowWindow(hWndApp, SW_SHOWMAXIMIZED);
 	//HANDLE thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&ThreadMain, (LPVOID)hWndApp, 0, 0);
 	
 	// Main message loop
@@ -130,10 +159,29 @@ int CKinectFusionExplorer::Run(HINSTANCE hInstance, int nCmdShow)
 		}
 	}
 	if (interactionMode)
-		PostThreadMessage(openGLWin.GetThreadID(), WM_QUIT, (WPARAM)NULL, (LPARAM)NULL);
-		WaitForSingleObject(openGLWin.interactionThread, INFINITE);
-		CloseHandle(openGLWin.interactionThread);
+		//PostThreadMessage(openGLWin.GetThreadID(), WM_QUIT, (WPARAM)NULL, (LPARAM)NULL);
+		//WaitForSingleObject(openGLWin.interactionThread, INFINITE);
+		//CloseHandle(openGLWin.interactionThread);
 	return static_cast<int>(msg.wParam);
+}
+
+LRESULT CALLBACK FusionDebugRouter(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	CKinectFusionExplorer* pThis = reinterpret_cast<CKinectFusionExplorer*>(::GetWindowLongPtr(hWndApp, GWLP_USERDATA));
+	//cDebug::DbgOut(L"msg?");
+	switch (message)
+	{
+	case WM_COMMAND:
+		if (pThis)
+			pThis->ProcessUI(wParam, lParam);
+		break;
+	case  WM_HSCROLL:
+		//cDebug::DbgOut(L"slider update");
+		if (pThis)
+			pThis->UpdateHSliders();
+		break;
+	}
+	return FALSE;
 }
 
 /// <summary>
@@ -152,10 +200,11 @@ LRESULT CALLBACK CKinectFusionExplorer::MessageRouter(
 {
 	CKinectFusionExplorer* pThis = nullptr;
 
-	if (WM_INITDIALOG == uMsg)
+	if (WM_INITDIALOG == uMsg && !initDone)
 	{
 		pThis = reinterpret_cast<CKinectFusionExplorer*>(lParam);
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
+		initDone = true;
 	}
 	else
 	{
@@ -164,7 +213,7 @@ LRESULT CALLBACK CKinectFusionExplorer::MessageRouter(
 
 	if (pThis)
 	{
-		return pThis->DlgProc(hWnd, uMsg, wParam, lParam);
+			return pThis->DlgProc(hWnd, uMsg, wParam, lParam);
 	}
 
 	return 0;
@@ -184,83 +233,111 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 	WPARAM wParam,
 	LPARAM lParam)
 {
+	if (Keys::GetKeyStateOnce(VK_F10))
+	{
+		//cDebug::DbgOut(L"Keydown indeed");
+		if (IsWindowVisible(fusionDebugHandle))
+		{
+			ShowWindow(hButtonInteractionMode, SW_SHOW);
+			ShowWindow(hButtonResetReconstruction, SW_SHOW);
+			ShowWindow(hButtonTestOne, SW_SHOW);
+			ShowWindow(hButtonTestTwo, SW_SHOW);
+			ShowWindow(fusionDebugHandle, SW_HIDE);
+		}
+		else
+		{
+			RECT rRect;
+			GetClientRect(hWnd, &rRect);
+			ShowWindow(fusionDebugHandle, SW_SHOW);
+			ShowWindow(hButtonInteractionMode, SW_HIDE);
+			ShowWindow(hButtonResetReconstruction, SW_HIDE);
+			ShowWindow(hButtonTestOne, SW_HIDE);
+			ShowWindow(hButtonTestTwo, SW_HIDE);
+			MoveWindow(fusionDebugHandle, rRect.right - 400, 0, 400, rRect.bottom, true);
+			InitializeUIControls();
+		}
+
+	}
+
 	switch (message)
 	{
 	case WM_INITDIALOG:
 	{
-						  // Bind application window handle
-						  m_hWnd = hWnd;
+		// Bind application window handle
+		m_hWnd = hWnd;
 
-						  InitializeUIControls();
+		
 
-						  // Init Direct2D
-						  D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pD2DFactory);
+		// Init Direct2D
+		D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pD2DFactory);
 
-						  int width = m_params.m_cDepthWidth;
-						  int height = m_params.m_cDepthHeight;
+		int width = m_params.m_cDepthWidth;
+		int height = m_params.m_cDepthHeight;
 
-						  // Create and initialize a new Direct2D image renderer (take a look at ImageRenderer.h)
-						  // We'll use this to draw the data we receive from the Kinect to the screen
-						  m_pDrawDepth = new ImageRenderer();
-						  HRESULT hr = m_pDrawDepth->Initialize(
-							  GetDlgItem(m_hWnd, IDC_DEPTH_VIEW),
-							  m_pD2DFactory,
-							  width,
-							  height,
-							  width * sizeof(long));
+		// Create and initialize a new Direct2D image renderer (take a look at ImageRenderer.h)
+		// We'll use this to draw the data we receive from the Kinect to the screen
+		m_pDrawDepth = new ImageRenderer();
+		HRESULT hr = m_pDrawDepth->Initialize(
+			GetDlgItem(m_hWnd, IDC_DEPTH_VIEW),
+			m_pD2DFactory,
+			width,
+			height,
+			width * sizeof(long));
 
-						  if (FAILED(hr))
-						  {
-							  SetStatusMessage(L"Failed to initialize the Direct2D draw device.");
-							  m_bInitializeError = true;
-						  }
+		if (FAILED(hr))
+		{
+			SetStatusMessage(L"Failed to initialize the Direct2D draw device.");
+			m_bInitializeError = true;
+		}
 
-						  m_pDrawReconstruction = new ImageRenderer();
-						  hr = m_pDrawReconstruction->Initialize(
-							  GetDlgItem(m_hWnd, IDC_RECONSTRUCTION_VIEW),
-							  m_pD2DFactory,
-							  width,
-							  height,
-							  width * sizeof(long));
+		m_pDrawReconstruction = new ImageRenderer();
+		hr = m_pDrawReconstruction->Initialize(
+			GetDlgItem(m_hWnd, IDC_RECONSTRUCTION_VIEW),
+			m_pD2DFactory,
+			width,
+			height,
+			width * sizeof(long));
 
-						  if (FAILED(hr))
-						  {
-							  SetStatusMessage(L"Failed to initialize the Direct2D draw device.");
-							  m_bInitializeError = true;
-						  }
+		if (FAILED(hr))
+		{
+			SetStatusMessage(L"Failed to initialize the Direct2D draw device.");
+			m_bInitializeError = true;
+		}
 
-						  m_pDrawTrackingResiduals = new ImageRenderer();
-						  hr = m_pDrawTrackingResiduals->Initialize(
-							  GetDlgItem(m_hWnd, IDC_TRACKING_RESIDUALS_VIEW),
-							  m_pD2DFactory,
-							  width,
-							  height,
-							  width * sizeof(long));
+		m_pDrawTrackingResiduals = new ImageRenderer();
+		hr = m_pDrawTrackingResiduals->Initialize(
+			GetDlgItem(m_hWnd, IDC_TRACKING_RESIDUALS_VIEW),
+			m_pD2DFactory,
+			width,
+			height,
+			width * sizeof(long));
 
-						  if (FAILED(hr))
-						  {
-							  SetStatusMessage(L"Failed to initialize the Direct2D draw device.");
-							  m_bInitializeError = true;
-						  }
+		if (FAILED(hr))
+		{
+			SetStatusMessage(L"Failed to initialize the Direct2D draw device.");
+			m_bInitializeError = true;
+		}
 
-						  if (FAILED(m_processor.SetWindow(m_hWnd, WM_FRAMEREADY, WM_UPDATESENSORSTATUS)) ||
-							  FAILED(m_processor.SetParams(m_params)) ||
-							  FAILED(m_processor.StartProcessing()))
-						  {
-							  m_bInitializeError = true;
-						  }
+		if (FAILED(m_processor.SetWindow(m_hWnd, WM_FRAMEREADY, WM_UPDATESENSORSTATUS)) ||
+			FAILED(m_processor.SetParams(m_params)) ||
+			FAILED(m_processor.StartProcessing()))
+		{
+			m_bInitializeError = true;
+		}
 
-						  m_saveMeshFormat = m_params.m_saveMeshType;
+		m_saveMeshFormat = m_params.m_saveMeshType;
 	}
-		break;
-
-		// If the title bar X is clicked, destroy app
-	case WM_CLOSE:
-		DestroyWindow(hWnd);
 		break;
 
 	case WM_DESTROY:
 		// Quit the main message pump
+		DestroyWindow(fusionDebugHandle);
+		DeleteObject(bBackground);
+		DeleteObject(bDefaultBrush);
+		DeleteObject(bDefaultPen);
+		DeleteObject(bPressedBrush);
+		DeleteObject(bPressedPen);
+		DeleteObject(guiFont);
 		m_processor.StopProcessing();
 		PostQuitMessage(0);
 		break;
@@ -274,14 +351,16 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 	case  WM_HSCROLL:
 		UpdateHSliders();
 		break;
-
+	case WM_CTLCOLORDLG:
+		return (LRESULT)bBackground;
+		break;
 	case WM_NOTIFY:
 	{
-					  const NMHDR* pNMHeader = reinterpret_cast<const NMHDR*>(lParam);
-					  if (pNMHeader->code == NSCN_REFRESH && pNMHeader->idFrom == IDC_SENSORCHOOSER)
-					  {
-						  m_processor.ResolveSensorConflict();
-					  }
+		const NMHDR* pNMHeader = reinterpret_cast<const NMHDR*>(lParam);
+		if (pNMHeader->code == NSCN_REFRESH && pNMHeader->idFrom == IDC_SENSORCHOOSER)
+		{
+			m_processor.ResolveSensorConflict();
+		}
 	}
 		break;
 
@@ -295,7 +374,84 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 			m_pSensorChooserUI->UpdateSensorStatus(static_cast<DWORD>(wParam));
 		}
 		break;
+	case WM_KEYDOWN:
+		//cDebug::DbgOut(L"Keydown indeed");
+		if (wParam == 'S')
+		{
+			//cDebug::DbgOut(L"S down indeed");
+			if (IsWindowVisible(fusionDebugHandle))
+				ShowWindow(fusionDebugHandle, SW_HIDE);
+			else
+			{
+				ShowWindow(fusionDebugHandle, SW_SHOW);
+				InitializeUIControls();
+			}
+
+		}
+		break;
+	case WM_SIZE:
+	{
+					OutputDebugString(L"WM_SIZE");
+		RECT rRect;
+		GetClientRect(GetParent(hWnd), &rRect);
+		int recoHeight = (rRect.right - 400)*ratio;
+		int recoWidth = rRect.right-400;
+		if (recoHeight >= rRect.bottom - 30)
+		{
+			recoHeight = rRect.bottom - 30;
+			recoWidth = recoHeight/ratio;
+		}
+		MoveWindow(GetDlgItem(hWnd, IDC_RECONSTRUCTION_VIEW), 0, 0, recoWidth, recoHeight, true);
+		MoveWindow(GetDlgItem(hWnd, IDC_BUTTON_INTERACTION_MODE), rRect.right - 400, 50, 300, 50, true);
+		MoveWindow(GetDlgItem(hWnd, IDC_BUTTON_TEST_INTERACTION), rRect.right - 400, 150, 300, 50, true);
+		MoveWindow(GetDlgItem(hWnd, IDC_BUTTON_TEST_OPENGL), rRect.right - 400, 250, 300, 50, true);
+		MoveWindow(GetDlgItem(hWnd, IDC_BUTTON_RESET_RECONSTRUCTION), rRect.right - 400, rRect.bottom - 250, 300, 50, true);
+		MoveWindow(GetDlgItem(hWnd, IDC_FRAMES_PER_SECOND), 0, rRect.bottom - 30, 100, 30, true);
+		MoveWindow(GetDlgItem(hWnd, IDC_STATUS), 100, rRect.bottom - 30, rRect.right - 100, 30, true);
+		MoveWindow(fusionDebugHandle, rRect.right - 400, 0, 400, rRect.bottom, true);
 	}
+		break;
+	case WM_DRAWITEM:
+	{
+
+		if (IDC_BUTTON_INTERACTION_MODE == LOWORD(wParam)
+			|| IDC_BUTTON_TEST_INTERACTION == LOWORD(wParam)
+			|| IDC_BUTTON_TEST_OPENGL == LOWORD(wParam)
+			|| IDC_BUTTON_RESET_RECONSTRUCTION == LOWORD(wParam))
+		{
+			LPDRAWITEMSTRUCT Item;
+			Item = (LPDRAWITEMSTRUCT)lParam;
+			SelectObject(Item->hDC, guiFont);
+			FillRect(Item->hDC, &Item->rcItem, bBackground);
+			SelectObject(Item->hDC, bDefaultBrush);
+			if (Item->itemState & ODS_SELECTED)
+			{
+				SetTextColor(Item->hDC, RGB(245, 245, 245));
+				SelectObject(Item->hDC, bPressedBrush);
+				SelectObject(Item->hDC, bPressedPen);
+			}
+			else
+			{
+				SetTextColor(Item->hDC, RGB(240, 240, 240));
+				SelectObject(Item->hDC, bDefaultPen);
+
+			}
+			SetBkMode(Item->hDC, TRANSPARENT);
+			RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
+			int len;
+			len = GetWindowTextLength(Item->hwndItem);
+			LPSTR lpBuff;
+			lpBuff = new char[len + 1];
+			GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
+
+			DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			return TRUE;
+		}
+	}
+		break;
+	}
+	
 
 	return FALSE;
 }
@@ -562,20 +718,20 @@ void CKinectFusionExplorer::InitializeUIControls()
 
 	// Set slider ranges
 	SendDlgItemMessage(
-		m_hWnd,
+		fusionDebugHandle,
 		IDC_SLIDER_DEPTH_MIN,
 		TBM_SETRANGE,
 		TRUE,
 		MAKELPARAM(MIN_DEPTH_DISTANCE_MM, MAX_DEPTH_DISTANCE_MM));
 
-	SendDlgItemMessage(m_hWnd,
+	SendDlgItemMessage(fusionDebugHandle,
 		IDC_SLIDER_DEPTH_MAX,
 		TBM_SETRANGE,
 		TRUE,
 		MAKELPARAM(MIN_DEPTH_DISTANCE_MM, MAX_DEPTH_DISTANCE_MM));
 
 	SendDlgItemMessage(
-		m_hWnd,
+		fusionDebugHandle,
 		IDC_INTEGRATION_WEIGHT_SLIDER,
 		TBM_SETRANGE,
 		TRUE,
@@ -583,21 +739,21 @@ void CKinectFusionExplorer::InitializeUIControls()
 
 	// Set slider positions
 	SendDlgItemMessage(
-		m_hWnd,
+		fusionDebugHandle,
 		IDC_SLIDER_DEPTH_MAX,
 		TBM_SETPOS,
 		TRUE,
 		(UINT)m_params.m_fMaxDepthThreshold * 1000);
 
 	SendDlgItemMessage(
-		m_hWnd,
+		fusionDebugHandle,
 		IDC_SLIDER_DEPTH_MIN,
 		TBM_SETPOS,
 		TRUE,
 		(UINT)m_params.m_fMinDepthThreshold * 1000);
 
 	SendDlgItemMessage(
-		m_hWnd,
+		fusionDebugHandle,
 		IDC_INTEGRATION_WEIGHT_SLIDER,
 		TBM_SETPOS,
 		TRUE,
@@ -606,137 +762,137 @@ void CKinectFusionExplorer::InitializeUIControls()
 	// Set intermediate slider tics at meter intervals
 	for (int i = 1; i<(MAX_DEPTH_DISTANCE_MM / 1000); i++)
 	{
-		SendDlgItemMessage(m_hWnd, IDC_SLIDER_DEPTH_MAX, TBM_SETTIC, 0, i * 1000);
-		SendDlgItemMessage(m_hWnd, IDC_SLIDER_DEPTH_MIN, TBM_SETTIC, 0, i * 1000);
+		SendDlgItemMessage(fusionDebugHandle, IDC_SLIDER_DEPTH_MAX, TBM_SETTIC, 0, i * 1000);
+		SendDlgItemMessage(fusionDebugHandle, IDC_SLIDER_DEPTH_MIN, TBM_SETTIC, 0, i * 1000);
 	}
 
 	// Update slider text
 	WCHAR str[MAX_PATH];
 	swprintf_s(str, ARRAYSIZE(str), L"%4.2fm", m_params.m_fMinDepthThreshold);
-	SetDlgItemText(m_hWnd, IDC_MIN_DIST_TEXT, str);
+	SetDlgItemText(fusionDebugHandle, IDC_MIN_DIST_TEXT, str);
 	swprintf_s(str, ARRAYSIZE(str), L"%4.2fm", m_params.m_fMaxDepthThreshold);
-	SetDlgItemText(m_hWnd, IDC_MAX_DIST_TEXT, str);
+	SetDlgItemText(fusionDebugHandle, IDC_MAX_DIST_TEXT, str);
 
 	swprintf_s(str, ARRAYSIZE(str), L"%d", m_params.m_cMaxIntegrationWeight);
-	SetDlgItemText(m_hWnd, IDC_INTEGRATION_WEIGHT_TEXT, str);
+	SetDlgItemText(fusionDebugHandle, IDC_INTEGRATION_WEIGHT_TEXT, str);
 
 	// Set the radio buttons for Volume Parameters
 	switch ((int)m_params.m_reconstructionParams.voxelsPerMeter)
 	{
 	case 768:
-		CheckDlgButton(m_hWnd, IDC_VPM_768, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VPM_768, BST_CHECKED);
 		break;
 	case 640:
-		CheckDlgButton(m_hWnd, IDC_VPM_640, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VPM_640, BST_CHECKED);
 		break;
 	case 512:
-		CheckDlgButton(m_hWnd, IDC_VPM_512, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VPM_512, BST_CHECKED);
 		break;
 	case 384:
-		CheckDlgButton(m_hWnd, IDC_VPM_384, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VPM_384, BST_CHECKED);
 		break;
 	case 256:
-		CheckDlgButton(m_hWnd, IDC_VPM_256, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VPM_256, BST_CHECKED);
 		break;
 	case 128:
-		CheckDlgButton(m_hWnd, IDC_VPM_128, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VPM_128, BST_CHECKED);
 		break;
 	default:
 		m_params.m_reconstructionParams.voxelsPerMeter = 256.0f;	// set to medium default
-		CheckDlgButton(m_hWnd, IDC_VPM_256, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VPM_256, BST_CHECKED);
 		break;
 	}
 
 	switch ((int)m_params.m_reconstructionParams.voxelCountX)
 	{
 	case 640:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_X_640, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_X_640, BST_CHECKED);
 		break;
 	case 512:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_X_512, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_X_512, BST_CHECKED);
 		break;
 	case 384:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_X_384, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_X_384, BST_CHECKED);
 		break;
 	case 256:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_X_256, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_X_256, BST_CHECKED);
 		break;
 	case 128:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_X_128, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_X_128, BST_CHECKED);
 		break;
 	default:
 		m_params.m_reconstructionParams.voxelCountX = 384;	// set to medium default
-		CheckDlgButton(m_hWnd, IDC_VOXELS_X_384, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_X_384, BST_CHECKED);
 		break;
 	}
 
 	switch ((int)m_params.m_reconstructionParams.voxelCountY)
 	{
 	case 640:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_Y_640, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_Y_640, BST_CHECKED);
 		break;
 	case 512:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_Y_512, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_Y_512, BST_CHECKED);
 		break;
 	case 384:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_Y_384, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_Y_384, BST_CHECKED);
 		break;
 	case 256:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_Y_256, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_Y_256, BST_CHECKED);
 		break;
 	case 128:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_Y_128, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_Y_128, BST_CHECKED);
 		break;
 	default:
 		m_params.m_reconstructionParams.voxelCountX = 384;	// set to medium default
-		CheckDlgButton(m_hWnd, IDC_VOXELS_Y_384, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_Y_384, BST_CHECKED);
 		break;
 	}
 
 	switch ((int)m_params.m_reconstructionParams.voxelCountZ)
 	{
 	case 640:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_Z_640, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_Z_640, BST_CHECKED);
 		break;
 	case 512:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_Z_512, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_Z_512, BST_CHECKED);
 		break;
 	case 384:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_Z_384, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_Z_384, BST_CHECKED);
 		break;
 	case 256:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_Z_256, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_Z_256, BST_CHECKED);
 		break;
 	case 128:
-		CheckDlgButton(m_hWnd, IDC_VOXELS_Z_128, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_Z_128, BST_CHECKED);
 		break;
 	default:
 		m_params.m_reconstructionParams.voxelCountX = 384;	// set to medium default
-		CheckDlgButton(m_hWnd, IDC_VOXELS_Z_384, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_VOXELS_Z_384, BST_CHECKED);
 		break;
 	}
 
 	if (Stl == m_saveMeshFormat)
 	{
-		CheckDlgButton(m_hWnd, IDC_MESH_FORMAT_STL_RADIO, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_MESH_FORMAT_STL_RADIO, BST_CHECKED);
 	}
 	else if (Obj == m_saveMeshFormat)
 	{
-		CheckDlgButton(m_hWnd, IDC_MESH_FORMAT_OBJ_RADIO, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_MESH_FORMAT_OBJ_RADIO, BST_CHECKED);
 	}
 	else if (Ply == m_saveMeshFormat)
 	{
-		CheckDlgButton(m_hWnd, IDC_MESH_FORMAT_PLY_RADIO, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_MESH_FORMAT_PLY_RADIO, BST_CHECKED);
 	}
 
 	if (m_params.m_bCaptureColor)
 	{
-		CheckDlgButton(m_hWnd, IDC_CHECK_CAPTURE_COLOR, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_CHECK_CAPTURE_COLOR, BST_CHECKED);
 	}
 
 	if (m_params.m_bAutoFindCameraPoseWhenLost)
 	{
-		CheckDlgButton(m_hWnd, IDC_CHECK_CAMERA_POSE_FINDER, BST_CHECKED);
+		CheckDlgButton(fusionDebugHandle, IDC_CHECK_CAMERA_POSE_FINDER, BST_CHECKED);
 	}
 }
 
@@ -785,15 +941,20 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_BUTTON_TEST_INTERACTION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		interactionMode = true;
-		openGLWin.testMode = 1;
-		openGLWin.StartOpenGLThread(m_hWnd, GetModuleHandle(NULL));
+		ShowWindow(hWndApp, SW_HIDE);
+		ptrStartOpenGL(&m_processor, 1);
+
+		//openGLWin.testMode = 1;
+		//openGLWin.StartOpenGLThread(m_hWnd, GetModuleHandle(NULL));
 
 	}
 	if (IDC_BUTTON_TEST_OPENGL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		interactionMode = true;
-		openGLWin.testMode = 2;
-		openGLWin.StartOpenGLThread(m_hWnd, GetModuleHandle(NULL));
+		ShowWindow(hWndApp, SW_HIDE);
+		ptrStartOpenGL(&m_processor, 2);
+		//openGLWin.testMode = 2;
+		//openGLWin.StartOpenGLThread(m_hWnd, GetModuleHandle(NULL));
 	}
 	// If it was the mesh button clicked, mesh the volume and save
 	if (IDC_BUTTON_MESH_RECONSTRUCTION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
@@ -842,7 +1003,7 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 	}
 	if (IDC_BUTTON_INTERACTION_MODE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
-		openGLWin.testMode = 0;
+		//openGLWin.testMode = 0;
 		SetStatusMessage(L"Creating mesh and entering interaction mode. Please wait...");
 		m_bSavingMesh = true;
 
@@ -861,10 +1022,9 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 			LPOLESTR fileString = W2OLE((wchar_t*)fileName.c_str());
 			hr = WriteAsciiPlyMeshFile(mesh, fileString, true, m_bColorCaptured);
 			interactionMode = true;
-			if (openGLWin.StartOpenGLThread(m_hWnd, GetModuleHandle(NULL)))
-			{
-				hr = S_OK;
-			}
+			ShowWindow(hWndApp, SW_HIDE);
+			ptrStartOpenGL(&m_processor, 0);
+			hr = S_OK;
 			// Release the mesh
 			SafeRelease(mesh);
 		}
@@ -989,33 +1149,33 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 /// </summary>
 void CKinectFusionExplorer::UpdateHSliders()
 {
-	int mmMinPos = (int)SendDlgItemMessage(m_hWnd, IDC_SLIDER_DEPTH_MIN, TBM_GETPOS, 0, 0);
+	int mmMinPos = (int)SendDlgItemMessage(fusionDebugHandle, IDC_SLIDER_DEPTH_MIN, TBM_GETPOS, 0, 0);
 
 	if (mmMinPos >= MIN_DEPTH_DISTANCE_MM && mmMinPos <= MAX_DEPTH_DISTANCE_MM)
 	{
 		m_params.m_fMinDepthThreshold = (float)mmMinPos * 0.001f;
 	}
 
-	int mmMaxPos = (int)SendDlgItemMessage(m_hWnd, IDC_SLIDER_DEPTH_MAX, TBM_GETPOS, 0, 0);
+	int mmMaxPos = (int)SendDlgItemMessage(fusionDebugHandle, IDC_SLIDER_DEPTH_MAX, TBM_GETPOS, 0, 0);
 
 	if (mmMaxPos >= MIN_DEPTH_DISTANCE_MM && mmMaxPos <= MAX_DEPTH_DISTANCE_MM)
 	{
 		m_params.m_fMaxDepthThreshold = (float)mmMaxPos * 0.001f;
 	}
 
-	int maxWeight = (int)SendDlgItemMessage(m_hWnd, IDC_INTEGRATION_WEIGHT_SLIDER, TBM_GETPOS, 0, 0);
+	int maxWeight = (int)SendDlgItemMessage(fusionDebugHandle, IDC_INTEGRATION_WEIGHT_SLIDER, TBM_GETPOS, 0, 0);
 	m_params.m_cMaxIntegrationWeight = maxWeight % (MAX_INTEGRATION_WEIGHT + 1);
 
 
 	// update text
 	WCHAR str[MAX_PATH];
 	swprintf_s(str, ARRAYSIZE(str), L"%4.2fm", m_params.m_fMinDepthThreshold);
-	SetDlgItemText(m_hWnd, IDC_MIN_DIST_TEXT, str);
+	SetDlgItemText(fusionDebugHandle, IDC_MIN_DIST_TEXT, str);
 	swprintf_s(str, ARRAYSIZE(str), L"%4.2fm", m_params.m_fMaxDepthThreshold);
-	SetDlgItemText(m_hWnd, IDC_MAX_DIST_TEXT, str);
+	SetDlgItemText(fusionDebugHandle, IDC_MAX_DIST_TEXT, str);
 
 	swprintf_s(str, ARRAYSIZE(str), L"%d", m_params.m_cMaxIntegrationWeight);
-	SetDlgItemText(m_hWnd, IDC_INTEGRATION_WEIGHT_TEXT, str);
+	SetDlgItemText(fusionDebugHandle, IDC_INTEGRATION_WEIGHT_TEXT, str);
 
 	m_processor.SetParams(m_params);
 }

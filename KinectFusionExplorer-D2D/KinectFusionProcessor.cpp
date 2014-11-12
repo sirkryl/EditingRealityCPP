@@ -7,7 +7,6 @@
 // System includes
 #include "stdafx.h"
 //#include "win_OpenGLApp.h"
-#include "openGLWin.h"
 #pragma warning(push)
 #pragma warning(disable:6255)
 #pragma warning(disable:6263)
@@ -2047,28 +2046,9 @@ FinishFrame:
     m_frame.SetStatusMessage(m_statusMessage);
 
     LeaveCriticalSection(&m_lockFrame);
-
-	//CHANGED
-	UpdateInteractiveFusion();
 	
 }
 
-//CHANGED
-/// <summary>
-/// This and it's function call are responsible for updating the InteractiveFusion-Library. 
-/// It sends the Kinect camera matrix to the OpenGL Window.
-/// </summary>
-void KinectFusionProcessor::UpdateInteractiveFusion()
-{
-	glm::mat4 cameraMatrix(1.0f);
-
-	Matrix4 leftHandedCamTransform = m_worldToCameraTransform;
-	cameraMatrix[0] = glm::vec4(leftHandedCamTransform.M11, leftHandedCamTransform.M12, leftHandedCamTransform.M13, leftHandedCamTransform.M14);
-	cameraMatrix[1] = glm::vec4(leftHandedCamTransform.M21, leftHandedCamTransform.M22, leftHandedCamTransform.M23, leftHandedCamTransform.M24);
-	cameraMatrix[2] = glm::vec4(leftHandedCamTransform.M31, leftHandedCamTransform.M32, leftHandedCamTransform.M33, leftHandedCamTransform.M34);
-	cameraMatrix[3] = glm::vec4(leftHandedCamTransform.M41, leftHandedCamTransform.M42, leftHandedCamTransform.M43, leftHandedCamTransform.M44);
-	openGLWin.glControl.SetCameraMatrix(cameraMatrix);
-}
 
 /// <summary>
 /// Perform camera pose finding when tracking is lost using AlignPointClouds.

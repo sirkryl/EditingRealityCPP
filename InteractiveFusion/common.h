@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <unordered_map>
 #include "openGLResources.h"
+#include <boost/smart_ptr/shared_ptr.hpp>
 using namespace std;
 
 #include <gl/glew.h>

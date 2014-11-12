@@ -10,7 +10,6 @@
 #include <NuiSensorChooserUI.h>
 #include "KinectFusionParams.h"
 #include "KinectFusionProcessor.h"
-
 /// <summary>
 /// KinectFusionExplorer sample.
 /// </summary>
@@ -32,6 +31,7 @@ public:
 	//int WINAPI CKinectFusionExplorer::ThreadMain(HWND parent);
 	//static LRESULT CALLBACK CKinectFusionExplorer::RenderWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+	//LRESULT CALLBACK FusionDebugRouter(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
     /// <summary>
     /// Handles window messages, passes most to the class instance to handle
     /// </summary>
@@ -57,7 +57,23 @@ public:
     /// </summary>
     /// <param name="hInstance"></param>
     /// <param name="nCmdShow"></param>
-    int                         Run(HINSTANCE hInstance, int nCmdShow);
+    int                         Run(HWND parent, HINSTANCE hInstance, int nCmdShow, HWND &fusionHandle);
+
+
+	/// <summary>
+	/// Initialize the UI controls
+	/// </summary>
+	void                        InitializeUIControls();
+
+	/// <summary>
+	/// Handle new UI interaction
+	/// </summary>
+	void                        ProcessUI(WPARAM wParam, LPARAM lParam);
+
+	/// <summary>
+	/// Update the internal variable values from the UI Horizontal sliders.
+	/// </summary>
+	void                        UpdateHSliders();
 
 private:
     HWND                        m_hWnd;
@@ -86,21 +102,6 @@ private:
     /// Handle a completed frame from the Kinect Fusion processor.
     /// </summary>
     void                        HandleCompletedFrame();
-
-    /// <summary>
-    /// Initialize the UI controls
-    /// </summary>
-    void                        InitializeUIControls();
-
-    /// <summary>
-    /// Handle new UI interaction
-    /// </summary>
-    void                        ProcessUI(WPARAM wParam, LPARAM lParam);
-
-    /// <summary>
-    /// Update the internal variable values from the UI Horizontal sliders.
-    /// </summary>
-    void                        UpdateHSliders();
 
     /// <summary>
     /// Set the status bar message
@@ -146,3 +147,5 @@ private:
     /// </summary>
     DWORD                       m_tickLastStatus;
 };
+
+void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(KinectFusionProcessor*, int), HWND &fusionHandle);

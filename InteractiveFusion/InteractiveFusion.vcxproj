@@ -18,13 +18,13 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -43,13 +43,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\include;W:\dev\glew\include;W:\dev\glsdk_0_5_2\glm;W:\dev\vcglib;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;$(FLANN_ROOT)\include\;$(QHULL_ROOT)\include;$(VTK_DIR)\include\vtk-6.1;W:\dev\freeglut\include;$(IncludePath)</IncludePath>
-    <LibraryPath>W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\objs\win32\vc2010;W:\dev\glew\lib\Release\Win32;$(SolutionDir)$(Configuration);$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;$(PCL_ROOT)\lib;$(BOOST_ROOT)\lib;$(FLANN_ROOT)\lib;$(QHULL_ROOT)l\lib;$(VTK_DIR)\lib;W:\dev\freeglut\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;$(FLANN_ROOT)\include\;$(QHULL_ROOT)\include;$(VTK_DIR)\include\vtk-6.1;W:\dev\freeglut\include;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;..\KinectFusionExplorer-D2D;W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\include;W:\dev\glew\include;W:\dev\glsdk_0_5_2\glm;W:\dev\vcglib;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;$(FLANN_ROOT)\include\;$(QHULL_ROOT)\include;$(VTK_DIR)\include\vtk-6.1;W:\dev\freeglut\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\objs\win32\vc2010;W:\dev\glew\lib\Release\Win32;$(SolutionDir)$(Configuration);$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;$(PCL_ROOT)\lib;$(BOOST_ROOT)\lib;$(FLANN_ROOT)\lib;$(QHULL_ROOT)l\lib;$(VTK_DIR)\lib;W:\dev\freeglut\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\include;W:\dev\glew\include;W:\dev\glsdk_0_5_2\glm;W:\dev\vcglib;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;$(FLANN_ROOT)\include\;$(QHULL_ROOT)\include;$(VTK_DIR)\include\vtk-6.1;W:\dev\freeglut\include;$(IncludePath)</IncludePath>
-    <LibraryPath>W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\objs\win32\vc2010;W:\dev\glew\lib\Release\Win32;$(SolutionDir)$(Configuration);$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;$(PCL_ROOT)\lib;$(BOOST_ROOT)\lib;$(FLANN_ROOT)\lib;$(QHULL_ROOT)l\lib;$(VTK_DIR)\lib;W:\dev\freeglut\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;$(FLANN_ROOT)\include\;$(QHULL_ROOT)\include;$(VTK_DIR)\include\vtk-6.1;W:\dev\freeglut\include;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;..\KinectFusionExplorer-D2D;W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\include;W:\dev\glew\include;W:\dev\glsdk_0_5_2\glm;W:\dev\vcglib;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;$(FLANN_ROOT)\include\;$(QHULL_ROOT)\include;$(VTK_DIR)\include\vtk-6.1;W:\dev\freeglut\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\objs\win32\vc2010;W:\dev\glew\lib\Release\Win32;$(SolutionDir)$(Configuration);$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;$(PCL_ROOT)\lib;$(BOOST_ROOT)\lib;$(FLANN_ROOT)\lib;$(QHULL_ROOT)l\lib;$(VTK_DIR)\lib;W:\dev\freeglut\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -60,9 +60,9 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>freeglut.lib;opengl32.lib;freetype253_D.lib;vtkCommonColor-6.1.lib;vtkCommonComputationalGeometry-6.1.lib;vtkCommonCore-6.1.lib;vtkCommonDataModel-6.1.lib;vtkCommonExecutionModel-6.1.lib;vtkCommonMath-6.1.lib;vtkCommonMisc-6.1.lib;vtkCommonSystem-6.1.lib;vtkCommonTransforms-6.1.lib;vtkFiltersAMR-6.1.lib;vtkFiltersCore-6.1.lib;vtkFiltersExtraction-6.1.lib;vtkFiltersFlowPaths-6.1.lib;vtkFiltersGeneral-6.1.lib;vtkFiltersGeneric-6.1.lib;vtkFiltersGeometry-6.1.lib;vtkFiltersHybrid-6.1.lib;vtkFiltersHyperTree-6.1.lib;vtkFiltersImaging-6.1.lib;vtkFiltersModeling-6.1.lib;vtkFiltersParallel-6.1.lib;vtkFiltersParallelImaging-6.1.lib;vtkFiltersProgrammable-6.1.lib;vtkFiltersSelection-6.1.lib;vtkFiltersSMP-6.1.lib;vtkFiltersSources-6.1.lib;vtkFiltersStatistics-6.1.lib;vtkFiltersTexture-6.1.lib;vtkFiltersVerdict-6.1.lib;vtkRenderingAnnotation-6.1.lib;vtkRenderingContext2D-6.1.lib;vtkRenderingCore-6.1.lib;vtkRenderingFreeType-6.1.lib;vtkRenderingFreeTypeOpenGL-6.1.lib;vtkRenderingGL2PS-6.1.lib;vtkRenderingImage-6.1.lib;vtkRenderingLabel-6.1.lib;vtkRenderingLIC-6.1.lib;vtkRenderingLOD-6.1.lib;vtkRenderingOpenGL-6.1.lib;vtkRenderingVolume-6.1.lib;vtkRenderingVolumeAMR-6.1.lib;vtkRenderingVolumeOpenGL-6.1.lib;vtksys-6.1.lib;pcl_common_debug.lib;pcl_io_debug.lib;pcl_kdtree_debug.lib;pcl_segmentation_debug.lib;pcl_search_debug.lib;pcl_filters_debug.lib;pcl_features_debug.lib;pcl_surface_debug.lib;pcl_visualization_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>NuiSensorChooser.lib;Kinect10.lib;freetype253_D.lib;KinectFusion180_32.lib;vtkCommonColor-6.1.lib;vtkCommonComputationalGeometry-6.1.lib;vtkCommonCore-6.1.lib;vtkCommonDataModel-6.1.lib;vtkCommonExecutionModel-6.1.lib;vtkCommonMath-6.1.lib;vtkCommonMisc-6.1.lib;vtkCommonSystem-6.1.lib;vtkCommonTransforms-6.1.lib;vtkFiltersAMR-6.1.lib;vtkFiltersCore-6.1.lib;vtkFiltersExtraction-6.1.lib;vtkFiltersFlowPaths-6.1.lib;vtkFiltersGeneral-6.1.lib;vtkFiltersGeneric-6.1.lib;vtkFiltersGeometry-6.1.lib;vtkFiltersHybrid-6.1.lib;vtkFiltersHyperTree-6.1.lib;vtkFiltersImaging-6.1.lib;vtkFiltersModeling-6.1.lib;vtkFiltersParallel-6.1.lib;vtkFiltersParallelImaging-6.1.lib;vtkFiltersProgrammable-6.1.lib;vtkFiltersSelection-6.1.lib;vtkFiltersSMP-6.1.lib;vtkFiltersSources-6.1.lib;vtkFiltersStatistics-6.1.lib;vtkFiltersTexture-6.1.lib;vtkFiltersVerdict-6.1.lib;vtkRenderingAnnotation-6.1.lib;vtkRenderingContext2D-6.1.lib;vtkRenderingCore-6.1.lib;vtkRenderingFreeType-6.1.lib;vtkRenderingFreeTypeOpenGL-6.1.lib;vtkRenderingGL2PS-6.1.lib;vtkRenderingImage-6.1.lib;vtkRenderingLabel-6.1.lib;vtkRenderingLIC-6.1.lib;vtkRenderingLOD-6.1.lib;vtkRenderingOpenGL-6.1.lib;vtkRenderingVolume-6.1.lib;vtkRenderingVolumeAMR-6.1.lib;vtkRenderingVolumeOpenGL-6.1.lib;vtksys-6.1.lib;pcl_common_debug.lib;pcl_io_debug.lib;pcl_kdtree_debug.lib;pcl_segmentation_debug.lib;pcl_search_debug.lib;pcl_filters_debug.lib;pcl_features_debug.lib;pcl_surface_debug.lib;pcl_visualization_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -77,11 +77,11 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>freeglut.lib;freetype253_D.lib;vtkCommonColor-6.1.lib;vtkCommonComputationalGeometry-6.1.lib;vtkCommonCore-6.1.lib;vtkCommonDataModel-6.1.lib;vtkCommonExecutionModel-6.1.lib;vtkCommonMath-6.1.lib;vtkCommonMisc-6.1.lib;vtkCommonSystem-6.1.lib;vtkCommonTransforms-6.1.lib;vtkFiltersAMR-6.1.lib;vtkFiltersCore-6.1.lib;vtkFiltersExtraction-6.1.lib;vtkFiltersFlowPaths-6.1.lib;vtkFiltersGeneral-6.1.lib;vtkFiltersGeneric-6.1.lib;vtkFiltersGeometry-6.1.lib;vtkFiltersHybrid-6.1.lib;vtkFiltersHyperTree-6.1.lib;vtkFiltersImaging-6.1.lib;vtkFiltersModeling-6.1.lib;vtkFiltersParallel-6.1.lib;vtkFiltersParallelImaging-6.1.lib;vtkFiltersProgrammable-6.1.lib;vtkFiltersSelection-6.1.lib;vtkFiltersSMP-6.1.lib;vtkFiltersSources-6.1.lib;vtkFiltersStatistics-6.1.lib;vtkFiltersTexture-6.1.lib;vtkFiltersVerdict-6.1.lib;vtkRenderingAnnotation-6.1.lib;vtkRenderingContext2D-6.1.lib;vtkRenderingCore-6.1.lib;vtkRenderingFreeType-6.1.lib;vtkRenderingFreeTypeOpenGL-6.1.lib;vtkRenderingGL2PS-6.1.lib;vtkRenderingImage-6.1.lib;vtkRenderingLabel-6.1.lib;vtkRenderingLIC-6.1.lib;vtkRenderingLOD-6.1.lib;vtkRenderingOpenGL-6.1.lib;vtkRenderingVolume-6.1.lib;vtkRenderingVolumeAMR-6.1.lib;vtkRenderingVolumeOpenGL-6.1.lib;pcl_common_release.lib;pcl_io_release.lib;pcl_kdtree_release.lib;pcl_segmentation_release.lib;pcl_search_release.lib;pcl_filters_release.lib;pcl_features_release.lib;pcl_surface_release.lib;pcl_visualization_release.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>NuiSensorChooser.lib;Kinect10.lib;freetype253_D.lib;KinectFusion180_32.lib;vtkCommonColor-6.1.lib;vtkCommonComputationalGeometry-6.1.lib;vtkCommonCore-6.1.lib;vtkCommonDataModel-6.1.lib;vtkCommonExecutionModel-6.1.lib;vtkCommonMath-6.1.lib;vtkCommonMisc-6.1.lib;vtkCommonSystem-6.1.lib;vtkCommonTransforms-6.1.lib;vtkFiltersAMR-6.1.lib;vtkFiltersCore-6.1.lib;vtkFiltersExtraction-6.1.lib;vtkFiltersFlowPaths-6.1.lib;vtkFiltersGeneral-6.1.lib;vtkFiltersGeneric-6.1.lib;vtkFiltersGeometry-6.1.lib;vtkFiltersHybrid-6.1.lib;vtkFiltersHyperTree-6.1.lib;vtkFiltersImaging-6.1.lib;vtkFiltersModeling-6.1.lib;vtkFiltersParallel-6.1.lib;vtkFiltersParallelImaging-6.1.lib;vtkFiltersProgrammable-6.1.lib;vtkFiltersSelection-6.1.lib;vtkFiltersSMP-6.1.lib;vtkFiltersSources-6.1.lib;vtkFiltersStatistics-6.1.lib;vtkFiltersTexture-6.1.lib;vtkFiltersVerdict-6.1.lib;vtkRenderingAnnotation-6.1.lib;vtkRenderingContext2D-6.1.lib;vtkRenderingCore-6.1.lib;vtkRenderingFreeType-6.1.lib;vtkRenderingFreeTypeOpenGL-6.1.lib;vtkRenderingGL2PS-6.1.lib;vtkRenderingImage-6.1.lib;vtkRenderingLabel-6.1.lib;vtkRenderingLIC-6.1.lib;vtkRenderingLOD-6.1.lib;vtkRenderingOpenGL-6.1.lib;vtkRenderingVolume-6.1.lib;vtkRenderingVolumeAMR-6.1.lib;vtkRenderingVolumeOpenGL-6.1.lib;pcl_common_release.lib;pcl_io_release.lib;pcl_kdtree_release.lib;pcl_segmentation_release.lib;pcl_search_release.lib;pcl_filters_release.lib;pcl_features_release.lib;pcl_surface_release.lib;pcl_visualization_release.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -120,6 +120,11 @@
     <None Include="data\shaders\color.vert" />
     <None Include="data\shaders\font.frag" />
     <None Include="data\shaders\font.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KinectFusionExplorer-D2D\KinectFusionExplorer-D2D.vcxproj">
+      <Project>{9f1abebe-8226-4b92-ac8e-0b39c6aa2047}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -2,15 +2,15 @@
 #include "openGLWin.h"
 #include "resource.h"
 #include "stdafx.h"
-
+#include <KinectFusionExplorer.h>
 #pragma region
 
-void drawButtonRed(DRAWITEMSTRUCT *dis, HWND hwnd);
-void drawButtonBlue(DRAWITEMSTRUCT *dis, HWND hwnd);
+OpenGLWin openGLWin;
+
 HWND hButtonYes, hButtonNo, hButtonExport;
 HWND hCheckBoxDuplicate;
 HWND hTextWalls;
-std::vector<HWND*> uiElements;
+std::vector<HWND> uiElements;
 WNDPROC oldEditProc;
 HBRUSH hBackground = CreateSolidBrush(RGB(0, 0, 0));
 HBRUSH buttonDefaultBrush, buttonPressedBrush;
@@ -22,12 +22,30 @@ HWND debugHandle;
 int debugWidth = 0;
 TCHAR Keys::kp[256] = { 0 };
 HFONT uiFont;
+HFONT statusFont;
 const char className[] = "OpenGLWindow";
 
 bool winDestroyed = false;
 bool winResized = false;
 #pragma endregion variables
 
+
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+{
+	openGLWin.appInstance = hInstance;
+	openGLWin.parent = CreateDialogParamW(
+		openGLWin.appInstance,
+		MAKEINTRESOURCE(IDD_INTERACTION),
+		nullptr,
+		(DLGPROC)GLDlgProc,
+		0);
+
+	// Show window
+	//ShowWindow(parent, SW_HIDE);
+	ShowWindow(openGLWin.parent, SW_SHOW);
+	openGLWin.mode = openGLWin.Scanning;
+	StartKinectFusion(openGLWin.parent, hInstance, StartOpenGLThread, openGLWin.fusionHandle);
+}
 
 #pragma region
 
@@ -127,23 +145,14 @@ bool OpenGLWin::CreateOpenGLWindow()
 	glutCreateWindow("here");
 	glutDisplayFunc(&display);
 	glutMainLoop();*/
-	HWND hWndApp = CreateDialogParamW(
-		appInstance,
-		MAKEINTRESOURCE(IDD_INTERACTION),
-		nullptr,
-		(DLGPROC)GLDlgProc,
-		reinterpret_cast<LPARAM>(this));
-
-	// Show window
-	//ShowWindow(parent, SW_HIDE);
-	ShowWindow(hWndApp, SW_SHOW);
+	
 	WNDCLASSEX wc = { 0 };
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = GLViewportProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
-	wc.hInstance = appInstance;
+	wc.hInstance = openGLWin.appInstance;
 	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
@@ -153,27 +162,27 @@ bool OpenGLWin::CreateOpenGLWindow()
 	ATOM ClassAtom = RegisterClassExW(&wc);
 
 	RECT r = { 0, 0, 1024, 768 };
-	GetClientRect(parent, &r);
+	//GetClientRect(openGLWin, &r);
 
 	HWND hWnd = CreateWindowExW(WS_EX_APPWINDOW, (LPCTSTR)MAKELONG(ClassAtom, 0), L"", WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VISIBLE,
-		0, 0, r.right, r.bottom, hWndApp,
-		NULL, appInstance, NULL);
+		0, 0, r.right, r.bottom, parent,
+		NULL, openGLWin.appInstance, NULL);
 
 	if (hWnd == NULL)
 	{
-		MessageBox(0, GetLastErrorStdStr(),
+		MessageBox(0, openGLWin.GetLastErrorStdStr(),
 			L"ERROR!", MB_OK);
 		return false;
 	}
-	glWindowHandle = hWnd;
+	openGLWin.glWindowHandle = hWnd;
 
 
 	uiFont = CreateFont(40, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"FreeSans");
-
+	statusFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
 	
 	hbitmap = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BUTTON), IMAGE_BITMAP, 84, 36, LR_DEFAULTCOLOR);
-	hButtonYes = CreateWindowEx(0, L"Button", L"Yes", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_YES, appInstance, 0);
-	hButtonNo = CreateWindowEx(0, L"Button", L"No", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_NO, appInstance, 0);
+	hButtonYes = CreateWindowEx(0, L"Button", L"Yes", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_YES, openGLWin.appInstance, 0);
+	hButtonNo = CreateWindowEx(0, L"Button", L"No", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_NO, openGLWin.appInstance, 0);
 	//hTextWalls = CreateWindowEx(0, L"Text", L"Is this (part of) a floor/wall?", WS_CHILD | WS_VISIBLE | BS_BITMAP, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_NO, appInstance, 0);
 	hButtonExport = CreateWindowEx(0, L"BUTTON", L"Export", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_EXPORT, NULL, 0);
 
@@ -198,22 +207,22 @@ bool OpenGLWin::CreateOpenGLWindow()
 	ShowWindow(hButtonYes, SW_HIDE);
 	ShowWindow(hButtonNo, SW_HIDE);
 	
-	uiElements.push_back(&hButtonYes);
-	uiElements.push_back(&hButtonNo);
-	uiElements.push_back(&hButtonExport);
-	uiElements.push_back(&hTextWalls);
+	uiElements.push_back(hButtonYes);
+	uiElements.push_back(hButtonNo);
+	uiElements.push_back(hButtonExport);
+	uiElements.push_back(hTextWalls);
 
 
 	
 //debugHandle = CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, MAKEINTRESOURCE(IDD_DEBUG), L"Debug", WS_CHILD | WS_VISIBLE | DS_CONTROL, 50, 50, 300, 300, hWnd, 0, appInstance, 0);
-	debugHandle = CreateDialog(appInstance, MAKEINTRESOURCE(IDD_DEBUG), hWnd, (DLGPROC)DebugDlgProc);
+	debugHandle = CreateDialog(openGLWin.appInstance, MAKEINTRESOURCE(IDD_DEBUG), hWnd, (DLGPROC)DebugDlgProc);
 	ShowWindow(debugHandle, SW_HIDE);
 
 	hTextWalls = GetDlgItem(openGLWin.glWindowParent, IDC_STATIC_WALL);
 	SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
 	SendMessage(hTextWalls, WM_SETFONT, (WPARAM)uiFont, TRUE);
 	ShowWindow(hTextWalls, SW_HIDE);
-	ShowWindow(hWndApp, SW_SHOWMAXIMIZED);
+	ShowWindow(parent, SW_SHOWMAXIMIZED);
 
 
 	//SendMessage(d, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hbitmap);
@@ -225,12 +234,36 @@ bool OpenGLWin::CreateOpenGLWindow()
 	return true;
 }
 
+void OpenGLWin::ReleaseOpenGL()
+{
+	glControl.ReleaseOpenGLControl(&glControl);
+}
+
 void OpenGLWin::ShutdownWindow()
 {
 	//ShowWindow(parent, SW_RESTORE);
-	glControl.ReleaseOpenGLControl(&glControl);
-	DestroyWindow(glWindowHandle);
+	cDebug::DbgOut(L"CleanUp");
+
+	winDestroyed = true;
+	DestroyWindow(debugHandle);
+	DestroyWindow(openGLWin.fusionHandle);
+	//PostMessage(openGLWin.fusionHandle, WM_CLOSE, 0, 0);
+	DestroyWindow(openGLWin.glWindowHandle);
+	DestroyWindow(openGLWin.parent);
+	DeleteObject(hBackground);
+	DeleteObject(buttonDefaultBrush);
+	DeleteObject(buttonDefaultPen);
+	DeleteObject(buttonPressedBrush);
+	DeleteObject(buttonPressedPen);
+	DeleteObject(statusFont);
+	DeleteObject(uiFont);
+
+	
+	//if (openGLWin.mode != openGLWin.Scanning)
+	//	openGLWin.ReleaseOpenGL();
 	UnregisterClass((LPCWSTR)className, appInstance);
+	
+	
 }
 
 #pragma endregion Initialize / Shutdown Window
@@ -238,15 +271,17 @@ void OpenGLWin::ShutdownWindow()
 #pragma region
 
 //bool OpenGLWin::StartOpenGLThread(HWND parentWin, HINSTANCE currHInstance, KinectFusionProcessor* proc)
-bool OpenGLWin::StartOpenGLThread(HWND parentWin, HINSTANCE currHInstance)
+void StartOpenGLThread(KinectFusionProcessor* proc, int testMode)
 {
-	parent = parentWin;
-	appInstance = currHInstance;
-	//processor = proc;
-	interactionThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&GLViewportThreadMain, 0, 0, &threadId);
-	if (interactionThread == NULL)
-		return false;
-	return true;
+	openGLWin.testMode = testMode;
+	openGLWin.mode = openGLWin.Interaction;
+	//parent = parentWin;
+	//appInstance = currHInstance;
+	openGLWin.processor = proc;
+	openGLWin.interactionThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&GLViewportThreadMain, 0, 0, &openGLWin.threadId);
+	if (openGLWin.interactionThread == NULL)
+		return;
+	return;
 
 }
 
@@ -311,7 +346,7 @@ LRESULT CALLBACK GLViewportProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
 		
 		DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
+		DeleteObject(lpBuff);
 		return TRUE;
 		}
 	}
@@ -335,7 +370,7 @@ LRESULT CALLBACK GLViewportProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 	case WM_MOUSEWHEEL:
 		openGLWin.wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 		break;
-	case WM_SIZE:
+	case WM_SIZE:		
 		openGLWin.glControl.ResizeOpenGLViewportFull(LOWORD(lParam), HIWORD(lParam));
 		openGLWin.glControl.SetProjection3D(45.0f, float(LOWORD(lParam)) / float(HIWORD(lParam)), 0.1f, 1000.0f);
 		openGLWin.glControl.SetOrtho2D(LOWORD(lParam), HIWORD(lParam));
@@ -357,8 +392,9 @@ int WINAPI GLViewportThreadMain()
 		return -1;
 	}
 
-	//if (!openGLWin.glControl.InitOpenGL(openGLWin.GetInstance(), &openGLWin.glWindowHandle, 3, 3, Initialize, Render, Release, //openGLWin.processor, &openGLWin.glControl))
-	if (!openGLWin.glControl.InitOpenGL(openGLWin.GetInstance(), &openGLWin.glWindowHandle, 3, 3, Initialize, Render, Release,  &openGLWin.glControl))
+	
+	//if (!openGLWin.glControl.InitOpenGL(openGLWin.GetInstance(), &openGLWin.glWindowHandle, 3, 3, Initialize, Render, Release,  //&openGLWin.glControl))
+	if (!openGLWin.glControl.InitOpenGL(openGLWin.appInstance, &openGLWin.glWindowHandle, 3, 3, Initialize, Render, Release, openGLWin.processor, &openGLWin.glControl))
 	{
 		MessageBox(0, L"Error with initOpenGL",
 			L"ERROR!", MB_OK);
@@ -389,7 +425,8 @@ int WINAPI GLViewportThreadMain()
 		openGLWin.glControl.Render(&openGLWin.glControl);
 		//Sleep(10);
 	}
-	openGLWin.ShutdownWindow();
+	openGLWin.glControl.ReleaseOpenGLControl(&openGLWin.glControl);
+	//delete openGLWin.processor;
 	winDestroyed = false;
 	return 0;
 }
@@ -417,10 +454,8 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		//InitializeGLUIControls();
 		break;
 	case WM_CLOSE:
-		winDestroyed = true;
-		DestroyWindow(debugHandle);
-		DestroyWindow(hWnd);
-		
+		openGLWin.ShutdownWindow();
+		PostQuitMessage(0);
 		break;
 	case WM_DESTROY:
 		break;
@@ -436,7 +471,7 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 			SetBkMode((HDC)wParam, TRANSPARENT);
 			SetTextColor(hdc, RGB(255,255,255));
 			
-			return (LRESULT)CreateSolidBrush(RGB(0, 0, 0));
+			return (LRESULT)hBackground;
 		}
 		break;
 	case  WM_HSCROLL:
@@ -446,10 +481,15 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		openGLWin.wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 		break;
 	case WM_SIZE:
-		openGLWin.glControl.ResizeOpenGLViewportFull(LOWORD(lParam), HIWORD(lParam));
-		openGLWin.glControl.SetProjection3D(45.0f, float(LOWORD(lParam)) / float(HIWORD(lParam)), 0.1f, 1000.0f);
-		openGLWin.glControl.SetOrtho2D(LOWORD(lParam), HIWORD(lParam));
-		MoveButtonsOnResize();
+		if (openGLWin.mode == openGLWin.Scanning)
+			MoveWindow(openGLWin.fusionHandle, 0, 0, LOWORD(lParam), HIWORD(lParam), true);
+		else if (openGLWin.mode == openGLWin.Interaction)
+		{
+			openGLWin.glControl.ResizeOpenGLViewportFull(LOWORD(lParam), HIWORD(lParam));
+			openGLWin.glControl.SetProjection3D(45.0f, float(LOWORD(lParam)) / float(HIWORD(lParam)), 0.1f, 1000.0f);
+			openGLWin.glControl.SetOrtho2D(LOWORD(lParam), HIWORD(lParam));
+			MoveButtonsOnResize();
+		}
 		break;
 	}
 	return FALSE;
@@ -523,8 +563,9 @@ void InitializeGLUIControls()
 	//PostMessage(hCheck, BM_SETCHECK, BST_CHECKED, 0);
 
 	statusHandle = GetDlgItem(openGLWin.glWindowParent, IDC_IM_STATUS);
-	HFONT hFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
-	SendMessage(statusHandle, WM_SETFONT, (WPARAM)hFont, 0);
+	
+	SendMessage(statusHandle, WM_SETFONT, (WPARAM)statusFont, 0);
+	ShowWindow(statusHandle, SW_SHOW);
 	ResetEditControls();
 
 	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_KSEARCH_VALUE, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_KSEARCH_VALUE, MAX_RG_KSEARCH_VALUE));
@@ -1004,9 +1045,9 @@ bool OpenGLWin::IsMouseInHandle()
 	GetCursorPos(&pCur);
 	for (int i = 0; i < uiElements.size(); i++)
 	{
-		if (IsWindowVisible(*uiElements[i]))
+		if (IsWindowVisible(uiElements[i]))
 		{
-			RECT rRect; GetWindowRect(*uiElements[i], &rRect);
+			RECT rRect; GetWindowRect(uiElements[i], &rRect);
 			if (pCur.x >= rRect.left && pCur.x <= rRect.right &&
 				pCur.y >= rRect.top && pCur.y <= rRect.bottom)
 				return true;
@@ -1058,3 +1099,20 @@ void OpenGLWin::ShowConfirmationButtons(bool flag)
 }
 
 #pragma endregion GUI
+
+
+void CleanUp()
+{
+	cDebug::DbgOut(L"CleanUp");
+	winDestroyed = true;
+	DestroyWindow(debugHandle);
+	DestroyWindow(openGLWin.fusionHandle);
+	DestroyWindow(openGLWin.glWindowHandle);
+	DestroyWindow(openGLWin.parent);
+	DeleteObject(hBackground);
+	DeleteObject(buttonDefaultBrush);
+	DeleteObject(buttonDefaultPen);
+	DeleteObject(buttonPressedBrush);
+	DeleteObject(buttonPressedPen);
+	DeleteObject(uiFont);
+}

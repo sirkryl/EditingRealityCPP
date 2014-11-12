@@ -17,6 +17,9 @@
     <ClCompile Include="Timer.cpp">
       <Filter>KinectFusion</Filter>
     </ClCompile>
+    <ClCompile Include="Keys.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImageRenderer.h">
@@ -46,7 +49,12 @@
     <ClInclude Include="Timer.h">
       <Filter>KinectFusion</Filter>
     </ClInclude>
-    <ClInclude Include="NuiSensorChooserUIResource.h" />
+    <ClInclude Include="Keys.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="NuiSensorChooserUIResource.h">
+      <Filter>Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\NuiSensorChooser\Images\Allset.bmp">
@@ -147,6 +155,7 @@
       <Filter>KinectFusion</Filter>
     </Image>
     <Image Include="images\icon1.ico" />
+    <Image Include="images\button.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KinectFusionExplorer-D2D.rc">
