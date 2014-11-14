@@ -69,8 +69,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(BOOST_ROOT)\include\boost-1_56;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(IncludePath)</IncludePath>
-    <LibraryPath>$(BOOST_ROOT)\lib;$(SolutionDir)$(Configuration);$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Configuration);$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -79,8 +79,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(BOOST_ROOT)\include\boost-1_56;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(IncludePath)</IncludePath>
-    <LibraryPath>$(BOOST_ROOT)\lib;$(SolutionDir)$(Configuration);$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Configuration);$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>

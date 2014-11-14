@@ -12,6 +12,8 @@ class VCGEdge : public vcg::Edge<   VCGUsedTypes> {};
 class VCGFace : public vcg::Face<   VCGUsedTypes, vcg::face::VFAdj, vcg::face::FFAdj, vcg::face::VertexRef, vcg::face::BitFlags, vcg::face::Normal3f, vcg::face::Mark > {};
 class VCGMesh : public vcg::tri::TriMesh< std::vector<VCGVertex>, std::vector<VCGFace>, std::vector<VCGEdge> > {};
 
+
+
 class VCGMeshContainer
 {
 public:
@@ -19,14 +21,14 @@ public:
 	~VCGMeshContainer();
 
 	void LoadMesh(const char* filename);
-	void LoadMesh(std::vector<float> vertices, std::vector<GLuint> indices, std::vector<float> normals);
+	void LoadMesh(std::vector<Vertex> vertices, std::vector<Triangle> indices);
 	void GenerateVAO();
 	void GenerateBOs();
 
 	void CleanMesh();
 	void ParseData();
 	void ConvertToVCG();
-	void ParseData(std::vector<float> inputVertices, std::vector<GLuint> inputIndices);
+	void ParseData(std::vector<Vertex> inputVertices, std::vector<Triangle> inputIndices);
 
 	void Draw();
 	void DrawBB();
@@ -52,10 +54,10 @@ public:
 	int RemoveSmallComponents(int compSize);
 	int FillHoles(int holeSize);
 	void ResetSelectedTransformation();
-	void CleanAndParse(std::vector<float> &startingVertices, std::vector<GLuint> &startingIndices, std::vector<float> &startingNormals);
-	std::vector<float> GetVertices();
-	std::vector<float> GetNormals();
-	std::vector<GLuint> GetIndices();
+	void CleanAndParse(std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices);
+	std::vector<Vertex> GetVertices();
+	//std::vector<float> GetNormals();
+	std::vector<Triangle> GetIndices();
 	float GetLowestZ();
 	float GetLowestY();
 	void SetWall(bool flag);
@@ -64,15 +66,15 @@ public:
 	std::vector<int> GetOrientation();
 	bool IsWall();
 	int GetNumberOfVertices();
-	int GetNumberOfIndices();
-	void ConvertToVCG(std::vector<float> inputVertices, std::vector<GLuint> inputIndices);
+	int GetNumberOfTriangles();
+	void ConvertToVCG(std::vector<Vertex> inputVertices, std::vector<Triangle> inputIndices);
 	void ToggleSelectedColor(bool flag);
 	int GetColorCode();
 	void TogglePreviewSelection(bool flag);
 	glm::vec3 GetUpperBounds();
 	glm::vec3 GetLowerBounds();
-	
-	
+
+
 	void ClearMesh();
 private:
 	VCGMesh currentMesh;
@@ -80,11 +82,12 @@ private:
 	glm::vec3 FindClosestPoint(glm::vec3 inputPoint);
 	glm::vec3 offSet;
 	glm::vec3 snapPoint;
-	std::vector<float> bBoxVertices;
-	std::vector<GLuint> bBoxIndices;
-	std::vector<float> vertices;
-	std::vector<GLuint> indices;
-	std::vector<float> normals;
+	std::vector<Vertex> vertices;
+	std::vector<Vertex> bBoxVertices;
+	std::vector<Triangle> bBoxIndices;
+	//std::vector<float> vertices;
+	std::vector<Triangle> indices;
+	//std::vector<float> normals;
 	std::vector<float> storedColors;
 	float planeParameters[4];
 	std::vector<int> orientation;
@@ -127,13 +130,13 @@ private:
 
 	glm::vec3 originalUpperBounds;
 	glm::vec3 originalLowerBounds;
-	
+
 	int colorCode;
 };
 
-extern std::vector<VCGMeshContainer*> meshData;
+extern std::vector<shared_ptr<VCGMeshContainer>> meshData;
 extern int numberOfVertices;
 extern int numberOfFaces;
 
 void CombineAndExport();
-void CleanAndParse(const char* fileName, std::vector<float> &startingVertices, std::vector<GLuint> &startingIndices, std::vector<float> &startingNormals);
+void CleanAndParse(const char* fileName, std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices);

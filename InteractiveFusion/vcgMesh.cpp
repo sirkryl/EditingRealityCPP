@@ -15,6 +15,15 @@
 #include<vcg/complex/algorithms/update/normal.h>
 
 VCGMeshContainer::VCGMeshContainer() {
+	cDebug::DbgOut(L"vcg mesh init");
+	orientation.reserve(3);
+	orientation.push_back(0);
+	orientation.push_back(0);
+	orientation.push_back(0);
+	snapOrientation.reserve(3);
+	snapOrientation.push_back(0);
+	snapOrientation.push_back(0);
+	snapOrientation.push_back(0);
 }
 
 VCGMeshContainer::~VCGMeshContainer() { }
@@ -62,14 +71,6 @@ void VCGMeshContainer::LoadMesh(const char* filename)
 	CleanMesh();
 	statusMsg = L"Parsing data for interaction";
 	ParseData();
-	snapOrientation.clear();
-	orientation.clear();
-	snapOrientation.push_back(0);
-	snapOrientation.push_back(0);
-	snapOrientation.push_back(0);
-	orientation.push_back(0);
-	orientation.push_back(0);
-	orientation.push_back(0);
 }
 
 void VCGMeshContainer::RemoveNonManifoldFace()
@@ -94,30 +95,26 @@ int VCGMeshContainer::MergeCloseVertices(float threshold)
 	return vcg::tri::Clean<VCGMesh>::MergeCloseVertex(currentMesh, threshold);
 }
 
-void VCGMeshContainer::LoadMesh(std::vector<float> inputVertices, std::vector<GLuint> inputIndices, std::vector<float> inputNormals)
+void VCGMeshContainer::LoadMesh(std::vector<Vertex> inputVertices, std::vector<Triangle> inputIndices)
 {
 	currentMesh.Clear();
 	vertices.clear();
 	indices.clear();
-	vcg::tri::Allocator<VCGMesh>::AddVertices(currentMesh, inputVertices.size() / 6);
+	vcg::tri::Allocator<VCGMesh>::AddVertices(currentMesh, inputVertices.size());
 
-	int vertCount = 0;
-	for (int i = 0; i < vertices.size(); i += 6)
+	for (int i = 0; i < vertices.size(); i += 1)
 	{
-		currentMesh.vert[vertCount].P() = vcg::Point3f(inputVertices[i], inputVertices[i + 1], inputVertices[i + 2]);
-		currentMesh.vert[vertCount].C() = vcg::Color4b((int)(inputVertices[i + 3] * 255.0f), (int)(inputVertices[i + 4] * 255.0f), (int)(inputVertices[i + 5] * 255.0f), 255);
-		vertCount++;
-
+		currentMesh.vert[i].P() = vcg::Point3f(inputVertices[i].x, inputVertices[i].y, inputVertices[i].z);
+		currentMesh.vert[i].C() = vcg::Color4b((int)(inputVertices[i].r * 255.0f), (int)(inputVertices[i].g * 255.0f), (int)(inputVertices[i].b * 255.0f), 255);
+		currentMesh.vert[i].N() = vcg::Point3f(inputVertices[i].normal_x, inputVertices[i].normal_y, inputVertices[i].normal_z);
 	}
 
-	vcg::tri::Allocator<VCGMesh>::AddFaces(currentMesh, inputIndices.size() / 3);
+	vcg::tri::Allocator<VCGMesh>::AddFaces(currentMesh, inputIndices.size());
 
-	int faceCount = 0;
-	for (int i = 0; i<inputIndices.size(); i += 3){
-		currentMesh.face[faceCount].V(0) = &currentMesh.vert[inputIndices[i]];
-		currentMesh.face[faceCount].V(1) = &currentMesh.vert[inputIndices[i + 1]];
-		currentMesh.face[faceCount].V(2) = &currentMesh.vert[inputIndices[i + 2]];
-		faceCount++;
+	for (int i = 0; i<inputIndices.size(); i += 1){
+		currentMesh.face[i].V(0) = &currentMesh.vert[inputIndices[i].v1];
+		currentMesh.face[i].V(1) = &currentMesh.vert[inputIndices[i].v2];
+		currentMesh.face[i].V(2) = &currentMesh.vert[inputIndices[i].v3];
 	}
 	CleanMesh();
 	ParseData();
@@ -190,194 +187,10 @@ void VCGMeshContainer::CleanMesh()
 
 }
 
-void VCGMeshContainer::ParseData(std::vector<float> inputVertices, std::vector<GLuint> inputIndices)
-{
-	//vertices = inputVertices;
-	//indices = inputIndices;
-
-	lowerBounds.x = 99999.0f;
-	lowerBounds.y = 99999.0f;
-	lowerBounds.z = 99999.0f;
-	upperBounds.x = -99999.0f;
-	upperBounds.y = -99999.0f;
-	upperBounds.z = -99999.0f;
-
-	//std::clock_t start;
-	//double duration;
-
-	//start = std::clock();
-
-	for (int i = 0; i < inputVertices.size(); i += 6)
-	{
-		lowerBounds.x = min(inputVertices[i], lowerBounds.x);
-		lowerBounds.y = min(inputVertices[i + 1], lowerBounds.y);
-		lowerBounds.z = min(inputVertices[i + 2], lowerBounds.z);
-		upperBounds.x = max(inputVertices[i], upperBounds.x);
-		upperBounds.y = max(inputVertices[i + 1], upperBounds.y);
-		upperBounds.z = max(inputVertices[i + 2], upperBounds.z);
-		vertices.push_back(inputVertices[i]);
-		vertices.push_back(inputVertices[i + 1]);
-		vertices.push_back(inputVertices[i + 2]);
-		vertices.push_back(inputVertices[i + 3]);
-		vertices.push_back(inputVertices[i + 4]);
-		vertices.push_back(inputVertices[i + 5]);
-		//vertices.push_back(inputVertices[i + 6]);
-	}
-
-	vertNum = vertices.size() / 6;
-
-	for (int i = 0; i < inputIndices.size(); i++)
-	{
-		indices.push_back(inputIndices[i]);
-	}
-	//bbox
-
-	glm::vec4 color = colorCoding::IntToColor(colorCode);
-
-	centerPoint.x = (lowerBounds.x + upperBounds.x) / 2.0f;
-	centerPoint.y = (lowerBounds.y + upperBounds.y) / 2.0f;
-	centerPoint.z = (lowerBounds.z + upperBounds.z) / 2.0f;
-	originTransform = glm::translate(glm::mat4(1.0), -centerPoint);
-	snapPoint.x = 0.0f;
-	snapPoint.y = 0.2f;// (centerPoint.y - lowerBounds.y);
-	snapPoint.z = 0.0f;
-	snapTransform = glm::translate(glm::mat4(1.0), snapPoint);
-	bBoxVertices.push_back(lowerBounds.x - 0.01f);
-	bBoxVertices.push_back(lowerBounds.y - 0.01f);
-	bBoxVertices.push_back(upperBounds.z + 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(upperBounds.x + 0.01f);
-	bBoxVertices.push_back(lowerBounds.y - 0.01f);
-	bBoxVertices.push_back(upperBounds.z + 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(upperBounds.x + 0.01f);
-	bBoxVertices.push_back(upperBounds.y + 0.01f);
-	bBoxVertices.push_back(upperBounds.z + 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(lowerBounds.x - 0.01f);
-	bBoxVertices.push_back(upperBounds.y + 0.01f);
-	bBoxVertices.push_back(upperBounds.z + 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(lowerBounds.x - 0.01f);
-	bBoxVertices.push_back(lowerBounds.y - 0.01f);
-	bBoxVertices.push_back(lowerBounds.z - 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(upperBounds.x + 0.01f);
-	bBoxVertices.push_back(lowerBounds.y - 0.01f);
-	bBoxVertices.push_back(lowerBounds.z - 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(upperBounds.x + 0.01f);
-	bBoxVertices.push_back(upperBounds.y + 0.01f);
-	bBoxVertices.push_back(lowerBounds.z - 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(lowerBounds.x - 0.01f);
-	bBoxVertices.push_back(upperBounds.y + 0.01f);
-	bBoxVertices.push_back(lowerBounds.z - 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxIndices.push_back(0);
-	bBoxIndices.push_back(1);
-	bBoxIndices.push_back(2);
-
-	bBoxIndices.push_back(2);
-	bBoxIndices.push_back(3);
-	bBoxIndices.push_back(0);
-
-
-	bBoxIndices.push_back(3);
-	bBoxIndices.push_back(2);
-	bBoxIndices.push_back(6);
-
-
-	bBoxIndices.push_back(6);
-	bBoxIndices.push_back(7);
-	bBoxIndices.push_back(3);
-
-
-	bBoxIndices.push_back(7);
-	bBoxIndices.push_back(6);
-	bBoxIndices.push_back(5);
-
-
-	bBoxIndices.push_back(5);
-	bBoxIndices.push_back(4);
-	bBoxIndices.push_back(7);
-
-	bBoxIndices.push_back(4);
-	bBoxIndices.push_back(5);
-	bBoxIndices.push_back(1);
-
-
-	bBoxIndices.push_back(1);
-	bBoxIndices.push_back(0);
-	bBoxIndices.push_back(4);
-
-
-	bBoxIndices.push_back(4);
-	bBoxIndices.push_back(0);
-	bBoxIndices.push_back(3);
-
-
-	bBoxIndices.push_back(3);
-	bBoxIndices.push_back(7);
-	bBoxIndices.push_back(4);
-
-	bBoxIndices.push_back(1);
-	bBoxIndices.push_back(5);
-	bBoxIndices.push_back(6);
-
-
-	bBoxIndices.push_back(6);
-	bBoxIndices.push_back(2);
-	bBoxIndices.push_back(1);
-
-
-	//bbox end
-	selectTranslation = glm::vec3(0.0f, 0.0f, 0.0f);
-	translation = glm::vec3(0.0f, 0.0f, 0.0f);
-
-
-	//duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-
-	//cDebug::DbgOut(L"parse duration: ", duration);
-}
-
 void VCGMeshContainer::ParseData()
 {
 	vertices.clear();
 	indices.clear();
-	normals.clear();
 
 	bBoxVertices.clear();
 	bBoxIndices.clear();
@@ -397,34 +210,40 @@ void VCGMeshContainer::ParseData()
 	//std::vector<float> colors;
 	int numvert = 0;
 	int curNormalIndex = 1;
-
 	for (vi = (currentMesh).vert.begin(); vi != (currentMesh).vert.end(); ++vi) if (!(*vi).IsD())
 	{
 		VertexId[vi - (currentMesh).vert.begin()] = numvert;
 		int dim = 0;
-		while (dim < 3)
-		{
-			float tmpFloat = (*vi).P()[dim];
-			vertices.push_back(tmpFloat);
-			normals.push_back((*vi).N()[dim]);
-			bBoxVertices.push_back(tmpFloat);
-			lowerBounds[dim] = min(lowerBounds[dim], tmpFloat);
-			upperBounds[dim] = max(upperBounds[dim], tmpFloat);
+		Vertex vertex;
+		vertex.x = (*vi).P()[0];
+		vertex.y = (*vi).P()[1];
+		vertex.z = (*vi).P()[2];
+		vertex.normal_x = (*vi).N()[0];
+		vertex.normal_y = (*vi).N()[1];
+		vertex.normal_z = (*vi).N()[2];
+		vertex.r = (*vi).C()[0] / 255.0f;
+		vertex.g = (*vi).C()[1] / 255.0f;
+		vertex.b = (*vi).C()[2] / 255.0f;
+		vertices.push_back(vertex);
 
-			//colors.push_back((*vi).C()[dim] / 255.0f);
-			dim++;
-		}
-		dim = 0;
-		bBoxVertices.push_back(color.r);
-		bBoxVertices.push_back(color.g);
-		bBoxVertices.push_back(color.b);
-		while (dim < 3)
-		{
-			vertices.push_back((*vi).C()[dim] / 255.0f);
-			dim++;
-		}
-		//vertices.push_back(1.0f);
-		//colors.push_back(1.0f);
+		lowerBounds[0] = min(lowerBounds[0], vertex.x);
+		lowerBounds[1] = min(lowerBounds[1], vertex.y);
+		lowerBounds[2] = min(lowerBounds[2], vertex.z);
+		upperBounds[0] = max(upperBounds[0], vertex.x);
+		upperBounds[1] = max(upperBounds[1], vertex.y);
+		upperBounds[2] = max(upperBounds[2], vertex.z);
+
+		Vertex bBoxVertex;
+		bBoxVertex.x = vertex.x;
+		bBoxVertex.y = vertex.y;
+		bBoxVertex.z = vertex.z;
+		bBoxVertex.normal_x = vertex.normal_x;
+		bBoxVertex.normal_y = vertex.normal_y;
+		bBoxVertex.normal_z = vertex.normal_z;
+		bBoxVertex.r = color.r;
+		bBoxVertex.g = color.g;
+		bBoxVertex.b = color.b;
+		bBoxVertices.push_back(bBoxVertex);
 
 		numvert++;
 	}
@@ -435,13 +254,13 @@ void VCGMeshContainer::ParseData()
 	int mem_index = 0; //var temporany
 	for (VCGMesh::FaceIterator fi = (currentMesh).face.begin(); fi != (currentMesh).face.end(); ++fi) if (!(*fi).IsD())
 	{
-		for (int k = 0; k<(*fi).VN(); k++)
-		{
-			int vInd = -1;
-			bBoxIndices.push_back(VertexId[vcg::tri::Index((currentMesh), (*fi).V(k))]);
-			indices.push_back(VertexId[vcg::tri::Index((currentMesh), (*fi).V(k))]);//index of vertex per face
-		}
+		Triangle triangle;
+		triangle.v1 = VertexId[vcg::tri::Index((currentMesh), (*fi).V(0))];
+		triangle.v2 = VertexId[vcg::tri::Index((currentMesh), (*fi).V(1))];
+		triangle.v3 = VertexId[vcg::tri::Index((currentMesh), (*fi).V(2))];
 
+		indices.push_back(triangle);
+		bBoxIndices.push_back(triangle);
 	}
 
 
@@ -455,140 +274,19 @@ void VCGMeshContainer::ParseData()
 	originalUpperBounds.x = upperBounds.x;
 	originalUpperBounds.y = upperBounds.y;
 	originalUpperBounds.z = upperBounds.z;
+
 	centerPoint.x = (lowerBounds.x + upperBounds.x) / 2.0f;
 	centerPoint.y = (lowerBounds.y + upperBounds.y) / 2.0f;
-	//centerPoint.y = lowerBounds.y;
 	centerPoint.z = (lowerBounds.z + upperBounds.z) / 2.0f;
-	//centerPoint.z = lowerBounds.z;
+
 	originTransform = glm::translate(glm::mat4(1.0), -centerPoint);
+
 	offSet.x = (centerPoint.x - lowerBounds.x);
 	offSet.y = (centerPoint.y - lowerBounds.y);
 	offSet.z = (centerPoint.z - lowerBounds.z);
-	/*bBoxVertices.push_back(lowerBounds.x - 0.01f);
-	bBoxVertices.push_back(lowerBounds.y - 0.01f);
-	bBoxVertices.push_back(upperBounds.z + 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
 
-	bBoxVertices.push_back(upperBounds.x + 0.01f);
-	bBoxVertices.push_back(lowerBounds.y - 0.01f);
-	bBoxVertices.push_back(upperBounds.z + 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(upperBounds.x + 0.01f);
-	bBoxVertices.push_back(upperBounds.y + 0.01f);
-	bBoxVertices.push_back(upperBounds.z + 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(lowerBounds.x - 0.01f);
-	bBoxVertices.push_back(upperBounds.y + 0.01f);
-	bBoxVertices.push_back(upperBounds.z + 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(lowerBounds.x - 0.01f);
-	bBoxVertices.push_back(lowerBounds.y - 0.01f);
-	bBoxVertices.push_back(lowerBounds.z - 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(upperBounds.x + 0.01f);
-	bBoxVertices.push_back(lowerBounds.y - 0.01f);
-	bBoxVertices.push_back(lowerBounds.z - 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(upperBounds.x + 0.01f);
-	bBoxVertices.push_back(upperBounds.y + 0.01f);
-	bBoxVertices.push_back(lowerBounds.z - 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxVertices.push_back(lowerBounds.x - 0.01f);
-	bBoxVertices.push_back(upperBounds.y + 0.01f);
-	bBoxVertices.push_back(lowerBounds.z - 0.01f);
-	bBoxVertices.push_back(color.r);
-	bBoxVertices.push_back(color.g);
-	bBoxVertices.push_back(color.b);
-	//bBoxVertices.push_back(color.a);
-
-	bBoxIndices.push_back(0);
-	bBoxIndices.push_back(1);
-	bBoxIndices.push_back(2);
-
-	bBoxIndices.push_back(2);
-	bBoxIndices.push_back(3);
-	bBoxIndices.push_back(0);
-
-
-	bBoxIndices.push_back(3);
-	bBoxIndices.push_back(2);
-	bBoxIndices.push_back(6);
-
-
-	bBoxIndices.push_back(6);
-	bBoxIndices.push_back(7);
-	bBoxIndices.push_back(3);
-
-
-	bBoxIndices.push_back(7);
-	bBoxIndices.push_back(6);
-	bBoxIndices.push_back(5);
-
-
-	bBoxIndices.push_back(5);
-	bBoxIndices.push_back(4);
-	bBoxIndices.push_back(7);
-
-	bBoxIndices.push_back(4);
-	bBoxIndices.push_back(5);
-	bBoxIndices.push_back(1);
-
-
-	bBoxIndices.push_back(1);
-	bBoxIndices.push_back(0);
-	bBoxIndices.push_back(4);
-
-
-	bBoxIndices.push_back(4);
-	bBoxIndices.push_back(0);
-	bBoxIndices.push_back(3);
-
-
-	bBoxIndices.push_back(3);
-	bBoxIndices.push_back(7);
-	bBoxIndices.push_back(4);
-
-	bBoxIndices.push_back(1);
-	bBoxIndices.push_back(5);
-	bBoxIndices.push_back(6);
-
-
-	bBoxIndices.push_back(6);
-	bBoxIndices.push_back(2);
-	bBoxIndices.push_back(1);*/
-
-
-	//bbox end
 	selectTranslation = glm::vec3(0.0f, 0.0f, 0.0f);
 	translation = glm::vec3(0.0f, 0.0f, 0.0f);
-
 
 
 
@@ -601,104 +299,46 @@ void VCGMeshContainer::ParseData()
 void VCGMeshContainer::ConvertToVCG()
 {
 	currentMesh.Clear();
-	vcg::tri::Allocator<VCGMesh>::AddVertices(currentMesh, vertices.size() / 6);
+	vcg::tri::Allocator<VCGMesh>::AddVertices(currentMesh, vertices.size());
 
-	int vertCount = 0;
-	int normCount = 0;
-	for (int i = 0; i < vertices.size(); i += 6)
+	for (int i = 0; i < vertices.size(); i += 1)
 	{
-		currentMesh.vert[vertCount].P() = vcg::Point3f(vertices[i], vertices[i + 1], vertices[i + 2]);
-		currentMesh.vert[vertCount].C() = vcg::Color4b((int)(vertices[i + 3] * 255.0f), (int)(vertices[i + 4] * 255.0f), (int)(vertices[i + 5] * 255.0f), 255);
-		currentMesh.vert[vertCount].N() = vcg::Point3f(normals[normCount], normals[normCount + 1], normals[normCount + 2]);
-		vertCount++;
-		normCount += 3;
-
+		currentMesh.vert[i].P() = vcg::Point3f(vertices[i].x, vertices[i].y, vertices[i].z);
+		currentMesh.vert[i].C() = vcg::Color4b((int)(vertices[i].r * 255.0f), (int)(vertices[i].g * 255.0f), (int)(vertices[i].b * 255.0f), 255);
+		currentMesh.vert[i].N() = vcg::Point3f(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z);
 	}
 
-	vcg::tri::Allocator<VCGMesh>::AddFaces(currentMesh, indices.size() / 3);
+	vcg::tri::Allocator<VCGMesh>::AddFaces(currentMesh, indices.size());
 
-	int faceCount = 0;
-	for (int i = 0; i<indices.size(); i += 3){
-		currentMesh.face[faceCount].V(0) = &currentMesh.vert[indices[i]];
-		currentMesh.face[faceCount].V(1) = &currentMesh.vert[indices[i + 1]];
-		currentMesh.face[faceCount].V(2) = &currentMesh.vert[indices[i + 2]];
-		faceCount++;
+	for (int i = 0; i<indices.size(); i += 1){
+		currentMesh.face[i].V(0) = &currentMesh.vert[indices[i].v1];
+		currentMesh.face[i].V(1) = &currentMesh.vert[indices[i].v2];
+		currentMesh.face[i].V(2) = &currentMesh.vert[indices[i].v3];
 	}
-
-
-	/*vcg::tri::UpdateTopology<VCGMesh>::FaceFace(newMesh);
-	vcg::tri::updateflags<vcgmesh>::faceborderfromff(newmesh);
-	int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(newMesh);
-	cDebug::DbgOut(_T("Removed duplicates: "), dup);
-	int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(newMesh);
-	cDebug::DbgOut(_T("Removed unreferenced: "), unref);
-	int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(newMesh);
-	cDebug::DbgOut(_T("Removed degenerate faces: "), deg);
-	vcg::tri::RequirePerVertexNormal(newMesh);
-	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(newMesh);*/
-	//vcg::tri::io::ExporterPLY<VCGMesh>::Save(newMesh, "saved.ply", vcg::tri::io::Mask::IOM_VERTCOLOR);
-	//currentMesh = newMesh.
 }
 
-void VCGMeshContainer::ConvertToVCG(std::vector<float> inputVertices, std::vector<GLuint> inputIndices)
+void VCGMeshContainer::ConvertToVCG(std::vector<Vertex> inputVertices, std::vector<Triangle> inputIndices)
 {
-	/*currentMesh.Clear();
-	VCGMesh newMesh;
-	int size = vertices.size();
-	VCGMesh::VertexPointer* ivp = new VCGMesh::VertexPointer[size];
-	int vertNum = 0;
-	for (int i = 0; i < vertices.size(); i += 7)
-	{
-	ivp[vertNum] = &*vcg::tri::Allocator<VCGMesh>::AddVertex(newMesh, VCGMesh::CoordType(vertices[i], vertices[i + 1], vertices[i + 2]),
-	vcg::Color4b(vertices[i + 3], vertices[i + 4], vertices[i + 5], vertices[i + 6]));
-	vertNum++;
-	}
-	for (int i = 0; i < indices.size(); i+=3)
-	{
-	vcg::tri::Allocator<VCGMesh>::AddFace(newMesh, ivp[indices[i]], ivp[indices[i + 1]], ivp[indices[i + 2]]);
-	}*/
+	vcg::tri::Allocator<VCGMesh>::AddVertices(currentMesh, inputVertices.size());
 
-	//VCGMesh newMesh;
-	vcg::tri::Allocator<VCGMesh>::AddVertices(currentMesh, inputVertices.size() / 6);
-
-	int vertCount = 0;
-	for (int i = 0; i < inputVertices.size(); i += 6)
+	for (int i = 0; i < inputVertices.size(); i += 1)
 	{
-		currentMesh.vert[vertCount].P() = vcg::Point3f(inputVertices[i], inputVertices[i + 1], inputVertices[i + 2]);
-		currentMesh.vert[vertCount].C() = vcg::Color4b((int)(inputVertices[i + 3] * 255.0f), (int)(inputVertices[i + 4] * 255.0f), (int)(inputVertices[i + 5] * 255.0f), 255);
-		vertCount++;
-
+		currentMesh.vert[i].P() = vcg::Point3f(inputVertices[i].x, inputVertices[i].y, inputVertices[i].z);
+		currentMesh.vert[i].C() = vcg::Color4b((int)(inputVertices[i].r * 255.0f), (int)(inputVertices[i].g * 255.0f), (int)
+			(inputVertices[i].b * 255.0f), 255);
+		currentMesh.vert[i].N() = vcg::Point3f(inputVertices[i].normal_x, inputVertices[i].normal_y, inputVertices[i].normal_z);
 	}
 
-	vcg::tri::Allocator<VCGMesh>::AddFaces(currentMesh, inputIndices.size() / 3);
+	
 
-	int faceCount = 0;
-	for (int i = 0; i<inputIndices.size(); i += 3){
-		currentMesh.face[faceCount].V(0) = &currentMesh.vert[inputIndices[i]];
-		currentMesh.face[faceCount].V(1) = &currentMesh.vert[inputIndices[i + 1]];
-		currentMesh.face[faceCount].V(2) = &currentMesh.vert[inputIndices[i + 2]];
-		faceCount++;
+	vcg::tri::Allocator<VCGMesh>::AddFaces(currentMesh, inputIndices.size());
+
+	for (int i = 0; i<inputIndices.size(); i += 1){
+		currentMesh.face[i].V(0) = &currentMesh.vert[inputIndices[i].v1];
+		currentMesh.face[i].V(1) = &currentMesh.vert[inputIndices[i].v2];
+		currentMesh.face[i].V(2) = &currentMesh.vert[inputIndices[i].v3];
 	}
-	/*vcg::tri::UpdateTopology<VCGMesh>::FaceFace(newMesh);
-	vcg::tri::updateflags<vcgmesh>::faceborderfromff(newmesh);
-	int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(newMesh);
-	cDebug::DbgOut(_T("Removed duplicates: "), dup);
-	int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(newMesh);
-	cDebug::DbgOut(_T("Removed unreferenced: "), unref);
-	int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(newMesh);
-	cDebug::DbgOut(_T("Removed degenerate faces: "), deg);
-	vcg::tri::RequirePerVertexNormal(newMesh);
-	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(newMesh);*/
-	//vcg::tri::io::ExporterPLY<VCGMesh>::Save(newMesh, "saved.ply", vcg::tri::io::Mask::IOM_VERTCOLOR);
-	//currentMesh = newMesh.
-	snapOrientation.clear();
-	orientation.clear();
-	snapOrientation.push_back(0);
-	snapOrientation.push_back(0);
-	snapOrientation.push_back(0);
-	orientation.push_back(0);
-	orientation.push_back(0);
-	orientation.push_back(0);
+
 }
 
 void VCGMeshContainer::GenerateVAO()
@@ -709,9 +349,10 @@ void VCGMeshContainer::GenerateVAO()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)* 6, reinterpret_cast<void*>(0));
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float)* 6, reinterpret_cast<void*>(sizeof(float)* 3));
-
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 3));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 6));
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 
 	glGenVertexArrays(1, &bbVAO);
@@ -719,8 +360,10 @@ void VCGMeshContainer::GenerateVAO()
 	glBindBuffer(GL_ARRAY_BUFFER, bbVBO);
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)* 6, reinterpret_cast<void*>(0));
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float)* 6, reinterpret_cast<void*>(sizeof(float)* 3));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 3));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 6));
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbIBO);
 }
@@ -730,25 +373,25 @@ void VCGMeshContainer::GenerateBOs()
 	glGenBuffers(1, &vbo);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glGenBuffers(1, &ibo);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Triangle), &indices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	glGenBuffers(1, &bbVBO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, bbVBO);
-	glBufferData(GL_ARRAY_BUFFER, bBoxVertices.size() * sizeof(float), &bBoxVertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, bBoxVertices.size() * sizeof(Vertex), &bBoxVertices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glGenBuffers(1, &bbIBO);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, bBoxIndices.size() * sizeof(GLuint), &bBoxIndices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, bBoxIndices.size() * sizeof(Triangle), &bBoxIndices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
@@ -756,14 +399,14 @@ void VCGMeshContainer::ToggleSelectedColor(bool flag)
 {
 	if (flag && !colorSelection)
 	{
-		for (int i = 0; i < vertices.size(); i += 6)
+		for (int i = 0; i < vertices.size(); i += 1)
 		{
-			storedColors.push_back(vertices[i + 3]);
-			vertices[i + 3] = min(vertices[i + 3] + 0.1f, 1.0f);
+			storedColors.push_back(vertices[i].r);
+			vertices[i].r = min(vertices[i].r + 0.1f, 1.0f);
 		}
 		colorSelection = true;
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 	else
@@ -771,15 +414,15 @@ void VCGMeshContainer::ToggleSelectedColor(bool flag)
 		if (colorSelection);
 		{
 			int cnt = 0;
-			for (int i = 0; i < vertices.size(); i += 6)
+			for (int i = 0; i < vertices.size(); i += 1)
 			{
-				vertices[i + 3] = storedColors[cnt];
+				vertices[i].r = storedColors[cnt];
 				cnt++;
 			}
 			storedColors.clear();
 			colorSelection = false;
 			glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 	}
@@ -805,7 +448,7 @@ void VCGMeshContainer::Draw()
 	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
 
 	glBindVertexArray(vao);
-	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (GLvoid*)0);
+	glDrawElements(GL_TRIANGLES, indices.size()*3, GL_UNSIGNED_INT, (GLvoid*)0);
 	glBindVertexArray(0);
 
 	glUseProgram(0);
@@ -830,7 +473,7 @@ void VCGMeshContainer::DrawBB()
 	}
 	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
 	glBindVertexArray(bbVAO);
-	glDrawElements(GL_TRIANGLES, bBoxIndices.size(), GL_UNSIGNED_INT, (GLvoid*)0);
+	glDrawElements(GL_TRIANGLES, bBoxIndices.size()*3, GL_UNSIGNED_INT, (GLvoid*)0);
 	glBindVertexArray(0);
 
 }
@@ -895,10 +538,10 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 	glm::mat4 combinedTranslation = (snapTransform * pointTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform);
 
 	int normalCount = 0;
-	for (int i = 0; i < vertices.size(); i += 6)
+	for (int i = 0; i < vertices.size(); i += 1)
 	{
-		glm::vec4 tmp = glm::vec4(vertices[i], vertices[i + 1], vertices[i + 2], 1.0f);
-		glm::vec4 tmpNormal = glm::vec4(normals[normalCount], normals[normalCount + 1], normals[normalCount + 2], 1.0f);
+		glm::vec4 tmp = glm::vec4(vertices[i].x, vertices[i].y, vertices[i].z, 1.0f);
+		glm::vec4 tmpNormal = glm::vec4(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z, 1.0f);
 
 		//tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
 		//if (orien == -1)
@@ -910,54 +553,28 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 		//tmp = snapTransform * snapReverse * tmp;
 		//tmp = snapTransform * tmp;
 
-		vertices[i] = tmp.x;
-		vertices[i + 1] = tmp.y;// abs(centerPoint.y - snapPoint.y);
-		vertices[i + 2] = tmp.z;// +abs(snapPoint.z - lowestZ);
-		normals[normalCount] = tmpNormal.x;
-		normals[normalCount + 1] = tmpNormal.y;
-		normals[normalCount + 2] = tmpNormal.z;
+		vertices[i].x = tmp.x;
+		vertices[i].y = tmp.y;// abs(centerPoint.y - snapPoint.y);
+		vertices[i].z = tmp.z;// +abs(snapPoint.z - lowestZ);
+		vertices[i].normal_x = tmpNormal.x;
+		vertices[i].normal_y = tmpNormal.y;
+		vertices[i].normal_z = tmpNormal.z;
 		upperBounds.x = max(upperBounds.x, tmp.x);
 		lowerBounds.x = min(lowerBounds.x, tmp.x);
 		upperBounds.y = max(upperBounds.y, tmp.y);
 		lowerBounds.y = min(lowerBounds.y, tmp.y);
 		upperBounds.z = max(upperBounds.z, tmp.z);
 		lowerBounds.z = min(lowerBounds.z, tmp.z);
-		/*upperBounds.x = max(upperBounds.x, vertices[i]);
-		lowerBounds.x = min(lowerBounds.x, vertices[i]);
-		upperBounds.y = max(upperBounds.y, vertices[i + 1]);
-		lowerBounds.y = min(lowerBounds.y, vertices[i + 2]);
-		upperBounds.z = max(upperBounds.z, vertices[i + 2]);
-		lowerBounds.z = min(lowerBounds.z, vertices[i + 2]);*/
+
+		bBoxVertices[i].x = tmp.x;
+		bBoxVertices[i].y = tmp.y;
+		bBoxVertices[i].z = tmp.z;
+		bBoxVertices[i].normal_x = tmpNormal.x;
+		bBoxVertices[i].normal_y = tmpNormal.y;
+		bBoxVertices[i].normal_z = tmpNormal.z;
+
 		normalCount += 3;
 	}
-	for (int i = 0; i < bBoxVertices.size(); i += 6)
-	{
-		glm::vec4 tmp = glm::vec4(bBoxVertices[i], bBoxVertices[i + 1], bBoxVertices[i + 2], 1.0f);
-
-
-		tmp = combinedTranslation * tmp;
-		//if (doSnap)
-		//tmp = snapTransform * snapReverse * tmp;
-		//tmp = snapTransform  * tmp;
-		//else
-		//	tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * snapTransform) * tmp;
-		bBoxVertices[i] = tmp.x;
-		bBoxVertices[i + 1] = tmp.y;// + abs(centerPoint.y - snapPoint.y);
-		bBoxVertices[i + 2] = tmp.z;// +abs(snapPoint.z - lowestZ);
-
-		/*bBoxVertices[i] = bBoxVertices[i] - centerPoint.x;
-		bBoxVertices[i] = point.x - bBoxVertices[i];
-		bBoxVertices[i + 1] = bBoxVertices[i + 1] - centerPoint.y;
-		bBoxVertices[i + 1] = point.y - bBoxVertices[i + 1];
-		bBoxVertices[i + 2] = bBoxVertices[i + 2] - centerPoint.z;// +(centerPoint.z - oldLowBounds.z));
-		bBoxVertices[i + 2] = point.z - bBoxVertices[i + 2];*/
-	}
-
-	/*glm::vec4 cPtmp = glm::vec4(centerPoint.x, centerPoint.y, centerPoint.z, 1.0f);
-	cPtmp = (pointTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * cPtmp;
-	centerPoint.x = cPtmp.x;
-	centerPoint.y = cPtmp.y;
-	centerPoint.z = cPtmp.z;*/
 
 	angleX = 0;
 	angleY = 0;
@@ -967,43 +584,23 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 	yRotation = glm::mat4(1.0);
 	zRotation = glm::mat4(1.0);
 	scaleMatrix = glm::mat4(1.0);
-	/*upperBounds.x = upperBounds.x - centerPoint.x;
-	upperBounds.x = point.x - upperBounds.x;
-	upperBounds.y = upperBounds.y - centerPoint.y;
-	upperBounds.y = point.y - upperBounds.y;
-	upperBounds.z = upperBounds.z - centerPoint.z;
-	upperBounds.z = point.z - upperBounds.z;
-	lowerBounds.x = lowerBounds.x - centerPoint.x;
-	lowerBounds.x = point.x - lowerBounds.x;
-	lowerBounds.y = lowerBounds.y - centerPoint.y;
-	lowerBounds.y = point.y - lowerBounds.y;
-	lowerBounds.z = lowerBounds.z - centerPoint.z;
-	lowerBounds.z = point.z - lowerBounds.z;*/
-
 
 	centerPoint.x = (lowerBounds.x + upperBounds.x) / 2.0f;
 	centerPoint.y = (lowerBounds.y + upperBounds.y) / 2.0f;
-	//centerPoint.y = lowerBounds.y;
 	centerPoint.z = (lowerBounds.z + upperBounds.z) / 2.0f;
 
 	offSet.x = (centerPoint.x - lowerBounds.x);
 	offSet.y = (centerPoint.y - lowerBounds.y);
 	offSet.z = (centerPoint.z - lowerBounds.z);
 
-	//cDebug::DbgOut(L"offSet x:", offSet.x);
-	//cDebug::DbgOut(L"offSet y:", offSet.y);
-	//cDebug::DbgOut(L"offSet z:", offSet.z);
-
-	// +abs(centerPoint.z - lowestZ);
-	//snapTransform = glm::translate(glm::mat4(1.0), -centerPoint);
-	//centerPoint = point;
 	originTransform = glm::translate(glm::mat4(1.0), -centerPoint);
+
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, bbVBO);
-	glBufferData(GL_ARRAY_BUFFER, bBoxVertices.size() * sizeof(float), &bBoxVertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, bBoxVertices.size() * sizeof(Vertex), &bBoxVertices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -1024,15 +621,12 @@ glm::vec3 VCGMeshContainer::GetCenterPoint()
 float VCGMeshContainer::GetLowestZ()
 {
 	float lowestZ = std::numeric_limits<float>::max();
-	for (int i = 0; i <= vertices.size(); i += 6)
+	for (int i = 0; i <= vertices.size(); i += 1)
 	{
-		glm::vec4 currentPoint = glm::vec4(vertices[i], vertices[i + 1], vertices[i + 2], 1.0f);
-
-
 		//currentPoint = (scaleMatrix * zRotation * yRotation * xRotation) * currentPoint;
-		if (currentPoint.z <= lowestZ)
+		if (vertices[i].z <= lowestZ)
 		{
-			lowestZ = currentPoint.z;
+			lowestZ = vertices[i].z;
 		}
 	}
 	//cDebug::DbgOut(L"lowestZ: ", lowestZ);
@@ -1042,15 +636,14 @@ float VCGMeshContainer::GetLowestZ()
 float VCGMeshContainer::GetLowestY()
 {
 	float lowestY = std::numeric_limits<float>::max();
-	for (int i = 0; i <= vertices.size(); i += 6)
+	for (int i = 0; i <= vertices.size(); i += 1)
 	{
-		glm::vec4 currentPoint = glm::vec4(vertices[i], vertices[i + 1], vertices[i + 2], 1.0f);
 
 
 		//currentPoint = (scaleMatrix * zRotation * yRotation * xRotation) * currentPoint;
-		if (currentPoint.y <= lowestY)
+		if (vertices[i].y <= lowestY)
 		{
-			lowestY = currentPoint.y;
+			lowestY = vertices[i].y;
 		}
 	}
 	//cDebug::DbgOut(L"lowestZ: ", lowestZ);
@@ -1060,54 +653,6 @@ float VCGMeshContainer::GetLowestY()
 bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output, glm::vec3 &outputNormal, bool snapToVertex)
 {
 	glm::vec3 rayDirection = glm::normalize(farPoint - nearPoint);
-
-	/*float tMin = (lowerBounds.x - nearPoint.x) / rayDirection.x;
-	float tMax = (upperBounds.x - nearPoint.x) / rayDirection.x;
-
-
-	if (tMin > tMax)
-	{
-	float tmp = tMin;
-	tMin = tMax;
-	tMax = tmp;
-	}
-
-	float tyMin = (lowerBounds.y - nearPoint.y) / rayDirection.y;
-	float tyMax = (upperBounds.y - nearPoint.y) / rayDirection.y;
-
-	if (tyMin > tyMax)
-	{
-	float tmp = tyMin;
-	tyMin = tyMax;
-	tyMax = tyMin;
-	}
-
-	if ((tMin > tyMax) || (tyMin > tMax))
-	return false;
-
-	if (tyMin > tMin)
-	tMin = tyMin;
-	if (tyMax < tMax)
-	tMax = tyMax;
-
-	float tzMin = (lowerBounds.z - nearPoint.z) / rayDirection.z;
-	float tzMax = (upperBounds.z - nearPoint.z) / rayDirection.z;
-
-	if (tzMin < tzMax)
-	{
-	float tmp = tzMin;
-	tzMin = tzMax;
-	tzMax = tzMin;
-	}
-
-	if ((tMin > tzMax) || (tzMin > tMax))
-	return false;
-
-	if (tzMin > tMin)
-	tMin = tzMin;
-
-	if (tzMax < tMax)
-	tMax = tzMax;*/
 
 	glm::vec3 dirfrac;
 	// r.dir is unit direction vector of ray
@@ -1143,12 +688,6 @@ bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm:
 
 	t = tmin;
 
-	//glm::vec3 vA = farPoint - nearPoint;
-	//glm::vec3 distance(vA.x * t, vA.y * t, vA.z * t);
-	//glm::vec3 rayPoint = nearPoint + distance;
-	//output = rayPoint;
-	//return true;
-
 	if (snapToVertex)
 	{
 		float highestZ = -99999.0f;
@@ -1157,9 +696,9 @@ bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm:
 		double c2 = glm::dot(v, v);
 		float minDistance = std::numeric_limits<float>::max();
 		int index = -1;
-		for (int i = 0; i < vertices.size(); i += 6)
+		for (int i = 0; i < vertices.size(); i += 1)
 		{
-			glm::vec3 point(vertices[i], vertices[i + 1], vertices[i + 2]);
+			glm::vec3 point(vertices[i].x, vertices[i].y, vertices[i].z);
 
 			glm::vec3 w = point - nearPoint;
 
@@ -1185,20 +724,20 @@ bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm:
 		float highestZ = -99999.0f;
 		float u, v, tX;
 		glm::vec3 normal;
-		for (int i = 0; i < indices.size(); i += 3)
+		for (int i = 0; i < indices.size(); i += 1)
 		{
 			glm::vec3 v0;
-			v0.x = vertices[indices[i] * 6];
-			v0.y = vertices[indices[i] * 6 + 1];
-			v0.z = vertices[indices[i] * 6 + 2];
+			v0.x = vertices[indices[i].v1].x;
+			v0.y = vertices[indices[i].v1].y;
+			v0.z = vertices[indices[i].v1].z;
 			glm::vec3 v1;
-			v1.x = vertices[indices[i + 1] * 6];
-			v1.y = vertices[indices[i + 1] * 6 + 1];
-			v1.z = vertices[indices[i + 1] * 6 + 2];
+			v1.x = vertices[indices[i].v2].x;
+			v1.y = vertices[indices[i].v2].y;
+			v1.z = vertices[indices[i].v2].z;
 			glm::vec3 v2;
-			v2.x = vertices[indices[i + 2] * 6];
-			v2.y = vertices[indices[i + 2] * 6 + 1];
-			v2.z = vertices[indices[i + 2] * 6 + 2];
+			v2.x = vertices[indices[i].v3].x;
+			v2.y = vertices[indices[i].v3].y;
+			v2.z = vertices[indices[i].v3].z;
 			glm::vec3 edge1 = v1 - v0;
 			glm::vec3 edge2 = v2 - v0;
 			glm::vec3 pVec = glm::cross(rayDirection, edge2);
@@ -1214,13 +753,13 @@ bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm:
 			v = glm::dot(rayDirection, qVec) * invDet;
 			if (v < 0.0f || u + v > 1.0f)
 				continue;
-			if (vertices[indices[i] * 6 + 2] >= highestZ)
+			if (vertices[indices[i].v1 + 2].z >= highestZ)
 			{
-				highestZ = vertices[indices[i] * 6 + 2];
+				highestZ = vertices[indices[i].v1 + 2].z;
 				tX = glm::dot(edge2, qVec) * invDet;
-				normal.x = normals[indices[i] * 3];
-				normal.y = normals[indices[i] * 3 + 1];
-				normal.z = normals[indices[i] * 3 + 2];
+				normal.x = vertices[indices[i].v1].normal_x;
+				normal.y = vertices[indices[i].v1].normal_y;
+				normal.z = vertices[indices[i].v1].normal_z;
 			}
 		}
 		glm::vec3 minPoint = nearPoint + rayDirection * tX;
@@ -1229,51 +768,6 @@ bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm:
 
 	}
 	return true;
-
-	/*triangle intersection
-	int cnnt = 0;
-	float u, v, tX;
-	for (int i = 0; i < indices.size(); i += 3)
-	{
-	glm::vec3 v0;
-	v0.x = vertices[indices[i]*6]; q
-	v0.y = vertices[indices[i]*6+1];
-	v0.z = vertices[indices[i]*6+2];
-	glm::vec3 v1;
-	v1.x = vertices[indices[i+1]*6];
-	v1.y = vertices[indices[i + 1] * 6 + 1];
-	v1.z = vertices[indices[i + 1] * 6 + 2];
-	glm::vec3 v2;
-	v2.x = vertices[indices[i + 2] * 6];
-	v2.y = vertices[indices[i + 2] * 6 + 1];
-	v2.z = vertices[indices[i + 2] * 6 + 2];
-	glm::vec3 edge1 = v1 - v0;
-	glm::vec3 edge2 = v2 - v0;
-	glm::vec3 pVec = glm::cross(rayDirection, edge2);
-	float det = glm::dot(edge1, pVec);
-	if (det > -0.00001f && det < 0.00001f)
-	continue;
-	float invDet = 1 / det;
-	glm::vec3 tVec = nearPoint - v0;
-	u = glm::dot(tVec, pVec) * invDet;
-	if (u < 0.0f || u > 1.0f)
-	continue;
-	glm::vec3 qVec = glm::cross(tVec, edge1);
-	v = glm::dot(rayDirection, qVec) * invDet;
-	if (v < 0.0f || u + v > 1.0f)
-	continue;
-	tX = glm::dot(edge2, qVec) * invDet;
-
-	if (tX > 0.00001f)
-	{
-	cnnt++;
-	break;
-	}
-	}
-	cDebug::DbgOut(L"Count: ", cnnt);
-	glm::vec3 minPoint = nearPoint + rayDirection * tX;
-	output = minPoint;
-	return true;*/
 
 }
 
@@ -1309,9 +803,9 @@ bool VCGMeshContainer::CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, g
 	{
 		glm::vec3 minPoint;
 		float minDistance = std::numeric_limits<float>::max();
-		for (int i = 0; i < vertices.size(); i += 6)
+		for (int i = 0; i < vertices.size(); i += 1)
 		{
-			glm::vec3 point(vertices[i], vertices[i + 1], vertices[i + 2]);
+			glm::vec3 point(vertices[i].x, vertices[i].y, vertices[i].z);
 			glm::vec3 v = farPoint - nearPoint;
 			glm::vec3 w = point - nearPoint;
 
@@ -1443,19 +937,19 @@ int VCGMeshContainer::RemoveSmallComponents(int compSize)
 void VCGMeshContainer::UpdateBuffers()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Triangle), &indices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, bbVBO);
-	glBufferData(GL_ARRAY_BUFFER, bBoxVertices.size() * sizeof(float), &bBoxVertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, bBoxVertices.size() * sizeof(Vertex), &bBoxVertices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, bBoxIndices.size() * sizeof(GLuint), &bBoxIndices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, bBoxIndices.size() * sizeof(Triangle), &bBoxIndices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
@@ -1522,7 +1016,8 @@ void VCGMeshContainer::SetPlaneParameters(float x, float y, float z, float d)
 		pos = min;
 
 	//orientation = pos;
-	orientation[pos] = 1;
+	if (pos <= 2)
+		orientation[pos] = 1;
 }
 
 std::vector<int> VCGMeshContainer::GetOrientation()
@@ -1540,7 +1035,7 @@ std::vector<int> VCGMeshContainer::GetOrientation()
 		}*/
 		return orientation;
 	}
-	else return orientation;
+	return orientation;
 }
 
 void VCGMeshContainer::SetWall(bool flag)
@@ -1573,17 +1068,12 @@ glm::vec3 VCGMeshContainer::GetLowerBounds()
 	return lowerBounds;
 }
 
-std::vector<float> VCGMeshContainer::GetVertices()
+std::vector<Vertex> VCGMeshContainer::GetVertices()
 {
 	return vertices;
 }
 
-std::vector<float> VCGMeshContainer::GetNormals()
-{
-	return normals;
-}
-
-std::vector<GLuint> VCGMeshContainer::GetIndices()
+std::vector<Triangle> VCGMeshContainer::GetIndices()
 {
 	return indices;
 }
@@ -1593,16 +1083,15 @@ int VCGMeshContainer::GetNumberOfVertices()
 	return vertNum;
 }
 
-int VCGMeshContainer::GetNumberOfIndices()
+int VCGMeshContainer::GetNumberOfTriangles()
 {
 	return indices.size();
 }
 
-void VCGMeshContainer::CleanAndParse(std::vector<float> &startingVertices, std::vector<GLuint> &startingIndices, std::vector<float> &startingNormals)
+void VCGMeshContainer::CleanAndParse(std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices)
 {
 	startingVertices.clear();
 	startingIndices.clear();
-	startingNormals.clear();
 	CleanMesh();
 	std::clock_t start;
 	double duration;
@@ -1617,22 +1106,18 @@ void VCGMeshContainer::CleanAndParse(std::vector<float> &startingVertices, std::
 	for (vi = (currentMesh).vert.begin(); vi != (currentMesh).vert.end(); ++vi) if (!(*vi).IsD())
 	{
 		VertexId[vi - (currentMesh).vert.begin()] = numvert;
-		int dim = 0;
-		while (dim < 3)
-		{
-			float tmpFloat = (*vi).P()[dim];
-			startingVertices.push_back(tmpFloat);
-			startingNormals.push_back((*vi).N()[dim]);
+		Vertex vertex;
+		vertex.x = (*vi).P()[0];
+		vertex.y = (*vi).P()[1];
+		vertex.z = (*vi).P()[2];
+		vertex.normal_x = (*vi).N()[0];
+		vertex.normal_y = (*vi).N()[1];
+		vertex.normal_z = (*vi).N()[2];
+		vertex.r = (*vi).C()[0] / 255.0f;
+		vertex.g = (*vi).C()[1] / 255.0f;
+		vertex.b = (*vi).C()[2] / 255.0f;
+		startingVertices.push_back(vertex);
 
-			//colors.push_back((*vi).C()[dim] / 255.0f);
-			dim++;
-		}
-		dim = 0;
-		while (dim < 3)
-		{
-			startingVertices.push_back((*vi).C()[dim] / 255.0f);
-			dim++;
-		}
 		//startingVertices.push_back(1.0f);
 		//colors.push_back(1.0f);
 
@@ -1644,12 +1129,12 @@ void VCGMeshContainer::CleanAndParse(std::vector<float> &startingVertices, std::
 	int mem_index = 0; //var temporany
 	for (VCGMesh::FaceIterator fi = (currentMesh).face.begin(); fi != (currentMesh).face.end(); ++fi) if (!(*fi).IsD())
 	{
-		for (int k = 0; k<(*fi).VN(); k++)
-		{
-			int vInd = -1;
+		Triangle triangle;
+		triangle.v1 = VertexId[vcg::tri::Index((currentMesh), (*fi).V(0))];
+		triangle.v2 = VertexId[vcg::tri::Index((currentMesh), (*fi).V(1))];
+		triangle.v3 = VertexId[vcg::tri::Index((currentMesh), (*fi).V(2))];
 
-			startingIndices.push_back(VertexId[vcg::tri::Index((currentMesh), (*fi).V(k))]);//index of vertex per face
-		}
+		startingIndices.push_back(triangle);
 	}
 
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
@@ -1666,15 +1151,16 @@ void CombineAndExport()
 	std::vector<int> vertOffset;
 	vertOffset.push_back(0);
 	int meshCnt = 0;
-	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
-		std::vector<float> vertices = (*mI)->GetVertices();
+		std::vector<Vertex> vertices = (*mI)->GetVertices();
 
 		int vertCount = 0;
-		for (int i = 0; i < vertices.size(); i += 6)
+		for (int i = 0; i < vertices.size(); i += 1)
 		{
-			combinedMesh.vert[vertOffset[meshCnt] + vertCount].P() = vcg::Point3f(vertices[i], vertices[i + 1], vertices[i + 2]);
-			combinedMesh.vert[vertOffset[meshCnt] + vertCount].C() = vcg::Color4b((int)(vertices[i + 3] * 255.0f), (int)(vertices[i + 4] * 255.0f), (int)(vertices[i + 5] * 255.0f), 255);
+			combinedMesh.vert[vertOffset[meshCnt] + vertCount].P() = vcg::Point3f(vertices[i].x, vertices[i].y, vertices[i].z);
+			combinedMesh.vert[vertOffset[meshCnt] + vertCount].C() = vcg::Color4b((int)(vertices[i].r * 255.0f), (int)(vertices[i].g * 255.0f), (int)(vertices[i].b * 255.0f), 255);
+			combinedMesh.vert[vertOffset[meshCnt] + vertCount].N() = vcg::Point3f(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z);
 			vertCount++;
 		}
 		vertOffset.push_back(vertOffset[meshCnt] + vertCount);
@@ -1685,14 +1171,14 @@ void CombineAndExport()
 	faceOffset.push_back(0);
 	meshCnt = 0;
 	vcg::tri::Allocator<VCGMesh>::AddFaces(combinedMesh, numberOfFaces);
-	for (vector <VCGMeshContainer*>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
-		std::vector<GLuint> indices = (*mI)->GetIndices();
+		std::vector<Triangle> indices = (*mI)->GetIndices();
 		int faceCount = 0;
-		for (int i = 0; i < indices.size(); i += 3){
-			combinedMesh.face[faceOffset[meshCnt] + faceCount].V(0) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i]];
-			combinedMesh.face[faceOffset[meshCnt] + faceCount].V(1) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i + 1]];
-			combinedMesh.face[faceOffset[meshCnt] + faceCount].V(2) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i + 2]];
+		for (int i = 0; i < indices.size(); i += 1){
+			combinedMesh.face[faceOffset[meshCnt] + faceCount].V(0) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i].v1];
+			combinedMesh.face[faceOffset[meshCnt] + faceCount].V(1) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i].v2];
+			combinedMesh.face[faceOffset[meshCnt] + faceCount].V(2) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i].v3];
 			faceCount++;
 		}
 		faceOffset.push_back(faceOffset[meshCnt] + faceCount);
@@ -1720,7 +1206,7 @@ void CombineAndExport()
 	vcg::tri::io::ExporterPLY<VCGMesh>::Save(combinedMesh, filePath.c_str(), vcg::tri::io::Mask::IOM_VERTCOLOR);
 }
 
-void CleanAndParse(const char* fileName, std::vector<float> &startingVertices, std::vector<GLuint> &startingIndices, std::vector<float> &startingNormals)
+void CleanAndParse(const char* fileName, std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices)
 {
 	VCGMesh mesh;
 	vcg::tri::io::ImporterPLY<VCGMesh>::Open(mesh, fileName);
@@ -1749,24 +1235,17 @@ void CleanAndParse(const char* fileName, std::vector<float> &startingVertices, s
 	for (vi = (mesh).vert.begin(); vi != (mesh).vert.end(); ++vi) if (!(*vi).IsD())
 	{
 		VertexId[vi - (mesh).vert.begin()] = numvert;
-		int dim = 0;
-		while (dim < 3)
-		{
-			float tmpFloat = (*vi).P()[dim];
-			startingVertices.push_back(tmpFloat);
-			startingNormals.push_back((*vi).N()[dim]);
-
-			//colors.push_back((*vi).C()[dim] / 255.0f);
-			dim++;
-		}
-		dim = 0;
-		while (dim < 3)
-		{
-			startingVertices.push_back((*vi).C()[dim] / 255.0f);
-			dim++;
-		}
-		//startingVertices.push_back(1.0f);
-		//colors.push_back(1.0f);
+		Vertex vertex;
+		vertex.x = (*vi).P()[0];
+		vertex.y = (*vi).P()[1];
+		vertex.z = (*vi).P()[2];
+		vertex.normal_x = (*vi).N()[0];
+		vertex.normal_y = (*vi).N()[1];
+		vertex.normal_z = (*vi).N()[2];
+		vertex.r = (*vi).C()[0] / 255.0f;
+		vertex.g = (*vi).C()[1] / 255.0f;
+		vertex.b = (*vi).C()[2] / 255.0f;
+		startingVertices.push_back(vertex);
 
 		numvert++;
 	}
@@ -1776,12 +1255,12 @@ void CleanAndParse(const char* fileName, std::vector<float> &startingVertices, s
 	int mem_index = 0; //var temporany
 	for (VCGMesh::FaceIterator fi = (mesh).face.begin(); fi != (mesh).face.end(); ++fi) if (!(*fi).IsD())
 	{
-		for (int k = 0; k<(*fi).VN(); k++)
-		{
-			int vInd = -1;
+		Triangle triangle;
+		triangle.v1 = VertexId[vcg::tri::Index((mesh), (*fi).V(0))];
+		triangle.v2 = VertexId[vcg::tri::Index((mesh), (*fi).V(1))];
+		triangle.v3 = VertexId[vcg::tri::Index((mesh), (*fi).V(2))];
 
-			startingIndices.push_back(VertexId[vcg::tri::Index((mesh), (*fi).V(k))]);//index of vertex per face
-		}
+		startingIndices.push_back(triangle);
 	}
 
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;

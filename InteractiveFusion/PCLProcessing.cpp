@@ -90,7 +90,7 @@ bool PCLProcessor::PlaneSegmentation() {
 		segmentation.segment(*inlierIndices, *coefficients);
 		
 		statusMsg = L"Trying to detect planes";
-		if (inlierIndices->indices.size() <= mainCloud->points.size()/30)
+		if (inlierIndices->indices.size() <= mainCloud->points.size()/80)
 		{
 			if (axisCnt == 0)
 			{
@@ -141,7 +141,7 @@ bool PCLProcessor::PlaneSegmentation() {
 		
 		wallSegmentCloud = inlierPoints;
 		openGLWin.InitWallConfirmation();
-		while (openGLWin.wallSelection)
+		while (openGLWin.state == WALL_SELECTION)
 		{
 			//if (!openGLWin.wallSelection)
 			//	break;
@@ -522,11 +522,8 @@ bool PCLProcessor::RegionGrowingSegmentation() {
 	pcl::PointCloud <pcl::Normal>::Ptr estNormals(new pcl::PointCloud <pcl::Normal>);
 	if (openGLWin.estimateNormals)
 	{
-		std::wstringstream ws;
-		ws << L"Estimating normals... ";
-		wstring statusMsg(ws.str());
-		const TCHAR *c_str = statusMsg.c_str();
-		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+		openGLWin.ShowStatusBarMessage(L"Estimating normals..");
+		openGLWin.SetViewportStatusMessage(L"Estimating normals..");
 
 		QueryPerformanceFrequency(&frequency);
 		QueryPerformanceCounter(&t1);
@@ -553,11 +550,8 @@ bool PCLProcessor::RegionGrowingSegmentation() {
 	//std::vector<pcl::PointIndices> cluster_indices;
 	segmentedClusterIndices.clear();
 
-	std::wstringstream ws;
-	ws << L"Processing segmentation... ";
-	wstring statusMsg(ws.str());
-	const TCHAR *c_str = statusMsg.c_str();
-	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+	openGLWin.ShowStatusBarMessage(L"Segmenting mesh...");
+	openGLWin.SetViewportStatusMessage(L"Segmenting mesh");
 
 	pcl::RegionGrowing<pcl::PointXYZRGB, pcl::Normal> reg;
 	reg.setMinClusterSize(openGLWin.minClusterSize);
@@ -640,11 +634,8 @@ bool PCLProcessor::EuclideanSegmentation() {
 	pcl::PointCloud <pcl::Normal>::Ptr estNormals(new pcl::PointCloud <pcl::Normal>);
 	if (openGLWin.estimateNormals)
 	{
-		std::wstringstream ws;
-		ws << L"Estimating normals... ";
-		wstring statusMsg(ws.str());
-		const TCHAR *c_str = statusMsg.c_str();
-		SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+		openGLWin.ShowStatusBarMessage(L"Estimating normals...");
+		openGLWin.SetViewportStatusMessage(L"Estimating normals");
 
 		QueryPerformanceFrequency(&frequency);
 		QueryPerformanceCounter(&t1);
@@ -671,11 +662,8 @@ bool PCLProcessor::EuclideanSegmentation() {
 	//std::vector<pcl::PointIndices> cluster_indices;
 	segmentedClusterIndices.clear();
 
-	std::wstringstream ws;
-	ws << L"Processing segmentation... ";
-	wstring statusMsg(ws.str());
-	const TCHAR *c_str = statusMsg.c_str();
-	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+	openGLWin.SetViewportStatusMessage(L"Segmenting mesh");
+	openGLWin.ShowStatusBarMessage(L"Processing segmentation...");
 
 	//pcl::ConditionalEuclideanClustering<pcl::PointXYZRGBNormal> ec;
 	pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
@@ -760,78 +748,59 @@ std::vector<int> PCLProcessor::CalculateIndicesForCluster(pcl::PointCloud<pcl::P
 	
 }
 
-bool PCLProcessor::ConvertToCloud(std::vector<float> startingVertices, std::vector<GLuint> startingIndices, std::vector<float> startingNormals)
+bool PCLProcessor::ConvertToCloud(std::vector<Vertex> startingVertices, std::vector<Triangle> startingIndices)
 {
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
 	indexMap.clear();
 	clusterIndexCount = 0;
 	mainCloud->clear();
-	cloud->width = startingVertices.size() / 6;
+	cloud->width = startingVertices.size();
 	cloud->height = 1;
 	cloud->is_dense = true;
 	cloud->points.resize(cloud->width * cloud->height);
 
 	normals->clear();
-	normals->width = startingNormals.size() / 3;
+	normals->width = startingVertices.size();
 	normals->height = 1;
 	normals->is_dense = true;
 	normals->points.resize(normals->width * normals->height);
-	int index = 0;
-	for (int i = 0; i < startingVertices.size(); i += 6)
+	for (int i = 0; i < startingVertices.size(); i += 1)
 	{
-		cloud->points[index].x = startingVertices[i];
-		cloud->points[index].y = startingVertices[i + 1];
-		cloud->points[index].z = startingVertices[i + 2];
-		cloud->points[index].r = startingVertices[i + 3] * 255;
-		cloud->points[index].g = startingVertices[i + 4] * 255;
-		cloud->points[index].b = startingVertices[i + 5] * 255;
+		cloud->points[i].x = startingVertices[i].x;
+		cloud->points[i].y = startingVertices[i].y;
+		cloud->points[i].z = startingVertices[i].z;
+		cloud->points[i].r = startingVertices[i].r * 255;
+		cloud->points[i].g = startingVertices[i].g * 255;
+		cloud->points[i].b = startingVertices[i].b * 255;
+		normals->points[i].normal_x = startingVertices[i].normal_x;
+		normals->points[i].normal_y = startingVertices[i].normal_y;
+		normals->points[i].normal_z = startingVertices[i].normal_z;
 		//cloud->points[index].a = startingVertices[i + 6];
-		index++;
 
-		vertexMap[startingVertices[i]].push_back(i / 6);
-		vertexMap[startingVertices[i]].push_back(startingVertices[i + 1]);
-		vertexMap[startingVertices[i]].push_back(startingVertices[i + 2]);
-	}
-	
-
-	index = 0;
-	for (int i = 0; i < startingNormals.size(); i += 3)
-	{
-		normals->points[index].normal_x = startingNormals[i];
-		normals->points[index].normal_y = startingNormals[i + 1];
-		normals->points[index].normal_z = startingNormals[i + 2];
-		index++;
+		vertexMap[startingVertices[i].x].push_back(i);
+		vertexMap[startingVertices[i].x].push_back(startingVertices[i].y);
+		vertexMap[startingVertices[i].x].push_back(startingVertices[i].z);
 	}
 
 	if (indexMap.empty())
 	{
-		for (int i = 0; i < startingIndices.size(); i += 3)
+		for (int i = 0; i < startingIndices.size(); i += 1)
 		{
-			indexMap[startingIndices[i]].push_back(startingIndices[i]);
-			indexMap[startingIndices[i]].push_back(startingIndices[i + 1]);
-			indexMap[startingIndices[i]].push_back(startingIndices[i + 2]);
-			indexMap[startingIndices[i + 1]].push_back(startingIndices[i]);
-			indexMap[startingIndices[i + 1]].push_back(startingIndices[i + 1]);
-			indexMap[startingIndices[i + 1]].push_back(startingIndices[i + 2]);
-			indexMap[startingIndices[i + 2]].push_back(startingIndices[i]);
-			indexMap[startingIndices[i + 2]].push_back(startingIndices[i + 1]);
-			indexMap[startingIndices[i + 2]].push_back(startingIndices[i + 2]);
+			indexMap[startingIndices[i].v1].push_back(startingIndices[i].v1);
+			indexMap[startingIndices[i].v1].push_back(startingIndices[i].v2);
+			indexMap[startingIndices[i].v1].push_back(startingIndices[i].v3);
+			indexMap[startingIndices[i].v2].push_back(startingIndices[i].v1);
+			indexMap[startingIndices[i].v2].push_back(startingIndices[i].v2);
+			indexMap[startingIndices[i].v2].push_back(startingIndices[i].v3);
+			indexMap[startingIndices[i].v3].push_back(startingIndices[i].v1);
+			indexMap[startingIndices[i].v3].push_back(startingIndices[i].v2);
+			indexMap[startingIndices[i].v3].push_back(startingIndices[i].v3);
 
 			if (i % 100000 == 0)
 			{
 				int percent = (((float)i / (float)startingIndices.size()) * 100.0f);
-				std::wstringstream ws;
-				ws << L"Converting mesh to point cloud... ";
-				ws << percent;
-				ws << L"%";
-				wstring statusBarMsg(ws.str());
-				const TCHAR *c_str = statusBarMsg.c_str();
-				SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
-				wstringstream strs;
-				strs << percent;
-				statusMsg = L"Converting mesh to point cloud (";
-				statusMsg.append(strs.str());
-				statusMsg.append(L"%)");
+				openGLWin.ShowStatusBarMessage(L"Converting mesh to point cloud... " + to_wstring(percent) + L"%");
+				openGLWin.SetViewportStatusMessage(L"Converting mesh to point cloud (" + to_wstring(percent) + L"%)");
 			}
 
 		}
@@ -841,7 +810,7 @@ bool PCLProcessor::ConvertToCloud(std::vector<float> startingVertices, std::vect
 	return true;
 }
 
-bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<float> allVertices, std::vector<float> &vertices, std::vector<GLuint> &indices)
+bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> allVertices, std::vector<Vertex> &vertices, std::vector<Triangle> &indices)
 {
 	//get clustered cloud at clusterIndex
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cluster = clusteredClouds[clusterIndex];
@@ -871,12 +840,14 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<float> al
 	//vertices are straight-forward and are mapped 1:1
 	for (size_t i = 0; i < cluster->points.size(); i++)
 	{
-		vertices.push_back(cluster->points[i].x);
-		vertices.push_back(cluster->points[i].y);
-		vertices.push_back(cluster->points[i].z);
-		vertices.push_back(cluster->points[i].r / 255.0f);
-		vertices.push_back(cluster->points[i].g / 255.0f);
-		vertices.push_back(cluster->points[i].b / 255.0f);
+		Vertex vertex;
+		vertex.x = cluster->points[i].x;
+		vertex.y = cluster->points[i].y;
+		vertex.z = cluster->points[i].z;
+		vertex.r = cluster->points[i].r / 255.0f;
+		vertex.g = cluster->points[i].g / 255.0f;
+		vertex.b = cluster->points[i].b / 255.0f;
+		vertices.push_back(vertex);
 	}
 
 	QueryPerformanceCounter(&t2);
@@ -906,12 +877,15 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<float> al
 		vector<int> tmp = indexMap[cloudIndices[i]];
 		for (int j = 0; j < tmp.size(); j += 3)
 		{
+			Triangle triangle;
 			/*if the index is the first value in the current face, look for 2nd and 3rd in the current cluster 
 			and either add them to the new face or add new vertices to fill the face */
 			if (tmp[j] == cloudIndices[i])
 			{
 				//first index of face
-				indices.push_back(i);
+				triangle.v1 = i;
+				
+				//indices.push_back(i);
 
 				//second index of face
 
@@ -923,18 +897,22 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<float> al
 				{
 					size_t index = clusterIndexMap[tmp[j + 1]];
 
-					indices.push_back(index);
+					triangle.v2 = index;
+					//indices.push_back(index);
 				}
 				else
 				{
-					size_t index = vertices.size() / 6;
-					indices.push_back(index);
-					vertices.push_back(allVertices[tmp[j + 1] * 6]);
-					vertices.push_back(allVertices[(tmp[j + 1] * 6) + 1]);
-					vertices.push_back(allVertices[(tmp[j + 1] * 6) + 2]);
-					vertices.push_back(allVertices[(tmp[j + 1] * 6) + 3]);
-					vertices.push_back(allVertices[(tmp[j + 1] * 6) + 4]);
-					vertices.push_back(allVertices[(tmp[j + 1] * 6) + 5]);
+					size_t index = vertices.size();
+					triangle.v2 = index;
+					//indices.push_back(index);
+					Vertex vertex;
+					vertex.x = allVertices[tmp[j + 1]].x;
+					vertex.y = allVertices[tmp[j + 1]].y;
+					vertex.z = allVertices[tmp[j + 1]].z;
+					vertex.r = allVertices[tmp[j + 1]].r;
+					vertex.g = allVertices[tmp[j + 1]].g;
+					vertex.b = allVertices[tmp[j + 1]].b;
+					vertices.push_back(vertex);
 				}
 				
 				//third index of face
@@ -944,21 +922,25 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<float> al
 				{
 					size_t index = clusterIndexMap[tmp[j + 2]];
 
-					indices.push_back(index);
+					triangle.v3 = index;
+					//indices.push_back(index);
 				}
 				else
 				{
-					size_t index = vertices.size() / 6;
+					size_t index = vertices.size();
 
-					indices.push_back(index);
-
-					vertices.push_back(allVertices[tmp[j + 2] * 6]);
-					vertices.push_back(allVertices[(tmp[j + 2] * 6) + 1]);
-					vertices.push_back(allVertices[(tmp[j + 2] * 6) + 2]);
-					vertices.push_back(allVertices[(tmp[j + 2] * 6) + 3]);
-					vertices.push_back(allVertices[(tmp[j + 2] * 6) + 4]);
-					vertices.push_back(allVertices[(tmp[j + 2] * 6) + 5]);
+					//indices.push_back(index);
+					triangle.v3 = index;
+					Vertex vertex;
+					vertex.x = allVertices[tmp[j + 2]].x;
+					vertex.y = allVertices[tmp[j + 2]].y;
+					vertex.z = allVertices[tmp[j + 2]].z;
+					vertex.r = allVertices[tmp[j + 2]].r;
+					vertex.g = allVertices[tmp[j + 2]].g;
+					vertex.b = allVertices[tmp[j + 2]].b;
+					vertices.push_back(vertex);
 				}
+				indices.push_back(triangle);
 			}
 			else if (tmp[j + 1] == cloudIndices[i])
 			{
@@ -968,22 +950,27 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<float> al
 				if (mapIterator != clusterIndexMap.end())
 				{
 					size_t index = clusterIndexMap[tmp[j]];
-					indices.push_back(index);
+					triangle.v1 = index;
+					//indices.push_back(index);
 				}
 				else
 				{
-					size_t index = vertices.size() / 6;
-					indices.push_back(index);
-					vertices.push_back(allVertices[tmp[j] * 6]);
-					vertices.push_back(allVertices[(tmp[j] * 6) + 1]);
-					vertices.push_back(allVertices[(tmp[j] * 6) + 2]);
-					vertices.push_back(allVertices[(tmp[j] * 6) + 3]);
-					vertices.push_back(allVertices[(tmp[j] * 6) + 4]);
-					vertices.push_back(allVertices[(tmp[j] * 6) + 5]);
+					size_t index = vertices.size();
+					triangle.v1 = index;
+					//indices.push_back(index);
+					Vertex vertex;
+					vertex.x = allVertices[tmp[j]].x;
+					vertex.y = allVertices[tmp[j]].y;
+					vertex.z = allVertices[tmp[j]].z;
+					vertex.r = allVertices[tmp[j]].r;
+					vertex.g = allVertices[tmp[j]].g;
+					vertex.b = allVertices[tmp[j]].b;
+					vertices.push_back(vertex);
 				}
 
 				//second index of face
-				indices.push_back(i);
+				//indices.push_back(i);
+				triangle.v2 = i;
 
 				//third index of face
 				mapIterator = clusterIndexMap.find(tmp[j + 2]);
@@ -991,19 +978,24 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<float> al
 				if (mapIterator != clusterIndexMap.end())
 				{
 					size_t index = clusterIndexMap[tmp[j + 2]];
-					indices.push_back(index);
+					triangle.v3 = index;
+					//indices.push_back(index);
 				}
 				else
 				{
-					size_t index = vertices.size() / 6;
-					indices.push_back(index);
-					vertices.push_back(allVertices[tmp[j + 2] * 6]);
-					vertices.push_back(allVertices[(tmp[j + 2] * 6) + 1]);
-					vertices.push_back(allVertices[(tmp[j + 2] * 6) + 2]);
-					vertices.push_back(allVertices[(tmp[j + 2] * 6) + 3]);
-					vertices.push_back(allVertices[(tmp[j + 2] * 6) + 4]);
-					vertices.push_back(allVertices[(tmp[j + 2] * 6) + 5]);
+					size_t index = vertices.size();
+					triangle.v3 = index;
+					//indices.push_back(index);
+					Vertex vertex;
+					vertex.x = allVertices[tmp[j + 2]].x;
+					vertex.y = allVertices[tmp[j + 2]].y;
+					vertex.z = allVertices[tmp[j + 2]].z;
+					vertex.r = allVertices[tmp[j + 2]].r;
+					vertex.g = allVertices[tmp[j + 2]].g;
+					vertex.b = allVertices[tmp[j + 2]].b;
+					vertices.push_back(vertex);
 				}
+				indices.push_back(triangle);
 			}
 			else if (tmp[j + 2] == cloudIndices[i])
 			{
@@ -1013,18 +1005,22 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<float> al
 				if (mapIterator != clusterIndexMap.end())
 				{
 					size_t index = clusterIndexMap[tmp[j]];
-					indices.push_back(index);
+					triangle.v1 = index;
+					//indices.push_back(index);
 				}
 				else
 				{
-					size_t index = vertices.size() / 6;
-					indices.push_back(index);
-					vertices.push_back(allVertices[tmp[j] * 6]);
-					vertices.push_back(allVertices[(tmp[j] * 6) + 1]);
-					vertices.push_back(allVertices[(tmp[j] * 6) + 2]);
-					vertices.push_back(allVertices[(tmp[j] * 6) + 3]);
-					vertices.push_back(allVertices[(tmp[j] * 6) + 4]);
-					vertices.push_back(allVertices[(tmp[j] * 6) + 5]);
+					size_t index = vertices.size();
+					triangle.v1 = index;
+					//indices.push_back(index);
+					Vertex vertex;
+					vertex.x = allVertices[tmp[j]].x;
+					vertex.y = allVertices[tmp[j]].y;
+					vertex.z = allVertices[tmp[j]].z;
+					vertex.r = allVertices[tmp[j]].r;
+					vertex.g = allVertices[tmp[j]].g;
+					vertex.b = allVertices[tmp[j]].b;
+					vertices.push_back(vertex);
 				}
 
 				//second index of face
@@ -1033,22 +1029,28 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<float> al
 				if (mapIterator != clusterIndexMap.end())
 				{
 					size_t index = clusterIndexMap[tmp[j + 1]];
-					indices.push_back(index);
+					triangle.v2 = index;
+					//indices.push_back(index);
 				}
 				else
 				{
-					size_t index = vertices.size() / 6;
-					indices.push_back(index);
-					vertices.push_back(allVertices[tmp[j + 1] * 6]);
-					vertices.push_back(allVertices[(tmp[j + 1] * 6) + 1]);
-					vertices.push_back(allVertices[(tmp[j + 1] * 6) + 2]);
-					vertices.push_back(allVertices[(tmp[j + 1] * 6) + 3]);
-					vertices.push_back(allVertices[(tmp[j + 1] * 6) + 4]);
-					vertices.push_back(allVertices[(tmp[j + 1] * 6) + 5]);
+					size_t index = vertices.size();
+					//indices.push_back(index);
+					triangle.v2 = index;
+					Vertex vertex;
+					vertex.x = allVertices[tmp[j + 1]].x;
+					vertex.y = allVertices[tmp[j + 1]].y;
+					vertex.z = allVertices[tmp[j + 1]].z;
+					vertex.r = allVertices[tmp[j + 1]].r;
+					vertex.g = allVertices[tmp[j + 1]].g;
+					vertex.b = allVertices[tmp[j + 1]].b;
+					vertices.push_back(vertex);
 				}
 
 				//third index of face
-				indices.push_back(i);
+				triangle.v3 = i;
+				//indices.push_back(i);
+				indices.push_back(triangle);
 			}
 		}
 
@@ -1057,20 +1059,10 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<float> al
 		if (procIndexCount % 2000 == 0)
 		{
 			int percent = (((float)procIndexCount / (float)clusterIndexCount) * 100.0f);
-			std::wstringstream ws;
-			ws << L"Converting cloud to triangle mesh ( ";
-			ws << percent;
-			ws << L"% ";
-			ws << clusterIndex + 1;
-			ws << L" of ";
-			ws << clusteredClouds.size();
-			ws << L")";
-			wstring statusBarMsg(ws.str());
-			const TCHAR *c_str = statusBarMsg.c_str();
-			SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, c_str);
+			
+			openGLWin.ShowStatusBarMessage(L"Converting cloud to triangle mesh ( " + to_wstring(percent) + L"% " + to_wstring(clusterIndex + 1) + L" of " + to_wstring(clusteredClouds.size()) + L")");
 
-			statusMsg = L"";
-			statusMsg.append(ws.str());
+			openGLWin.SetViewportStatusMessage(L"Converting cloud to triangle mesh ( " + to_wstring(percent) + L"% " + to_wstring(clusterIndex + 1) + L" of " + to_wstring(clusteredClouds.size()) + L")");
 		}
 
 	}

@@ -31,13 +31,14 @@ bool PrepareShaderPrograms()
 	for(int i = 0; i < 4; i++)
 	{
 		string sExt = fileNames[i].substr((int)fileNames[i].size() - 4, 4);
-		int shaderType;
+		int shaderType = -1;
 		if (sExt == "vert")
 			shaderType = GL_VERTEX_SHADER;
 		else if (sExt == "frag")
 			shaderType = GL_FRAGMENT_SHADER;
 
-		shaders[i].LoadShader("data\\shaders\\" + fileNames[i], shaderType);
+		if (shaderType != -1)
+			shaders[i].LoadShader("data\\shaders\\" + fileNames[i], shaderType);
 	}
 
 	shaderColor.CreateProgram();
@@ -68,10 +69,14 @@ bool OpenGLShader::LoadShader(string sFile, int sType)
 {
 	vector<string> sLines;
 
-	if(!GetLinesFromFile(sFile, false, &sLines))return false;
+	if(!GetLinesFromFile(sFile, false, &sLines))
+		return false;
 
+	if (sLines.size() == 0)
+		return false;
 	const char** sProgram = new const char*[(int)sLines.size()];
-	for (int i = 0; i < (int)sLines.size(); i++)sProgram[i] = sLines[i].c_str();
+	for (int i = 0; i < (int)
+		sLines.size(); i++)sProgram[i] = sLines[i].c_str();
 	
 	shaderId = glCreateShader(sType);
 

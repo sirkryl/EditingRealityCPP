@@ -14,13 +14,13 @@ public:
 	//bool DifferenceOfNormalsSegmentation();
 	pcl::PointCloud <pcl::PointXYZRGB>::ConstPtr coloredSegmentedCloud;
 	pcl::PointCloud <pcl::PointXYZRGB>::Ptr wallSegmentCloud;
-	bool ConvertToCloud(std::vector<float> startingVertices, std::vector<GLuint> startingIndices, std::vector<float> startingNormals);
-	bool ConvertToTriangleMesh(int clusterIndex, std::vector<float> allVertices, std::vector<float> &vertices, std::vector<GLuint> &indices);
+	bool ConvertToCloud(std::vector<Vertex> startingVertices, std::vector<Triangle> startingIndices);
+	bool ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> allVertices, std::vector<Vertex> &vertices, std::vector<Triangle> &indices);
 	//bool ConvertPlaneToTriangleMesh(int clusterIndex, std::vector<float> allVertices, std::vector<float> &vertices, std::vector<GLuint> &indices);
 	void PoissonReconstruction();
 	void PlaneIndexEstimation();
 	void IndexEstimation();
-	void MovingLeastSquares(std::vector<float> vertices, std::vector<float> normals, std::vector<float> &outputVertices, std::vector<GLuint> &outputIndices, std::vector<float> &outputNormals);
+	//void MovingLeastSquares(std::vector<Vertex> vertices, std::vector<float> normals, std::vector<Vertex> &outputVertices, std::vector<GLuint> &outputIndices);
 	bool coloredCloudReady = false;
 	void ShowViewer();
 	bool IsMainCloudInitialized();

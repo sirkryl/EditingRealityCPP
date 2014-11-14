@@ -2,6 +2,7 @@
 
 layout (location = 0) in vec4 inPosition;
 layout (location = 1) in vec4 color;
+layout (location = 2) in vec4 inNormal;
 
 smooth out vec4 theColor;
 

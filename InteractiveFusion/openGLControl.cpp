@@ -66,7 +66,7 @@ bool OpenGLControl::InitGLEW(HINSTANCE hInstance)
 	{
 		if(glewInit() != GLEW_OK)
 		{
-			MessageBox(*hWnd, _T("Couldn't initialize GLEW!"), _T("Fatal Error"), MB_ICONERROR);
+			MessageBox(hWnd, _T("Couldn't initialize GLEW!"), _T("Fatal Error"), MB_ICONERROR);
 			bResult = false;
 		}
 		bGlewInitialized = true;
@@ -99,13 +99,13 @@ Result:	Initializes OpenGL rendering context
 /*---------------------------------------------*/
 //(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), KinectFusionProcessor* proc, LPVOID lpParam)
 //(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), LPVOID lpParam)	
-bool OpenGLControl::InitOpenGL(HINSTANCE hInstance, HWND* a_hWnd, int iMajorVersion, int iMinorVersion, void(*a_ptrInitScene)(LPVOID), void
+bool OpenGLControl::InitOpenGL(HINSTANCE hInstance, HWND a_hWnd, int iMajorVersion, int iMinorVersion, void(*a_ptrInitScene)(LPVOID), void
 	(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), KinectFusionProcessor* proc, LPVOID lpParam)
 {
 	if(!InitGLEW(hInstance))return false;
 	processor = proc;
 	hWnd = a_hWnd;
-	hDC = GetDC(*hWnd);
+	hDC = GetDC(hWnd);
 	bool bError = false;
 	PIXELFORMATDESCRIPTOR pfd;
 
@@ -171,7 +171,7 @@ bool OpenGLControl::InitOpenGL(HINSTANCE hInstance, HWND* a_hWnd, int iMajorVers
 		TCHAR sErrorMessage[255], sErrorTitle[255];
 		wsprintf(sErrorMessage, _T("OpenGL %d.%d is not supported! Please download latest GPU drivers!"), iMajorVersion, iMinorVersion);
 		wsprintf(sErrorTitle, _T("OpenGL %d.%d Not Supported"), iMajorVersion, iMinorVersion);
-		MessageBox(*hWnd, sErrorMessage, sErrorTitle, MB_ICONINFORMATION);
+		MessageBox(hWnd, sErrorMessage, sErrorTitle, MB_ICONINFORMATION);
 		return false;
 	}
 	ptrRenderScene = a_ptrRenderScene;
@@ -203,7 +203,7 @@ void OpenGLControl::ResizeOpenGLViewportFull(int width, int height)
 	
 	//SetProjection3D(45.0f, float(width) / float(height), 0.1f, 1000.0f);
 	//SetOrtho2D(width, height);
-	SetWindowPos(*hWnd, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+	SetWindowPos(hWnd, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 	//glViewport(0, 0, width, height);
 	//iViewportWidth = width;
 	//iViewportHeight = height;
@@ -267,9 +267,9 @@ Result:	Retrieves pointer to projection matrix.
 
 /*---------------------------------------------*/
 
-glm::mat4* OpenGLControl::GetProjectionMatrix()
+glm::mat4 OpenGLControl::GetProjectionMatrix()
 {
-	return &mProjection;
+	return mProjection;
 }
 
 /*-----------------------------------------------
@@ -282,9 +282,9 @@ Result:	Retrieves pointer to ortho matrix.
 
 /*---------------------------------------------*/
 
-glm::mat4* OpenGLControl::GetOrthoMatrix()
+glm::mat4 OpenGLControl::GetOrthoMatrix()
 {
-	return &mOrtho;
+	return mOrtho;
 }
 
 void OpenGLControl::SetCameraMatrix(glm::mat4 viewMatrix)
@@ -367,18 +367,18 @@ Result:	Handles messages from windows that use
 
 /*---------------------------------------------*/
 
-LRESULT CALLBACK msgHandlerSimpleOpenGLClass(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK msgHandlerSimpleOpenGLClass(HWND wnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
 	switch(uiMsg)
 	{
 		case WM_PAINT:									
-			BeginPaint(hWnd, &ps);							
-			EndPaint(hWnd, &ps);					
+			BeginPaint(wnd, &ps);
+			EndPaint(wnd, &ps);
 			break;
 
 		default:
-			return DefWindowProc(hWnd, uiMsg, wParam, lParam); // Default window procedure
+			return DefWindowProc(wnd, uiMsg, wParam, lParam); // Default window procedure
 	}
 	return 0;
 }
@@ -452,14 +452,12 @@ Result:	Calls previously set release function
 
 void OpenGLControl::ReleaseOpenGLControl(LPVOID lpParam)
 {
+	cDebug::DbgOut(L"Releasing");
 	if(ptrReleaseScene)ptrReleaseScene(lpParam);
 
 	wglMakeCurrent(NULL, NULL);
 	wglDeleteContext(hRC);
-	ReleaseDC(*hWnd, hDC);
-
-	//delete hWnd;
-	hWnd = NULL;
+	ReleaseDC(hWnd, hDC);
 }
 
 /*-----------------------------------------------
