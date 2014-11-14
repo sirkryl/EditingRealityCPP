@@ -1,7 +1,7 @@
 #pragma once
 #include "common.h"
 
-class OpenGLSelector
+class SelectionHelper
 {
 public:
 	//currently selected object (or -1 if none selected)
@@ -32,4 +32,4 @@ private:
 	void DeleteMesh(int index);
 	
 };
-extern OpenGLSelector glSelector;
+extern SelectionHelper glSelector;

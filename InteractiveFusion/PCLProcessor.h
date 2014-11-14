@@ -48,5 +48,7 @@ private:
 	
 };
 
+extern PCLProcessor pclProcessor;
+
 void ViewerCallback(pcl::visualization::PCLVisualizer& viewer);
 void ViewerInit(pcl::visualization::PCLVisualizer& viewer);

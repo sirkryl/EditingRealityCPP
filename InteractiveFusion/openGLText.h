@@ -18,3 +18,5 @@ private:
 	FT_Library ft_lib{ nullptr };
 	FT_Face face{ nullptr };
 };
+
+extern OpenGLText glText;

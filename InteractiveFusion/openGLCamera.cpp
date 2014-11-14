@@ -1,6 +1,6 @@
 #include "common.h"
-#include "openGLWin.h"
-#include "openGLCamera.h"
+#include "InteractiveFusion.h"
+#include "OpenGLCamera.h"
 #include <glm/ext.hpp>
 float angleX = 5.0f;
 float zoomFactor = 1.0f;

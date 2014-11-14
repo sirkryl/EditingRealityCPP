@@ -1,6 +1,6 @@
 #include "common.h"
-#include "PCLProcessing.h"
-#include "openGLWin.h"
+#include "PCLProcessor.h"
+#include "InteractiveFusion.h"
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
 //#include <pcl/filters/voxel_grid.h>

@@ -1,9 +1,8 @@
-#include "common.h"
 #include "colorCoding.h"
-#include "vcgMesh.h"
-#include "openGLShaders.h"
-#include "openGLWin.h"
-#include "openGLCamera.h"
+#include "VcgMeshContainer.h"
+#include "OpenGLShaders.h"
+#include "InteractiveFusion.h"
+#include "OpenGLCamera.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <vcg/complex/algorithms/hole.h>
@@ -1141,69 +1140,6 @@ void VCGMeshContainer::CleanAndParse(std::vector<Vertex> &startingVertices, std:
 
 	cDebug::DbgOut(L"Parse duration: ", duration);
 
-}
-
-void CombineAndExport()
-{
-	VCGMesh combinedMesh;
-	vcg::tri::Allocator<VCGMesh>::AddVertices(combinedMesh, numberOfVertices);
-
-	std::vector<int> vertOffset;
-	vertOffset.push_back(0);
-	int meshCnt = 0;
-	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
-	{
-		std::vector<Vertex> vertices = (*mI)->GetVertices();
-
-		int vertCount = 0;
-		for (int i = 0; i < vertices.size(); i += 1)
-		{
-			combinedMesh.vert[vertOffset[meshCnt] + vertCount].P() = vcg::Point3f(vertices[i].x, vertices[i].y, vertices[i].z);
-			combinedMesh.vert[vertOffset[meshCnt] + vertCount].C() = vcg::Color4b((int)(vertices[i].r * 255.0f), (int)(vertices[i].g * 255.0f), (int)(vertices[i].b * 255.0f), 255);
-			combinedMesh.vert[vertOffset[meshCnt] + vertCount].N() = vcg::Point3f(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z);
-			vertCount++;
-		}
-		vertOffset.push_back(vertOffset[meshCnt] + vertCount);
-		meshCnt++;
-	}
-
-	std::vector<int> faceOffset;
-	faceOffset.push_back(0);
-	meshCnt = 0;
-	vcg::tri::Allocator<VCGMesh>::AddFaces(combinedMesh, numberOfFaces);
-	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
-	{
-		std::vector<Triangle> indices = (*mI)->GetIndices();
-		int faceCount = 0;
-		for (int i = 0; i < indices.size(); i += 1){
-			combinedMesh.face[faceOffset[meshCnt] + faceCount].V(0) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i].v1];
-			combinedMesh.face[faceOffset[meshCnt] + faceCount].V(1) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i].v2];
-			combinedMesh.face[faceOffset[meshCnt] + faceCount].V(2) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i].v3];
-			faceCount++;
-		}
-		faceOffset.push_back(faceOffset[meshCnt] + faceCount);
-		meshCnt++;
-	}
-	string path = "data\\output\\";
-	string fileName = "combined";
-	string ext = ".ply";
-	struct stat buffer;
-	string filePath = path;
-	filePath.append(fileName);
-	filePath.append(ext);
-	int cnt = 1;
-	while (stat(filePath.c_str(), &buffer) != -1)
-	{
-		ostringstream convert;
-		convert << cnt;
-		fileName = "combined_" + convert.str();
-		filePath = path;
-		filePath.append(fileName);
-		filePath.append(ext);
-		cnt++;
-	}
-
-	vcg::tri::io::ExporterPLY<VCGMesh>::Save(combinedMesh, filePath.c_str(), vcg::tri::io::Mask::IOM_VERTCOLOR);
 }
 
 void CleanAndParse(const char* fileName, std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices)

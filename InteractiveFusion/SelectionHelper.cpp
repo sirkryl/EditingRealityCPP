@@ -1,13 +1,14 @@
-#include "openGLSelector.h"
-#include "openGLCamera.h"
-#include "openGLWin.h"
-#include "openGLHelper.h"
+#include "SelectionHelper.h"
+#include "OpenGLCamera.h"
+#include "InteractiveFusion.h"
+#include "VisualizationHelper.h"
+#include "MeshHelper.h"
 #include "colorCoding.h"
-#include "vcgMesh.h"
+#include "VcgMeshContainer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-int OpenGLSelector::GetColorUnderCursor()
+int SelectionHelper::GetColorUnderCursor()
 {
 	POINT cursorPos;
 	GetCursorPos(&cursorPos);
@@ -23,7 +24,7 @@ int OpenGLSelector::GetColorUnderCursor()
 	return output;
 }
 
-void OpenGLSelector::RayCast(glm::vec3* v1, glm::vec3* v2)
+void SelectionHelper::RayCast(glm::vec3* v1, glm::vec3* v2)
 {
 	POINT cursorPos;
 	GetCursorPos(&cursorPos);
@@ -46,7 +47,7 @@ void OpenGLSelector::RayCast(glm::vec3* v1, glm::vec3* v2)
 
 }
 
-void OpenGLSelector::GetRayOrientation(glm::vec3 v1, glm::vec3 v2, glm::vec3 normal, std::vector<int> &orientation)
+void SelectionHelper::GetRayOrientation(glm::vec3 v1, glm::vec3 v2, glm::vec3 normal, std::vector<int> &orientation)
 {
 	/*orientation.clear();
 	orientation.push_back(0);
@@ -81,7 +82,7 @@ void OpenGLSelector::GetRayOrientation(glm::vec3 v1, glm::vec3 v2, glm::vec3 nor
 	}
 }
 
-bool OpenGLSelector::ColorPlacing(bool preview)
+bool SelectionHelper::ColorPlacing(bool preview)
 {
 	bool result = false;
 	glm::vec3 tmpNormal;
@@ -136,7 +137,7 @@ bool OpenGLSelector::ColorPlacing(bool preview)
 	return result;
 }
 
-void OpenGLSelector::DeleteMesh(int index)
+void SelectionHelper::DeleteMesh(int index)
 {
 	numberOfVertices -= meshData[index]->GetNumberOfVertices();
 	numberOfFaces -= meshData[index]->GetNumberOfTriangles();
@@ -145,7 +146,7 @@ void OpenGLSelector::DeleteMesh(int index)
 	meshData.erase(meshData.begin() + index);// std::remove(meshData.begin(), meshData.end(), meshData[index]), meshData.end());
 }
 
-int OpenGLSelector::DuplicateMesh(int index)
+int SelectionHelper::DuplicateMesh(int index)
 {
 	shared_ptr<VCGMeshContainer> mesh(new VCGMeshContainer);
 	mesh->SetColorCode(meshData.size() + 1);
@@ -160,7 +161,7 @@ int OpenGLSelector::DuplicateMesh(int index)
 	return meshData.size();
 }
 
-bool OpenGLSelector::RayCastPlacing(bool preview)
+bool SelectionHelper::RayCastPlacing(bool preview)
 {
 	bool result = false;
 	glm::vec3 hitNormal;
@@ -216,7 +217,7 @@ bool OpenGLSelector::RayCastPlacing(bool preview)
 	return result;
 }
 
-bool OpenGLSelector::PlacingPreview()
+bool SelectionHelper::PlacingPreview()
 {
 	if (!openGLWin.placeWithRaycast)
 	{
@@ -228,7 +229,7 @@ bool OpenGLSelector::PlacingPreview()
 	}
 }
 
-void OpenGLSelector::ProcessSelectedObject()
+void SelectionHelper::ProcessSelectedObject()
 {
 	//while (previewThreadActive)
 	//{
@@ -301,7 +302,7 @@ void OpenGLSelector::ProcessSelectedObject()
 	//}
 }
 
-void OpenGLSelector::ProcessPicking()
+void SelectionHelper::ProcessPicking()
 {
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
@@ -339,7 +340,7 @@ void OpenGLSelector::ProcessPicking()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void OpenGLSelector::ProcessPlacing()
+void SelectionHelper::ProcessPlacing()
 {
 	glm::vec3 tmpNormal;
 	if (!openGLWin.placeWithRaycast)
@@ -353,7 +354,7 @@ void OpenGLSelector::ProcessPlacing()
 }
 
 #pragma region
-void OpenGLSelector::SelectWallObject()
+void SelectionHelper::SelectWallObject()
 {
 	if (selectedIndex != -1)
 	{
@@ -365,7 +366,7 @@ void OpenGLSelector::SelectWallObject()
 	}
 }
 
-void OpenGLSelector::ResetWallObject()
+void SelectionHelper::ResetWallObject()
 {
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{

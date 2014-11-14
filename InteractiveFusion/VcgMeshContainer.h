@@ -1,6 +1,6 @@
 #pragma once
 #include<vcg/complex/complex.h>
-
+#include "common.h"
 class VCGFace;
 class VCGVertex;
 class VCGEdge;
@@ -135,8 +135,5 @@ private:
 };
 
 extern std::vector<shared_ptr<VCGMeshContainer>> meshData;
-extern int numberOfVertices;
-extern int numberOfFaces;
 
-void CombineAndExport();
 void CleanAndParse(const char* fileName, std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices);

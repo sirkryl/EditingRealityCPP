@@ -1,11 +1,12 @@
-#include "common.h"
-#include "openGLWin.h"
+#include "InteractiveFusion.h"
+#include "MeshHelper.h"
 #include "resource.h"
 #include "stdafx.h"
 #include <KinectFusionExplorer.h>
 #pragma region
 
-OpenGLWin openGLWin;
+InteractiveFusion openGLWin;
+MeshHelper meshHelper;
 
 HWND hButtonYes, hButtonNo;
 HWND hButtonExport, hButtonDuplicate, hButtonDelete, hButtonReset;
@@ -48,7 +49,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 #pragma region
 
-LPCWSTR OpenGLWin::GetLastErrorStdStr()
+LPCWSTR InteractiveFusion::GetLastErrorStdStr()
 {
 	DWORD error = GetLastError();
 	if (error)
@@ -76,7 +77,7 @@ LPCWSTR OpenGLWin::GetLastErrorStdStr()
 	return NULL;
 }
 
-HINSTANCE OpenGLWin::GetInstance()
+HINSTANCE InteractiveFusion::GetInstance()
 {
 	return appInstance;
 }
@@ -108,20 +109,20 @@ int Keys::GetKeyStateOnce(int key)
 
 #pragma region
 
-void OpenGLWin::ResetTimer()
+void InteractiveFusion::ResetTimer()
 {
 	tLastFrame = clock();
 	fFrameInterval = 0.0f;
 }
 
-void OpenGLWin::UpdateTimer()
+void InteractiveFusion::UpdateTimer()
 {
 	clock_t tCur = clock();
 	fFrameInterval = float(tCur - tLastFrame) / float(CLOCKS_PER_SEC);
 	tLastFrame = tCur;
 }
 
-float OpenGLWin::SpeedOptimizedFloat(float fVal)
+float InteractiveFusion::SpeedOptimizedFloat(float fVal)
 {
 	return fVal*fFrameInterval;
 }
@@ -132,7 +133,7 @@ float OpenGLWin::SpeedOptimizedFloat(float fVal)
 
 HANDLE hbitmap;
 
-bool OpenGLWin::CreateOpenGLWindow()
+bool InteractiveFusion::CreateOpenGLWindow()
 {
 	/*char *argv[] = { "arg" };
 	int argc = 1; // must/should match the number of strings in argv
@@ -233,12 +234,12 @@ bool OpenGLWin::CreateOpenGLWindow()
 	return true;
 }
 
-void OpenGLWin::ReleaseOpenGL()
+void InteractiveFusion::ReleaseOpenGL()
 {
 	glControl.ReleaseOpenGLControl(&glControl);
 }
 
-void OpenGLWin::ShutdownWindow()
+void InteractiveFusion::ShutdownWindow()
 {
 	winDestroyed = true;
 	DestroyWindow(debugHandle);
@@ -262,7 +263,7 @@ void OpenGLWin::ShutdownWindow()
 
 #pragma region
 
-//bool OpenGLWin::StartOpenGLThread(HWND parentWin, HINSTANCE currHInstance, KinectFusionProcessor* proc)
+//bool InteractiveFusion::StartOpenGLThread(HWND parentWin, HINSTANCE currHInstance, KinectFusionProcessor* proc)
 void StartOpenGLThread(KinectFusionProcessor* proc, int testMode)
 {
 	openGLWin.testMode = testMode;
@@ -276,14 +277,14 @@ void StartOpenGLThread(KinectFusionProcessor* proc, int testMode)
 
 }
 
-DWORD OpenGLWin::GetThreadID()
+DWORD InteractiveFusion::GetThreadID()
 {
 	return threadId;
 }
 
 int WINAPI LoadMeshThread()
 {
-	LoadInput();
+	InitialLoading();
 	return 0;
 }
 bool DrawButton(WPARAM wParam, LPARAM lParam)
@@ -597,12 +598,12 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_BUTTON_EXPORT == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.ShowStatusBarMessage(L"Combining and exporting all meshes...");
-		CombineAndExport();
+		meshHelper.CombineAndExport();
 	}
 	if (IDC_BUTTON_FILLHOLES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.ShowStatusBarMessage(L"Filling holes...");
-		FillHoles(openGLWin.holeSize);
+		meshHelper.FillHoles(openGLWin.holeSize);
 	}
 	if (IDC_BUTTON_RG_RESETVALUES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -677,7 +678,7 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	{
 		cDebug::DbgOut(L"select Remove Segments: ");
 		int size = GetDlgItemInt(debugHandle, IDC_EDIT_REMOVESEGMENTS, NULL, FALSE);
-		RemoveSmallComponents(size);
+		meshHelper.RemoveSmallComponents(size);
 	}
 	if (IDC_BUTTON_RESETWALL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -714,7 +715,7 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	{
 		cDebug::DbgOut(L"clean mesh", 0);
 		openGLWin.ShowStatusBarMessage(L"Cleaning mesh...");
-		CleanMesh();
+		meshHelper.CleanMesh();
 		//m_processor.ResetReconstruction();
 	}
 	if (IDC_BUTTON_RG_PREVIEW == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
@@ -732,7 +733,7 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-void OpenGLWin::SetBackgroundColor(int redValue, int greenValue, int blueValue)
+void InteractiveFusion::SetBackgroundColor(int redValue, int greenValue, int blueValue)
 {
 	openGLWin.bgRed = redValue / 255.0f;
 	openGLWin.bgGreen = greenValue / 255.0f;
@@ -907,7 +908,7 @@ void MoveButtonsOnResize()
 	RedrawWindow(hTextWalls, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
 }
 
-void OpenGLWin::ToggleDebugControls()
+void InteractiveFusion::ToggleDebugControls()
 {
 	if (IsWindowVisible(debugHandle))
 	{
@@ -1029,7 +1030,7 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-bool OpenGLWin::IsMouseInHandle()
+bool InteractiveFusion::IsMouseInHandle()
 {
 	POINT pCur;
 	GetCursorPos(&pCur);
@@ -1046,7 +1047,7 @@ bool OpenGLWin::IsMouseInHandle()
 	return false;
 }
 
-bool OpenGLWin::IsMouseInOpenGLWindow()
+bool InteractiveFusion::IsMouseInOpenGLWindow()
 {
 	POINT pCur;
 	GetCursorPos(&pCur);
@@ -1060,7 +1061,7 @@ bool OpenGLWin::IsMouseInOpenGLWindow()
 		return false;
 }
 
-void OpenGLWin::InitWallConfirmation()
+void InteractiveFusion::InitWallConfirmation()
 {
 	
 	ShowWindow(hTextWalls, SW_SHOW);
@@ -1073,7 +1074,7 @@ void OpenGLWin::InitWallConfirmation()
 	
 }
 
-void OpenGLWin::ShowConfirmationButtons(bool flag)
+void InteractiveFusion::ShowConfirmationButtons(bool flag)
 {
 	if (flag)
 	{
@@ -1088,20 +1089,20 @@ void OpenGLWin::ShowConfirmationButtons(bool flag)
 	}
 }
 
-void OpenGLWin::ShowStatusBarMessage(string message)
+void InteractiveFusion::ShowStatusBarMessage(string message)
 {
 	std::wstring ws = Util::StringToWString(message);
 	LPCWSTR statusBarMessage = ws.c_str();
 	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, statusBarMessage);
 }
 
-void OpenGLWin::ShowStatusBarMessage(wstring message)
+void InteractiveFusion::ShowStatusBarMessage(wstring message)
 {
 	LPCWSTR statusBarMessage = message.c_str();
 	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, statusBarMessage);
 }
 
-void OpenGLWin::SetViewportStatusMessage(wstring message)
+void InteractiveFusion::SetViewportStatusMessage(wstring message)
 {
 	statusMsg = message;
 }

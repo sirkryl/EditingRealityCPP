@@ -1,7 +1,7 @@
 #pragma once
 #include "common.h"
 
-class OpenGLHelper
+class VisualizationHelper
 {
 public:
 	void FillPointsToVisualize();
@@ -15,4 +15,4 @@ private:
 	std::vector<float> rayVertices;
 	std::vector<float> pointVertices;
 };
-extern OpenGLHelper glHelper;
+extern VisualizationHelper glHelper;

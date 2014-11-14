@@ -90,33 +90,37 @@
   <ItemGroup>
     <ClInclude Include="colorCoding.h" />
     <ClInclude Include="common.h" />
-    <ClInclude Include="openGLCamera.h" />
-    <ClInclude Include="openGLControl.h" />
-    <ClInclude Include="openGLHelper.h" />
+    <ClInclude Include="InteractiveFusion.h" />
+    <ClInclude Include="MeshHelper.h" />
+    <ClInclude Include="OpenGLCamera.h" />
+    <ClInclude Include="OpenGLControl.h" />
+    <ClInclude Include="VisualizationHelper.h" />
     <ClInclude Include="openGLResources.h" />
-    <ClInclude Include="openGLSelector.h" />
-    <ClInclude Include="openGLShaders.h" />
-    <ClInclude Include="openGLText.h" />
-    <ClInclude Include="openGLWin.h" />
-    <ClInclude Include="PCLProcessing.h" />
+    <ClInclude Include="SegmentationHelper.h" />
+    <ClInclude Include="SelectionHelper.h" />
+    <ClInclude Include="OpenGLShaders.h" />
+    <ClInclude Include="OpenGLText.h" />
+    <ClInclude Include="PCLProcessor.h" />
     <ClInclude Include="plylib.h" />
     <ClInclude Include="plystuff.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="vcgMesh.h" />
+    <ClInclude Include="VcgMeshContainer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="openGLCamera.cpp" />
-    <ClCompile Include="openGLControl.cpp" />
-    <ClCompile Include="openGLHelper.cpp" />
-    <ClCompile Include="openGLRendering.cpp" />
-    <ClCompile Include="openGLSelector.cpp" />
-    <ClCompile Include="openGLShaders.cpp" />
-    <ClCompile Include="openGLText.cpp" />
-    <ClCompile Include="openGLWin.cpp" />
-    <ClCompile Include="PCLProcessing.cpp" />
+    <ClCompile Include="InteractiveFusion.cpp" />
+    <ClCompile Include="MeshHelper.cpp" />
+    <ClCompile Include="OpenGLCamera.cpp" />
+    <ClCompile Include="OpenGLControl.cpp" />
+    <ClCompile Include="VisualizationHelper.cpp" />
+    <ClCompile Include="OpenGLRendering.cpp" />
+    <ClCompile Include="SegmentationHelper.cpp" />
+    <ClCompile Include="SelectionHelper.cpp" />
+    <ClCompile Include="OpenGLShaders.cpp" />
+    <ClCompile Include="OpenGLText.cpp" />
+    <ClCompile Include="PCLProcessor.cpp" />
     <ClCompile Include="plylib.cpp" />
-    <ClCompile Include="vcgMesh.cpp" />
+    <ClCompile Include="VcgMeshContainer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="InteractiveFusion.rc" />

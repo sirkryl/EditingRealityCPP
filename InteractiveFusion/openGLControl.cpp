@@ -2,7 +2,7 @@
 #pragma comment(lib, "glu32.lib")
 #pragma comment(lib, "glew32.lib")
 
-#include "openGLControl.h"
+#include "OpenGLControl.h"
 #include <gl/glew.h>
 #include <gl/wglew.h>
 #include <glm/gtc/matrix_transform.hpp>

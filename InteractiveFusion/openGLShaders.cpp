@@ -1,5 +1,5 @@
 #include "common.h"
-#include "openGLShaders.h"
+#include "OpenGLShaders.h"
 
 #include <glm/gtc/type_ptr.hpp>
 

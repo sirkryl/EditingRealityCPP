@@ -1,5 +1,5 @@
 #pragma once
-
+#include "common.h"
 namespace colorCoding
 {
 	static int ColorToInt(int r, int g, int b)

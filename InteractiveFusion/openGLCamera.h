@@ -7,7 +7,6 @@ class OpenGLCamera
 {
 public:
 
-	
 	CameraMode mode = CAMERA_SENSOR;
 	OpenGLCamera();
 	OpenGLCamera(glm::vec3 position, glm::vec3 lookAt, glm::vec3 upDirection, float mvSpeed, float sensitivity);

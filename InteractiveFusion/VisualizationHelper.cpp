@@ -1,9 +1,9 @@
-#include "openGLHelper.h"
-#include "openGLCamera.h"
-#include "openGLSelector.h"
-#include "openGLShaders.h"
-#include "openGLWin.h"
-void OpenGLHelper::FillPointsToVisualize()
+#include "VisualizationHelper.h"
+#include "OpenGLCamera.h"
+#include "SelectionHelper.h"
+#include "OpenGLShaders.h"
+#include "InteractiveFusion.h"
+void VisualizationHelper::FillPointsToVisualize()
 {
 	pointVertices.clear();
 	pointVertices.push_back(glCamera.GetPosition().x);
@@ -48,7 +48,7 @@ void OpenGLHelper::FillPointsToVisualize()
 
 }
 
-void OpenGLHelper::RenderHelpingVisuals()
+void VisualizationHelper::RenderHelpingVisuals()
 {
 	//RENDER HELPING POINTS
 	FillPointsToVisualize();
@@ -77,7 +77,7 @@ void OpenGLHelper::RenderHelpingVisuals()
 	glDisable(GL_LINE_SMOOTH);
 }
 
-void OpenGLHelper::InitializeRayVisual()
+void VisualizationHelper::InitializeRayVisual()
 {
 	rayVertices.clear();
 	rayVertices.push_back(glSelector.nearPoint.x);
@@ -106,7 +106,7 @@ void OpenGLHelper::InitializeRayVisual()
 
 }
 
-void OpenGLHelper::CleanUp()
+void VisualizationHelper::CleanUp()
 {
 	glDeleteBuffers(1, &rayVBO);
 	glDeleteBuffers(1, &pointVBO);

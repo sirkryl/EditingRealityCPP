@@ -1,7 +1,7 @@
 #include "common.h"
-#include "openGLText.h"
-#include "openGLWin.h"
-#include "openGLShaders.h"
+#include "OpenGLText.h"
+#include "InteractiveFusion.h"
+#include "OpenGLShaders.h"
 
 
 void OpenGLText::Initialize(string fontname)
