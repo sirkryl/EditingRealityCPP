@@ -2,6 +2,7 @@
 #include "InteractiveFusion.h"
 #include "OpenGLCamera.h"
 #include <glm/ext.hpp>
+#include "Keys.h"
 float angleX = 5.0f;
 float zoomFactor = 1.0f;
 float strafeX = 0.0f;
@@ -34,6 +35,15 @@ OpenGLCamera::OpenGLCamera(glm::vec3 position, glm::vec3 lookAt, glm::vec3 upDir
 	moveSpeed = mvSpeed;
 	rotationSensitivity = sensitivity;
 	moveBy = glm::vec3(0.0f, 0.0f, 0.0f);
+}
+
+void OpenGLCamera::GetRotation(glm::mat4 &rotation)
+{
+	rotation = glm::mat4(GetViewMatrix());
+	rotation[0][3] = rotation[1][3] = rotation[2][3] =
+		rotation[3][0] = rotation[3][1] = rotation[3][2] = 0.0f;
+	rotation[3][3] = 1.0f;
+	rotation = glm::inverse(rotation);
 }
 
 void OpenGLCamera::ResetCameraPosition()
@@ -121,6 +131,11 @@ void OpenGLCamera::Orbit()
 	}
 }
 
+glm::vec3 OpenGLCamera::GetDirection()
+{
+	return camDirection;
+}
+
 glm::mat4 OpenGLCamera::GetViewMatrix()
 {
 	if (mode == CAMERA_FREE)
@@ -151,6 +166,7 @@ glm::mat4 OpenGLCamera::GetViewMatrix()
 	}
 	else if (mode == CAMERA_SENSOR)
 	{
+		
 		zoomFactor = 1.0f;
 		strafeX = 0.0f;
 		strafeY = 0.0f;
@@ -159,7 +175,7 @@ glm::mat4 OpenGLCamera::GetViewMatrix()
 		camPosition = glm::vec3(-cameraTransform[3][0], cameraTransform[3][1], cameraTransform[3][2]);// +moveBy;
 		camLookAt = camPosition + glm::vec3(-cameraTransform[2][0], cameraTransform[2][1], -cameraTransform[2][2]);// +moveBy;
 		camUpDirection = glm::vec3(cameraTransform[1][0], cameraTransform[1][1], cameraTransform[1][2]);
-
+		camDirection = glm::normalize(camPosition - camLookAt);
 		return glm::lookAt(camPosition, camLookAt, camUpDirection);
 	}
 
@@ -251,6 +267,11 @@ void OpenGLCamera::ResetMouse()
 	int iCentX = (rRect.left + rRect.right) >> 1,
 		iCentY = (rRect.top + rRect.bottom) >> 1;
 	SetCursorPos(iCentX, iCentY);
+}
+
+glm::vec3 OpenGLCamera::GetUpDirection()
+{
+	return camUpDirection;
 }
 
 glm::vec3 OpenGLCamera::GetPosition()

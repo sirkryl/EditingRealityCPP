@@ -10,6 +10,7 @@ public:
 	//(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), LPVOID lpParam);
 
 	void ResizeOpenGLViewportFull(int width, int height);
+	void ResizeOpenGLViewportFull();
 	void SetProjection3D(float fFOV, float fAspectRatio, float fNear, float fFar);
 	void SetOrtho2D(int width, int height);
 
@@ -24,8 +25,11 @@ public:
 	static void RegisterSimpleOpenGLClass(HINSTANCE hInstance);
 	static void UnregisterSimpleOpenGLClass(HINSTANCE hInstance);
 
-	void SetOffSetWidth(int offsetX);
-	void SetOffSetHeight(int offsetY);
+	int GetOffSetRight();
+	int GetOffSetBottom();
+
+	void SetOffSetRight(int offset);
+	void SetOffSetBottom(int offset);
 
 	void MakeCurrent();
 	void SwapBuffers();
@@ -50,7 +54,7 @@ private:
 	static bool bClassRegistered;
 	static bool bGlewInitialized;
 	int iMajorVersion, iMinorVersion;
-	int offSetWidth, offSetHeight = 0;
+	int offSetRight, offSetBottom = 0;
 	// Used for FPS calculation
 	int iFPSCount, iCurrentFPS;
 	clock_t tLastSecond;

@@ -1,6 +1,7 @@
 #pragma once
 #include<vcg/complex/complex.h>
 #include "common.h"
+
 class VCGFace;
 class VCGVertex;
 class VCGEdge;
@@ -12,23 +13,33 @@ class VCGEdge : public vcg::Edge<   VCGUsedTypes> {};
 class VCGFace : public vcg::Face<   VCGUsedTypes, vcg::face::VFAdj, vcg::face::FFAdj, vcg::face::VertexRef, vcg::face::BitFlags, vcg::face::Normal3f, vcg::face::Mark > {};
 class VCGMesh : public vcg::tri::TriMesh< std::vector<VCGVertex>, std::vector<VCGFace>, std::vector<VCGEdge> > {};
 
-
-
 class VCGMeshContainer
 {
 public:
 	VCGMeshContainer();
 	~VCGMeshContainer();
-
 	void LoadMesh(const char* filename);
 	void LoadMesh(std::vector<Vertex> vertices, std::vector<Triangle> indices);
+
+	void ParseData();
+	void ParseData(std::vector<Vertex> inputVertices, std::vector<Triangle> inputIndices);
+
+	void ConvertToVCG();
+	void ConvertToVCG(std::vector<Vertex> inputVertices, std::vector<Triangle> inputIndices);
+
 	void GenerateVAO();
 	void GenerateBOs();
 
+	void UpdateBuffers();
+
 	void CleanMesh();
-	void ParseData();
-	void ConvertToVCG();
-	void ParseData(std::vector<Vertex> inputVertices, std::vector<Triangle> inputIndices);
+	int MergeCloseVertices(float threshold);
+	void LaplacianSmooth(int step);
+	void RemoveNonManifoldFace();
+	int RemoveSmallComponents(int compSize);
+	int FillHoles(int holeSize);
+	
+	void CleanAndParse(std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices);
 
 	void Draw();
 	void DrawBB();
@@ -37,70 +48,54 @@ public:
 	bool GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output, glm::vec3 &outputNormal, bool snapToVertex);
 	bool CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output);
 	void TranslateVerticesToPoint(glm::vec3 point, std::vector<int> orien);
-	void TemporaryTranslateVerticesToPoint(glm::vec3 point);
-	//just temporary to create multiple visible meshs from the same file
-	void SetTranslation(glm::vec3 trans);
-	void UpdateBuffers();
+	
 	void SetSelected(bool val);
 	void SetColorCode(int value);
+	void SetTranslation(glm::vec3 trans);
 	void SetAngleX(bool positive);
 	void SetAngleY(bool positive);
 	void SetAngleZ(bool positive);
 	void SetScale(bool positive);
-	int MergeCloseVertices(float threshold);
-	void LaplacianSmooth(int step);
-	void RemoveNonManifoldFace();
-	glm::vec3 GetCenterPoint();
-	int RemoveSmallComponents(int compSize);
-	int FillHoles(int holeSize);
 	void ResetSelectedTransformation();
-	void CleanAndParse(std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices);
-	std::vector<Vertex> GetVertices();
-	//std::vector<float> GetNormals();
-	std::vector<Triangle> GetIndices();
-	float GetLowestZ();
-	float GetLowestY();
+
 	void SetWall(bool flag);
 	void SetPlaneParameters(float x, float y, float z, float d);
-	void SetSnapTransform(std::vector<int> orien);
-	std::vector<int> GetOrientation();
-	bool IsWall();
+
+	
+	std::vector<Vertex> GetVertices();
+	std::vector<Triangle> GetIndices();
 	int GetNumberOfVertices();
 	int GetNumberOfTriangles();
-	void ConvertToVCG(std::vector<Vertex> inputVertices, std::vector<Triangle> inputIndices);
-	void ToggleSelectedColor(bool flag);
 	int GetColorCode();
-	void TogglePreviewSelection(bool flag);
-	glm::vec3 GetUpperBounds();
-	glm::vec3 GetLowerBounds();
+	glm::vec3 GetCenterPoint();
+	std::vector<int> GetOrientation();
+	bool IsWall();
 
+	void ToggleSelectedColor(bool flag);
+	void TogglePreviewSelection(bool flag);
 
 	void ClearMesh();
 private:
 	VCGMesh currentMesh;
-
+	void SetSnapTransform(std::vector<int> orien);
 	glm::vec3 FindClosestPoint(glm::vec3 inputPoint);
 	glm::vec3 offSet;
 	glm::vec3 snapPoint;
+
 	std::vector<Vertex> vertices;
 	std::vector<Vertex> bBoxVertices;
 	std::vector<Triangle> bBoxIndices;
-	//std::vector<float> vertices;
 	std::vector<Triangle> indices;
-	//std::vector<float> normals;
 	std::vector<float> storedColors;
+
 	float planeParameters[4];
 	std::vector<int> orientation;
 	// -1 = no plane, 0 = x, 1 = y, 2 = z
 	glm::mat4 storedTranslation;
 	int vertNum;
 
-	GLuint vbo;
-	GLuint bbVBO;
-	GLuint bbIBO;
-	GLuint bbVAO;
-	GLuint ibo;
-	GLuint vao;
+	GLuint vbo{ 0 }, vao{ 0 }, ibo{ 0 };
+	GLuint bbVBO{ 0 }, bbVAO{ 0 }, bbIBO{ 0 };
 
 	std::vector<int> snapOrientation;
 	glm::mat4 snapTransform = glm::mat4(1.0f);
@@ -134,6 +129,5 @@ private:
 	int colorCode;
 };
 
-extern std::vector<shared_ptr<VCGMeshContainer>> meshData;
 
-void CleanAndParse(const char* fileName, std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices);
+

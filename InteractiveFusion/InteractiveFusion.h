@@ -9,9 +9,7 @@ class InteractiveFusion
 {
 public:
 	
-
-	WindowMode mode;
-	WindowState state;
+	
 	HWND parent;
 	HWND fusionHandle;
 	HWND glWindowHandle;
@@ -81,11 +79,17 @@ public:
 	//application in general
 	HINSTANCE GetInstance();
 
+	WindowMode GetWindowMode();
+	void SetWindowMode(WindowMode wMode);
+
+	WindowState GetWindowState();
+	void SetWindowState(WindowState wState);
+
 	//cursor and/or mouse related methods
 	bool IsMouseInHandle();
+	bool IsMouseInDeleteHandle();
 	bool IsMouseInOpenGLWindow();
 
-	void ShowConfirmationButtons(bool flag);
 	void InitWallConfirmation();
 
 	void ShowStatusBarMessage(string message);
@@ -94,6 +98,8 @@ public:
 	void ToggleDebugControls();
 
 	void SetBackgroundColor(int redValue, int greenValue, int blueValue);
+
+	void HideAllButtons();
 
 	//thread related methods
 	//bool StartOpenGLThread(HWND parentWin, HINSTANCE currHInstance, KinectFusionProcessor* proc);
@@ -105,7 +111,8 @@ public:
 private:
 	//application variables
 	
-
+	WindowMode mode;
+	WindowState state;
 	//fps related variables
 	clock_t tLastFrame;
 	float fFrameInterval;
@@ -115,13 +122,6 @@ private:
 
 	
 };
-
-namespace Keys
-{
-	int GetKeyState(int key);
-	int GetKeyStateOnce(int key);
-	extern TCHAR kp[256];
-}
 
 extern InteractiveFusion openGLWin;
 

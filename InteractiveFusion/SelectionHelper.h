@@ -10,9 +10,6 @@ public:
 	glm::vec3 hitPoint{ -1, -1, -1 };
 	glm::vec3 nearPoint;
 
-	//first time something happened flags
-	bool firstRayCast = false;
-
 	void ProcessSelectedObject();
 
 	void ProcessPicking();
@@ -28,8 +25,6 @@ private:
 	bool RayCastPlacing(bool preview);
 	void GetRayOrientation(glm::vec3 v1, glm::vec3 v2, glm::vec3 normal, std::vector<int> &orientation);
 	void RayCast(glm::vec3* v1, glm::vec3* v2);
-	int DuplicateMesh(int index);
-	void DeleteMesh(int index);
 	
 };
 extern SelectionHelper glSelector;

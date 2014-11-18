@@ -17,13 +17,14 @@ public:
 	void UpdateZoom();
 	void UpdateStrafe();
 	void RotateWithMouse();
-
+	void GetRotation(glm::mat4 &rotation);
+	glm::vec3 GetDirection();
 	void Update();
 	void ResetCameraPosition();
 	glm::mat4 GetViewMatrix();
 	glm::vec3 GetPosition();
 	void ResetMouse();
-
+	glm::vec3 GetUpDirection();
 	// Functions that get viewing angles
 	float GetAngleX(), GetAngleY();
 

@@ -4,9 +4,11 @@
 #include "VisualizationHelper.h"
 #include "MeshHelper.h"
 #include "colorCoding.h"
+#include "OpenGL2DHelper.h"
 #include "VcgMeshContainer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "Keys.h"
 
 int SelectionHelper::GetColorUnderCursor()
 {
@@ -33,17 +35,13 @@ void SelectionHelper::RayCast(glm::vec3* v1, glm::vec3* v2)
 	GetClientRect(openGLWin.glWindowHandle, &rect);
 	cursorPos.y = rect.bottom - cursorPos.y;
 
-	glm::vec4 viewport = glm::vec4(0.0f, 0.0f, openGLWin.glControl.GetViewportWidth(), openGLWin.glControl.GetViewportHeight());
+	glm::vec4 viewport = glm::vec4(0.0f, (float)openGLWin.glControl.GetOffSetBottom(), openGLWin.glControl.GetViewportWidth(), openGLWin.glControl.GetViewportHeight());
 
 	*v1 = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 0.0f), glCamera.GetViewMatrix(), openGLWin.glControl.GetProjectionMatrix(), viewport);
 	*v2 = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 1.0f), glCamera.GetViewMatrix(), openGLWin.glControl.GetProjectionMatrix(), viewport);
 	nearPoint = *v1;
 	if (openGLWin.helpingVisuals)
-	{
 		glHelper.InitializeRayVisual();
-		if (!firstRayCast)
-			firstRayCast = true;
-	}
 
 }
 
@@ -94,9 +92,17 @@ bool SelectionHelper::ColorPlacing(bool preview)
 			(*mI)->DrawBB();
 		cnt++;
 	}
+	gl2DHelper.DrawAllBB();
 	int tmpIndex = GetColorUnderCursor();
 
-	if (tmpIndex > -1 && tmpIndex <= meshData.size())
+	if (tmpIndex == TRASH_BIN_COLOR)
+	{
+		gl2DHelper.isOpen = true;
+	}
+	else
+		gl2DHelper.isOpen = false;
+
+	if (tmpIndex > -1 && tmpIndex <= meshData.size() && tmpIndex != TRASH_BIN_COLOR)
 	{
 		openGLWin.ShowStatusBarMessage(L"Selecting object #" + to_wstring(tmpIndex));
 		glm::vec3 v1, v2;
@@ -119,7 +125,7 @@ bool SelectionHelper::ColorPlacing(bool preview)
 
 			if (Keys::GetKeyState('D'))
 			{
-				int newIndex = DuplicateMesh(selectedIndex - 1);
+				int newIndex = meshHelper.DuplicateMesh(selectedIndex - 1);
 				selectedIndex = newIndex;
 				meshData[selectedIndex - 1]->SetSelected(true);
 			}
@@ -129,36 +135,21 @@ bool SelectionHelper::ColorPlacing(bool preview)
 	}
 	else if (!preview)
 	{
-		meshData[selectedIndex - 1]->SetSelected(false);
-		meshData[selectedIndex - 1]->ResetSelectedTransformation();
-		selectedIndex = -1;
+		if (tmpIndex == TRASH_BIN_COLOR)
+		{
+			meshHelper.DeleteMesh(selectedIndex - 1);
+			selectedIndex = -1;
+			gl2DHelper.isOpen = false;
+		}
+		else
+		{
+			meshData[selectedIndex - 1]->SetSelected(false);
+			meshData[selectedIndex - 1]->ResetSelectedTransformation();
+			selectedIndex = -1;
+		}
 	}
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	return result;
-}
-
-void SelectionHelper::DeleteMesh(int index)
-{
-	numberOfVertices -= meshData[index]->GetNumberOfVertices();
-	numberOfFaces -= meshData[index]->GetNumberOfTriangles();
-	meshData[index]->ClearMesh();
-	//delete meshData[index];
-	meshData.erase(meshData.begin() + index);// std::remove(meshData.begin(), meshData.end(), meshData[index]), meshData.end());
-}
-
-int SelectionHelper::DuplicateMesh(int index)
-{
-	shared_ptr<VCGMeshContainer> mesh(new VCGMeshContainer);
-	mesh->SetColorCode(meshData.size() + 1);
-
-	mesh->ConvertToVCG(meshData[index]->GetVertices(), meshData[index]->GetIndices());
-	mesh->ParseData();
-	mesh->GenerateBOs();
-	mesh->GenerateVAO();
-	numberOfVertices += mesh->GetNumberOfVertices();
-	numberOfFaces += mesh->GetNumberOfTriangles();
-	meshData.push_back(mesh);
-	return meshData.size();
 }
 
 bool SelectionHelper::RayCastPlacing(bool preview)
@@ -245,7 +236,7 @@ void SelectionHelper::ProcessSelectedObject()
 	}
 	if (Keys::GetKeyState(VK_DELETE))
 	{
-		DeleteMesh(selectedIndex - 1);
+		meshHelper.DeleteMesh(selectedIndex - 1);
 		selectedIndex = -1;
 		cDebug::DbgOut(L"pressed ENTF alright");
 	}

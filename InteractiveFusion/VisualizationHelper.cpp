@@ -77,6 +77,13 @@ void VisualizationHelper::RenderHelpingVisuals()
 	glDisable(GL_LINE_SMOOTH);
 }
 
+bool VisualizationHelper::IsRayInitialized()
+{
+	if (rayVBO == 0)
+		return false; 
+	return true;
+}
+
 void VisualizationHelper::InitializeRayVisual()
 {
 	rayVertices.clear();

@@ -8,8 +8,8 @@ OpenGLShader::OpenGLShader()
 	ready = false;
 }
 
-OpenGLShader shaders[4];
-OpenGLShaderProgram shaderColor, shaderFont;
+OpenGLShader shaders[6];
+OpenGLShaderProgram shaderColor, shaderFont, shader2d;
 
 /*-----------------------------------------------
 
@@ -25,10 +25,10 @@ bool PrepareShaderPrograms()
 {
 	// Load shaders and create shader program
 
-	string fileNames[] = { "color.vert", "color.frag", "font.vert", "font.frag"
+	string fileNames[] = { "color.vert", "color.frag", "font.vert", "font.frag", "2dimage.vert", "2dimage.frag"
 	};
 
-	for(int i = 0; i < 4; i++)
+	for(int i = 0; i < 6; i++)
 	{
 		string sExt = fileNames[i].substr((int)fileNames[i].size() - 4, 4);
 		int shaderType = -1;
@@ -51,8 +51,14 @@ bool PrepareShaderPrograms()
 	shaderFont.AddShaderToProgram(&shaders[2]);
 	shaderFont.AddShaderToProgram(&shaders[3]);
 	shaderFont.LinkProgram();
+
+	shader2d.CreateProgram();
+	shader2d.AddShaderToProgram(&shaders[4]);
+	shader2d.AddShaderToProgram(&shaders[5]);
+	shader2d.LinkProgram();
 	return true;
 }
+
 
 /*-----------------------------------------------
 
@@ -288,6 +294,12 @@ void OpenGLShaderProgram::UseProgram()
 		glUseProgram(glProgram);
 }
 
+void OpenGLShaderProgram::UnUseProgram()
+{
+	if (linked)
+		glUseProgram(0);
+}
+
 /*-----------------------------------------------
 
 Name:	GetProgramID
@@ -309,6 +321,12 @@ void OpenGLShaderProgram::SetUniform(string name, const glm::vec4 vector)
 {
 	int iLoc = glGetUniformLocation(glProgram, name.c_str());
 	glUniform4fv(iLoc, 1, (GLfloat*)&vector);
+}
+
+void OpenGLShaderProgram::SetUniform(string name, const glm::vec3 vector)
+{
+	int iLoc = glGetUniformLocation(glProgram, name.c_str());
+	glUniform3fv(iLoc, 1, (GLfloat*)&vector);
 }
 
 //xx

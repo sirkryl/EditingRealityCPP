@@ -8,6 +8,8 @@
 #include "InteractiveFusion.h"
 #include "MeshHelper.h"
 #include "VcgMeshContainer.h"
+#include "Keys.h"
+#include "OpenGL2DHelper.h"
 
 #pragma region
 
@@ -21,6 +23,7 @@ OpenGLText glText;
 OpenGLCamera glCamera;
 VisualizationHelper glHelper;
 SegmentationHelper glSegmentation;
+OpenGL2DHelper gl2DHelper;
 
 //for status messages (appear 'busy' to the user)
 int dotCount = 0;
@@ -111,6 +114,9 @@ void InitialLoading()
 		meshHelper.InitialLoadFromFile("data\\models\\cube.ply");
 		break;
 	}
+
+	gl2DHelper.InitialLoadFromFile("data\\models\\trash2.ply");
+	gl2DHelper.InitialLoadFromFile("data\\models\\trash_open.ply");
 	glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
 
 
@@ -120,7 +126,7 @@ void InitialLoading()
 	openGLWin.previewMode = false;
 	glSegmentation.StartSegmentation();
 
-	//openGLWin.state = BUFFERS;
+	//openGLWin.SetWindowState(BUFFERS);
 	
 	
 }
@@ -154,29 +160,31 @@ void Render(LPVOID lpParam)
 	int viewportWidth = openGLWin.glControl.GetViewportWidth();
 	int viewportHeight = openGLWin.glControl.GetViewportHeight();
 
-	openGLWin.glControl.ResizeOpenGLViewportFull(viewportWidth, viewportHeight);
+	openGLWin.glControl.ResizeOpenGLViewportFull();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if (openGLWin.wireFrameMode && openGLWin.state != SEGMENTATION_PREVIEW && openGLWin.state != WALL_SELECTION)
+	if (openGLWin.wireFrameMode && openGLWin.GetWindowState() != SEGMENTATION_PREVIEW && openGLWin.GetWindowState() != WALL_SELECTION)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	//for initializing without segmentation..debug purposes
-	if (openGLWin.state == BUFFERS)
+	if (openGLWin.GetWindowState() == BUFFERS)
 	{
+		gl2DHelper.GenerateBuffers();
 		meshHelper.GenerateBuffers();
-		openGLWin.state = DEFAULT;
+		
+		openGLWin.SetWindowState(DEFAULT);
 		return;
 	}
 
 	//USER SELECTS WALL OR SEES SOME OTHER PREVIEW
-	if (openGLWin.state == WALL_SELECTION || openGLWin.state == SEGMENTATION_PREVIEW)
+	if (openGLWin.GetWindowState() == WALL_SELECTION || openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
 	{
 		if (!glSegmentation.IsPreviewInitialized())
 		{
-			if (openGLWin.state == SEGMENTATION_PREVIEW)
+			if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
 			{
 				if (glSegmentation.IsCloudReady())
 					glSegmentation.InitializePreview();
@@ -202,15 +210,18 @@ void Render(LPVOID lpParam)
 	}
 
 	//SEGMENTATION IS FINISHED, LOAD RELEVANT DATA
-	if (openGLWin.state == SEGMENTATION_FINISHED)
+	if (openGLWin.GetWindowState() == SEGMENTATION_FINISHED)
 	{
+		
 		glSegmentation.LoadClusterData();
 		glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
+		gl2DHelper.GenerateBuffers();
+		openGLWin.SetWindowState(DEFAULT);
 		return;
 	}
 
 	//WHENEVER MESSAGES SHOULD BE DISPLAYED
-	if (openGLWin.state == INITIALIZING || openGLWin.state == SEGMENTATION)
+	if (openGLWin.GetWindowState() == INITIALIZING || openGLWin.GetWindowState() == SEGMENTATION)
 	{
 		ShowStatusMsg();
 		openGLWin.glControl.SwapBuffers();
@@ -221,12 +232,17 @@ void Render(LPVOID lpParam)
 	if (Keys::GetKeyStateOnce(VK_LBUTTON) && glCamera.mode == CAMERA_SENSOR && openGLWin.IsMouseInOpenGLWindow())
 	{
 		if (glSelector.selectedIndex == -1)
-			glSelector.ProcessPicking();
+		{
+			if(!openGLWin.IsMouseInDeleteHandle())
+				glSelector.ProcessPicking();
+		}
 		else
 			if (openGLWin.colorSelection)
 				glSelector.ProcessPicking();
 			else
 				glSelector.ProcessPlacing();
+			
+		return;
 	}
 
 	//process currently selected object (attach to cursor, rotation/scaling etc.)
@@ -235,12 +251,19 @@ void Render(LPVOID lpParam)
 		glSelector.ProcessSelectedObject();
 	}
 
-	//draw every mesh
 	meshHelper.DrawAll();
+	//draw every mesh
+	if (openGLWin.GetWindowState() == DEFAULT)
+	{
+		//glDisable(GL_DEPTH_TEST);
+		gl2DHelper.DrawAll();
+		//glEnable(GL_DEPTH_TEST);
+	}
+	
 	
 
 	//draw helper visuals
-	if (openGLWin.helpingVisuals && glSelector.firstRayCast)
+	if (openGLWin.helpingVisuals && glHelper.IsRayInitialized())
 	{
 		glHelper.RenderHelpingVisuals();
 	}
@@ -256,8 +279,8 @@ void Render(LPVOID lpParam)
 	glText.PrepareForRender();
 	glText.RenderText(L"FPS: ", openGLWin.glControl.GetFPS(), 20, -0.98f, 0.85f, 2.0f / viewportWidth, 2.0f / viewportHeight);
 	glText.RenderText(L"Meshs: ", meshData.size(), 15, -0.98f, 0.75f, 2.0f / viewportWidth, 2.0f / viewportHeight);
-	glText.RenderText(L"Verts: ", numberOfVertices, 15, -0.98f, 0.70f, 2.0f / viewportWidth, 2.0f / viewportHeight);
-	glText.RenderText(L"Faces: ", numberOfFaces, 15, -0.98f, 0.65f, 2.0f / viewportWidth, 2.0f / viewportHeight);
+	glText.RenderText(L"Verts: ", meshHelper.GetNumberOfVertices(), 15, -0.98f, 0.70f, 2.0f / viewportWidth, 2.0f / viewportHeight);
+	glText.RenderText(L"Faces: ", meshHelper.GetNumberOfFaces() , 15, -0.98f, 0.65f, 2.0f / viewportWidth, 2.0f / viewportHeight);
 	glText.RenderText(L"Sel: ", glSelector.selectedIndex - 1, 15, -0.98f, 0.6f, 2.0f / viewportWidth, 2.0f / viewportHeight);
 
 	glEnable(GL_DEPTH_TEST);
@@ -270,11 +293,12 @@ void Release(LPVOID lpParam)
 {
 	shaderColor.DeleteProgram();
 	shaderFont.DeleteProgram();
+	shader2d.DeleteProgram();
 	glText.CleanUp();
 	glHelper.CleanUp();
 	glSegmentation.CleanUp();
-
-	for (int i = 0; i < 4; i++)shaders[i].DeleteShader();
+	gl2DHelper.CleanUp();
+	for (int i = 0; i < 6; i++)shaders[i].DeleteShader();
 
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{

@@ -63,7 +63,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>NuiSensorChooser.lib;Kinect10.lib;freetype253_D.lib;KinectFusion180_32.lib;vtkCommonColor-6.1.lib;vtkCommonComputationalGeometry-6.1.lib;vtkCommonCore-6.1.lib;vtkCommonDataModel-6.1.lib;vtkCommonExecutionModel-6.1.lib;vtkCommonMath-6.1.lib;vtkCommonMisc-6.1.lib;vtkCommonSystem-6.1.lib;vtkCommonTransforms-6.1.lib;vtkFiltersAMR-6.1.lib;vtkFiltersCore-6.1.lib;vtkFiltersExtraction-6.1.lib;vtkFiltersFlowPaths-6.1.lib;vtkFiltersGeneral-6.1.lib;vtkFiltersGeneric-6.1.lib;vtkFiltersGeometry-6.1.lib;vtkFiltersHybrid-6.1.lib;vtkFiltersHyperTree-6.1.lib;vtkFiltersImaging-6.1.lib;vtkFiltersModeling-6.1.lib;vtkFiltersParallel-6.1.lib;vtkFiltersParallelImaging-6.1.lib;vtkFiltersProgrammable-6.1.lib;vtkFiltersSelection-6.1.lib;vtkFiltersSMP-6.1.lib;vtkFiltersSources-6.1.lib;vtkFiltersStatistics-6.1.lib;vtkFiltersTexture-6.1.lib;vtkFiltersVerdict-6.1.lib;vtkRenderingAnnotation-6.1.lib;vtkRenderingContext2D-6.1.lib;vtkRenderingCore-6.1.lib;vtkRenderingFreeType-6.1.lib;vtkRenderingFreeTypeOpenGL-6.1.lib;vtkRenderingGL2PS-6.1.lib;vtkRenderingImage-6.1.lib;vtkRenderingLabel-6.1.lib;vtkRenderingLIC-6.1.lib;vtkRenderingLOD-6.1.lib;vtkRenderingOpenGL-6.1.lib;vtkRenderingVolume-6.1.lib;vtkRenderingVolumeAMR-6.1.lib;vtkRenderingVolumeOpenGL-6.1.lib;vtksys-6.1.lib;pcl_common_debug.lib;pcl_io_debug.lib;pcl_kdtree_debug.lib;pcl_segmentation_debug.lib;pcl_search_debug.lib;pcl_filters_debug.lib;pcl_features_debug.lib;pcl_surface_debug.lib;pcl_visualization_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Msimg32.lib;NuiSensorChooser.lib;Kinect10.lib;freetype253_D.lib;KinectFusion180_32.lib;vtkCommonColor-6.1.lib;vtkCommonComputationalGeometry-6.1.lib;vtkCommonCore-6.1.lib;vtkCommonDataModel-6.1.lib;vtkCommonExecutionModel-6.1.lib;vtkCommonMath-6.1.lib;vtkCommonMisc-6.1.lib;vtkCommonSystem-6.1.lib;vtkCommonTransforms-6.1.lib;vtkFiltersAMR-6.1.lib;vtkFiltersCore-6.1.lib;vtkFiltersExtraction-6.1.lib;vtkFiltersFlowPaths-6.1.lib;vtkFiltersGeneral-6.1.lib;vtkFiltersGeneric-6.1.lib;vtkFiltersGeometry-6.1.lib;vtkFiltersHybrid-6.1.lib;vtkFiltersHyperTree-6.1.lib;vtkFiltersImaging-6.1.lib;vtkFiltersModeling-6.1.lib;vtkFiltersParallel-6.1.lib;vtkFiltersParallelImaging-6.1.lib;vtkFiltersProgrammable-6.1.lib;vtkFiltersSelection-6.1.lib;vtkFiltersSMP-6.1.lib;vtkFiltersSources-6.1.lib;vtkFiltersStatistics-6.1.lib;vtkFiltersTexture-6.1.lib;vtkFiltersVerdict-6.1.lib;vtkRenderingAnnotation-6.1.lib;vtkRenderingContext2D-6.1.lib;vtkRenderingCore-6.1.lib;vtkRenderingFreeType-6.1.lib;vtkRenderingFreeTypeOpenGL-6.1.lib;vtkRenderingGL2PS-6.1.lib;vtkRenderingImage-6.1.lib;vtkRenderingLabel-6.1.lib;vtkRenderingLIC-6.1.lib;vtkRenderingLOD-6.1.lib;vtkRenderingOpenGL-6.1.lib;vtkRenderingVolume-6.1.lib;vtkRenderingVolumeAMR-6.1.lib;vtkRenderingVolumeOpenGL-6.1.lib;vtksys-6.1.lib;pcl_common_debug.lib;pcl_io_debug.lib;pcl_kdtree_debug.lib;pcl_segmentation_debug.lib;pcl_search_debug.lib;pcl_filters_debug.lib;pcl_features_debug.lib;pcl_surface_debug.lib;pcl_visualization_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -82,20 +82,23 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>NuiSensorChooser.lib;Kinect10.lib;freetype253_D.lib;KinectFusion180_32.lib;vtkCommonColor-6.1.lib;vtkCommonComputationalGeometry-6.1.lib;vtkCommonCore-6.1.lib;vtkCommonDataModel-6.1.lib;vtkCommonExecutionModel-6.1.lib;vtkCommonMath-6.1.lib;vtkCommonMisc-6.1.lib;vtkCommonSystem-6.1.lib;vtkCommonTransforms-6.1.lib;vtkFiltersAMR-6.1.lib;vtkFiltersCore-6.1.lib;vtkFiltersExtraction-6.1.lib;vtkFiltersFlowPaths-6.1.lib;vtkFiltersGeneral-6.1.lib;vtkFiltersGeneric-6.1.lib;vtkFiltersGeometry-6.1.lib;vtkFiltersHybrid-6.1.lib;vtkFiltersHyperTree-6.1.lib;vtkFiltersImaging-6.1.lib;vtkFiltersModeling-6.1.lib;vtkFiltersParallel-6.1.lib;vtkFiltersParallelImaging-6.1.lib;vtkFiltersProgrammable-6.1.lib;vtkFiltersSelection-6.1.lib;vtkFiltersSMP-6.1.lib;vtkFiltersSources-6.1.lib;vtkFiltersStatistics-6.1.lib;vtkFiltersTexture-6.1.lib;vtkFiltersVerdict-6.1.lib;vtkRenderingAnnotation-6.1.lib;vtkRenderingContext2D-6.1.lib;vtkRenderingCore-6.1.lib;vtkRenderingFreeType-6.1.lib;vtkRenderingFreeTypeOpenGL-6.1.lib;vtkRenderingGL2PS-6.1.lib;vtkRenderingImage-6.1.lib;vtkRenderingLabel-6.1.lib;vtkRenderingLIC-6.1.lib;vtkRenderingLOD-6.1.lib;vtkRenderingOpenGL-6.1.lib;vtkRenderingVolume-6.1.lib;vtkRenderingVolumeAMR-6.1.lib;vtkRenderingVolumeOpenGL-6.1.lib;pcl_common_release.lib;pcl_io_release.lib;pcl_kdtree_release.lib;pcl_segmentation_release.lib;pcl_search_release.lib;pcl_filters_release.lib;pcl_features_release.lib;pcl_surface_release.lib;pcl_visualization_release.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Msimg32.lib;NuiSensorChooser.lib;Kinect10.lib;freetype253_D.lib;KinectFusion180_32.lib;vtkCommonColor-6.1.lib;vtkCommonComputationalGeometry-6.1.lib;vtkCommonCore-6.1.lib;vtkCommonDataModel-6.1.lib;vtkCommonExecutionModel-6.1.lib;vtkCommonMath-6.1.lib;vtkCommonMisc-6.1.lib;vtkCommonSystem-6.1.lib;vtkCommonTransforms-6.1.lib;vtkFiltersAMR-6.1.lib;vtkFiltersCore-6.1.lib;vtkFiltersExtraction-6.1.lib;vtkFiltersFlowPaths-6.1.lib;vtkFiltersGeneral-6.1.lib;vtkFiltersGeneric-6.1.lib;vtkFiltersGeometry-6.1.lib;vtkFiltersHybrid-6.1.lib;vtkFiltersHyperTree-6.1.lib;vtkFiltersImaging-6.1.lib;vtkFiltersModeling-6.1.lib;vtkFiltersParallel-6.1.lib;vtkFiltersParallelImaging-6.1.lib;vtkFiltersProgrammable-6.1.lib;vtkFiltersSelection-6.1.lib;vtkFiltersSMP-6.1.lib;vtkFiltersSources-6.1.lib;vtkFiltersStatistics-6.1.lib;vtkFiltersTexture-6.1.lib;vtkFiltersVerdict-6.1.lib;vtkRenderingAnnotation-6.1.lib;vtkRenderingContext2D-6.1.lib;vtkRenderingCore-6.1.lib;vtkRenderingFreeType-6.1.lib;vtkRenderingFreeTypeOpenGL-6.1.lib;vtkRenderingGL2PS-6.1.lib;vtkRenderingImage-6.1.lib;vtkRenderingLabel-6.1.lib;vtkRenderingLIC-6.1.lib;vtkRenderingLOD-6.1.lib;vtkRenderingOpenGL-6.1.lib;vtkRenderingVolume-6.1.lib;vtkRenderingVolumeAMR-6.1.lib;vtkRenderingVolumeOpenGL-6.1.lib;pcl_common_release.lib;pcl_io_release.lib;pcl_kdtree_release.lib;pcl_segmentation_release.lib;pcl_search_release.lib;pcl_filters_release.lib;pcl_features_release.lib;pcl_surface_release.lib;pcl_visualization_release.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Mesh2D.h" />
     <ClInclude Include="colorCoding.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="InteractiveFusion.h" />
+    <ClInclude Include="Keys.h" />
     <ClInclude Include="MeshHelper.h" />
+    <ClInclude Include="OpenGL2DHelper.h" />
     <ClInclude Include="OpenGLCamera.h" />
     <ClInclude Include="OpenGLControl.h" />
     <ClInclude Include="VisualizationHelper.h" />
-    <ClInclude Include="openGLResources.h" />
+    <ClInclude Include="IFResources.h" />
     <ClInclude Include="SegmentationHelper.h" />
     <ClInclude Include="SelectionHelper.h" />
     <ClInclude Include="OpenGLShaders.h" />
@@ -103,13 +106,14 @@
     <ClInclude Include="PCLProcessor.h" />
     <ClInclude Include="plylib.h" />
     <ClInclude Include="plystuff.h" />
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="stdafx.h" />
     <ClInclude Include="VcgMeshContainer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Mesh2D.cpp" />
     <ClCompile Include="InteractiveFusion.cpp" />
+    <ClCompile Include="Keys.cpp" />
     <ClCompile Include="MeshHelper.cpp" />
+    <ClCompile Include="OpenGL2DHelper.cpp" />
     <ClCompile Include="OpenGLCamera.cpp" />
     <ClCompile Include="OpenGLControl.cpp" />
     <ClCompile Include="VisualizationHelper.cpp" />
@@ -126,6 +130,8 @@
     <ResourceCompile Include="InteractiveFusion.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="data\shaders\2dimage.frag" />
+    <None Include="data\shaders\2dimage.vert" />
     <None Include="data\shaders\color.frag" />
     <None Include="data\shaders\color.vert" />
     <None Include="data\shaders\font.frag" />

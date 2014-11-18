@@ -27,20 +27,11 @@
     <ClInclude Include="common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="openGLResources.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="plylib.h">
       <Filter>VCG</Filter>
     </ClInclude>
     <ClInclude Include="plystuff.h">
       <Filter>VCG</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MeshHelper.h">
       <Filter>Header Files</Filter>
@@ -73,6 +64,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PCLProcessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IFResources.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Keys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGL2DHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -116,6 +119,15 @@
     <ClCompile Include="PCLProcessor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Keys.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGL2DHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\color.frag">
@@ -128,6 +140,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="data\shaders\font.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="data\shaders\2dimage.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="data\shaders\2dimage.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -7,12 +7,13 @@ public:
 	void FillPointsToVisualize();
 	void RenderHelpingVisuals();
 	void InitializeRayVisual();
-
+	bool IsRayInitialized();
 	void CleanUp();
 private:
 	GLuint rayVBO{ 0 }, rayVAO{ 0 };
 	GLuint pointVBO{ 0 }, pointVAO{ 0 };
 	std::vector<float> rayVertices;
 	std::vector<float> pointVertices;
+
 };
 extern VisualizationHelper glHelper;

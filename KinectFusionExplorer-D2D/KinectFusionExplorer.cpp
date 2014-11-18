@@ -6,14 +6,15 @@
 
 // System includes
 #include "stdafx.h"
-#include "Keys.h"
-//#include "win_OpenGLApp.h"
-//#include <openGLWin.h>
+
 // Project includes
+#include "KFKeys.h"
 #include "resource.h"
 #include "KinectFusionExplorer.h"
 #include "KinectFusionProcessorFrame.h"
 #include "KinectFusionHelper.h"
+
+TCHAR KFKeys::kp[256] = { 0 };
 
 LRESULT CALLBACK FusionDebugRouter(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -233,7 +234,7 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 	WPARAM wParam,
 	LPARAM lParam)
 {
-	if (Keys::GetKeyStateOnce(VK_F10))
+	if (KFKeys::GetKeyStateOnce(VK_F10))
 	{
 		//cDebug::DbgOut(L"Keydown indeed");
 		if (IsWindowVisible(fusionDebugHandle))

@@ -1,11 +1,10 @@
 #include "common.h"
 #include "MeshHelper.h"
-#include "VcgMeshContainer.h"
 #include "InteractiveFusion.h"
+#include "OpenGLShaders.h"
+#include "OpenGLCamera.h"
 #include<wrap/io_trimesh/export.h>
-
-int numberOfVertices = 0;
-int numberOfFaces = 0;
+#include<wrap/io_trimesh/import.h>
 
 void MeshHelper::InitialLoadFromFile(const char* fileName)
 {
@@ -61,6 +60,30 @@ void MeshHelper::RemoveSmallComponents(int size)
 		numberOfFaces += (*mI)->GetNumberOfTriangles();
 	}
 	openGLWin.ShowStatusBarMessage(L"Deleted " + to_wstring(cmpCnt) + L"components");
+}
+
+void MeshHelper::DeleteMesh(int index)
+{
+	numberOfVertices -= meshData[index]->GetNumberOfVertices();
+	numberOfFaces -= meshData[index]->GetNumberOfTriangles();
+	meshData[index]->ClearMesh();
+	//delete meshData[index];
+	meshData.erase(meshData.begin() + index);// std::remove(meshData.begin(), meshData.end(), meshData[index]), meshData.end());
+}
+
+int MeshHelper::DuplicateMesh(int index)
+{
+	shared_ptr<VCGMeshContainer> mesh(new VCGMeshContainer);
+	mesh->SetColorCode(meshData.size() + 1);
+
+	mesh->ConvertToVCG(meshData[index]->GetVertices(), meshData[index]->GetIndices());
+	mesh->ParseData();
+	mesh->GenerateBOs();
+	mesh->GenerateVAO();
+	numberOfVertices += mesh->GetNumberOfVertices();
+	numberOfFaces += mesh->GetNumberOfTriangles();
+	meshData.push_back(mesh);
+	return meshData.size();
 }
 
 void MeshHelper::CleanMesh()
@@ -143,6 +166,7 @@ void MeshHelper::CombineAndExport()
 
 void MeshHelper::GenerateBuffers()
 {
+	cDebug::DbgOut(L"MeshHelper Generate Buffers");
 	numberOfVertices = 0;
 	numberOfFaces = 0;
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
@@ -158,21 +182,35 @@ void MeshHelper::GenerateBuffers()
 	}
 }
 
+int MeshHelper::GetNumberOfVertices()
+{
+	return numberOfVertices;
+}
+
+int MeshHelper::GetNumberOfFaces()
+{
+	return numberOfFaces;
+}
+
 void MeshHelper::DrawAll()
 {
+	//cDebug::DbgOut(L"Meshhelper DrawAll");
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		(*mI)->Draw();
 	}
+	//shaderColor.UnUseProgram();
 }
 
 void MeshHelper::DrawAllForColorPicking()
 {
+	//cDebug::DbgOut(L"Meshhelper DrawAllForColorPicking");
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		if (!(*mI)->IsWall())
 			(*mI)->DrawBB();
 	}
+	//shaderColor.UnUseProgram();
 }
 
 glm::vec3 MeshHelper::GetCombinedCenterPoint()
@@ -187,4 +225,67 @@ glm::vec3 MeshHelper::GetCombinedCenterPoint()
 	cDebug::DbgOut(L"centerPoint y: ", centerPoint.y);
 	cDebug::DbgOut(L"centerPoint z: ", centerPoint.z);
 	return centerPoint;
+}
+
+void MeshHelper::CleanAndParse(const char* fileName, std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices)
+{
+	VCGMesh mesh;
+	vcg::tri::io::ImporterPLY<VCGMesh>::Open(mesh, fileName);
+
+	if (mesh.vn > 1000)
+	{
+		int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(mesh);
+		cDebug::DbgOut(_T("Removed duplicates:"), dup);
+		int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(mesh);
+		cDebug::DbgOut(_T("Removed unreferenced:"), unref);
+		int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(mesh);
+		cDebug::DbgOut(_T("Removed degenerate faces:"), deg);
+	}
+	vcg::tri::RequirePerVertexNormal(mesh);
+	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(mesh);
+	std::clock_t start;
+	double duration;
+
+	start = std::clock();
+	VCGMesh::VertexIterator vi;
+	std::vector<int> VertexId((mesh).vert.size());
+	//std::vector<float> colors;
+	int numvert = 0;
+	int curNormalIndex = 1;
+
+	for (vi = (mesh).vert.begin(); vi != (mesh).vert.end(); ++vi) if (!(*vi).IsD())
+	{
+		VertexId[vi - (mesh).vert.begin()] = numvert;
+		Vertex vertex;
+		vertex.x = (*vi).P()[0];
+		vertex.y = (*vi).P()[1];
+		vertex.z = (*vi).P()[2];
+		vertex.normal_x = (*vi).N()[0];
+		vertex.normal_y = (*vi).N()[1];
+		vertex.normal_z = (*vi).N()[2];
+		vertex.r = (*vi).C()[0] / 255.0f;
+		vertex.g = (*vi).C()[1] / 255.0f;
+		vertex.b = (*vi).C()[2] / 255.0f;
+		startingVertices.push_back(vertex);
+
+		numvert++;
+	}
+
+	//vertices.insert(vertices.end(), colors.begin(), colors.end());
+
+	int mem_index = 0; //var temporany
+	for (VCGMesh::FaceIterator fi = (mesh).face.begin(); fi != (mesh).face.end(); ++fi) if (!(*fi).IsD())
+	{
+		Triangle triangle;
+		triangle.v1 = VertexId[vcg::tri::Index((mesh), (*fi).V(0))];
+		triangle.v2 = VertexId[vcg::tri::Index((mesh), (*fi).V(1))];
+		triangle.v3 = VertexId[vcg::tri::Index((mesh), (*fi).V(2))];
+
+		startingIndices.push_back(triangle);
+	}
+
+	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
+
+	cDebug::DbgOut(L"Parse duration: ", duration);
+
 }

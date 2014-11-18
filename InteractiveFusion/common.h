@@ -3,10 +3,12 @@
 #include <windows.h>
 #include <tchar.h>
 #include <vector>
+#include <windows.h>
+#include <Shlobj.h>
 #include <sstream>
 #include <sys/stat.h>
 #include <unordered_map>
-#include "openGLResources.h"
+#include "IFResources.h"
 #include <boost/shared_ptr.hpp>
 using namespace std;
 

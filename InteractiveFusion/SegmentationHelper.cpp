@@ -56,7 +56,7 @@ void SegmentationHelper::LoadClusterData()
 	meshHelper.GenerateBuffers();
 
 	//segFinished = false;
-	openGLWin.state = DEFAULT;
+	//openGLWin.state = DEFAULT;
 	pclProcessor.coloredCloudReady = false;
 }
 
@@ -101,13 +101,13 @@ int WINAPI SegThreadMain()
 		{
 		case 0:
 			//CombineAndExport();
-			CleanAndParse("data\\models\\output.ply", startingVertices, startingIndices);
+			meshHelper.CleanAndParse("data\\models\\output.ply", startingVertices, startingIndices);
 			break;
 		case 1:
-			CleanAndParse("data\\models\\testScene.ply", startingVertices, startingIndices);
+			meshHelper.CleanAndParse("data\\models\\testScene.ply", startingVertices, startingIndices);
 			break;
 		case 2:
-			CleanAndParse("data\\models\\cube.ply", startingVertices, startingIndices);
+			meshHelper.CleanAndParse("data\\models\\cube.ply", startingVertices, startingIndices);
 			break;
 		}
 	}
@@ -165,7 +165,7 @@ int WINAPI SegThreadMain()
 
 	if (openGLWin.segmentationMode == REGION_GROWTH_SEGMENTATION)
 	{
-		if (openGLWin.state != SEGMENTATION_PREVIEW || openGLWin.previewMode || openGLWin.segmentValuesChanged)
+		if (openGLWin.GetWindowState() != SEGMENTATION_PREVIEW || openGLWin.previewMode || openGLWin.segmentValuesChanged)
 		{
 
 			//meshData_segTmp[0]->CleanAndParse(startingVertices, startingIndices, startingNormals);
@@ -176,7 +176,7 @@ int WINAPI SegThreadMain()
 		}
 		if (openGLWin.previewMode)
 		{
-			openGLWin.state = SEGMENTATION_PREVIEW;
+			openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
 			cDebug::DbgOut(L"Number of clusters: ", pclProcessor.GetClusterCount());
 			return 0;
 		}
@@ -220,7 +220,7 @@ int WINAPI SegThreadMain()
 	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
 	cDebug::DbgOut(L"Filled MeshData in ", elapsedTime);
 	//UNCOMMENT UNTIL HERE FOR SEGMENTATION
-	openGLWin.state = SEGMENTATION_FINISHED;
+	openGLWin.SetWindowState(SEGMENTATION_FINISHED);
 	//showColoredSegments = false;
 	//segFinished = true;
 	openGLWin.ShowStatusBarMessage(L"Segmented mesh in " + to_wstring(pclProcessor.GetRegionClusterCount()) + L"clusters.");
@@ -232,7 +232,7 @@ int WINAPI SegThreadMain()
 void SegmentationHelper::StartSegmentation()
 {
 	//segmenting = true;
-	openGLWin.state = SEGMENTATION;
+	openGLWin.SetWindowState(SEGMENTATION);
 	segmentationThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&SegThreadMain, 0, 0, &sThreadId);
 }
 
@@ -248,16 +248,20 @@ void SegmentationHelper::GeneratePreviewBuffers()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 3));
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 6));
+
+	cDebug::DbgOut(L"seg mesh:");
+	cDebug::DbgOut(L"vbo: ", (int)segmentVBO);
+	cDebug::DbgOut(L"vao: ", (int)segmentVAO);
 }
 
 bool SegmentationHelper::InitializePreview()
 {
 	pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr pointCloud;
-	if (openGLWin.state == WALL_SELECTION)
+	if (openGLWin.GetWindowState() == WALL_SELECTION)
 	{
 		pointCloud = pclProcessor.wallSegmentCloud;
 	}
-	else if (openGLWin.state == SEGMENTATION_PREVIEW)
+	else if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
 	{
 		pointCloud = pclProcessor.coloredSegmentedCloud;
 	}
@@ -286,9 +290,9 @@ bool SegmentationHelper::InitializePreview()
 	glBufferData(GL_ARRAY_BUFFER, previewVertices.size() * sizeof(Vertex), &previewVertices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	if (openGLWin.state == WALL_SELECTION)
+	if (openGLWin.GetWindowState() == WALL_SELECTION)
 		openGLWin.ShowStatusBarMessage(L"Showing wall preview.");
-	else if (openGLWin.state == SEGMENTATION_PREVIEW)
+	else if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
 	{
 		openGLWin.ShowStatusBarMessage(L"Showing region growth segmentation preview with " + to_wstring(pclProcessor.GetClusterCount()) + L"clusters");
 		pclProcessor.coloredCloudReady = false;
@@ -316,7 +320,7 @@ void SegmentationHelper::RenderPreview()
 
 	glUseProgram(0);
 
-	if (openGLWin.state == SEGMENTATION_PREVIEW)
+	if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
 	{
 		glText.PrepareForRender();
 		glText.RenderText(L"Clusters: ", pclProcessor.GetClusterCount(), 20, -0.98f, 0.85f, 2.0f / w, 2.0f / h);

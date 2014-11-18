@@ -31,13 +31,14 @@ public:
 	bool LinkProgram();
 
 	void UseProgram();
-
+	void UnUseProgram();
 	UINT GetProgramID();
 
 	void SetUniform(string name, const glm::vec4 vector);
 	void SetUniform(string name, glm::mat4* mMatrices, int count = 1);
 	void SetUniform(string name, const glm::mat4 mMatrix);
 	void SetUniform(string name, const int value);
+	void SetUniform(string name, const glm::vec3 vector);
 private:
 	UINT glProgram; 
 	bool linked; 
@@ -45,5 +46,5 @@ private:
 
 bool PrepareShaderPrograms();
 
-extern OpenGLShader shaders[4];
-extern OpenGLShaderProgram shaderColor, shaderFont;
+extern OpenGLShader shaders[6];
+extern OpenGLShaderProgram shaderColor, shaderFont, shader2d;

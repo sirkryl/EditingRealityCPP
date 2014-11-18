@@ -197,21 +197,37 @@ void OpenGLControl::ResizeOpenGLViewportFull(int width, int height)
 {
 	if(hWnd == NULL)return;
 	//RECT rRect; GetClientRect(*hWnd, &rRect);
-	
-	glViewport(offSetWidth, offSetHeight*2, width - 2*offSetWidth, (height-offSetHeight*2));
+	SetWindowPos(hWnd, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+
+	glViewport(0, offSetBottom, width - offSetRight, height - offSetBottom);
 	//glViewport(0, 0, width-offSetWidth, height);
 	
 	//SetProjection3D(45.0f, float(width) / float(height), 0.1f, 1000.0f);
 	//SetOrtho2D(width, height);
-	SetWindowPos(hWnd, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 	//glViewport(0, 0, width, height);
 	//iViewportWidth = width;
 	//iViewportHeight = height;
-	iViewportWidth = width;// -2 * offSetWidth;
-	iViewportHeight = height;// -2 * offSetHeight;
-	
-	
-	
+	iViewportWidth = width - offSetRight;
+	iViewportHeight = height - offSetBottom;
+}
+
+int OpenGLControl::GetOffSetRight()
+{
+	return offSetRight;
+}
+
+int OpenGLControl::GetOffSetBottom()
+{
+	return offSetBottom;
+}
+
+void OpenGLControl::ResizeOpenGLViewportFull()
+{
+	if (hWnd == NULL)return;
+	//RECT rRect; GetClientRect(*hWnd, &rRect);
+	SetWindowPos(hWnd, 0, 0, 0, iViewportWidth + offSetRight, iViewportHeight + offSetBottom, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+
+	glViewport(0, offSetBottom, iViewportWidth - offSetRight, iViewportHeight - offSetBottom);
 }
 
 /*-----------------------------------------------
@@ -231,14 +247,14 @@ void OpenGLControl::SetProjection3D(float fFOV, float fAspectRatio, float fNear,
 	mProjection = glm::perspective(fFOV, fAspectRatio, fNear, fFar);
 }
 
-void OpenGLControl::SetOffSetWidth(int offsetX)
+void OpenGLControl::SetOffSetRight(int offset)
 {
-	offSetWidth = offsetX;
+	offSetRight = offset;
 }
 
-void OpenGLControl::SetOffSetHeight(int offsetY)
+void OpenGLControl::SetOffSetBottom(int offset)
 {
-	offSetHeight = offsetY;
+	offSetBottom = offset;
 }
 
 /*-----------------------------------------------
@@ -254,7 +270,7 @@ Result:	Calculates ortho 2D projection matrix and stores it.
 
 void OpenGLControl::SetOrtho2D(int width, int height)
 {
-	mOrtho = glm::ortho(0.0f, float(width), 0.0f, float(height));
+	mOrtho = glm::ortho(0.0f, float(width), 0.0f, float(height), 0.1f, 1000.0f);
 }
 
 /*-----------------------------------------------

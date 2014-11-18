@@ -352,7 +352,6 @@ void VCGMeshContainer::GenerateVAO()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 3));
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 6));
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 
 	glGenVertexArrays(1, &bbVAO);
 	glBindVertexArray(bbVAO);
@@ -363,8 +362,6 @@ void VCGMeshContainer::GenerateVAO()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 3));
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 6));
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbIBO);
 }
 
 void VCGMeshContainer::GenerateBOs()
@@ -392,7 +389,10 @@ void VCGMeshContainer::GenerateBOs()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbIBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, bBoxIndices.size() * sizeof(Triangle), &bBoxIndices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	
 }
+
 
 void VCGMeshContainer::ToggleSelectedColor(bool flag)
 {
@@ -447,9 +447,10 @@ void VCGMeshContainer::Draw()
 	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
 
 	glBindVertexArray(vao);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glDrawElements(GL_TRIANGLES, indices.size()*3, GL_UNSIGNED_INT, (GLvoid*)0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-
 	glUseProgram(0);
 }
 
@@ -472,9 +473,11 @@ void VCGMeshContainer::DrawBB()
 	}
 	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
 	glBindVertexArray(bbVAO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbIBO);
 	glDrawElements(GL_TRIANGLES, bBoxIndices.size()*3, GL_UNSIGNED_INT, (GLvoid*)0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-
+	glUseProgram(0);
 }
 
 void VCGMeshContainer::AttachToCursor(glm::vec3 nearPoint, glm::vec3 farPoint, int distance)
@@ -517,23 +520,6 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 	lowerBounds = glm::vec3(9999.0f, 9999.0f, 9999.0f);
 	upperBounds = glm::vec3(-9999.0f, -9999.0f, -9999.0f);
 
-	/*glm::mat4 originTransform = glm::translate(glm::mat4(1.0), -centerPoint);
-	glm::mat4 xRotation = glm::mat4(1.0f);
-	glm::mat4 yRotation = glm::mat4(1.0f);
-	glm::mat4 zRotation = glm::mat4(1.0f);
-	glm::mat4 scaleMatrix = glm::mat4(1.0f);
-	if (angleX != 0)
-	xRotation = glm::rotate(glm::mat4(1.0), angleX, glm::vec3(1.0f, 0.0f, 0.0f));
-	if (angleY != 0)
-	yRotation = glm::rotate(glm::mat4(1.0), angleY, glm::vec3(0.0f, 1.0f, 0.0f));
-	if (angleZ != 0)
-	zRotation = glm::rotate(glm::mat4(1.0), angleZ, glm::vec3(0.0f, 0.0f, 1.0f));
-	if (scaleFactor != 1.0f)
-	scaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(scaleFactor, scaleFactor, scaleFactor));*/
-
-	//originTransform = glm::translate(glm::mat4(1.0), -GetCenterPoint());
-
-	float lowestZ = GetLowestZ();
 	glm::mat4 combinedTranslation = (snapTransform * pointTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform);
 
 	int normalCount = 0;
@@ -615,38 +601,6 @@ glm::vec3 VCGMeshContainer::GetCenterPoint()
 		glm::vec4 tmpVec = (scaleMatrix * zRotation * yRotation * xRotation) * glm::vec4(centerPoint.x, centerPoint.y, centerPoint.z, 1.0f);
 		return glm::vec3(tmpVec.x, tmpVec.y, tmpVec.z);
 	}
-}
-
-float VCGMeshContainer::GetLowestZ()
-{
-	float lowestZ = std::numeric_limits<float>::max();
-	for (int i = 0; i <= vertices.size(); i += 1)
-	{
-		//currentPoint = (scaleMatrix * zRotation * yRotation * xRotation) * currentPoint;
-		if (vertices[i].z <= lowestZ)
-		{
-			lowestZ = vertices[i].z;
-		}
-	}
-	//cDebug::DbgOut(L"lowestZ: ", lowestZ);
-	return lowestZ;
-}
-
-float VCGMeshContainer::GetLowestY()
-{
-	float lowestY = std::numeric_limits<float>::max();
-	for (int i = 0; i <= vertices.size(); i += 1)
-	{
-
-
-		//currentPoint = (scaleMatrix * zRotation * yRotation * xRotation) * currentPoint;
-		if (vertices[i].y <= lowestY)
-		{
-			lowestY = vertices[i].y;
-		}
-	}
-	//cDebug::DbgOut(L"lowestZ: ", lowestZ);
-	return lowestY;
 }
 
 bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output, glm::vec3 &outputNormal, bool snapToVertex)
@@ -1057,16 +1011,6 @@ void VCGMeshContainer::TogglePreviewSelection(bool flag)
 	previewSelection = flag;
 }
 
-glm::vec3 VCGMeshContainer::GetUpperBounds()
-{
-	return upperBounds;
-}
-
-glm::vec3 VCGMeshContainer::GetLowerBounds()
-{
-	return lowerBounds;
-}
-
 std::vector<Vertex> VCGMeshContainer::GetVertices()
 {
 	return vertices;
@@ -1132,69 +1076,6 @@ void VCGMeshContainer::CleanAndParse(std::vector<Vertex> &startingVertices, std:
 		triangle.v1 = VertexId[vcg::tri::Index((currentMesh), (*fi).V(0))];
 		triangle.v2 = VertexId[vcg::tri::Index((currentMesh), (*fi).V(1))];
 		triangle.v3 = VertexId[vcg::tri::Index((currentMesh), (*fi).V(2))];
-
-		startingIndices.push_back(triangle);
-	}
-
-	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-
-	cDebug::DbgOut(L"Parse duration: ", duration);
-
-}
-
-void CleanAndParse(const char* fileName, std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices)
-{
-	VCGMesh mesh;
-	vcg::tri::io::ImporterPLY<VCGMesh>::Open(mesh, fileName);
-
-	if (mesh.vn > 1000)
-	{
-		int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(mesh);
-		cDebug::DbgOut(_T("Removed duplicates:"), dup);
-		int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(mesh);
-		cDebug::DbgOut(_T("Removed unreferenced:"), unref);
-		int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(mesh);
-		cDebug::DbgOut(_T("Removed degenerate faces:"), deg);
-	}
-	vcg::tri::RequirePerVertexNormal(mesh);
-	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(mesh);
-	std::clock_t start;
-	double duration;
-
-	start = std::clock();
-	VCGMesh::VertexIterator vi;
-	std::vector<int> VertexId((mesh).vert.size());
-	//std::vector<float> colors;
-	int numvert = 0;
-	int curNormalIndex = 1;
-
-	for (vi = (mesh).vert.begin(); vi != (mesh).vert.end(); ++vi) if (!(*vi).IsD())
-	{
-		VertexId[vi - (mesh).vert.begin()] = numvert;
-		Vertex vertex;
-		vertex.x = (*vi).P()[0];
-		vertex.y = (*vi).P()[1];
-		vertex.z = (*vi).P()[2];
-		vertex.normal_x = (*vi).N()[0];
-		vertex.normal_y = (*vi).N()[1];
-		vertex.normal_z = (*vi).N()[2];
-		vertex.r = (*vi).C()[0] / 255.0f;
-		vertex.g = (*vi).C()[1] / 255.0f;
-		vertex.b = (*vi).C()[2] / 255.0f;
-		startingVertices.push_back(vertex);
-
-		numvert++;
-	}
-
-	//vertices.insert(vertices.end(), colors.begin(), colors.end());
-
-	int mem_index = 0; //var temporany
-	for (VCGMesh::FaceIterator fi = (mesh).face.begin(); fi != (mesh).face.end(); ++fi) if (!(*fi).IsD())
-	{
-		Triangle triangle;
-		triangle.v1 = VertexId[vcg::tri::Index((mesh), (*fi).V(0))];
-		triangle.v2 = VertexId[vcg::tri::Index((mesh), (*fi).V(1))];
-		triangle.v3 = VertexId[vcg::tri::Index((mesh), (*fi).V(2))];
 
 		startingIndices.push_back(triangle);
 	}

@@ -17,7 +17,7 @@
     <ClCompile Include="Timer.cpp">
       <Filter>KinectFusion</Filter>
     </ClCompile>
-    <ClCompile Include="Keys.cpp">
+    <ClCompile Include="KFKeys.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -49,10 +49,10 @@
     <ClInclude Include="Timer.h">
       <Filter>KinectFusion</Filter>
     </ClInclude>
-    <ClInclude Include="Keys.h">
+    <ClInclude Include="NuiSensorChooserUIResource.h">
       <Filter>Header</Filter>
     </ClInclude>
-    <ClInclude Include="NuiSensorChooserUIResource.h">
+    <ClInclude Include="KFKeys.h">
       <Filter>Header</Filter>
     </ClInclude>
   </ItemGroup>

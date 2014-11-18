@@ -192,7 +192,7 @@
     <None Include="..\NuiSensorChooser\Images\RefreshOver.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Keys.h" />
+    <ClInclude Include="KFKeys.h" />
     <ClInclude Include="NuiSensorChooserUIResource.h" />
     <ClInclude Include="ImageRenderer.h" />
     <ClInclude Include="Resource.h" />
@@ -206,7 +206,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImageRenderer.cpp" />
-    <ClCompile Include="Keys.cpp" />
+    <ClCompile Include="KFKeys.cpp" />
     <ClCompile Include="KinectFusionExplorer.cpp" />
     <ClCompile Include="KinectFusionHelper.cpp" />
     <ClCompile Include="KinectFusionProcessor.cpp" />

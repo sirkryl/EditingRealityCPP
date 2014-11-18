@@ -4,7 +4,7 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
 //#include <pcl/filters/voxel_grid.h>
-#include "resource.h"
+//#include "resource.h"
 //#include <pcl/kdtree/kdtree_flann.h>
 //#include <pcl/surface/mls.h>
 #include <unordered_set>
@@ -140,8 +140,8 @@ bool PCLProcessor::PlaneSegmentation() {
 		PV2->addText("Is this (part of) a floor/wall? (Y/N)", 250, 30, 20,1,1,1);*/
 		
 		wallSegmentCloud = inlierPoints;
-		openGLWin.InitWallConfirmation();
-		while (openGLWin.state == WALL_SELECTION)
+		openGLWin.SetWindowState(WALL_SELECTION);
+		while (openGLWin.GetWindowState() == WALL_SELECTION)
 		{
 			//if (!openGLWin.wallSelection)
 			//	break;
