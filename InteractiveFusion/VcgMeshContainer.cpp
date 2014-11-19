@@ -42,7 +42,7 @@ void VCGMeshContainer::LoadMesh(const char* filename)
 	vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
 	vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromNone(currentMesh);*/
 	statusMsg = L"Simplifying mesh";
-	RemoveNonManifoldFace();
+	//RemoveNonManifoldFace();
 	LARGE_INTEGER frequency;        // ticks per second
 	LARGE_INTEGER t1, t2;           // ticks
 	double elapsedTime;
@@ -63,6 +63,7 @@ void VCGMeshContainer::LoadMesh(const char* filename)
 	//vcg::tri::Smooth<VCGMesh>::VertexCoordLaplacian(currentMesh, stepSmoothNum, cnt>0);
 	statusMsg = L"Smoothing mesh";
 	LaplacianSmooth(3);
+	UnsharpColor(0.3f);
 	statusMsg = L"Cleaning mesh";
 	CleanMesh();
 	statusMsg = L"Removing small components";
@@ -81,7 +82,22 @@ void VCGMeshContainer::RemoveNonManifoldFace()
 	vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
 	vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromNone(currentMesh);
 	int test = vcg::tri::Clean<VCGMesh>::RemoveNonManifoldFace(currentMesh);
+
+	int count;
+	while (count = vcg::tri::Clean<VCGMesh>::CountNonManifoldVertexFF(currentMesh) > 0)
+	{
+	
+		int total = vcg::tri::Clean<VCGMesh>::SplitNonManifoldVertex(currentMesh, 0);
+		cDebug::DbgOut(_T("Removed non manifold vertices: "), total);
+		cDebug::DbgOut(_T("Still remaining: "), count);
+	}
+	
+	//int testV = vcg::tri::Clean<VCGMesh>::RemoveNonManifoldVertex(currentMesh);
 	cDebug::DbgOut(_T("Removed non manifold faces: "), test);
+	int fCount = vcg::tri::Clean<VCGMesh>::CountNonManifoldEdgeFF(currentMesh);
+	cDebug::DbgOut(_T("Non manifold faces remaining: "), fCount);
+	count = vcg::tri::Clean<VCGMesh>::CountNonManifoldVertexFF(currentMesh);
+	cDebug::DbgOut(_T("Non manifold vertices remaining: "), count);
 }
 
 void VCGMeshContainer::LaplacianSmooth(int step)
@@ -117,6 +133,27 @@ void VCGMeshContainer::LoadMesh(std::vector<Vertex> inputVertices, std::vector<T
 	}
 	CleanMesh();
 	ParseData();
+}
+
+void VCGMeshContainer::UnsharpColor(float alpha)
+{
+	float alphaorig = 1.0f;
+	int smoothIter = 5;
+
+	vcg::tri::Allocator<VCGMesh>::CompactVertexVector(currentMesh);
+	vector<vcg::Color4f> colorOrig(currentMesh.vn);
+	for (int i = 0; i<currentMesh.vn; ++i)
+		colorOrig[i].Import(currentMesh.vert[i].C());
+
+	vcg::tri::Smooth<VCGMesh>::VertexColorLaplacian(currentMesh, smoothIter);
+	for (int i = 0; i<currentMesh.vn; ++i)
+	{
+		vcg::Color4f colorDelta = colorOrig[i] - vcg::Color4f::Construct(currentMesh.vert[i].C());
+		vcg::Color4f newCol = colorOrig[i] * alphaorig + colorDelta*alpha;       // Unsharp formula 
+		vcg::Clamp(newCol); // Clamp everything in the 0..1 range
+		currentMesh.vert[i].C().Import(newCol);
+
+	}
 }
 
 void VCGMeshContainer::CleanMesh()

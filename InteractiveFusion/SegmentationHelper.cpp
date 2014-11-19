@@ -11,6 +11,8 @@ PCLProcessor pclProcessor;
 std::vector<Vertex> startingVertices;
 std::vector<Triangle> startingIndices;
 
+glm::vec4 planeC;
+
 std::vector<shared_ptr<VCGMeshContainer>> meshData_segTmp;
 
 bool SegmentationHelper::IsCloudReady()
@@ -144,19 +146,29 @@ int WINAPI SegThreadMain()
 			//mesh->ParseData(clusterVertices, clusterIndices);
 			mesh->SetWall(true);
 			mesh->ConvertToVCG(clusterVertices, clusterIndices);
-
+			float threshold = 0.005f;
+			int total = mesh->MergeCloseVertices(threshold);
+			cDebug::DbgOut(_T("Merged close vertices: "), total);
 			//int total = mesh->MergeCloseVertices(0.005f);
 			//cDebug::DbgOut(_T("Merged close vertices: "), total);
 			//cDebug::DbgOut(L"indices: ", (int)mesh->GetVertices().size());
 			//cDebug::DbgOut(L"vertices: " + (int)mesh->GetIndices().size());
-			mesh->RemoveSmallComponents(1000);
+
+			cDebug::DbgOut(_T("Clean PlaneSeg #1"));
 			mesh->CleanMesh();
+			mesh->RemoveSmallComponents(clusterVertices.size() / 5);
+			//cDebug::DbgOut(_T("Clean PlaneSeg #2"));
+			//mesh->CleanMesh();
 			mesh->RemoveNonManifoldFace();
-			mesh->FillHoles((clusterVertices.size()) / 10);
-			mesh->CleanMesh();
+			mesh->FillHoles(10000);
+			//cDebug::DbgOut(_T("Clean PlaneSeg #3"));
+			//mesh->CleanMesh();
+			mesh->RemoveSmallComponents(clusterVertices.size() / 2);
+			//mesh->CleanMesh();
 			mesh->ParseData();
 			mesh->SetPlaneParameters(pclProcessor.planeCoefficients[i]->values[0], pclProcessor.planeCoefficients[i]->values[1],
 				pclProcessor.planeCoefficients[i]->values[2], pclProcessor.planeCoefficients[i]->values[3]);
+			planeC = glm::vec4(pclProcessor.planeCoefficients[i]->values[0], pclProcessor.planeCoefficients[i]->values[1], pclProcessor.planeCoefficients[i]->values[2], pclProcessor.planeCoefficients[i]->values[3]);
 			//cDebug::DbgOut(L"vertices: ", (int)mesh->GetNumberOfVertices());
 			//cDebug::DbgOut(L"indices: " + (int)mesh->GetNumberOfTriangles());
 			meshData_segTmp.push_back(mesh);
@@ -201,20 +213,26 @@ int WINAPI SegThreadMain()
 	{
 		std::vector<Vertex> clusterVertices;
 		std::vector<Triangle> clusterIndices;
-		pclProcessor.ConvertToTriangleMesh(i, startingVertices, clusterVertices, clusterIndices);
+		if (!pclProcessor.ConvertToTriangleMesh(i, startingVertices, clusterVertices, clusterIndices))
+			continue;
 		//cDebug::DbgOut(L"Converted Triangle Mesh #",i);
 		shared_ptr<VCGMeshContainer> mesh(new VCGMeshContainer);
 		mesh->SetColorCode(i + pclProcessor.GetPlaneClusterCount() + 1);
 		//mesh->ParseData(clusterVertices, clusterIndices);
 		mesh->ConvertToVCG(clusterVertices, clusterIndices);
-
+		cDebug::DbgOut(_T("Clean Seg #1"));
 		mesh->CleanMesh();
 		mesh->RemoveNonManifoldFace();
 
-		mesh->FillHoles((clusterVertices.size()) / 10);
-		mesh->CleanMesh();
+		//mesh->FillHoles((clusterVertices.size()) / 10);
+		//mesh->CleanMesh();
 		mesh->ParseData();
-		meshData_segTmp.push_back(mesh);
+		//glm::vec3 cP = mesh->GetCenterPoint();
+		//float iO = cP.x*planeC.x + cP.y*planeC.y + cP.z * planeC.z + planeC.w;
+		//cDebug::DbgOut(L"mesh #" + to_wstring(i) + L" iO: ", iO);
+		//if (iO >= 0.0f)
+			meshData_segTmp.push_back(mesh);
+		
 	}
 	QueryPerformanceCounter(&t2);
 	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;

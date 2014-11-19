@@ -227,7 +227,7 @@ void OpenGLControl::ResizeOpenGLViewportFull()
 	//RECT rRect; GetClientRect(*hWnd, &rRect);
 	SetWindowPos(hWnd, 0, 0, 0, iViewportWidth + offSetRight, iViewportHeight + offSetBottom, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
-	glViewport(0, offSetBottom, iViewportWidth - offSetRight, iViewportHeight - offSetBottom);
+	glViewport(0, offSetBottom, iViewportWidth, iViewportHeight);
 }
 
 /*-----------------------------------------------

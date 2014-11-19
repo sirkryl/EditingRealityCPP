@@ -17,7 +17,7 @@ HWND hTextWalls;
 std::vector<HWND> uiElements;
 WNDPROC oldEditProc;
 HBRUSH hBackground = CreateSolidBrush(RGB(0, 0, 0));
-HBRUSH buttonDefaultBrush, buttonPressedBrush;
+HBRUSH buttonDefaultBrush, buttonPressedBrush, buttonActiveBrush;
 HPEN buttonDefaultPen, buttonPressedPen;
 
 HWND editKSearchHandle, editMinClustersHandle, editCarryDistanceHandle, editMaxClustersHandle, editNonHandle, editSmoothnessHandle, editCurvatureHandle, editFillHoleHandle, editRemoveComponentHandle;
@@ -85,7 +85,7 @@ void InteractiveFusion::SetWindowState(WindowState wState)
 	state = wState;
 
 	HideAllButtons();
-	//MoveButtonsOnResize();
+	
 	if (state == WALL_SELECTION)
 	{
 		ShowWindow(hTextWalls, SW_SHOW);
@@ -99,14 +99,17 @@ void InteractiveFusion::SetWindowState(WindowState wState)
 	if (state == DEFAULT)
 	{
 		openGLWin.glControl.SetOffSetBottom(0);
-		openGLWin.glControl.SetOffSetRight(150);
+		openGLWin.glControl.SetOffSetRight(250);
 		ShowWindow(hButtonExport, SW_SHOW);
 		//ShowWindow(hButtonDelete, SW_SHOW);
 		ShowWindow(hButtonDuplicate, SW_SHOW);
-		//RECT rRect; GetClientRect(GetParent(openGLWin.glWindowHandle), &rRect);
-		//openGLWin.glControl.ResizeOpenGLViewportFull(rRect.right, rRect.bottom);
+		
 		//openGLWin.glControl.ResizeOpenGLViewportFull();
 	}
+	RECT rRect; GetClientRect(GetParent(openGLWin.glWindowHandle), &rRect);
+	openGLWin.glControl.ResizeOpenGLViewportFull(rRect.right, rRect.bottom);
+	MoveButtonsOnResize();
+	
 }
 
 LPCWSTR InteractiveFusion::GetLastErrorStdStr()
@@ -207,9 +210,9 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	hButtonDelete = CreateWindowEx(0, L"STATIC", L"Delete", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_DELETE, NULL, 0);
 	buttonDefaultBrush = CreateSolidBrush(RGB(20, 20, 20));
 	buttonPressedBrush = CreateSolidBrush(RGB(40, 40, 40));
-	buttonDefaultPen = CreatePen(PS_SOLID, 2, RGB(240, 240, 240));
-	buttonPressedPen = CreatePen(PS_SOLID, 2, RGB(220, 220, 220));
-
+	buttonDefaultPen = CreatePen(PS_SOLID, 2, RGB(200, 200, 200));
+	buttonPressedPen = CreatePen(PS_SOLID, 2, RGB(160, 160, 160));
+	buttonActiveBrush = CreateSolidBrush(RGB(0, 0, 255));
 	trashBmp = LoadBitmap(openGLWin.appInstance, MAKEINTRESOURCE(IDB_TRASH));
 	trashBmp_mask = LoadBitmap(openGLWin.appInstance, MAKEINTRESOURCE(IDB_TRASH_MASK));
 
@@ -255,19 +258,24 @@ void InteractiveFusion::ReleaseOpenGL()
 void InteractiveFusion::ShutdownWindow()
 {
 	winDestroyed = true;
-	DestroyWindow(debugHandle);
-	DestroyWindow(openGLWin.fusionHandle);
-	DestroyWindow(openGLWin.glWindowHandle);
-	DestroyWindow(openGLWin.parent);
 	DeleteObject(hBackground);
 	DeleteObject(buttonDefaultBrush);
 	DeleteObject(buttonDefaultPen);
 	DeleteObject(buttonPressedBrush);
 	DeleteObject(buttonPressedPen);
+	DeleteObject(buttonActiveBrush);
 	DeleteObject(statusFont);
 	DeleteObject(uiFont);
+	
+	DestroyWindow(debugHandle);
+	DestroyWindow(openGLWin.fusionHandle);
+	DestroyWindow(openGLWin.glWindowHandle);
+	DestroyWindow(openGLWin.parent);
 
 	UnregisterClass((LPCWSTR)className, appInstance);
+	
+
+	
 	
 	
 }
@@ -340,10 +348,12 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		}
 		else
 		{
+			
 			SetTextColor(item->hDC, RGB(240, 240, 240));
 			SelectObject(item->hDC, buttonDefaultPen);
-
 		}
+		if (IDC_BUTTON_DUPLICATE == LOWORD(wParam) && openGLWin.duplicationMode)
+			SelectObject(item->hDC, buttonActiveBrush);
 		SetBkMode(item->hDC, TRANSPARENT);
 		RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 20, 20);
 		int len;
@@ -900,14 +910,16 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 void GLProcessUI(WPARAM wParam, LPARAM lParam)
 {
+	if (IDC_BUTTON_DUPLICATE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		openGLWin.duplicationMode = !openGLWin.duplicationMode;
+	}
 	if (IDC_BUTTON_YES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.SetWindowState(SEGMENTATION);
 		openGLWin.isWall = true;
 		ShowWindow(hTextWalls, SW_HIDE);
-		
-
 	}
 	if (IDC_BUTTON_NO == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -1067,9 +1079,9 @@ void MoveButtonsOnResize()
 	MoveWindow(debugHandle, width - rRect.right, 0, rRect.right, rRect.bottom, true);
 	MoveWindow(hButtonYes, width / 2 - 175, height - 150, 150, 50, true);
 	MoveWindow(hButtonNo, width / 2 + 25, height - 150, 150, 50, true);
-	MoveWindow(hButtonExport, width - 200, height - 350, 150, 150, true);
+	MoveWindow(hButtonExport, width - 200, height - 200, 150, 150, true);
 	MoveWindow(hButtonDelete, width - 200, height - 750, 128, 128, true);
-	MoveWindow(hButtonDuplicate, width - 200, height - 550, 150, 150, true);
+	MoveWindow(hButtonDuplicate, width - 200, 250, 150, 150, true);
 
 	RECT sRect;
 	GetWindowRect(statusHandle, &sRect);

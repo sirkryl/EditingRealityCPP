@@ -31,6 +31,7 @@ public:
 	bool previewMode = false;
 	bool wallSelection = false;
 	bool isWall = false;
+	bool duplicationMode = false;
 	//segmentation values
 	int kSearchValue = 20;
 	int minClusterSize = 1000;

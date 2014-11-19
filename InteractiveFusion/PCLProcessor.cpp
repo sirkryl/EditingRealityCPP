@@ -3,6 +3,7 @@
 #include "InteractiveFusion.h"
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
+#include "MeshHelper.h"
 //#include <pcl/filters/voxel_grid.h>
 //#include "resource.h"
 //#include <pcl/kdtree/kdtree_flann.h>
@@ -78,7 +79,7 @@ bool PCLProcessor::PlaneSegmentation() {
 		segmentation.setNormalDistanceWeight(0.5);
 		segmentation.setEpsAngle(10.0f * (M_PI / 180.0f));
 		// Configure the object to look for a plane.
-		segmentation.setModelType(pcl::SACMODEL_NORMAL_PARALLEL_PLANE);// SACMODEL_NORMAL_PLANE);
+		segmentation.setModelType(pcl::SACMODEL_NORMAL_PLANE);// SACMODEL_NORMAL_PLANE);
 		// Use RANSAC method.
 	
 		segmentation.setMethodType(pcl::SAC_RANSAC);
@@ -90,7 +91,7 @@ bool PCLProcessor::PlaneSegmentation() {
 		segmentation.segment(*inlierIndices, *coefficients);
 		
 		statusMsg = L"Trying to detect planes";
-		if (inlierIndices->indices.size() <= mainCloud->points.size()/80)
+		if (inlierIndices->indices.size() <= mainCloud->points.size()/30)
 		{
 			if (axisCnt == 0)
 			{
@@ -215,6 +216,7 @@ bool PCLProcessor::PlaneSegmentation() {
 				else
 					maxPlane.z = max.z;
 			}
+			cDebug::DbgOut(L"axisCnt", axisCnt);
 			pcl::PointCloud<pcl::PointXYZRGB>::Ptr testCloud(new pcl::PointCloud<pcl::PointXYZRGB>);
 			pcl::PassThrough<pcl::PointXYZRGB> pass;
 			pass.setInputCloud(cloudWithoutPlane);
@@ -669,7 +671,7 @@ bool PCLProcessor::EuclideanSegmentation() {
 	pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
 	//ec.setConditionFunction(&EnforceCurvatureOrColor);
 	ec.setClusterTolerance(0.01); // 2cm
-	ec.setMinClusterSize(100);
+	ec.setMinClusterSize(1000);
 	ec.setMaxClusterSize(9000000);
 	//ec.setSearchMethod(tree);
 	ec.setInputCloud(mainCloud);
@@ -837,6 +839,7 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> a
 	QueryPerformanceFrequency(&frequency);
 	QueryPerformanceCounter(&t1);
 
+	Vertex centerVertex{ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	//vertices are straight-forward and are mapped 1:1
 	for (size_t i = 0; i < cluster->points.size(); i++)
 	{
@@ -848,7 +851,50 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> a
 		vertex.g = cluster->points[i].g / 255.0f;
 		vertex.b = cluster->points[i].b / 255.0f;
 		vertices.push_back(vertex);
+
+		centerVertex.x += vertex.x;
+		centerVertex.y += vertex.y;
+		centerVertex.z += vertex.z;
 	}
+	centerVertex.x = centerVertex.x / (float)cluster->points.size();
+	centerVertex.y = centerVertex.y / (float)cluster->points.size();
+	centerVertex.z = centerVertex.z / (float)cluster->points.size();
+
+	// THIS IS FOR WALL & FLOOR CROPPING
+	cDebug::DbgOut(L"clusterIndex:", clusterIndex);
+	cDebug::DbgOut(L"planeCoefficients size:", (int)planeCoefficients.size());
+	if (clusterIndex >= planeCoefficients.size())
+	{
+		glm::vec3 overallCenterPoint = meshHelper.GetCombinedCenterPoint();
+		for (int i = 0; i < planeCoefficients.size(); i++)
+		{
+			float iO = centerVertex.x*planeCoefficients[0]->values[0] + centerVertex.y*planeCoefficients[0]->values[1] + centerVertex.z * planeCoefficients[0]->values[2] + planeCoefficients[0]->values[3];
+			cDebug::DbgOut(L"mesh #" + to_wstring(clusterIndex) + L" iO: ", iO);
+
+			float max = -99999.0f;
+			int pIndex = -1;
+			for (int j = 0; j < 3; j++)
+			{
+				if (abs(planeCoefficients[i]->values[j]) > max)
+				{
+					max = abs(planeCoefficients[i]->values[j]);
+					pIndex = j;
+				}
+			}
+			cDebug::DbgOut(L"max dimension: ", pIndex);
+			int dimension;
+			if (planeCoefficients[i]->values[pIndex] > 0)
+			{
+				if (iO < 0.0f)
+					return false;
+			}
+			else if (iO > 0.0f)
+				return false;
+				
+		}
+		
+	}
+	//END FOR CROPPING
 
 	QueryPerformanceCounter(&t2);
 	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;

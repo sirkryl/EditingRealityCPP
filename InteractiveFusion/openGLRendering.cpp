@@ -36,7 +36,7 @@ void RemoveSelectionColor()
 {
 	if (glSelector.selectedIndex != -1)
 	{
-		meshData[glSelector.selectedIndex - 1]->ToggleSelectedColor(false);
+		meshData[glSelector.selectedIndex]->ToggleSelectedColor(false);
 	}
 }
 
@@ -281,7 +281,7 @@ void Render(LPVOID lpParam)
 	glText.RenderText(L"Meshs: ", meshData.size(), 15, -0.98f, 0.75f, 2.0f / viewportWidth, 2.0f / viewportHeight);
 	glText.RenderText(L"Verts: ", meshHelper.GetNumberOfVertices(), 15, -0.98f, 0.70f, 2.0f / viewportWidth, 2.0f / viewportHeight);
 	glText.RenderText(L"Faces: ", meshHelper.GetNumberOfFaces() , 15, -0.98f, 0.65f, 2.0f / viewportWidth, 2.0f / viewportHeight);
-	glText.RenderText(L"Sel: ", glSelector.selectedIndex - 1, 15, -0.98f, 0.6f, 2.0f / viewportWidth, 2.0f / viewportHeight);
+	glText.RenderText(L"Sel: ", glSelector.selectedIndex, 15, -0.98f, 0.6f, 2.0f / viewportWidth, 2.0f / viewportHeight);
 
 	glEnable(GL_DEPTH_TEST);
 

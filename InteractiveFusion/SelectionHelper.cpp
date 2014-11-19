@@ -85,7 +85,7 @@ bool SelectionHelper::ColorPlacing(bool preview)
 	bool result = false;
 	glm::vec3 tmpNormal;
 	std::wstringstream ws;
-	int cnt = 1;
+	int cnt = 0;
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		if (cnt != selectedIndex)
@@ -102,32 +102,45 @@ bool SelectionHelper::ColorPlacing(bool preview)
 	else
 		gl2DHelper.isOpen = false;
 
-	if (tmpIndex > -1 && tmpIndex <= meshData.size() && tmpIndex != TRASH_BIN_COLOR)
+	bool found = false;
+	int meshIndex = 0;
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		if (tmpIndex == (*mI)->GetColorCode())
+		{
+			tmpIndex = meshIndex;
+			found = true;
+			break;
+		}
+		meshIndex++;
+	}
+
+	if (found && tmpIndex != TRASH_BIN_COLOR)
 	{
 		openGLWin.ShowStatusBarMessage(L"Selecting object #" + to_wstring(tmpIndex));
 		glm::vec3 v1, v2;
 		RayCast(&v1, &v2);
 		glm::vec3 tmpPoint;
 
-		std::vector<int> orientation = meshData[tmpIndex - 1]->GetOrientation();
+		std::vector<int> orientation = meshData[tmpIndex]->GetOrientation();
 
-		meshData[tmpIndex - 1]->GetHitPoint(v1, v2, tmpPoint, tmpNormal, openGLWin.snapToVertex);
+		meshData[tmpIndex]->GetHitPoint(v1, v2, tmpPoint, tmpNormal, openGLWin.snapToVertex);
 		GetRayOrientation(v1, v2, tmpNormal, orientation);
 		hitPoint = tmpPoint;
 
-		meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint, orientation);
+		meshData[selectedIndex]->TranslateVerticesToPoint(hitPoint, orientation);
 
 		if (preview)
-			meshData[selectedIndex - 1]->TogglePreviewSelection(true);
+			meshData[selectedIndex]->TogglePreviewSelection(true);
 		else
 		{
-			meshData[selectedIndex - 1]->SetSelected(false);
+			meshData[selectedIndex]->SetSelected(false);
 
-			if (Keys::GetKeyState('D'))
+			if (Keys::GetKeyState('D') || openGLWin.duplicationMode)
 			{
-				int newIndex = meshHelper.DuplicateMesh(selectedIndex - 1);
+				int newIndex = meshHelper.DuplicateMesh(selectedIndex);
 				selectedIndex = newIndex;
-				meshData[selectedIndex - 1]->SetSelected(true);
+				meshData[selectedIndex]->SetSelected(true);
 			}
 			else selectedIndex = -1;
 		}
@@ -137,14 +150,14 @@ bool SelectionHelper::ColorPlacing(bool preview)
 	{
 		if (tmpIndex == TRASH_BIN_COLOR)
 		{
-			meshHelper.DeleteMesh(selectedIndex - 1);
+			meshHelper.DeleteMesh(selectedIndex);
 			selectedIndex = -1;
 			gl2DHelper.isOpen = false;
 		}
 		else
 		{
-			meshData[selectedIndex - 1]->SetSelected(false);
-			meshData[selectedIndex - 1]->ResetSelectedTransformation();
+			meshData[selectedIndex]->SetSelected(false);
+			meshData[selectedIndex]->ResetSelectedTransformation();
 			selectedIndex = -1;
 		}
 	}
@@ -163,7 +176,7 @@ bool SelectionHelper::RayCastPlacing(bool preview)
 	int sIndex = -1;
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
-		if (index != selectedIndex - 1)
+		if (index != selectedIndex)
 		{
 			glm::vec3 tmpHit;
 			glm::vec3 tmpNormal;
@@ -184,25 +197,25 @@ bool SelectionHelper::RayCastPlacing(bool preview)
 		}
 		index++;
 	}
-	if (sIndex > 0)
+	if (sIndex > -1)
 	{
-		std::vector<int> orientation = meshData[sIndex - 1]->GetOrientation();
+		std::vector<int> orientation = meshData[sIndex]->GetOrientation();
 		GetRayOrientation(v1, v2, hitNormal, orientation);
-		meshData[selectedIndex - 1]->TranslateVerticesToPoint(hitPoint, orientation);
+		meshData[selectedIndex]->TranslateVerticesToPoint(hitPoint, orientation);
 
 		if (preview)
-			meshData[selectedIndex - 1]->TogglePreviewSelection(true);
+			meshData[selectedIndex]->TogglePreviewSelection(true);
 		else
 		{
-			meshData[selectedIndex - 1]->SetSelected(false);
+			meshData[selectedIndex]->SetSelected(false);
 			selectedIndex = -1;
 		}
 		result = true;
 	}
 	else if (!preview)
 	{
-		meshData[selectedIndex - 1]->SetSelected(false);
-		meshData[selectedIndex - 1]->ResetSelectedTransformation();
+		meshData[selectedIndex]->SetSelected(false);
+		meshData[selectedIndex]->ResetSelectedTransformation();
 		selectedIndex = -1;
 	}
 	return result;
@@ -228,15 +241,15 @@ void SelectionHelper::ProcessSelectedObject()
 	//boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 	if (!PlacingPreview())
 	{
-		meshData[selectedIndex - 1]->TogglePreviewSelection(false);
+		meshData[selectedIndex]->TogglePreviewSelection(false);
 
 		glm::vec3 v1, v2;
 		RayCast(&v1, &v2);
-		meshData[selectedIndex - 1]->AttachToCursor(v1, v2, openGLWin.carryDistance);
+		meshData[selectedIndex]->AttachToCursor(v1, v2, openGLWin.carryDistance);
 	}
 	if (Keys::GetKeyState(VK_DELETE))
 	{
-		meshHelper.DeleteMesh(selectedIndex - 1);
+		meshHelper.DeleteMesh(selectedIndex);
 		selectedIndex = -1;
 		cDebug::DbgOut(L"pressed ENTF alright");
 	}
@@ -245,11 +258,11 @@ void SelectionHelper::ProcessSelectedObject()
 		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
 		if (openGLWin.wheelDelta < 0)
 		{
-			meshData[selectedIndex - 1]->SetAngleX(false);
+			meshData[selectedIndex]->SetAngleX(false);
 		}
 		else if (openGLWin.wheelDelta > 0)
 		{
-			meshData[selectedIndex - 1]->SetAngleX(true);
+			meshData[selectedIndex]->SetAngleX(true);
 		}
 	}
 	if (Keys::GetKeyState('Y'))
@@ -257,11 +270,11 @@ void SelectionHelper::ProcessSelectedObject()
 		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
 		if (openGLWin.wheelDelta < 0)
 		{
-			meshData[selectedIndex - 1]->SetAngleY(false);
+			meshData[selectedIndex]->SetAngleY(false);
 		}
 		else if (openGLWin.wheelDelta > 0)
 		{
-			meshData[selectedIndex - 1]->SetAngleY(true);
+			meshData[selectedIndex]->SetAngleY(true);
 		}
 
 	}
@@ -270,22 +283,22 @@ void SelectionHelper::ProcessSelectedObject()
 		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
 		if (openGLWin.wheelDelta < 0)
 		{
-			meshData[selectedIndex - 1]->SetAngleZ(false);
+			meshData[selectedIndex]->SetAngleZ(false);
 		}
 		else if (openGLWin.wheelDelta > 0)
 		{
-			meshData[selectedIndex - 1]->SetAngleZ(true);
+			meshData[selectedIndex]->SetAngleZ(true);
 		}
 	}
 	if (Keys::GetKeyState('U'))
 	{
 		if (openGLWin.wheelDelta < 0)
 		{
-			meshData[selectedIndex - 1]->SetScale(false);
+			meshData[selectedIndex]->SetScale(false);
 		}
 		else if (openGLWin.wheelDelta > 0)
 		{
-			meshData[selectedIndex - 1]->SetScale(true);
+			meshData[selectedIndex]->SetScale(true);
 		}
 		openGLWin.wheelDelta = 0;
 	}
@@ -301,18 +314,32 @@ void SelectionHelper::ProcessPicking()
 			(*mI)->DrawBB();
 	}
 	int tmpIndex = GetColorUnderCursor();
-	if (tmpIndex > -1 && tmpIndex <= meshData.size())
+
+	bool found = false;
+	int meshIndex = 0;
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		if (tmpIndex == (*mI)->GetColorCode())
+		{
+			tmpIndex = meshIndex;
+			found = true;
+			break;
+		}
+		meshIndex++;
+	}
+
+	if (found)
 	{
 		if (selectedIndex != -1)
 		{
 			if (openGLWin.colorSelection)
-				meshData[selectedIndex - 1]->ToggleSelectedColor(false);
-			meshData[selectedIndex - 1]->SetSelected(false);
+				meshData[selectedIndex]->ToggleSelectedColor(false);
+			meshData[selectedIndex]->SetSelected(false);
 		}
 		openGLWin.ShowStatusBarMessage(L"Selecting object #" + to_wstring(tmpIndex));
-		meshData[tmpIndex - 1]->SetSelected(true);
+		meshData[tmpIndex]->SetSelected(true);
 		if (openGLWin.colorSelection)
-			meshData[tmpIndex - 1]->ToggleSelectedColor(true);
+			meshData[tmpIndex]->ToggleSelectedColor(true);
 		selectedIndex = tmpIndex;
 	}
 	else
@@ -322,8 +349,8 @@ void SelectionHelper::ProcessPicking()
 			openGLWin.ShowStatusBarMessage(L"Unselecting object #" + to_wstring(selectedIndex));
 
 			if (openGLWin.colorSelection)
-				meshData[selectedIndex - 1]->ToggleSelectedColor(false);
-			meshData[selectedIndex - 1]->SetSelected(false);
+				meshData[selectedIndex]->ToggleSelectedColor(false);
+			meshData[selectedIndex]->SetSelected(false);
 			selectedIndex = -1;
 		}
 	}
@@ -349,10 +376,10 @@ void SelectionHelper::SelectWallObject()
 {
 	if (selectedIndex != -1)
 	{
-		meshData[selectedIndex - 1]->SetWall(true);
+		meshData[selectedIndex]->SetWall(true);
 		if (openGLWin.colorSelection)
-			meshData[selectedIndex - 1]->ToggleSelectedColor(false);
-		meshData[selectedIndex - 1]->SetSelected(false);
+			meshData[selectedIndex]->ToggleSelectedColor(false);
+		meshData[selectedIndex]->SetSelected(false);
 		selectedIndex = -1;
 	}
 }

@@ -38,7 +38,8 @@ public:
 	void RemoveNonManifoldFace();
 	int RemoveSmallComponents(int compSize);
 	int FillHoles(int holeSize);
-	
+	void UnsharpColor(float alpha);
+
 	void CleanAndParse(std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices);
 
 	void Draw();

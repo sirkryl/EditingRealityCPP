@@ -83,7 +83,7 @@ int MeshHelper::DuplicateMesh(int index)
 	numberOfVertices += mesh->GetNumberOfVertices();
 	numberOfFaces += mesh->GetNumberOfTriangles();
 	meshData.push_back(mesh);
-	return meshData.size();
+	return meshData.size()-1;
 }
 
 void MeshHelper::CleanMesh()
