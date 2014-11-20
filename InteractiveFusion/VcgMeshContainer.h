@@ -18,6 +18,7 @@ class VCGMeshContainer
 public:
 	VCGMeshContainer();
 	~VCGMeshContainer();
+	void Load2DMesh(const char* filename);
 	void LoadMesh(const char* filename);
 	void LoadMesh(std::vector<Vertex> vertices, std::vector<Triangle> indices);
 
@@ -31,6 +32,8 @@ public:
 	void GenerateBOs();
 
 	void UpdateBuffers();
+
+
 
 	void CleanMesh();
 	int MergeCloseVertices(float threshold);
@@ -60,6 +63,8 @@ public:
 	void ResetSelectedTransformation();
 
 	void SetWall(bool flag);
+	void Set2D(bool flag);
+	void SetDuplicate(bool flag);
 	void SetPlaneParameters(float x, float y, float z, float d);
 
 	
@@ -71,7 +76,7 @@ public:
 	glm::vec3 GetCenterPoint();
 	std::vector<int> GetOrientation();
 	bool IsWall();
-
+	bool IsDuplicate();
 	void ToggleSelectedColor(bool flag);
 	void TogglePreviewSelection(bool flag);
 
@@ -83,9 +88,9 @@ private:
 	glm::vec3 offSet;
 	glm::vec3 snapPoint;
 
+	bool is2D = false;
+	bool isDuplicate = false;
 	std::vector<Vertex> vertices;
-	std::vector<Vertex> bBoxVertices;
-	std::vector<Triangle> bBoxIndices;
 	std::vector<Triangle> indices;
 	std::vector<float> storedColors;
 

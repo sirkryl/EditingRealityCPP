@@ -115,8 +115,8 @@ void InitialLoading()
 		break;
 	}
 
-	gl2DHelper.InitialLoadFromFile("data\\models\\trash2.ply");
-	gl2DHelper.InitialLoadFromFile("data\\models\\trash_open.ply");
+	gl2DHelper.InitialLoadFromFile("data\\models\\trash.ply", TRASH_BIN_COLOR);
+	gl2DHelper.InitialLoadFromFile("data\\models\\trash_open.ply", TRASH_BIN_COLOR);
 	glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
 
 

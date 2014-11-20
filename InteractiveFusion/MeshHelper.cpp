@@ -62,6 +62,31 @@ void MeshHelper::RemoveSmallComponents(int size)
 	openGLWin.ShowStatusBarMessage(L"Deleted " + to_wstring(cmpCnt) + L"components");
 }
 
+void MeshHelper::ResetAll()
+{
+	std::vector<int> removeIndices;
+	int cnt = 0;
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		if ((*mI)->IsDuplicate())
+		{
+			removeIndices.push_back(cnt);
+			cnt++;
+			continue;
+		}
+		(*mI)->ParseData();
+		(*mI)->UpdateBuffers();
+		cnt++;
+	}
+
+	cnt = 0;
+	for (int i = 0; i < removeIndices.size(); i++)
+	{
+		DeleteMesh(removeIndices[i]-cnt);
+		cnt++;
+	}
+}
+
 void MeshHelper::DeleteMesh(int index)
 {
 	numberOfVertices -= meshData[index]->GetNumberOfVertices();
@@ -78,6 +103,7 @@ int MeshHelper::DuplicateMesh(int index)
 
 	mesh->ConvertToVCG(meshData[index]->GetVertices(), meshData[index]->GetIndices());
 	mesh->ParseData();
+	mesh->SetDuplicate(true);
 	mesh->GenerateBOs();
 	mesh->GenerateVAO();
 	numberOfVertices += mesh->GetNumberOfVertices();

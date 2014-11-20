@@ -15,7 +15,7 @@ public:
 	pcl::PointCloud <pcl::PointXYZRGB>::ConstPtr coloredSegmentedCloud;
 	pcl::PointCloud <pcl::PointXYZRGB>::Ptr wallSegmentCloud;
 	bool ConvertToCloud(std::vector<Vertex> startingVertices, std::vector<Triangle> startingIndices);
-	bool ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> allVertices, std::vector<Vertex> &vertices, std::vector<Triangle> &indices);
+	bool ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> allVertices, std::vector<Vertex> &vertices, std::vector<Triangle> &indices, bool isPlane);
 	//bool ConvertPlaneToTriangleMesh(int clusterIndex, std::vector<float> allVertices, std::vector<float> &vertices, std::vector<GLuint> &indices);
 	void PoissonReconstruction();
 	void PlaneIndexEstimation();

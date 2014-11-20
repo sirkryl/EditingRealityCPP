@@ -101,6 +101,7 @@ void InteractiveFusion::SetWindowState(WindowState wState)
 		openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.glControl.SetOffSetRight(250);
 		ShowWindow(hButtonExport, SW_SHOW);
+		ShowWindow(hButtonReset, SW_SHOW);
 		//ShowWindow(hButtonDelete, SW_SHOW);
 		ShowWindow(hButtonDuplicate, SW_SHOW);
 		
@@ -204,7 +205,7 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	//hTextWalls = CreateWindowEx(0, L"Text", L"Is this (part of) a floor/wall?", WS_CHILD | WS_VISIBLE | BS_BITMAP, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_NO, appInstance, 0);
 	hButtonExport = CreateWindowEx(0, L"BUTTON", L"Export", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_EXPORT, NULL, 0);
 	hButtonDuplicate = CreateWindowEx(0, L"BUTTON", L"Duplicate", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_DUPLICATE, NULL, 0);
-
+	hButtonReset = CreateWindowEx(0, L"BUTTON", L"Reset", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RESET, NULL, 0);
 	hDeleteIcon = (HICON)LoadImage(openGLWin.appInstance, MAKEINTRESOURCE(IDI_TRASH), IMAGE_ICON, 100, 100, NULL);
 
 	hButtonDelete = CreateWindowEx(0, L"STATIC", L"Delete", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_DELETE, NULL, 0);
@@ -224,6 +225,7 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	uiElements.push_back(hButtonExport);
 	uiElements.push_back(hButtonDelete);
 	uiElements.push_back(hButtonDuplicate);
+	uiElements.push_back(hButtonReset);
 	uiElements.push_back(hTextWalls);
 
 	HideAllButtons();
@@ -334,7 +336,8 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 	if (IDC_BUTTON_EXPORT == LOWORD(wParam)
 		|| IDC_BUTTON_YES == LOWORD(wParam)
 		|| IDC_BUTTON_NO == LOWORD(wParam)
-		|| IDC_BUTTON_DUPLICATE == LOWORD(wParam))
+		|| IDC_BUTTON_DUPLICATE == LOWORD(wParam)
+		|| IDC_BUTTON_RESET == LOWORD(wParam))
 	{
 		LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lParam;
 		SelectObject(item->hDC, uiFont);
@@ -910,6 +913,10 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 void GLProcessUI(WPARAM wParam, LPARAM lParam)
 {
+	if (IDC_BUTTON_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		meshHelper.ResetAll();
+	}
 	if (IDC_BUTTON_DUPLICATE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.duplicationMode = !openGLWin.duplicationMode;
@@ -1082,6 +1089,7 @@ void MoveButtonsOnResize()
 	MoveWindow(hButtonExport, width - 200, height - 200, 150, 150, true);
 	MoveWindow(hButtonDelete, width - 200, height - 750, 128, 128, true);
 	MoveWindow(hButtonDuplicate, width - 200, 250, 150, 150, true);
+	MoveWindow(hButtonReset, width - 200, 50, 150, 150, true);
 
 	RECT sRect;
 	GetWindowRect(statusHandle, &sRect);

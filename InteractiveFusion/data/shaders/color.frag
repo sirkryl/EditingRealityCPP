@@ -2,9 +2,15 @@
 
 smooth in vec4 theColor;
 
+uniform vec4 pickColor;
+uniform bool colorPicking = false;
+
 out vec4 outputColor;
 
 void main()
 {
-	outputColor = theColor;
+	if (colorPicking)
+		outputColor = pickColor;
+	else 
+		outputColor = theColor;
 }

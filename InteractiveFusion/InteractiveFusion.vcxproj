@@ -88,7 +88,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Mesh2D.h" />
     <ClInclude Include="colorCoding.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="InteractiveFusion.h" />
@@ -109,7 +108,6 @@
     <ClInclude Include="VcgMeshContainer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Mesh2D.cpp" />
     <ClCompile Include="InteractiveFusion.cpp" />
     <ClCompile Include="Keys.cpp" />
     <ClCompile Include="MeshHelper.cpp" />

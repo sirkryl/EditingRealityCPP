@@ -75,9 +75,6 @@
     <ClInclude Include="OpenGL2DHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Mesh2D.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="plylib.cpp">
@@ -123,9 +120,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="OpenGL2DHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Mesh2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

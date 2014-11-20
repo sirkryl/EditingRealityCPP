@@ -1,12 +1,12 @@
 #pragma once
-#include "Mesh2D.h"
+#include "VCGMeshContainer.h"
 
-#define TRASH_BIN_COLOR 666
+
 
 class OpenGL2DHelper
 {
 public:
-	void InitialLoadFromFile(const char* fileName);
+	void InitialLoadFromFile(const char* fileName, int colorCode);
 
 	void DrawAll();
 	void DrawAllBB();
@@ -17,7 +17,7 @@ public:
 
 	void CleanUp();
 private:
-	std::vector<shared_ptr<Mesh2D>> meshData2d;
+	std::vector<shared_ptr<VCGMeshContainer>> meshData2d;
 };
 
 extern OpenGL2DHelper gl2DHelper;

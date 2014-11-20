@@ -31,6 +31,8 @@ public:
 
 	int GetNumberOfFaces();
 
+	void ResetAll();
+
 	glm::vec3 GetCombinedCenterPoint();
 private:
 	int numberOfVertices = 0;

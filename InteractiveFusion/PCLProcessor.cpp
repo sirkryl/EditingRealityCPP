@@ -812,7 +812,7 @@ bool PCLProcessor::ConvertToCloud(std::vector<Vertex> startingVertices, std::vec
 	return true;
 }
 
-bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> allVertices, std::vector<Vertex> &vertices, std::vector<Triangle> &indices)
+bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> allVertices, std::vector<Vertex> &vertices, std::vector<Triangle> &indices, bool isPlane)
 {
 	//get clustered cloud at clusterIndex
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cluster = clusteredClouds[clusterIndex];
@@ -863,7 +863,7 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> a
 	// THIS IS FOR WALL & FLOOR CROPPING
 	cDebug::DbgOut(L"clusterIndex:", clusterIndex);
 	cDebug::DbgOut(L"planeCoefficients size:", (int)planeCoefficients.size());
-	if (clusterIndex >= planeCoefficients.size())
+	if (!isPlane)
 	{
 		glm::vec3 overallCenterPoint = meshHelper.GetCombinedCenterPoint();
 		for (int i = 0; i < planeCoefficients.size(); i++)
@@ -883,6 +883,7 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> a
 			}
 			cDebug::DbgOut(L"max dimension: ", pIndex);
 			int dimension;
+			cDebug::DbgOut(L"clusterIndex maybe false?", clusterIndex);
 			if (planeCoefficients[i]->values[pIndex] > 0)
 			{
 				if (iO < 0.0f)

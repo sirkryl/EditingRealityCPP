@@ -14,7 +14,6 @@
 #include<vcg/complex/algorithms/update/normal.h>
 
 VCGMeshContainer::VCGMeshContainer() {
-	cDebug::DbgOut(L"vcg mesh init");
 	orientation.reserve(3);
 	orientation.push_back(0);
 	orientation.push_back(0);
@@ -27,7 +26,11 @@ VCGMeshContainer::VCGMeshContainer() {
 
 VCGMeshContainer::~VCGMeshContainer() { }
 
-
+void VCGMeshContainer::Load2DMesh(const char* filename)
+{
+	vcg::tri::io::ImporterPLY<VCGMesh>::Open(currentMesh, filename);
+	is2D = true;
+}
 
 void VCGMeshContainer::LoadMesh(const char* filename)
 {
@@ -228,8 +231,6 @@ void VCGMeshContainer::ParseData()
 	vertices.clear();
 	indices.clear();
 
-	bBoxVertices.clear();
-	bBoxIndices.clear();
 	lowerBounds.x = 99999.0f;
 	lowerBounds.y = 99999.0f;
 	lowerBounds.z = 99999.0f;
@@ -239,7 +240,6 @@ void VCGMeshContainer::ParseData()
 
 	std::clock_t start;
 	double duration;
-	glm::vec4 color = colorCoding::IntToColor(colorCode);
 	start = std::clock();
 	VCGMesh::VertexIterator vi;
 	std::vector<int> VertexId((currentMesh).vert.size());
@@ -269,18 +269,6 @@ void VCGMeshContainer::ParseData()
 		upperBounds[1] = max(upperBounds[1], vertex.y);
 		upperBounds[2] = max(upperBounds[2], vertex.z);
 
-		Vertex bBoxVertex;
-		bBoxVertex.x = vertex.x;
-		bBoxVertex.y = vertex.y;
-		bBoxVertex.z = vertex.z;
-		bBoxVertex.normal_x = vertex.normal_x;
-		bBoxVertex.normal_y = vertex.normal_y;
-		bBoxVertex.normal_z = vertex.normal_z;
-		bBoxVertex.r = color.r;
-		bBoxVertex.g = color.g;
-		bBoxVertex.b = color.b;
-		bBoxVertices.push_back(bBoxVertex);
-
 		numvert++;
 	}
 	vertNum = (currentMesh).vn;
@@ -296,7 +284,6 @@ void VCGMeshContainer::ParseData()
 		triangle.v3 = VertexId[vcg::tri::Index((currentMesh), (*fi).V(2))];
 
 		indices.push_back(triangle);
-		bBoxIndices.push_back(triangle);
 	}
 
 
@@ -389,16 +376,6 @@ void VCGMeshContainer::GenerateVAO()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 3));
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 6));
-
-	glGenVertexArrays(1, &bbVAO);
-	glBindVertexArray(bbVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, bbVBO);
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 3));
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 6));
 }
 
 void VCGMeshContainer::GenerateBOs()
@@ -414,20 +391,6 @@ void VCGMeshContainer::GenerateBOs()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Triangle), &indices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	glGenBuffers(1, &bbVBO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, bbVBO);
-	glBufferData(GL_ARRAY_BUFFER, bBoxVertices.size() * sizeof(Vertex), &bBoxVertices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glGenBuffers(1, &bbIBO);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, bBoxIndices.size() * sizeof(Triangle), &bBoxIndices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	
 }
 
 
@@ -467,19 +430,33 @@ void VCGMeshContainer::ToggleSelectedColor(bool flag)
 void VCGMeshContainer::Draw()
 {
 	shaderColor.UseProgram();
-	shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
-	shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
+	shaderColor.SetUniform("colorPicking", false);
 	glm::mat4 modelMatrix;
-	if (!isSelected || previewSelection)
+	if (is2D)
 	{
-		//if (previewSelection)
-		//modelMatrix = snapTransform * glm::translate(glm::mat4(1.0), translation);
-		//else
-		modelMatrix = glm::translate(glm::mat4(1.0), translation);
+		shaderColor.SetUniform("matrices.projectionMatrix", glm::mat4(1.0f));
+		shaderColor.SetUniform("matrices.viewMatrix", glm::mat4(1.0f));
+		float hRatio = (float)openGLWin.glControl.GetViewportHeight() / (float)openGLWin.glControl.GetViewportWidth();
+		glm::mat4 twoDScaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(hRatio, 1.0f, 1.0f));
+
+		modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.95f - hRatio*0.15f, -0.65f, 0.0f)) * twoDScaleMatrix;
 	}
-	else if (!colorSelection)
+	else
 	{
-		modelMatrix = cursorTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+		shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
+		shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
+	
+		if (!isSelected || previewSelection)
+		{
+			//if (previewSelection)
+			//modelMatrix = snapTransform * glm::translate(glm::mat4(1.0), translation);
+			//else
+			modelMatrix = glm::translate(glm::mat4(1.0), translation);
+		}
+		else if (!colorSelection)
+		{
+			modelMatrix = cursorTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+		}
 	}
 	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
 
@@ -494,24 +471,40 @@ void VCGMeshContainer::Draw()
 void VCGMeshContainer::DrawBB()
 {
 	shaderColor.UseProgram();
-	shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
-	shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
+	shaderColor.SetUniform("colorPicking", true);
+	shaderColor.SetUniform("pickColor", colorCoding::IntToColor(colorCode));
 	glm::mat4 modelMatrix;
-	if (!isSelected || previewSelection)
+	if (is2D)
 	{
-		//if (previewSelection)
-		//modelMatrix = snapTransform * glm::translate(glm::mat4(1.0), translation);
-		//else
-		modelMatrix = glm::translate(glm::mat4(1.0), translation);
+		shaderColor.SetUniform("matrices.projectionMatrix", glm::mat4(1.0f));
+		shaderColor.SetUniform("matrices.viewMatrix", glm::mat4(1.0f));
+		float hRatio = (float)openGLWin.glControl.GetViewportHeight() / (float)openGLWin.glControl.GetViewportWidth();
+		glm::mat4 twoDScaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(hRatio, 1.0f, 1.0f));
+
+		modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.95f - hRatio*0.15f, -0.65f, 0.0f)) * twoDScaleMatrix;
 	}
-	else if (!colorSelection)
+	else
 	{
-		modelMatrix = cursorTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+		shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
+		shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
+
+		if (!isSelected || previewSelection)
+		{
+			//if (previewSelection)
+			//modelMatrix = snapTransform * glm::translate(glm::mat4(1.0), translation);
+			//else
+			modelMatrix = glm::translate(glm::mat4(1.0), translation);
+		}
+		else if (!colorSelection)
+		{
+			modelMatrix = cursorTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+		}
 	}
 	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
-	glBindVertexArray(bbVAO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbIBO);
-	glDrawElements(GL_TRIANGLES, bBoxIndices.size()*3, GL_UNSIGNED_INT, (GLvoid*)0);
+
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+	glDrawElements(GL_TRIANGLES, indices.size() * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	glUseProgram(0);
@@ -558,17 +551,19 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 	upperBounds = glm::vec3(-9999.0f, -9999.0f, -9999.0f);
 
 	glm::mat4 combinedTranslation = (snapTransform * pointTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform);
-
+	glm::mat4 normalTranslation = glm::transpose(glm::inverse(glm::mat4(combinedTranslation)));
 	int normalCount = 0;
 	for (int i = 0; i < vertices.size(); i += 1)
 	{
 		glm::vec4 tmp = glm::vec4(vertices[i].x, vertices[i].y, vertices[i].z, 1.0f);
-		glm::vec4 tmpNormal = glm::vec4(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z, 1.0f);
+		glm::vec4 tmpNormal = glm::vec4(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z, 0.0f);
 
 		//tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
 		//if (orien == -1)
 
-		tmpNormal = combinedTranslation * tmpNormal;
+		tmpNormal = normalTranslation * tmpNormal;
+		tmpNormal = glm::normalize(tmpNormal);
+		
 		tmp = combinedTranslation * tmp;
 
 		//if (doSnap)
@@ -587,13 +582,6 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 		lowerBounds.y = min(lowerBounds.y, tmp.y);
 		upperBounds.z = max(upperBounds.z, tmp.z);
 		lowerBounds.z = min(lowerBounds.z, tmp.z);
-
-		bBoxVertices[i].x = tmp.x;
-		bBoxVertices[i].y = tmp.y;
-		bBoxVertices[i].z = tmp.z;
-		bBoxVertices[i].normal_x = tmpNormal.x;
-		bBoxVertices[i].normal_y = tmpNormal.y;
-		bBoxVertices[i].normal_z = tmpNormal.z;
 
 		normalCount += 3;
 	}
@@ -619,10 +607,6 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, bbVBO);
-	glBufferData(GL_ARRAY_BUFFER, bBoxVertices.size() * sizeof(Vertex), &bBoxVertices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -732,7 +716,7 @@ bool VCGMeshContainer::GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm:
 			glm::vec3 edge2 = v2 - v0;
 			glm::vec3 pVec = glm::cross(rayDirection, edge2);
 			float det = glm::dot(edge1, pVec);
-			if (det > -0.00001f && det < 0.00001f)
+			if (det > -0.00000000000000000000000000000001f && det < 0.0000000000000000000000000000001f)
 				continue;
 			float invDet = 1 / det;
 			glm::vec3 tVec = nearPoint - v0;
@@ -823,13 +807,8 @@ void VCGMeshContainer::ClearMesh()
 {
 	currentMesh.Clear();
 	glDeleteBuffers(1, &vbo);
-	glDeleteBuffers(1, &bbVBO);
-	glDeleteBuffers(1, &bbIBO);
 	glDeleteBuffers(1, &ibo);
 	glDeleteVertexArrays(1, &vao);
-	glDeleteVertexArrays(1, &bbVAO);
-	bBoxVertices.clear();
-	bBoxIndices.clear();
 	vertices.clear();
 	indices.clear();
 	vertNum = 0;
@@ -933,14 +912,6 @@ void VCGMeshContainer::UpdateBuffers()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Triangle), &indices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, bbVBO);
-	glBufferData(GL_ARRAY_BUFFER, bBoxVertices.size() * sizeof(Vertex), &bBoxVertices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, bBoxIndices.size() * sizeof(Triangle), &bBoxIndices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 int VCGMeshContainer::FillHoles(int holeSize)
@@ -1026,6 +997,22 @@ std::vector<int> VCGMeshContainer::GetOrientation()
 		return orientation;
 	}
 	return orientation;
+}
+
+
+void VCGMeshContainer::SetDuplicate(bool flag)
+{
+	isDuplicate = flag;
+}
+
+bool VCGMeshContainer::IsDuplicate()
+{
+	return isDuplicate;
+}
+
+void VCGMeshContainer::Set2D(bool flag)
+{
+	is2D = flag;
 }
 
 void VCGMeshContainer::SetWall(bool flag)

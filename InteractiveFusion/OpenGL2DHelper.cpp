@@ -1,11 +1,11 @@
 #include "OpenGL2DHelper.h"
 
-void OpenGL2DHelper::InitialLoadFromFile(const char* fileName)
+void OpenGL2DHelper::InitialLoadFromFile(const char* fileName, int colorCode)
 {
-	shared_ptr<Mesh2D> meshTo(new Mesh2D);
+	shared_ptr<VCGMeshContainer> meshTo(new VCGMeshContainer);
 	//meshTo->SetColorCode(100);
-	meshTo->Load2dMesh(fileName);
-	meshTo->SetColorCode(TRASH_BIN_COLOR);
+	meshTo->Load2DMesh(fileName);
+	meshTo->SetColorCode(colorCode);
 	meshTo->CleanMesh();
 	meshTo->ParseData();
 	//mesh->GenerateBOs();
@@ -20,12 +20,12 @@ void OpenGL2DHelper::GenerateBuffers()
 	cDebug::DbgOut(L"2D Generate Buffers");
 	//numberOfVertices = 0;
 	//numberOfFaces = 0;
-	for (vector <shared_ptr<Mesh2D>>::iterator mI = meshData2d.begin(); mI != meshData2d.end(); ++mI)
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData2d.begin(); mI != meshData2d.end(); ++mI)
 	{
-		(*mI)->GenerateBO();
+		(*mI)->GenerateBOs();
 
 	}
-	for (vector <shared_ptr<Mesh2D>>::iterator mI = meshData2d.begin(); mI != meshData2d.end(); ++mI)
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData2d.begin(); mI != meshData2d.end(); ++mI)
 	{
 		(*mI)->GenerateVAO();
 	}
@@ -47,7 +47,7 @@ void OpenGL2DHelper::DrawAll()
 void OpenGL2DHelper::DrawAllBB()
 {
 	//cDebug::DbgOut(L"2D DrawAll");
-	for (vector <shared_ptr<Mesh2D>>::iterator mI = meshData2d.begin(); mI != meshData2d.end(); ++mI)
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData2d.begin(); mI != meshData2d.end(); ++mI)
 	{
 		(*mI)->DrawBB();
 	}
@@ -55,7 +55,7 @@ void OpenGL2DHelper::DrawAllBB()
 
 void OpenGL2DHelper::CleanUp()
 {
-	for (vector <shared_ptr<Mesh2D>>::iterator mI = meshData2d.begin(); mI != meshData2d.end(); ++mI)
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData2d.begin(); mI != meshData2d.end(); ++mI)
 	{
 		(*mI)->ClearMesh();
 	}

@@ -139,7 +139,7 @@ int WINAPI SegThreadMain()
 		{
 			std::vector<Vertex> clusterVertices;
 			std::vector<Triangle> clusterIndices;
-			pclProcessor.ConvertToTriangleMesh(i, startingVertices, clusterVertices, clusterIndices);
+			pclProcessor.ConvertToTriangleMesh(i, startingVertices, clusterVertices, clusterIndices, true);
 			cDebug::DbgOut(L"Converted Plane Mesh #", i);
 			shared_ptr<VCGMeshContainer> mesh(new VCGMeshContainer);
 			mesh->SetColorCode(i + 1);
@@ -157,20 +157,21 @@ int WINAPI SegThreadMain()
 			cDebug::DbgOut(_T("Clean PlaneSeg #1"));
 			mesh->CleanMesh();
 			mesh->RemoveSmallComponents(clusterVertices.size() / 5);
-			//cDebug::DbgOut(_T("Clean PlaneSeg #2"));
-			//mesh->CleanMesh();
+
 			mesh->RemoveNonManifoldFace();
-			mesh->FillHoles(10000);
+			mesh->FillHoles(100000);
 			//cDebug::DbgOut(_T("Clean PlaneSeg #3"));
-			//mesh->CleanMesh();
-			mesh->RemoveSmallComponents(clusterVertices.size() / 2);
+			total = mesh->MergeCloseVertices(threshold);
+			cDebug::DbgOut(_T("Merged close vertices 22: "), total);
+			mesh->CleanMesh();
+
+			//mesh->RemoveSmallComponents(clusterVertices.size() / 3);
 			//mesh->CleanMesh();
 			mesh->ParseData();
 			mesh->SetPlaneParameters(pclProcessor.planeCoefficients[i]->values[0], pclProcessor.planeCoefficients[i]->values[1],
 				pclProcessor.planeCoefficients[i]->values[2], pclProcessor.planeCoefficients[i]->values[3]);
 			planeC = glm::vec4(pclProcessor.planeCoefficients[i]->values[0], pclProcessor.planeCoefficients[i]->values[1], pclProcessor.planeCoefficients[i]->values[2], pclProcessor.planeCoefficients[i]->values[3]);
-			//cDebug::DbgOut(L"vertices: ", (int)mesh->GetNumberOfVertices());
-			//cDebug::DbgOut(L"indices: " + (int)mesh->GetNumberOfTriangles());
+			
 			meshData_segTmp.push_back(mesh);
 		}
 	}
@@ -213,7 +214,7 @@ int WINAPI SegThreadMain()
 	{
 		std::vector<Vertex> clusterVertices;
 		std::vector<Triangle> clusterIndices;
-		if (!pclProcessor.ConvertToTriangleMesh(i, startingVertices, clusterVertices, clusterIndices))
+		if (!pclProcessor.ConvertToTriangleMesh(i, startingVertices, clusterVertices, clusterIndices, false))
 			continue;
 		//cDebug::DbgOut(L"Converted Triangle Mesh #",i);
 		shared_ptr<VCGMeshContainer> mesh(new VCGMeshContainer);
