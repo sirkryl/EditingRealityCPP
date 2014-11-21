@@ -10,6 +10,9 @@
 #include <NuiSensorChooserUI.h>
 #include "KinectFusionParams.h"
 #include "KinectFusionProcessor.h"
+
+enum FusionState { START, SCAN };
+
 /// <summary>
 /// KinectFusionExplorer sample.
 /// </summary>
@@ -27,6 +30,8 @@ public:
     /// Destructor
     /// </summary>
     ~CKinectFusionExplorer();
+
+
 
 	//int WINAPI CKinectFusionExplorer::ThreadMain(HWND parent);
 	//static LRESULT CALLBACK CKinectFusionExplorer::RenderWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -50,6 +55,9 @@ public:
     /// <param name="wParam">message data</param>
     /// <param name="lParam">additional message data</param>
     /// <returns>result of message processing</returns>
+
+	LRESULT CALLBACK            StartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
     LRESULT CALLBACK            DlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	
     /// <summary>
@@ -59,6 +67,11 @@ public:
     /// <param name="nCmdShow"></param>
     int                         Run(HWND parent, HINSTANCE hInstance, int nCmdShow, HWND &fusionHandle);
 
+	FusionState GetWindowState();
+
+	void SetWindowState(FusionState fState);
+
+	void MoveUIOnResize();
 
 	/// <summary>
 	/// Initialize the UI controls
@@ -75,10 +88,13 @@ public:
 	/// </summary>
 	void                        UpdateHSliders();
 
+	void HideAllUIElements();
+
 private:
     HWND                        m_hWnd;
     NuiSensorChooserUI*         m_pSensorChooserUI;
 
+	FusionState state;
     /// <summary>
     /// Direct2D
     /// </summary>
@@ -91,6 +107,12 @@ private:
     /// Main processing function
     /// </summary>
     void                        Update();
+
+	void InitializeFusionUI();
+
+	void HandleKeyInput();
+
+	
 
     /// <summary>
     /// Save a mesh

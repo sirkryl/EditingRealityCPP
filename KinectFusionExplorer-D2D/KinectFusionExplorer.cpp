@@ -6,6 +6,8 @@
 
 // System includes
 #include "stdafx.h"
+#include <chrono>
+#include <thread>
 
 // Project includes
 #include "KFKeys.h"
@@ -25,12 +27,17 @@ bool debugMode = true;
 bool interactionMode = false;
 HWND hWndApp;
 HWND hButtonTestOne, hButtonTestTwo, hButtonInteractionMode;
+HWND hButtonStart;
 HWND hButtonResetReconstruction;
 HWND fusionDebugHandle;
+HWND hStatusText, hStatusTextSmall, hCountdownText;
+
+std::vector<HWND> fusionUiElements;
+
 HBRUSH bDefaultBrush, bPressedBrush;
 HBRUSH bBackground = CreateSolidBrush(RGB(0, 0, 0));
 HPEN bDefaultPen, bPressedPen;
-HFONT guiFont;
+HFONT guiFont, countdownFont, smallFont;
 void(*ptrStartOpenGL)(KinectFusionProcessor*,int);
 #define MIN_DEPTH_DISTANCE_MM 350   // Must be greater than 0
 #define MAX_DEPTH_DISTANCE_MM 8000
@@ -120,6 +127,8 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 		return 0;
 	}
 
+	
+
 	hWndApp = CreateDialogParamW(
 		hInstance,
 		MAKEINTRESOURCE(IDD_APP),
@@ -132,6 +141,9 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	ShowWindow(fusionDebugHandle, SW_HIDE);
 	// Show window
 	guiFont = CreateFont(40, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"FreeSans");
+	countdownFont = CreateFont(300, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"FreeSans");
+	smallFont = CreateFont(25, 0, 0, 0, FW_LIGHT, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"FreeSans");
+
 	bDefaultBrush = CreateSolidBrush(RGB(20, 20, 20));
 	bPressedBrush = CreateSolidBrush(RGB(40, 40, 40));
 	bDefaultPen = CreatePen(PS_SOLID, 2, RGB(240, 240, 240));
@@ -144,6 +156,35 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	ShowWindow(hWndApp, SW_SHOWMAXIMIZED);
 	//HANDLE thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&ThreadMain, (LPVOID)hWndApp, 0, 0);
 	
+	hButtonStart = CreateWindowEx(0, L"Button", L"Start", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_BUTTON_START, hInstance, 0);
+
+	hStatusText = GetDlgItem(hWndApp, IDC_FUSION_STATIC_STATUS);
+	
+	SetDlgItemText(hWndApp, IDC_FUSION_STATIC_STATUS, L"Let's begin by scanning your scene.");
+	SendMessage(hStatusText, WM_SETFONT, (WPARAM)guiFont, TRUE);
+
+	hStatusTextSmall = GetDlgItem(hWndApp, IDC_FUSION_STATIC_STATUS_SMALL);
+
+	SetDlgItemText(hWndApp, IDC_FUSION_STATIC_STATUS_SMALL, L"Please move the sensor slowly and smoothly.");
+	SendMessage(hStatusTextSmall, WM_SETFONT, (WPARAM)smallFont, TRUE);
+	//ShowWindow(hStatusText, SW_HIDE);
+
+	hCountdownText = GetDlgItem(hWndApp, IDC_FUSION_STATIC_COUNTDOWN);
+	SetDlgItemText(hWndApp, IDC_FUSION_STATIC_COUNTDOWN, L"3");
+	SendMessage(hCountdownText, WM_SETFONT, (WPARAM)countdownFont, TRUE);
+
+	fusionUiElements.push_back(hButtonTestOne);
+	fusionUiElements.push_back(hButtonTestTwo);
+	fusionUiElements.push_back(hButtonInteractionMode);
+	fusionUiElements.push_back(hButtonResetReconstruction);
+	fusionUiElements.push_back(hButtonStart);
+	fusionUiElements.push_back(hStatusText);
+	fusionUiElements.push_back(hStatusTextSmall);
+	fusionUiElements.push_back(hCountdownText);
+	fusionUiElements.push_back(GetDlgItem(m_hWnd, IDC_RECONSTRUCTION_VIEW));
+
+	SetWindowState(START);
+
 	// Main message loop
 	while (WM_QUIT != msg.message)
 	{
@@ -214,11 +255,109 @@ LRESULT CALLBACK CKinectFusionExplorer::MessageRouter(
 
 	if (pThis)
 	{
+			
+		if (pThis->GetWindowState() == SCAN)
 			return pThis->DlgProc(hWnd, uMsg, wParam, lParam);
+		else
+			return pThis->StartProc(hWnd, uMsg, wParam, lParam);
 	}
 
 	return 0;
 }
+
+LRESULT CALLBACK CKinectFusionExplorer::StartProc(
+	HWND hWnd,
+	UINT message,
+	WPARAM wParam,
+	LPARAM lParam)
+{
+	HandleKeyInput();
+
+	switch (message)
+	{
+	case WM_INITDIALOG:						  // Bind application window handle
+		
+		m_hWnd = hWnd;
+		break;
+		// Handle button press
+	case WM_COMMAND:
+		ProcessUI(wParam, lParam);
+		break;
+
+		// Handle sliders
+	case  WM_HSCROLL:
+		UpdateHSliders();
+		break;
+	case WM_CTLCOLORDLG:
+		return (LRESULT)bBackground;
+		break;
+	case WM_CTLCOLORSTATIC:
+		if ((HWND)lParam == hStatusText ||
+			(HWND)lParam == hCountdownText ||
+			(HWND)lParam == hStatusTextSmall)
+		{
+
+			HDC hdc = reinterpret_cast<HDC>(wParam);
+			SetBkMode((HDC)wParam, TRANSPARENT);
+			SetTextColor(hdc, RGB(255, 255, 255));
+
+			return (LRESULT)bBackground;
+		}
+		break;
+	case WM_UPDATESENSORSTATUS:
+		if (m_pSensorChooserUI != nullptr)
+		{
+			m_pSensorChooserUI->UpdateSensorStatus(static_cast<DWORD>(wParam));
+		}
+		break;
+	case WM_SIZE:
+		MoveUIOnResize();
+		break;
+	case WM_DRAWITEM:
+	{
+		if (IDC_BUTTON_INTERACTION_MODE == LOWORD(wParam)
+			|| IDC_BUTTON_TEST_INTERACTION == LOWORD(wParam)
+			|| IDC_BUTTON_TEST_OPENGL == LOWORD(wParam)
+			|| IDC_BUTTON_RESET_RECONSTRUCTION == LOWORD(wParam)
+			|| IDC_BUTTON_START == LOWORD(wParam))
+		{
+			LPDRAWITEMSTRUCT Item;
+			Item = (LPDRAWITEMSTRUCT)lParam;
+			SelectObject(Item->hDC, guiFont);
+			FillRect(Item->hDC, &Item->rcItem, bBackground);
+			SelectObject(Item->hDC, bDefaultBrush);
+			if (Item->itemState & ODS_SELECTED)
+			{
+				SetTextColor(Item->hDC, RGB(245, 245, 245));
+				SelectObject(Item->hDC, bPressedBrush);
+				SelectObject(Item->hDC, bPressedPen);
+			}
+			else
+			{
+				SetTextColor(Item->hDC, RGB(240, 240, 240));
+				SelectObject(Item->hDC, bDefaultPen);
+
+			}
+			SetBkMode(Item->hDC, TRANSPARENT);
+			RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
+			int len;
+			len = GetWindowTextLength(Item->hwndItem);
+			LPSTR lpBuff;
+			lpBuff = new char[len + 1];
+			GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
+
+			DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			return TRUE;
+		}
+	}
+		break;
+	}
+
+
+	return FALSE;
+}
+
 
 /// <summary>
 /// Handle windows messages for the class instance
@@ -234,31 +373,7 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 	WPARAM wParam,
 	LPARAM lParam)
 {
-	if (KFKeys::GetKeyStateOnce(VK_F10))
-	{
-		//cDebug::DbgOut(L"Keydown indeed");
-		if (IsWindowVisible(fusionDebugHandle))
-		{
-			ShowWindow(hButtonInteractionMode, SW_SHOW);
-			ShowWindow(hButtonResetReconstruction, SW_SHOW);
-			ShowWindow(hButtonTestOne, SW_SHOW);
-			ShowWindow(hButtonTestTwo, SW_SHOW);
-			ShowWindow(fusionDebugHandle, SW_HIDE);
-		}
-		else
-		{
-			RECT rRect;
-			GetClientRect(hWnd, &rRect);
-			ShowWindow(fusionDebugHandle, SW_SHOW);
-			ShowWindow(hButtonInteractionMode, SW_HIDE);
-			ShowWindow(hButtonResetReconstruction, SW_HIDE);
-			ShowWindow(hButtonTestOne, SW_HIDE);
-			ShowWindow(hButtonTestTwo, SW_HIDE);
-			MoveWindow(fusionDebugHandle, rRect.right - 400, 0, 400, rRect.bottom, true);
-			InitializeUIControls();
-		}
-
-	}
+	HandleKeyInput();
 
 	switch (message)
 	{
@@ -266,8 +381,6 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 	{
 		// Bind application window handle
 		m_hWnd = hWnd;
-
-		
 
 		// Init Direct2D
 		D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pD2DFactory);
@@ -364,7 +477,19 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 		}
 	}
 		break;
+	case WM_CTLCOLORSTATIC:
+		if ((HWND)lParam == hStatusText ||
+			(HWND)lParam == hCountdownText ||
+			(HWND)lParam == hStatusTextSmall)
+		{
+			
+			HDC hdc = reinterpret_cast<HDC>(wParam);
+			SetBkMode((HDC)wParam, TRANSPARENT);
+			SetTextColor(hdc, RGB(255, 255, 255));
 
+			return (LRESULT)bBackground;
+		}
+		break;
 	case WM_FRAMEREADY:
 		HandleCompletedFrame();
 		break;
@@ -392,24 +517,8 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 		break;
 	case WM_SIZE:
 	{
-					OutputDebugString(L"WM_SIZE");
-		RECT rRect;
-		GetClientRect(GetParent(hWnd), &rRect);
-		int recoHeight = (rRect.right - 400)*ratio;
-		int recoWidth = rRect.right-400;
-		if (recoHeight >= rRect.bottom - 30)
-		{
-			recoHeight = rRect.bottom - 30;
-			recoWidth = recoHeight/ratio;
-		}
-		MoveWindow(GetDlgItem(hWnd, IDC_RECONSTRUCTION_VIEW), 0, 0, recoWidth, recoHeight, true);
-		MoveWindow(GetDlgItem(hWnd, IDC_BUTTON_INTERACTION_MODE), rRect.right - 400, 50, 300, 50, true);
-		MoveWindow(GetDlgItem(hWnd, IDC_BUTTON_TEST_INTERACTION), rRect.right - 400, 150, 300, 50, true);
-		MoveWindow(GetDlgItem(hWnd, IDC_BUTTON_TEST_OPENGL), rRect.right - 400, 250, 300, 50, true);
-		MoveWindow(GetDlgItem(hWnd, IDC_BUTTON_RESET_RECONSTRUCTION), rRect.right - 400, rRect.bottom - 250, 300, 50, true);
-		MoveWindow(GetDlgItem(hWnd, IDC_FRAMES_PER_SECOND), 0, rRect.bottom - 30, 100, 30, true);
-		MoveWindow(GetDlgItem(hWnd, IDC_STATUS), 100, rRect.bottom - 30, rRect.right - 100, 30, true);
-		MoveWindow(fusionDebugHandle, rRect.right - 400, 0, 400, rRect.bottom, true);
+		MoveUIOnResize();
+		
 	}
 		break;
 	case WM_DRAWITEM:
@@ -418,7 +527,8 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 		if (IDC_BUTTON_INTERACTION_MODE == LOWORD(wParam)
 			|| IDC_BUTTON_TEST_INTERACTION == LOWORD(wParam)
 			|| IDC_BUTTON_TEST_OPENGL == LOWORD(wParam)
-			|| IDC_BUTTON_RESET_RECONSTRUCTION == LOWORD(wParam))
+			|| IDC_BUTTON_RESET_RECONSTRUCTION == LOWORD(wParam)
+			|| IDC_BUTTON_START == LOWORD(wParam))
 		{
 			LPDRAWITEMSTRUCT Item;
 			Item = (LPDRAWITEMSTRUCT)lParam;
@@ -897,6 +1007,28 @@ void CKinectFusionExplorer::InitializeUIControls()
 	}
 }
 
+
+int WINAPI CountdownThread()
+{
+	
+	int secondTimer = 3;
+	CKinectFusionExplorer* pThis = reinterpret_cast<CKinectFusionExplorer*>(::GetWindowLongPtr(hWndApp, GWLP_USERDATA));
+	pThis->HideAllUIElements();
+	ShowWindow(hCountdownText, SW_SHOW);
+	//SetDlgItemText(hWndApp, IDC_FUSION_STATIC_COUNTDOWN, L"3");
+	//CKinectFusionExplorer* explorer = reinterpret_cast<CKinectFusionExplorer*>(exp);
+	while (secondTimer > 0)
+	{
+		SetDlgItemText(hWndApp, IDC_FUSION_STATIC_COUNTDOWN, std::to_wstring(secondTimer).c_str());
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		secondTimer--;
+	}
+	//OutputDebugString(L"wel")
+	pThis->SetWindowState(SCAN);
+
+	return 0;
+}
+
 /// <summary>
 /// Process the UI inputs
 /// </summary>
@@ -1001,6 +1133,11 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 		m_processor.SetParams(m_params);
 
 		m_bSavingMesh = false;
+	}
+	if (IDC_BUTTON_START == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&CountdownThread, 0, 0, 0);
+		//SetWindowState(SCAN);
 	}
 	if (IDC_BUTTON_INTERACTION_MODE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -1230,4 +1367,140 @@ void CKinectFusionExplorer::SetFramesPerSecond(float fFramesPerSecond)
 
 		SendDlgItemMessageW(m_hWnd, IDC_FRAMES_PER_SECOND, WM_SETTEXT, 0, (LPARAM)str);
 	}
+}
+
+void CKinectFusionExplorer::HandleKeyInput()
+{
+	if (KFKeys::GetKeyStateOnce(VK_F10))
+	{
+		//cDebug::DbgOut(L"Keydown indeed");
+		if (IsWindowVisible(fusionDebugHandle))
+		{
+			ShowWindow(hButtonInteractionMode, SW_SHOW);
+			ShowWindow(hButtonResetReconstruction, SW_SHOW);
+			ShowWindow(hButtonTestOne, SW_SHOW);
+			ShowWindow(hButtonTestTwo, SW_SHOW);
+			ShowWindow(fusionDebugHandle, SW_HIDE);
+		}
+		else
+		{
+			RECT rRect;
+			GetClientRect(m_hWnd, &rRect);
+			ShowWindow(fusionDebugHandle, SW_SHOW);
+			ShowWindow(hButtonInteractionMode, SW_HIDE);
+			ShowWindow(hButtonResetReconstruction, SW_HIDE);
+			ShowWindow(hButtonTestOne, SW_HIDE);
+			ShowWindow(hButtonTestTwo, SW_HIDE);
+			MoveWindow(fusionDebugHandle, rRect.right - 400, 0, 400, rRect.bottom, true);
+			InitializeUIControls();
+		}
+
+	}
+}
+
+void CKinectFusionExplorer::MoveUIOnResize()
+{
+	RECT rRect;
+	GetClientRect(GetParent(m_hWnd), &rRect);
+
+	if (GetWindowState() == SCAN)
+	{
+		int recoHeight = (rRect.right - 400)*ratio;
+		int recoWidth = rRect.right - 400;
+		if (recoHeight >= rRect.bottom - 30)
+		{
+			recoHeight = rRect.bottom - 30;
+			recoWidth = recoHeight / ratio;
+		}
+		MoveWindow(GetDlgItem(m_hWnd, IDC_RECONSTRUCTION_VIEW), 0, 0, recoWidth, recoHeight, true);
+		MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_INTERACTION_MODE), rRect.right - 400, 50, 300, 50, true);
+		MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_INTERACTION), rRect.right - 400, 150, 300, 50, true);
+		MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_OPENGL), rRect.right - 400, 250, 300, 50, true);
+		MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_RESET_RECONSTRUCTION), rRect.right - 400, rRect.bottom - 250, 300, 50, true);
+	}
+	else if (GetWindowState() == START)
+	{
+		//MoveWindow(hButtonYes, width / 2 - 175, height - 150, 150, 50, true);
+		//MoveWindow(hButtonNo, width / 2 + 25, height - 150, 150, 50, true);
+		RECT rect;
+		GetClientRect(hStatusText, &rect);
+		MoveWindow(hStatusText, rRect.right / 2 - 250, rRect.bottom / 2 - 60, 500, 40, true);
+		SetDlgItemText(m_hWnd, IDC_FUSION_STATIC_STATUS, L"Let's begin by scanning your scene.");
+
+		InvalidateRect(hStatusText, &rect, TRUE);
+		MapWindowPoints(hStatusText, m_hWnd, (POINT *)&rect, 2);
+		RedrawWindow(hStatusText, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
+
+		RECT smallRect;
+		GetClientRect(hStatusTextSmall, &smallRect);
+		MoveWindow(hStatusTextSmall, rRect.right / 2 - 250, rRect.bottom / 2 - 20, 500, 30, true);
+		SetDlgItemText(m_hWnd, IDC_FUSION_STATIC_STATUS_SMALL, L"Please move the sensor slowly and smoothly.");
+
+		InvalidateRect(hStatusTextSmall, &smallRect, TRUE);
+		MapWindowPoints(hStatusTextSmall, m_hWnd, (POINT *)&smallRect, 2);
+		RedrawWindow(hStatusTextSmall, &smallRect, NULL, RDW_ERASE | RDW_INVALIDATE);
+
+		MoveWindow(hButtonStart, rRect.right / 2 - 100, rRect.bottom / 2 + 20, 200, 50, true);
+
+
+		RECT cRect;
+		GetClientRect(hCountdownText, &cRect);
+		MoveWindow(hCountdownText, rRect.right / 2 - 250, rRect.bottom / 2 - 150, 500, 300, true);
+		//SetDlgItemText(m_hWnd, IDC_FUSION_STATIC_COUNTDOWN, L"3");
+
+		InvalidateRect(hCountdownText, &cRect, TRUE);
+		MapWindowPoints(hCountdownText, m_hWnd, (POINT *)&cRect, 2);
+		RedrawWindow(hCountdownText, &cRect, NULL, RDW_ERASE | RDW_INVALIDATE);
+
+
+
+
+		
+	}
+
+	MoveWindow(GetDlgItem(m_hWnd, IDC_FRAMES_PER_SECOND), 0, rRect.bottom - 30, 100, 30, true);
+	MoveWindow(GetDlgItem(m_hWnd, IDC_STATUS), 100, rRect.bottom - 30, rRect.right - 100, 30, true);
+	MoveWindow(fusionDebugHandle, rRect.right - 400, 0, 400, rRect.bottom, true);
+}
+
+void CKinectFusionExplorer::InitializeFusionUI()
+{
+
+}
+
+void CKinectFusionExplorer::HideAllUIElements()
+{
+	for (int i = 0; i < fusionUiElements.size(); i++)
+	{
+		ShowWindow (fusionUiElements[i], SW_HIDE);
+	}
+}
+
+FusionState CKinectFusionExplorer::GetWindowState()
+{
+	return state;
+}
+
+void CKinectFusionExplorer::SetWindowState(FusionState fState)
+{
+	state = fState;
+
+	HideAllUIElements();
+	MoveUIOnResize();
+	if (state == START)
+	{
+		ShowWindow(hButtonStart, SW_SHOW);
+		ShowWindow(hStatusText, SW_SHOW);
+		ShowWindow(hStatusTextSmall, SW_SHOW);
+	}
+	else if (state == SCAN)
+	{
+		ShowWindow(GetDlgItem(m_hWnd, IDC_RECONSTRUCTION_VIEW), SW_SHOW);
+		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_INTERACTION_MODE), SW_SHOW);
+		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_INTERACTION), SW_SHOW);
+		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_OPENGL), SW_SHOW);
+		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_RESET_RECONSTRUCTION), SW_SHOW);
+		DlgProc(m_hWnd, WM_INITDIALOG, 0, 0);
+	}
+	
 }

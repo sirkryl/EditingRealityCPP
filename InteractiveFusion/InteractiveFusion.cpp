@@ -52,7 +52,15 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 		0);
 
 	ShowWindow(openGLWin.parent, SW_SHOW);
+
+	uiFont = CreateFont(40, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"FreeSans");
+	hTextWalls = GetDlgItem(openGLWin.glWindowParent, IDC_STATIC_WALL);
+	SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
+	SendMessage(hTextWalls, WM_SETFONT, (WPARAM)uiFont, TRUE);
+	ShowWindow(hTextWalls, SW_HIDE);
+
 	openGLWin.SetWindowMode(SCANNING);
+	//openGLWin.SetWindowState(START);
 	StartKinectFusion(openGLWin.parent, hInstance, StartOpenGLThread, openGLWin.fusionHandle);
 }
 
@@ -107,6 +115,7 @@ void InteractiveFusion::SetWindowState(WindowState wState)
 		
 		//openGLWin.glControl.ResizeOpenGLViewportFull();
 	}
+	
 	RECT rRect; GetClientRect(GetParent(openGLWin.glWindowHandle), &rRect);
 	openGLWin.glControl.ResizeOpenGLViewportFull(rRect.right, rRect.bottom);
 	MoveButtonsOnResize();
@@ -196,7 +205,7 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	openGLWin.glWindowHandle = hWnd;
 
 
-	uiFont = CreateFont(40, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"FreeSans");
+	
 	statusFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
 	
 	//hbitmap = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BUTTON), IMAGE_BITMAP, 84, 36, LR_DEFAULTCOLOR);
@@ -236,10 +245,7 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	debugHandle = CreateDialog(openGLWin.appInstance, MAKEINTRESOURCE(IDD_DEBUG), hWnd, (DLGPROC)DebugDlgProc);
 	ShowWindow(debugHandle, SW_HIDE);
 
-	hTextWalls = GetDlgItem(openGLWin.glWindowParent, IDC_STATIC_WALL);
-	SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
-	SendMessage(hTextWalls, WM_SETFONT, (WPARAM)uiFont, TRUE);
-	ShowWindow(hTextWalls, SW_HIDE);
+	
 	ShowWindow(parent, SW_SHOWMAXIMIZED);
 
 
@@ -1076,34 +1082,45 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 
 void MoveButtonsOnResize()
 {
-	//RECT wRect;
-	//GetClientRect(openGLWin.glWindowHandle, &wRect);
-
-	int width = openGLWin.glControl.GetViewportWidth() + openGLWin.glControl.GetOffSetRight();
-	int height = openGLWin.glControl.GetViewportHeight() + openGLWin.glControl.GetOffSetBottom();
-	RECT rRect;
-	GetClientRect(debugHandle, &rRect);
-	MoveWindow(debugHandle, width - rRect.right, 0, rRect.right, rRect.bottom, true);
-	MoveWindow(hButtonYes, width / 2 - 175, height - 150, 150, 50, true);
-	MoveWindow(hButtonNo, width / 2 + 25, height - 150, 150, 50, true);
-	MoveWindow(hButtonExport, width - 200, height - 200, 150, 150, true);
-	MoveWindow(hButtonDelete, width - 200, height - 750, 128, 128, true);
-	MoveWindow(hButtonDuplicate, width - 200, 250, 150, 150, true);
-	MoveWindow(hButtonReset, width - 200, 50, 150, 150, true);
-
-	RECT sRect;
-	GetWindowRect(statusHandle, &sRect);
-	MoveWindow(statusHandle, 0, height - 30, width, 30, true);
-
-	RECT rect;
-	GetClientRect(hTextWalls, &rect);
-	MoveWindow(hTextWalls, width / 2 - 250, height - 200, 500, 40, true);
-	SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
+	if (openGLWin.GetWindowMode() == INTERACTION)
+	{
+		int width = openGLWin.glControl.GetViewportWidth() + openGLWin.glControl.GetOffSetRight();
+		int height = openGLWin.glControl.GetViewportHeight() + openGLWin.glControl.GetOffSetBottom();
 	
-	InvalidateRect(hTextWalls, &rect, TRUE);
-	MapWindowPoints(hTextWalls, openGLWin.glWindowHandle, (POINT *)&rect, 2);
-	RedrawWindow(hTextWalls, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
+		if (IsWindowVisible(debugHandle))
+		{
+			RECT rRect;
+			GetClientRect(debugHandle, &rRect);
+			MoveWindow(debugHandle, width - rRect.right, 0, rRect.right, rRect.bottom, true);
+		}
+	
+		if (openGLWin.GetWindowState() == DEFAULT)
+		{
+		
+			MoveWindow(hButtonExport, width - 200, height - 200, 150, 150, true);
+			MoveWindow(hButtonDelete, width - 200, height - 750, 128, 128, true);
+			MoveWindow(hButtonDuplicate, width - 200, 250, 150, 150, true);
+			MoveWindow(hButtonReset, width - 200, 50, 150, 150, true);
+		}
 
+		RECT sRect;
+		GetWindowRect(statusHandle, &sRect);
+		MoveWindow(statusHandle, 0, height - 30, width, 30, true);
+
+		if (openGLWin.GetWindowState() == WALL_SELECTION)
+		{
+			MoveWindow(hButtonYes, width / 2 - 175, height - 150, 150, 50, true);
+			MoveWindow(hButtonNo, width / 2 + 25, height - 150, 150, 50, true);
+			RECT rect;
+			GetClientRect(hTextWalls, &rect);
+			MoveWindow(hTextWalls, width / 2 - 250, height - 200, 500, 40, true);
+			SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
+	
+			InvalidateRect(hTextWalls, &rect, TRUE);
+			MapWindowPoints(hTextWalls, openGLWin.glWindowHandle, (POINT *)&rect, 2);
+			RedrawWindow(hTextWalls, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
+		}
+	}
 	/*RECT ddRect;
 	GetClientRect(hButtonDelete, &ddRect);
 	InvalidateRect(hButtonDelete, &ddRect, TRUE);*/
