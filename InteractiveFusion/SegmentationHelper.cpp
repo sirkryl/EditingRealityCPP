@@ -348,6 +348,17 @@ void SegmentationHelper::RenderPreview()
 	glEnable(GL_DEPTH_TEST);
 }
 
+void SegmentationHelper::ClearForResume()
+{
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData_segTmp.begin(); mI != meshData_segTmp.end(); ++mI)
+	{
+		(*mI)->ClearMesh();
+	}
+	meshData_segTmp.clear();
+
+	pclProcessor.ClearAll();
+}
+
 void SegmentationHelper::CleanUp()
 {
 	glDeleteBuffers(1, &segmentVBO);

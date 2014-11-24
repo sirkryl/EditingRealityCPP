@@ -8,6 +8,11 @@
 
 void MeshHelper::InitialLoadFromFile(const char* fileName)
 {
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		(*mI)->ClearMesh();
+	}
+	meshData.clear();
 	shared_ptr<VCGMeshContainer> mesh(new VCGMeshContainer);
 	mesh->SetColorCode(1);
 	mesh->LoadMesh(fileName);
@@ -99,7 +104,7 @@ void MeshHelper::DeleteMesh(int index)
 int MeshHelper::DuplicateMesh(int index)
 {
 	shared_ptr<VCGMeshContainer> mesh(new VCGMeshContainer);
-	mesh->SetColorCode(meshData.size() + 1);
+	mesh->SetColorCode(meshData.size() + 2);
 
 	mesh->ConvertToVCG(meshData[index]->GetVertices(), meshData[index]->GetIndices());
 	mesh->ParseData();

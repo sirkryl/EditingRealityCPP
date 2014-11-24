@@ -30,6 +30,8 @@ public:
 	int GetPlaneClusterCount();
 	int GetCloudSize();
 	std::vector<pcl::ModelCoefficients::Ptr> planeCoefficients;
+
+	void ClearAll();
 private:
 	
 	int clusterCount = 0;

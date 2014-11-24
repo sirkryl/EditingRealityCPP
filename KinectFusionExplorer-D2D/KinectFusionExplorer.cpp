@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include <chrono>
 #include <thread>
-
+#include <map>
 // Project includes
 #include "KFKeys.h"
 #include "resource.h"
@@ -24,21 +24,23 @@ LRESULT CALLBACK FusionDebugRouter(HWND hWnd, UINT message, WPARAM wParam, LPARA
 bool initDone = false;
 float ratio = 480.0f / 640.0f;
 bool debugMode = true;
+bool resumed = false;
 bool interactionMode = false;
 HWND hWndApp;
 HWND hButtonTestOne, hButtonTestTwo, hButtonInteractionMode;
 HWND hButtonStart;
 HWND hButtonResetReconstruction;
 HWND fusionDebugHandle;
-HWND hStatusText, hStatusTextSmall, hCountdownText;
+HWND hStatusText, hStatusTextSmall, hCountdownText, hHelpText;
 
 std::vector<HWND> fusionUiElements;
 
 HBRUSH bDefaultBrush, bPressedBrush;
 HBRUSH bBackground = CreateSolidBrush(RGB(0, 0, 0));
-HPEN bDefaultPen, bPressedPen;
+HPEN bDefaultPen, bPressedPen, bInactivePen;
 HFONT guiFont, countdownFont, smallFont;
-void(*ptrStartOpenGL)(KinectFusionProcessor*,int);
+
+void(*ptrStartOpenGL)(CKinectFusionExplorer*,int);
 #define MIN_DEPTH_DISTANCE_MM 350   // Must be greater than 0
 #define MAX_DEPTH_DISTANCE_MM 8000
 #define MIN_INTEGRATION_WEIGHT 1    // Must be greater than 0
@@ -57,7 +59,7 @@ void(*ptrStartOpenGL)(KinectFusionProcessor*,int);
 /// <param name="nCmdShow">whether to display minimized, maximized, or normally</param>
 /// <returns>status</returns>
 //int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
-void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(KinectFusionProcessor*, int), HWND &fusionHandle)
+void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(CKinectFusionExplorer*, int), HWND &fusionHandle)
 {
 	CKinectFusionExplorer application;
 	ptrStartOpenGL = a_ptrStartOpenGL;
@@ -122,12 +124,11 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	wc.hIcon = LoadIconW(hInstance, MAKEINTRESOURCE(IDI_APP));
 	wc.lpfnWndProc = DefDlgProcW;
 	wc.lpszClassName = L"KinectFusionExplorerAppDlgWndClass";
+
 	if (!RegisterClassW(&wc))
 	{
 		return 0;
 	}
-
-	
 
 	hWndApp = CreateDialogParamW(
 		hInstance,
@@ -142,13 +143,14 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	// Show window
 	guiFont = CreateFont(40, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"FreeSans");
 	countdownFont = CreateFont(300, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"FreeSans");
-	smallFont = CreateFont(25, 0, 0, 0, FW_LIGHT, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"FreeSans");
+	smallFont = CreateFont(20, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"FreeSans");
 
 	bDefaultBrush = CreateSolidBrush(RGB(20, 20, 20));
 	bPressedBrush = CreateSolidBrush(RGB(40, 40, 40));
 	bDefaultPen = CreatePen(PS_SOLID, 2, RGB(240, 240, 240));
 	bPressedPen = CreatePen(PS_SOLID, 2, RGB(220, 220, 220));
-	hButtonInteractionMode = CreateWindowEx(0, L"Button", L"Interaction Mode", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWndApp, (HMENU)IDC_BUTTON_INTERACTION_MODE, hInstance, 0);
+	bInactivePen = CreatePen(PS_SOLID, 1, RGB(50, 50, 50));
+	hButtonInteractionMode = CreateWindowEx(0, L"Button", L"Finished", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWndApp, (HMENU)IDC_BUTTON_INTERACTION_MODE, hInstance, 0);
 	hButtonTestOne = CreateWindowEx(0, L"Button", L"Load Test Interaction", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 250, 150, 50, hWndApp, (HMENU)IDC_BUTTON_TEST_INTERACTION, hInstance, 0);
 	hButtonTestTwo = CreateWindowEx(0, L"Button", L"Test Open GL", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_BUTTON_TEST_OPENGL, hInstance, 0);
 	hButtonResetReconstruction = CreateWindowEx(0, L"Button", L"Reset", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_BUTTON_RESET_RECONSTRUCTION, hInstance, 0);
@@ -173,6 +175,11 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	SetDlgItemText(hWndApp, IDC_FUSION_STATIC_COUNTDOWN, L"3");
 	SendMessage(hCountdownText, WM_SETFONT, (WPARAM)countdownFont, TRUE);
 
+	hHelpText = GetDlgItem(hWndApp, IDC_FUSION_STATIC_HELP);
+
+	SetDlgItemText(hWndApp, IDC_FUSION_STATIC_HELP, L"Press 'Reset' to start over and 'Finished' if you're satisfied with your scan.");
+	SendMessage(hHelpText, WM_SETFONT, (WPARAM)smallFont, TRUE);
+
 	fusionUiElements.push_back(hButtonTestOne);
 	fusionUiElements.push_back(hButtonTestTwo);
 	fusionUiElements.push_back(hButtonInteractionMode);
@@ -180,6 +187,7 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	fusionUiElements.push_back(hButtonStart);
 	fusionUiElements.push_back(hStatusText);
 	fusionUiElements.push_back(hStatusTextSmall);
+	fusionUiElements.push_back(hHelpText);
 	fusionUiElements.push_back(hCountdownText);
 	fusionUiElements.push_back(GetDlgItem(m_hWnd, IDC_RECONSTRUCTION_VIEW));
 
@@ -265,6 +273,42 @@ LRESULT CALLBACK CKinectFusionExplorer::MessageRouter(
 	return 0;
 }
 
+bool CKinectFusionExplorer::DrawButton(LPARAM lParam)
+{
+	LPDRAWITEMSTRUCT Item;
+	Item = (LPDRAWITEMSTRUCT)lParam;
+	SelectObject(Item->hDC, guiFont);
+	FillRect(Item->hDC, &Item->rcItem, bBackground);
+	SelectObject(Item->hDC, bDefaultBrush);
+	if (!IsWindowEnabled(Item->hwndItem))
+	{
+		SetTextColor(Item->hDC, RGB(50, 50, 50));
+		SelectObject(Item->hDC, bInactivePen);
+	}
+	else if (Item->itemState & ODS_SELECTED)
+	{
+		SetTextColor(Item->hDC, RGB(245, 245, 245));
+		SelectObject(Item->hDC, bPressedBrush);
+		SelectObject(Item->hDC, bPressedPen);
+	}
+	else
+	{
+		SetTextColor(Item->hDC, RGB(240, 240, 240));
+		SelectObject(Item->hDC, bDefaultPen);
+	}
+	SetBkMode(Item->hDC, TRANSPARENT);
+	RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
+	int len;
+	len = GetWindowTextLength(Item->hwndItem);
+	LPSTR lpBuff;
+	lpBuff = new char[len + 1];
+	GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
+
+	DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+	return TRUE;
+}
+
 LRESULT CALLBACK CKinectFusionExplorer::StartProc(
 	HWND hWnd,
 	UINT message,
@@ -294,7 +338,8 @@ LRESULT CALLBACK CKinectFusionExplorer::StartProc(
 	case WM_CTLCOLORSTATIC:
 		if ((HWND)lParam == hStatusText ||
 			(HWND)lParam == hCountdownText ||
-			(HWND)lParam == hStatusTextSmall)
+			(HWND)lParam == hStatusTextSmall ||
+			(HWND)lParam == hHelpText)
 		{
 
 			HDC hdc = reinterpret_cast<HDC>(wParam);
@@ -321,34 +366,8 @@ LRESULT CALLBACK CKinectFusionExplorer::StartProc(
 			|| IDC_BUTTON_RESET_RECONSTRUCTION == LOWORD(wParam)
 			|| IDC_BUTTON_START == LOWORD(wParam))
 		{
-			LPDRAWITEMSTRUCT Item;
-			Item = (LPDRAWITEMSTRUCT)lParam;
-			SelectObject(Item->hDC, guiFont);
-			FillRect(Item->hDC, &Item->rcItem, bBackground);
-			SelectObject(Item->hDC, bDefaultBrush);
-			if (Item->itemState & ODS_SELECTED)
-			{
-				SetTextColor(Item->hDC, RGB(245, 245, 245));
-				SelectObject(Item->hDC, bPressedBrush);
-				SelectObject(Item->hDC, bPressedPen);
-			}
-			else
-			{
-				SetTextColor(Item->hDC, RGB(240, 240, 240));
-				SelectObject(Item->hDC, bDefaultPen);
-
-			}
-			SetBkMode(Item->hDC, TRANSPARENT);
-			RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
-			int len;
-			len = GetWindowTextLength(Item->hwndItem);
-			LPSTR lpBuff;
-			lpBuff = new char[len + 1];
-			GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
-
-			DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-			return TRUE;
+			return DrawButton(lParam);
+			
 		}
 	}
 		break;
@@ -449,9 +468,12 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 		DeleteObject(bBackground);
 		DeleteObject(bDefaultBrush);
 		DeleteObject(bDefaultPen);
+		DeleteObject(bInactivePen);
 		DeleteObject(bPressedBrush);
 		DeleteObject(bPressedPen);
 		DeleteObject(guiFont);
+		DeleteObject(smallFont);
+		DeleteObject(countdownFont);
 		m_processor.StopProcessing();
 		PostQuitMessage(0);
 		break;
@@ -480,7 +502,8 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 	case WM_CTLCOLORSTATIC:
 		if ((HWND)lParam == hStatusText ||
 			(HWND)lParam == hCountdownText ||
-			(HWND)lParam == hStatusTextSmall)
+			(HWND)lParam == hStatusTextSmall ||
+			(HWND)lParam == hHelpText)
 		{
 			
 			HDC hdc = reinterpret_cast<HDC>(wParam);
@@ -530,34 +553,7 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 			|| IDC_BUTTON_RESET_RECONSTRUCTION == LOWORD(wParam)
 			|| IDC_BUTTON_START == LOWORD(wParam))
 		{
-			LPDRAWITEMSTRUCT Item;
-			Item = (LPDRAWITEMSTRUCT)lParam;
-			SelectObject(Item->hDC, guiFont);
-			FillRect(Item->hDC, &Item->rcItem, bBackground);
-			SelectObject(Item->hDC, bDefaultBrush);
-			if (Item->itemState & ODS_SELECTED)
-			{
-				SetTextColor(Item->hDC, RGB(245, 245, 245));
-				SelectObject(Item->hDC, bPressedBrush);
-				SelectObject(Item->hDC, bPressedPen);
-			}
-			else
-			{
-				SetTextColor(Item->hDC, RGB(240, 240, 240));
-				SelectObject(Item->hDC, bDefaultPen);
-
-			}
-			SetBkMode(Item->hDC, TRANSPARENT);
-			RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
-			int len;
-			len = GetWindowTextLength(Item->hwndItem);
-			LPSTR lpBuff;
-			lpBuff = new char[len + 1];
-			GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
-
-			DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-			return TRUE;
+			return DrawButton(lParam);
 		}
 	}
 		break;
@@ -1013,7 +1009,8 @@ int WINAPI CountdownThread()
 	
 	int secondTimer = 3;
 	CKinectFusionExplorer* pThis = reinterpret_cast<CKinectFusionExplorer*>(::GetWindowLongPtr(hWndApp, GWLP_USERDATA));
-	pThis->HideAllUIElements();
+	pThis->SetWindowState(COUNTDOWN);
+	//pThis->HideAllUIElements();
 	ShowWindow(hCountdownText, SW_SHOW);
 	//SetDlgItemText(hWndApp, IDC_FUSION_STATIC_COUNTDOWN, L"3");
 	//CKinectFusionExplorer* explorer = reinterpret_cast<CKinectFusionExplorer*>(exp);
@@ -1073,9 +1070,11 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 	}
 	if (IDC_BUTTON_TEST_INTERACTION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
-		interactionMode = true;
+		FinishScan(1);
+		/*interactionMode = true;
 		ShowWindow(hWndApp, SW_HIDE);
-		ptrStartOpenGL(&m_processor, 1);
+		ptrStartOpenGL(reinterpret_cast<CKinectFusionExplorer*>(::GetWindowLongPtr(hWndApp, GWLP_USERDATA)), 1);*/
+		//ptrStartOpenGL(&m_processor, 1);
 
 		//openGLWin.testMode = 1;
 		//openGLWin.StartOpenGLThread(m_hWnd, GetModuleHandle(NULL));
@@ -1083,9 +1082,10 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 	}
 	if (IDC_BUTTON_TEST_OPENGL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
-		interactionMode = true;
+		FinishScan(2);
+		/*interactionMode = true;
 		ShowWindow(hWndApp, SW_HIDE);
-		ptrStartOpenGL(&m_processor, 2);
+		ptrStartOpenGL(reinterpret_cast<CKinectFusionExplorer*>(::GetWindowLongPtr(hWndApp, GWLP_USERDATA)), 2);*/
 		//openGLWin.testMode = 2;
 		//openGLWin.StartOpenGLThread(m_hWnd, GetModuleHandle(NULL));
 	}
@@ -1141,41 +1141,7 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 	}
 	if (IDC_BUTTON_INTERACTION_MODE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
-		//openGLWin.testMode = 0;
-		SetStatusMessage(L"Creating mesh and entering interaction mode. Please wait...");
-		m_bSavingMesh = true;
-
-		// Pause integration while we're saving
-		bool wasPaused = m_params.m_bPauseIntegration;
-		m_params.m_bPauseIntegration = true;
-		m_processor.SetParams(m_params);
-
-		INuiFusionColorMesh *mesh = nullptr;
-		HRESULT hr = m_processor.CalculateMesh(&mesh, 2);
-
-		if (SUCCEEDED(hr))
-		{
-			// Save mesh
-			std::wstring fileName = L"data\\models\\output.ply";
-			LPOLESTR fileString = W2OLE((wchar_t*)fileName.c_str());
-			hr = WriteAsciiPlyMeshFile(mesh, fileString, true, m_bColorCaptured);
-			interactionMode = true;
-			ShowWindow(hWndApp, SW_HIDE);
-			ptrStartOpenGL(&m_processor, 0);
-			hr = S_OK;
-			// Release the mesh
-			SafeRelease(mesh);
-		}
-		else
-		{
-			SetStatusMessage(L"Failed to enter interaction mode.");
-		}
-
-		// Restore pause state of integration
-		m_params.m_bPauseIntegration = wasPaused;
-		m_processor.SetParams(m_params);
-
-		m_bSavingMesh = false;
+		FinishScan(0);
 	}
 	if (IDC_CHECK_PAUSE_INTEGRATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -1280,6 +1246,61 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 	}
 
 	m_processor.SetParams(m_params);
+}
+
+void CKinectFusionExplorer::FinishScan(int testMode)
+{
+	if (testMode == 0)
+	{
+		//openGLWin.testMode = 0;
+		SetStatusMessage(L"Creating mesh and entering interaction mode. Please wait...");
+		m_bSavingMesh = true;
+
+		// Pause integration while we're saving
+		bool wasPaused = m_params.m_bPauseIntegration;
+		m_params.m_bPauseIntegration = true;
+		m_processor.SetParams(m_params);
+
+		INuiFusionColorMesh *mesh = nullptr;
+		HRESULT hr = m_processor.CalculateMesh(&mesh, 2);
+
+		if (SUCCEEDED(hr))
+		{
+			// Save mesh
+			std::wstring fileName = L"data\\models\\output.ply";
+			LPOLESTR fileString = W2OLE((wchar_t*)fileName.c_str());
+			hr = WriteAsciiPlyMeshFile(mesh, fileString, true, m_bColorCaptured);
+			interactionMode = true;
+			ShowWindow(hWndApp, SW_HIDE);
+			ptrStartOpenGL(reinterpret_cast<CKinectFusionExplorer*>(::GetWindowLongPtr(hWndApp, GWLP_USERDATA)), 0);
+			hr = S_OK;
+			// Release the mesh
+			SafeRelease(mesh);
+		}
+		else
+		{
+			SetStatusMessage(L"Failed to enter interaction mode.");
+		}
+
+		// Restore pause state of integration
+		m_params.m_bPauseIntegration = wasPaused;
+		m_processor.SetParams(m_params);
+
+		m_bSavingMesh = false;
+	}
+	else if (testMode == 1)
+	{
+		interactionMode = true;
+		ShowWindow(hWndApp, SW_HIDE);
+		ptrStartOpenGL(reinterpret_cast<CKinectFusionExplorer*>(::GetWindowLongPtr(hWndApp, GWLP_USERDATA)), 1);
+	}
+	else if (testMode == 2)
+	{
+		interactionMode = true;
+		ShowWindow(hWndApp, SW_HIDE);
+		ptrStartOpenGL(reinterpret_cast<CKinectFusionExplorer*>(::GetWindowLongPtr(hWndApp, GWLP_USERDATA)), 2);
+	}
+	
 }
 
 /// <summary>
@@ -1403,28 +1424,26 @@ void CKinectFusionExplorer::MoveUIOnResize()
 	RECT rRect;
 	GetClientRect(GetParent(m_hWnd), &rRect);
 
-	if (GetWindowState() == SCAN)
+	int recoHeight = (rRect.right - 400)*ratio;
+	int recoWidth = rRect.right - 400;
+	if (recoHeight >= rRect.bottom - 30)
 	{
-		int recoHeight = (rRect.right - 400)*ratio;
-		int recoWidth = rRect.right - 400;
-		if (recoHeight >= rRect.bottom - 30)
-		{
-			recoHeight = rRect.bottom - 30;
-			recoWidth = recoHeight / ratio;
-		}
-		MoveWindow(GetDlgItem(m_hWnd, IDC_RECONSTRUCTION_VIEW), 0, 0, recoWidth, recoHeight, true);
-		MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_INTERACTION_MODE), rRect.right - 400, 50, 300, 50, true);
-		MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_INTERACTION), rRect.right - 400, 150, 300, 50, true);
-		MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_OPENGL), rRect.right - 400, 250, 300, 50, true);
-		MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_RESET_RECONSTRUCTION), rRect.right - 400, rRect.bottom - 250, 300, 50, true);
+		recoHeight = rRect.bottom - 30;
+		recoWidth = recoHeight / ratio;
 	}
-	else if (GetWindowState() == START)
+	MoveWindow(GetDlgItem(m_hWnd, IDC_RECONSTRUCTION_VIEW), 0, 55, recoWidth- (55/ratio), recoHeight-55, true);
+	MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_INTERACTION_MODE), rRect.right - 200, rRect.bottom - 250, 150, 150, true);
+	MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_INTERACTION), rRect.right - 350, 300, 300, 50, true);
+	MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_OPENGL), rRect.right - 350, 400, 300, 50, true);
+	MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_RESET_RECONSTRUCTION), rRect.right - 200, 100, 150, 150, true);
+	
+	if (GetWindowState() == START)
 	{
 		//MoveWindow(hButtonYes, width / 2 - 175, height - 150, 150, 50, true);
 		//MoveWindow(hButtonNo, width / 2 + 25, height - 150, 150, 50, true);
 		RECT rect;
 		GetClientRect(hStatusText, &rect);
-		MoveWindow(hStatusText, rRect.right / 2 - 250, rRect.bottom / 2 - 60, 500, 40, true);
+		MoveWindow(hStatusText, recoWidth / 2 - 250, recoHeight / 2 - 60, 500, 40, true);
 		SetDlgItemText(m_hWnd, IDC_FUSION_STATIC_STATUS, L"Let's begin by scanning your scene.");
 
 		InvalidateRect(hStatusText, &rect, TRUE);
@@ -1433,19 +1452,19 @@ void CKinectFusionExplorer::MoveUIOnResize()
 
 		RECT smallRect;
 		GetClientRect(hStatusTextSmall, &smallRect);
-		MoveWindow(hStatusTextSmall, rRect.right / 2 - 250, rRect.bottom / 2 - 20, 500, 30, true);
+		MoveWindow(hStatusTextSmall, recoWidth / 2 - 250, recoHeight / 2 - 20, 500, 30, true);
 		SetDlgItemText(m_hWnd, IDC_FUSION_STATIC_STATUS_SMALL, L"Please move the sensor slowly and smoothly.");
 
 		InvalidateRect(hStatusTextSmall, &smallRect, TRUE);
 		MapWindowPoints(hStatusTextSmall, m_hWnd, (POINT *)&smallRect, 2);
 		RedrawWindow(hStatusTextSmall, &smallRect, NULL, RDW_ERASE | RDW_INVALIDATE);
 
-		MoveWindow(hButtonStart, rRect.right / 2 - 100, rRect.bottom / 2 + 20, 200, 50, true);
+		MoveWindow(hButtonStart, recoWidth / 2 - 100, recoHeight / 2 + 20, 200, 50, true);
 
 
 		RECT cRect;
 		GetClientRect(hCountdownText, &cRect);
-		MoveWindow(hCountdownText, rRect.right / 2 - 250, rRect.bottom / 2 - 150, 500, 300, true);
+		MoveWindow(hCountdownText, recoWidth / 2 - 250, recoHeight / 2 - 150, 500, 300, true);
 		//SetDlgItemText(m_hWnd, IDC_FUSION_STATIC_COUNTDOWN, L"3");
 
 		InvalidateRect(hCountdownText, &cRect, TRUE);
@@ -1454,7 +1473,14 @@ void CKinectFusionExplorer::MoveUIOnResize()
 
 
 
+		RECT helpRect;
+		GetClientRect(hHelpText, &helpRect);
+		MoveWindow(hHelpText, recoWidth / 2 - 350, recoHeight / 2 + 200, 700, 40, true);
+		SetDlgItemText(m_hWnd, IDC_FUSION_STATIC_HELP, L"Press 'Reset' to start over and 'Finished' if you're satisfied with your scan.");
 
+		InvalidateRect(hHelpText, &helpRect, TRUE);
+		MapWindowPoints(hHelpText, m_hWnd, (POINT *)&helpRect, 2);
+		RedrawWindow(hHelpText, &helpRect, NULL, RDW_ERASE | RDW_INVALIDATE);
 		
 	}
 
@@ -1470,9 +1496,11 @@ void CKinectFusionExplorer::InitializeFusionUI()
 
 void CKinectFusionExplorer::HideAllUIElements()
 {
-	for (int i = 0; i < fusionUiElements.size(); i++)
+
+	std::vector<HWND>::iterator iter;
+	for (iter = fusionUiElements.begin(); iter != fusionUiElements.end(); ++iter)
 	{
-		ShowWindow (fusionUiElements[i], SW_HIDE);
+		ShowWindow ((*iter), SW_HIDE);
 	}
 }
 
@@ -1488,13 +1516,41 @@ void CKinectFusionExplorer::SetWindowState(FusionState fState)
 	HideAllUIElements();
 	MoveUIOnResize();
 	if (state == START)
-	{
+	{		
+		
+		ShowWindow(hButtonInteractionMode, SW_SHOW);
+		ShowWindow(hButtonResetReconstruction, SW_SHOW);
+		ShowWindow(hButtonTestOne, SW_SHOW);
+		ShowWindow(hButtonTestTwo, SW_SHOW);
 		ShowWindow(hButtonStart, SW_SHOW);
 		ShowWindow(hStatusText, SW_SHOW);
 		ShowWindow(hStatusTextSmall, SW_SHOW);
+		ShowWindow(hHelpText, SW_SHOW);
+
+		EnableWindow(hButtonInteractionMode, false);
+		EnableWindow(hButtonResetReconstruction, false);
+		//EnableWindow(hButtonTestOne, false);
+		EnableWindow(hButtonTestTwo, false);
+	}
+	else if (state == COUNTDOWN)
+	{
+		ShowWindow(hCountdownText, SW_SHOW);
+		ShowWindow(hButtonInteractionMode, SW_SHOW);
+		ShowWindow(hButtonResetReconstruction, SW_SHOW);
+		ShowWindow(hButtonTestOne, SW_SHOW);
+		ShowWindow(hButtonTestTwo, SW_SHOW);
+		ShowWindow(hHelpText, SW_SHOW);
+		EnableWindow(hButtonInteractionMode, false);
+		EnableWindow(hButtonResetReconstruction, false);
+		EnableWindow(hButtonTestOne, false);
+		EnableWindow(hButtonTestTwo, false);
 	}
 	else if (state == SCAN)
 	{
+		EnableWindow(hButtonInteractionMode, true);
+		EnableWindow(hButtonResetReconstruction, true);
+		EnableWindow(hButtonTestOne, true);
+		EnableWindow(hButtonTestTwo, true);
 		ShowWindow(GetDlgItem(m_hWnd, IDC_RECONSTRUCTION_VIEW), SW_SHOW);
 		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_INTERACTION_MODE), SW_SHOW);
 		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_INTERACTION), SW_SHOW);
@@ -1503,4 +1559,11 @@ void CKinectFusionExplorer::SetWindowState(FusionState fState)
 		DlgProc(m_hWnd, WM_INITDIALOG, 0, 0);
 	}
 	
+}
+
+void ResumeKinectFusion()
+{
+	ShowWindow(hWndApp, SW_SHOW);
+	interactionMode = false;
+	resumed = true;
 }

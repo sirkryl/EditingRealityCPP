@@ -1,6 +1,7 @@
 #pragma once
 #include "OpenGLControl.h"
 #include "common.h"
+#include <KinectFusionExplorer.h>
 enum WindowMode { SCANNING, INTERACTION };
 
 enum WindowState {INITIALIZING, BUFFERS, DEFAULT, SEGMENTATION, SEGMENTATION_FINISHED, WALL_SELECTION, SEGMENTATION_PREVIEW, SHOWSTATUS, SELECTION };
@@ -15,7 +16,7 @@ public:
 	HWND glWindowHandle;
 	HWND glWindowParent;
 	OpenGLControl glControl;
-	KinectFusionProcessor* processor;
+	CKinectFusionExplorer* fusionExplorer;
 	HANDLE interactionThread;
 
 	//background color
@@ -98,6 +99,8 @@ public:
 	
 	void ToggleDebugControls();
 
+	void ResumeScanning();
+
 	void SetBackgroundColor(int redValue, int greenValue, int blueValue);
 
 	void HideAllButtons();
@@ -140,8 +143,10 @@ void UpdateSliderText();
 void UpdateGLHSliders();
 void ResetEditControls();
 void ResetSliders();
+void MoveModeButtonsOnResize();
 void MoveButtonsOnResize();
 
+void ResetForResume();
 void InitialLoading();
 
 void ResetCameraPosition();
@@ -159,4 +164,4 @@ void Initialize(LPVOID);
 void Render(LPVOID);
 void Release(LPVOID);
 
-void StartOpenGLThread(KinectFusionProcessor* proc, int testMode);
+void StartOpenGLThread(CKinectFusionExplorer* expl, int testMode);

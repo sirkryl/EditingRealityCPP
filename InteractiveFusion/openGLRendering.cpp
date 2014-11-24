@@ -24,6 +24,8 @@ OpenGLCamera glCamera;
 VisualizationHelper glHelper;
 SegmentationHelper glSegmentation;
 OpenGL2DHelper gl2DHelper;
+int storedWidth = 0;
+int storedHeight = 0;
 
 //for status messages (appear 'busy' to the user)
 int dotCount = 0;
@@ -100,6 +102,11 @@ void HandleKeyInput()
 	}
 }
 
+void ResetForResume()
+{
+	glSegmentation.ClearForResume();
+}
+
 void InitialLoading()
 {
 	switch (openGLWin.testMode)
@@ -157,10 +164,14 @@ void Render(LPVOID lpParam)
 
 	HandleKeyInput();
 
-	int viewportWidth = openGLWin.glControl.GetViewportWidth();
-	int viewportHeight = openGLWin.glControl.GetViewportHeight();
-
-	openGLWin.glControl.ResizeOpenGLViewportFull();
+	if (storedWidth != openGLWin.glControl.GetViewportWidth() ||
+		storedHeight != openGLWin.glControl.GetViewportHeight())
+	{
+		storedWidth = openGLWin.glControl.GetViewportWidth();
+		storedHeight = openGLWin.glControl.GetViewportHeight();
+		openGLWin.glControl.ResizeOpenGLViewportFull();
+		openGLWin.glControl.SetProjection3D(45.0f, float(openGLWin.glControl.GetViewportWidth()) / float(openGLWin.glControl.GetViewportHeight()), 0.1f, 1000.0f);
+	}
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -277,11 +288,11 @@ void Render(LPVOID lpParam)
 
 	//render info text on screen
 	glText.PrepareForRender();
-	glText.RenderText(L"FPS: ", openGLWin.glControl.GetFPS(), 20, -0.98f, 0.85f, 2.0f / viewportWidth, 2.0f / viewportHeight);
-	glText.RenderText(L"Meshs: ", meshData.size(), 15, -0.98f, 0.75f, 2.0f / viewportWidth, 2.0f / viewportHeight);
-	glText.RenderText(L"Verts: ", meshHelper.GetNumberOfVertices(), 15, -0.98f, 0.70f, 2.0f / viewportWidth, 2.0f / viewportHeight);
-	glText.RenderText(L"Faces: ", meshHelper.GetNumberOfFaces() , 15, -0.98f, 0.65f, 2.0f / viewportWidth, 2.0f / viewportHeight);
-	glText.RenderText(L"Sel: ", glSelector.selectedIndex, 15, -0.98f, 0.6f, 2.0f / viewportWidth, 2.0f / viewportHeight);
+	glText.RenderText(L"FPS: ", openGLWin.glControl.GetFPS(), 20, -0.98f, 0.85f, 2.0f / storedWidth, 2.0f / storedHeight);
+	glText.RenderText(L"Meshs: ", meshData.size(), 15, -0.98f, 0.75f, 2.0f / storedWidth, 2.0f / storedHeight);
+	glText.RenderText(L"Verts: ", meshHelper.GetNumberOfVertices(), 15, -0.98f, 0.70f, 2.0f / storedWidth, 2.0f / storedHeight);
+	glText.RenderText(L"Faces: ", meshHelper.GetNumberOfFaces(), 15, -0.98f, 0.65f, 2.0f / storedWidth, 2.0f / storedHeight);
+	glText.RenderText(L"Sel: ", glSelector.selectedIndex, 15, -0.98f, 0.6f, 2.0f / storedWidth, 2.0f / storedHeight);
 
 	glEnable(GL_DEPTH_TEST);
 

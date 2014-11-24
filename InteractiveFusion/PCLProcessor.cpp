@@ -84,7 +84,7 @@ bool PCLProcessor::PlaneSegmentation() {
 	
 		segmentation.setMethodType(pcl::SAC_RANSAC);
 		// Set the maximum allowed distance to the model.
-		segmentation.setDistanceThreshold(0.1);
+		segmentation.setDistanceThreshold(0.15);
 		// Enable model coefficient refinement (optional).
 		segmentation.setOptimizeCoefficients(true);
 		pcl::PointIndices::Ptr inlierIndices(new pcl::PointIndices);
@@ -1264,6 +1264,32 @@ int PCLProcessor::GetPlaneClusterCount() {
 
 int PCLProcessor::GetCloudSize() {
 	return mainCloud->points.size();
+}
+
+void PCLProcessor::ClearAll() {
+	
+	mainCloud->clear();
+	normals->clear();
+	cloudWithoutPlane->clear();
+	cloudWithoutPlaneNormals->clear();
+	cloudWithoutPlaneIndices.clear();
+	clusteredClouds.clear();
+	clusteredIndices.clear();
+	indexMap.clear();
+	vertexMap.clear();
+	minPlane = glm::vec3(999.0f, 999.0f, 999.0f);
+	maxPlane = glm::vec3(-999.0f, -999.0f, -999.0f);
+
+	clusterCount = 0;
+	clusterIndexCount = 0;
+	procIndexCount = 0;
+	segmentedClusterIndices.clear();
+	planeCoefficients.clear();
+	planeCloudIndices.clear();
+
+	isPlaneSegmented = false;
+	coloredCloudReady = false;
+	isWall = false;
 }
 
 bool PCLProcessor::CompareTwoPoints(pcl::PointXYZRGB &ptA, pcl::PointXYZRGB &ptB)

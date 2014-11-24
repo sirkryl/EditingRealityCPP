@@ -18,6 +18,8 @@ public:
 
 	bool IsCloudReady();
 
+	void ClearForResume();
+
 	void CleanUp();
 private:
 

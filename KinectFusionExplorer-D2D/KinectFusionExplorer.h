@@ -11,7 +11,7 @@
 #include "KinectFusionParams.h"
 #include "KinectFusionProcessor.h"
 
-enum FusionState { START, SCAN };
+enum FusionState { START, COUNTDOWN,  SCAN };
 
 /// <summary>
 /// KinectFusionExplorer sample.
@@ -77,7 +77,7 @@ public:
 	/// Initialize the UI controls
 	/// </summary>
 	void                        InitializeUIControls();
-
+	KinectFusionProcessor       m_processor;
 	/// <summary>
 	/// Handle new UI interaction
 	/// </summary>
@@ -88,7 +88,10 @@ public:
 	/// </summary>
 	void                        UpdateHSliders();
 
+	void FinishScan(int testMode);
+
 	void HideAllUIElements();
+
 
 private:
     HWND                        m_hWnd;
@@ -112,6 +115,7 @@ private:
 
 	void HandleKeyInput();
 
+	bool DrawButton(LPARAM lParam);
 	
 
     /// <summary>
@@ -151,7 +155,7 @@ private:
     /// <summary>
     /// The reconstruction processor
     /// </summary>
-    KinectFusionProcessor       m_processor;
+    
     bool                        m_bUIUpdated;
 
     bool                        m_bInitializeError;
@@ -170,4 +174,5 @@ private:
     DWORD                       m_tickLastStatus;
 };
 
-void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(KinectFusionProcessor*, int), HWND &fusionHandle);
+void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(CKinectFusionExplorer*, int), HWND &fusionHandle);
+void ResumeKinectFusion();
