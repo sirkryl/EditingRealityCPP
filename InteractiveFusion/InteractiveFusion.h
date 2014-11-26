@@ -89,7 +89,6 @@ public:
 
 	//cursor and/or mouse related methods
 	bool IsMouseInHandle();
-	bool IsMouseInDeleteHandle();
 	bool IsMouseInOpenGLWindow();
 
 	void InitWallConfirmation();
@@ -164,4 +163,4 @@ void Initialize(LPVOID);
 void Render(LPVOID);
 void Release(LPVOID);
 
-void StartOpenGLThread(CKinectFusionExplorer* expl, int testMode);
+void StartOpenGLThread(int testMode);

@@ -140,6 +140,14 @@
       <Project>{9f1abebe-8226-4b92-ac8e-0b39c6aa2047}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\Downloads\garbage.ico" />
+    <Image Include="arrow.bmp" />
+    <Image Include="arrow.png" />
+    <Image Include="arrow_mask.bmp" />
+    <Image Include="garbage.bmp" />
+    <Image Include="garbage_mask.bmp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -124,12 +124,22 @@ HRESULT ImageRenderer::Initialize(HWND hWnd, ID2D1Factory* pD2DFactory, int sour
 /// <returns>indicates success or failure</returns>
 HRESULT ImageRenderer::Draw(BYTE* pImage, unsigned long cbImage)
 {
+	
     // incorrectly sized image data passed in
     if ( cbImage < ((m_sourceHeight - 1) * m_sourceStride) + (m_sourceWidth * 4) )
     {
         return E_INVALIDARG;
     }
 
+	for (int i = 0; i < cbImage; i+=4)
+	{
+		if (pImage[i] == 0 && pImage[i + 1] == 0 && pImage[i + 2] == 0)
+		{
+			pImage[i] = 30;
+			pImage[i+1] = 30;
+			pImage[i+2] = 30;
+		}
+	}
     // create the resources for this draw device
     // they will be recreated if previously lost
     HRESULT hr = EnsureResources();

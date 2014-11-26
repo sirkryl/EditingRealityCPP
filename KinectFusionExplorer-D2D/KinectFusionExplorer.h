@@ -174,5 +174,5 @@ private:
     DWORD                       m_tickLastStatus;
 };
 
-void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(CKinectFusionExplorer*, int), HWND &fusionHandle);
+void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(int), CKinectFusionExplorer*& expl, HWND &fusionHandle);
 void ResumeKinectFusion();

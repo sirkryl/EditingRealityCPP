@@ -1218,7 +1218,7 @@ HRESULT KinectFusionProcessor::MapColorToDepth()
                 }
                 else
                 {
-                    colorDataInDepthFrame[destIndex] = 0;
+                    colorDataInDepthFrame[destIndex] = 255;
                 }
             }
         });
@@ -1252,7 +1252,7 @@ HRESULT KinectFusionProcessor::MapColorToDepth()
                 }
                 else
                 {
-                    colorDataInDepthFrame[flippedDestIndex] = 0;
+					colorDataInDepthFrame[flippedDestIndex] = 255;
                 }
             }
         });

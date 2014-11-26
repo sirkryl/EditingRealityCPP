@@ -151,7 +151,7 @@ void Initialize(LPVOID lpParam)
 	glDepthFunc(GL_LESS);
 	glDepthRange(-1.0f, 1000.0f);
 
-	glText.Initialize("FreeSans.ttf");
+	glText.Initialize("OpenSans-Regular.ttf");
 
 	glCamera = OpenGLCamera(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f, 0.1f);
 }
@@ -244,8 +244,7 @@ void Render(LPVOID lpParam)
 	{
 		if (glSelector.selectedIndex == -1)
 		{
-			if(!openGLWin.IsMouseInDeleteHandle())
-				glSelector.ProcessPicking();
+			glSelector.ProcessPicking();
 		}
 		else
 			if (openGLWin.colorSelection)

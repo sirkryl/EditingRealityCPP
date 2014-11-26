@@ -10,7 +10,7 @@ void OpenGLText::Initialize(string fontname)
 		MessageBox(NULL, _T("Couldn't initialize FreeType library"), _T("Error"), MB_ICONERROR);
 	}
 
-	if (FT_New_Face(ft_lib, "FreeSans.ttf", 0, &face) != 0) {
+	if (FT_New_Face(ft_lib, fontname.c_str(), 0, &face) != 0) {
 		MessageBox(NULL, _T("Unable to load myfont.ttf"), _T("Error"), MB_ICONERROR);
 	}
 
