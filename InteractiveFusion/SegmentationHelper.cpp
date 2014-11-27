@@ -174,6 +174,7 @@ int WINAPI SegThreadMain()
 			
 			meshData_segTmp.push_back(mesh);
 		}
+
 	}
 
 	if (openGLWin.segmentationMode == REGION_GROWTH_SEGMENTATION)
@@ -238,6 +239,7 @@ int WINAPI SegThreadMain()
 	QueryPerformanceCounter(&t2);
 	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
 	cDebug::DbgOut(L"Filled MeshData in ", elapsedTime);
+	SetViewportPercentMsg(L"");
 	//UNCOMMENT UNTIL HERE FOR SEGMENTATION
 	openGLWin.SetWindowState(SEGMENTATION_FINISHED);
 	//showColoredSegments = false;
@@ -321,7 +323,7 @@ bool SegmentationHelper::InitializePreview()
 
 void SegmentationHelper::RenderPreview()
 {
-	openGLWin.SetBackgroundColor(0, 0, 0);
+	//openGLWin.SetBackgroundColor(0, 0, 0);
 
 	int w = openGLWin.glControl.GetViewportWidth();
 	int h = openGLWin.glControl.GetViewportHeight();
@@ -346,6 +348,19 @@ void SegmentationHelper::RenderPreview()
 	}
 
 	glEnable(GL_DEPTH_TEST);
+}
+
+glm::vec3 SegmentationHelper::GetPreviewCenterPoint()
+{
+	glm::vec3 centerPoint = glm::vec3(0.0f, 0.0f, 0.0f);
+	for (int i = 0; i < previewVertices.size(); i++)
+	{
+		centerPoint.x += previewVertices[i].x;
+		centerPoint.y += previewVertices[i].y;
+		centerPoint.z += previewVertices[i].z;
+	}
+	centerPoint = centerPoint / (float)previewVertices.size();
+	return centerPoint;
 }
 
 void SegmentationHelper::ClearForResume()

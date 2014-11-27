@@ -18,6 +18,8 @@ public:
 
 	bool IsCloudReady();
 
+	glm::vec3 GetPreviewCenterPoint();
+
 	void ClearForResume();
 
 	void CleanUp();

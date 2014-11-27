@@ -135,9 +135,9 @@ HRESULT ImageRenderer::Draw(BYTE* pImage, unsigned long cbImage)
 	{
 		if (pImage[i] == 0 && pImage[i + 1] == 0 && pImage[i + 2] == 0)
 		{
-			pImage[i] = 30;
-			pImage[i+1] = 30;
-			pImage[i+2] = 30;
+			pImage[i] = 45;
+			pImage[i+1] = 45;
+			pImage[i+2] = 45;
 		}
 	}
     // create the resources for this draw device

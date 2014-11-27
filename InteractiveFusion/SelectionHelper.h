@@ -1,6 +1,7 @@
 #pragma once
 #include "common.h"
 
+enum ManipulationMode { MANIPULATION_NONE, MANIPULATION_SCALE, MANIPULATION_ROTATE_X, MANIPULATION_ROTATE_Y, MANIPULATION_ROTATE_Z };
 class SelectionHelper
 {
 public:
@@ -16,9 +17,15 @@ public:
 
 	void ProcessPlacing();
 
+	void SetManipulationMode(ManipulationMode mode);
+	ManipulationMode GetManipulationMode();
+
 	void ResetWallObject();
 	void SelectWallObject();
 private:
+
+	ManipulationMode manipMode = MANIPULATION_NONE;
+
 	int GetColorUnderCursor();
 	bool PlacingPreview();
 	bool ColorPlacing(bool preview);

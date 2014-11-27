@@ -110,6 +110,7 @@ private:
 	glm::mat4 yRotation = glm::mat4(1.0f);
 	glm::mat4 zRotation = glm::mat4(1.0f);
 	glm::mat4 scaleMatrix = glm::mat4(1.0f);
+	glm::mat4 selectScaleMatrix = glm::mat4(1.0f);
 	glm::vec3 selectTranslation;
 	glm::mat4 cursorTranslation = glm::mat4(1.0f);
 

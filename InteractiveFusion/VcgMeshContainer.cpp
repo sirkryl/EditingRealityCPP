@@ -311,7 +311,11 @@ void VCGMeshContainer::ParseData()
 	selectTranslation = glm::vec3(0.0f, 0.0f, 0.0f);
 	translation = glm::vec3(0.0f, 0.0f, 0.0f);
 
-
+	if ((upperBounds.y - lowerBounds.y) > 0.3f)
+	{
+		float selectScaleFactor = 0.3f / (upperBounds.y - lowerBounds.y);
+		selectScaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3((selectScaleFactor, selectScaleFactor, selectScaleFactor)));
+	}
 
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 
@@ -455,7 +459,7 @@ void VCGMeshContainer::Draw()
 		}
 		else if (!colorSelection)
 		{
-			modelMatrix = cursorTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+			modelMatrix = cursorTranslation * selectScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
 		}
 	}
 	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
@@ -497,7 +501,7 @@ void VCGMeshContainer::DrawBB()
 		}
 		else if (!colorSelection)
 		{
-			modelMatrix = cursorTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+			modelMatrix = cursorTranslation * selectScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
 		}
 	}
 	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);

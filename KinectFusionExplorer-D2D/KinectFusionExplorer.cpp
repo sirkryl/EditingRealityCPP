@@ -38,6 +38,7 @@ std::vector<HWND> fusionUiElements;
 HBRUSH bDefaultBrush, bPressedBrush;
 HBRUSH bGreenBrush, bRedBrush;
 HBRUSH bGreenPressedBrush, bRedPressedBrush;
+HBRUSH bRedInactiveBrush, bGreenInactiveBrush;
 HBRUSH bBackground = CreateSolidBrush(RGB(30, 30, 30));
 HPEN bDefaultPen, bPressedPen, bInactivePen;
 HFONT guiFont, countdownFont, smallFont, buttonFont;
@@ -154,8 +155,10 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	bPressedBrush = CreateSolidBrush(RGB(40, 40, 40));
 	bGreenBrush = CreateSolidBrush(RGB(0, 170, 0));
 	bGreenPressedBrush = CreateSolidBrush(RGB(0, 100, 0));
+	bGreenInactiveBrush = CreateSolidBrush(RGB(0, 50, 0));
 	bRedBrush = CreateSolidBrush(RGB(170, 0, 0));
 	bRedPressedBrush = CreateSolidBrush(RGB(100, 0, 0));
+	bRedInactiveBrush = CreateSolidBrush(RGB(50, 0, 0));
 	bDefaultPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
 	bPressedPen = CreatePen(PS_SOLID, 2, RGB(180, 180, 180));
 	bInactivePen = CreatePen(PS_SOLID, 1, RGB(50, 50, 50));
@@ -293,7 +296,20 @@ bool CKinectFusionExplorer::DrawButton(LPARAM lParam)
 	if (!IsWindowEnabled(Item->hwndItem))
 	{
 		SetTextColor(Item->hDC, RGB(50, 50, 50));
-		SelectObject(Item->hDC, bInactivePen);
+		if (Item->hwndItem == hButtonInteractionMode)
+		{
+			SelectObject(Item->hDC, bGreenInactiveBrush);
+			SelectObject(Item->hDC, bDefaultPen);
+		}
+		else if (Item->hwndItem == hButtonResetReconstruction)
+		{
+			SelectObject(Item->hDC, bRedInactiveBrush);
+			SelectObject(Item->hDC, bDefaultPen);
+		}
+		else
+		{
+			SelectObject(Item->hDC, bInactivePen);
+		}
 	}
 	else if (Item->itemState & ODS_SELECTED)
 	{
@@ -504,8 +520,10 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 		DeleteObject(bDefaultBrush);
 		DeleteObject(bGreenBrush);
 		DeleteObject(bGreenPressedBrush);
+		DeleteObject(bGreenInactiveBrush);
 		DeleteObject(bRedBrush);
 		DeleteObject(bRedPressedBrush);
+		DeleteObject(bRedInactiveBrush);
 		DeleteObject(bDefaultPen);
 		DeleteObject(bInactivePen);
 		DeleteObject(bPressedBrush);
@@ -1479,53 +1497,19 @@ void CKinectFusionExplorer::MoveUIOnResize()
 	MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_OPENGL), rRect.right - 350, 400, 300, 50, true);
 	MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_RESET_RECONSTRUCTION), rRect.right - 200, rRect.bottom/2 - 200, 150, 150, true);
 	
-	if (GetWindowState() == START)
+	if (GetWindowState() == START || GetWindowState() == COUNTDOWN)
 	{
-		//MoveWindow(hButtonYes, width / 2 - 175, height - 150, 150, 50, true);
-		//MoveWindow(hButtonNo, width / 2 + 25, height - 150, 150, 50, true);
-		RECT rect;
-		GetClientRect(hStatusText, &rect);
-		MoveWindow(hStatusText, recoWidth / 2 - 250, recoHeight / 2 - 60, 500, 40, true);
-		SetDlgItemText(m_hWnd, IDC_FUSION_STATIC_STATUS, L"Let's start with scanning your scene.");
+		MoveWindow(hStatusText, rRect.right / 2 - 250, rRect.bottom / 2 - 60, 500, 40, true);
 
-		InvalidateRect(hStatusText, &rect, TRUE);
-		MapWindowPoints(hStatusText, m_hWnd, (POINT *)&rect, 2);
-		RedrawWindow(hStatusText, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
+		MoveWindow(hStatusTextSmall, rRect.right / 2 - 250, rRect.bottom / 2 - 20, 500, 30, true);
 
-		RECT smallRect;
-		GetClientRect(hStatusTextSmall, &smallRect);
-		MoveWindow(hStatusTextSmall, recoWidth / 2 - 250, recoHeight / 2 - 20, 500, 30, true);
-		SetDlgItemText(m_hWnd, IDC_FUSION_STATIC_STATUS_SMALL, L"Please move the sensor slowly and smoothly.");
+		MoveWindow(hButtonStart, rRect.right / 2 - 100, rRect.bottom / 2 + 20, 200, 50, true);
 
-		InvalidateRect(hStatusTextSmall, &smallRect, TRUE);
-		MapWindowPoints(hStatusTextSmall, m_hWnd, (POINT *)&smallRect, 2);
-		RedrawWindow(hStatusTextSmall, &smallRect, NULL, RDW_ERASE | RDW_INVALIDATE);
+		MoveWindow(hHelpText, rRect.right / 2 - 350, rRect.bottom / 2 + 200, 700, 40, true);
 
-		MoveWindow(hButtonStart, recoWidth / 2 - 100, recoHeight / 2 + 20, 200, 50, true);
-
-
-		RECT cRect;
-		GetClientRect(hCountdownText, &cRect);
-		MoveWindow(hCountdownText, recoWidth / 2 - 250, recoHeight / 2 - 150, 500, 300, true);
-		//SetDlgItemText(m_hWnd, IDC_FUSION_STATIC_COUNTDOWN, L"3");
-
-		InvalidateRect(hCountdownText, &cRect, TRUE);
-		MapWindowPoints(hCountdownText, m_hWnd, (POINT *)&cRect, 2);
-		RedrawWindow(hCountdownText, &cRect, NULL, RDW_ERASE | RDW_INVALIDATE);
-
-
-
-		RECT helpRect;
-		GetClientRect(hHelpText, &helpRect);
-		MoveWindow(hHelpText, recoWidth / 2 - 350, recoHeight / 2 + 200, 700, 40, true);
-		SetDlgItemText(m_hWnd, IDC_FUSION_STATIC_HELP, L"Press 'Reset' to start over and 'Finished' if you're satisfied with your scan.");
-
-		InvalidateRect(hHelpText, &helpRect, TRUE);
-		MapWindowPoints(hHelpText, m_hWnd, (POINT *)&helpRect, 2);
-		RedrawWindow(hHelpText, &helpRect, NULL, RDW_ERASE | RDW_INVALIDATE);
+		MoveWindow(hCountdownText, rRect.right / 2 - 250, rRect.bottom / 2 - 150, 500, 300, true);
 		
 	}
-
 	MoveWindow(GetDlgItem(m_hWnd, IDC_FRAMES_PER_SECOND), 0, rRect.bottom - 30, 100, 30, true);
 	MoveWindow(GetDlgItem(m_hWnd, IDC_STATUS), 100, rRect.bottom - 30, rRect.right - 100, 30, true);
 	MoveWindow(fusionDebugHandle, rRect.right - 400, 0, 400, rRect.bottom, true);

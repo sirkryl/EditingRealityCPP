@@ -43,10 +43,10 @@ struct KinectFusionParams
         m_bCaptureColor(true),
         m_cColorIntegrationInterval(3),
         m_bTranslateResetPoseByMinDepthThreshold(true),
-        m_saveMeshType(Stl),
+		m_saveMeshType(Ply),
         m_cDeltaFromReferenceFrameCalculationInterval(2),
         m_cMinSuccessfulTrackingFramesForCameraPoseFinder(45), // only update the camera pose finder initially after 45 successful frames (1.5s)
-        m_cMinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure(200), // resume integration following 200 successful frames after tracking failure (~7s)
+        m_cMinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure(150), // resume integration following 200 successful frames after tracking failure (~7s)
         m_cMaxCameraPoseFinderPoseHistory(NUI_FUSION_CAMERA_POSE_FINDER_DEFAULT_POSE_HISTORY_COUNT),
         m_glCameraPoseFinderFeatureSampleLocationsPerFrame(NUI_FUSION_CAMERA_POSE_FINDER_DEFAULT_FEATURE_LOCATIONS_PER_FRAME_COUNT),
         m_fMaxCameraPoseFinderDepthThreshold(NUI_FUSION_CAMERA_POSE_FINDER_DEFAULT_MAX_DEPTH_THRESHOLD),
@@ -60,7 +60,7 @@ struct KinectFusionParams
         m_fMinAlignPointCloudsEnergyForSuccess(0.0f),
         m_cSmoothingKernelWidth(1),                 // 0=just copy, 1=3x3, 2=5x5, 3=7x7, here we create a 3x3 kernel
         m_fSmoothingDistanceThreshold(0.04f),       // 4cm, could use up to around 0.1f
-        m_cAlignPointCloudsImageDownsampleFactor(2),// 1 = no down sample (process at m_depthImageResolution), 2=x/2,y/2, 4=x/4,y/4
+        m_cAlignPointCloudsImageDownsampleFactor(1),// 1 = no down sample (process at m_depthImageResolution), 2=x/2,y/2, 4=x/4,y/4
         m_fMaxTranslationDelta(0.3f),               // 0.15 - 0.3m per frame typical
         m_fMaxRotationDelta(20.0f)                  // 10-20 degrees per frame typical
     {

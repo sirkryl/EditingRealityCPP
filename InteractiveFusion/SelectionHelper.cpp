@@ -253,7 +253,7 @@ void SelectionHelper::ProcessSelectedObject()
 		selectedIndex = -1;
 		cDebug::DbgOut(L"pressed ENTF alright");
 	}
-	if (Keys::GetKeyState('X'))
+	if (Keys::GetKeyState('X') || manipMode == MANIPULATION_ROTATE_X)
 	{
 		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
 		if (openGLWin.wheelDelta < 0)
@@ -265,7 +265,7 @@ void SelectionHelper::ProcessSelectedObject()
 			meshData[selectedIndex]->SetAngleX(true);
 		}
 	}
-	if (Keys::GetKeyState('Y'))
+	if (Keys::GetKeyState('Y') || manipMode == MANIPULATION_ROTATE_Y)
 	{
 		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
 		if (openGLWin.wheelDelta < 0)
@@ -278,7 +278,7 @@ void SelectionHelper::ProcessSelectedObject()
 		}
 
 	}
-	if (Keys::GetKeyState('Z'))
+	if (Keys::GetKeyState('Z') || manipMode == MANIPULATION_ROTATE_Z)
 	{
 		//cDebug::DbgOut(L"Wheel: ", openGLWin.GetWheelDelta());
 		if (openGLWin.wheelDelta < 0)
@@ -290,7 +290,7 @@ void SelectionHelper::ProcessSelectedObject()
 			meshData[selectedIndex]->SetAngleZ(true);
 		}
 	}
-	if (Keys::GetKeyState('U'))
+	if (Keys::GetKeyState('U') || manipMode == MANIPULATION_SCALE)
 	{
 		if (openGLWin.wheelDelta < 0)
 		{
@@ -390,5 +390,15 @@ void SelectionHelper::ResetWallObject()
 	{
 		(*mI)->SetWall(false);
 	}
+}
+
+void SelectionHelper::SetManipulationMode(ManipulationMode mode)
+{
+	manipMode = mode;
+}
+
+ManipulationMode SelectionHelper::GetManipulationMode()
+{
+	return manipMode;
 }
 #pragma endregion wall object

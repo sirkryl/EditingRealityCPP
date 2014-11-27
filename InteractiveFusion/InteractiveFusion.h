@@ -20,9 +20,9 @@ public:
 	HANDLE interactionThread;
 
 	//background color
-	float bgRed = 0.0f;
-	float bgGreen = 0.0f;
-	float bgBlue = 0.0f;
+	float bgRed = 30.0f / 255.0f;
+	float bgGreen = 30.0f / 255.0f;
+	float bgBlue = 30.0f / 255.0f;
 
 	//test mode flag
 	int testMode = 0;
@@ -71,7 +71,6 @@ public:
 	void ResetTimer();
 	void UpdateTimer();
 	float SpeedOptimizedFloat(float fVal);
-	void SetViewportStatusMessage(wstring message);
 	//window related methods
 	bool CreateOpenGLWindow();
 	void ReleaseOpenGL();
@@ -104,6 +103,8 @@ public:
 
 	void HideAllButtons();
 
+	void RedrawManipulationButtons();
+
 	//thread related methods
 	//bool StartOpenGLThread(HWND parentWin, HINSTANCE currHInstance, KinectFusionProcessor* proc);
 	
@@ -119,6 +120,8 @@ private:
 	//fps related variables
 	clock_t tLastFrame;
 	float fFrameInterval;
+
+	
 
 	//thread related variables
 	
@@ -136,6 +139,10 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 //process UI
 void GLProcessUI(WPARAM wParam, LPARAM lParam);
+
+
+void SetViewportStatusMessage(wstring message);
+void SetViewportPercentMsg(wstring percent);
 
 void InitializeGLUIControls();
 void UpdateSliderText();

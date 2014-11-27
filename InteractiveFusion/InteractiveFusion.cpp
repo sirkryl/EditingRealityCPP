@@ -1,5 +1,6 @@
 #include "InteractiveFusion.h"
 #include "MeshHelper.h"
+#include "SelectionHelper.h"
 #include "Keys.h"
 //#include <gdiplus.h>
 
@@ -11,7 +12,12 @@ InteractiveFusion openGLWin;
 MeshHelper meshHelper;
 
 HWND hButtonYes, hButtonNo;
-HWND hButtonExport, hButtonDuplicate, hButtonReset;
+HWND hButtonExport, hButtonReset;
+
+HWND hButtonDuplicate;
+
+HWND hButtonScale, hButtonRotateVertical, hButtonRotateHorizontal;
+
 HWND hModeArrow;
 HWND hCheckBoxDuplicate;
 HWND hTextWalls;
@@ -20,6 +26,9 @@ std::vector<HWND> uiElements;
 WNDPROC oldEditProc;
 HBRUSH hBackground = CreateSolidBrush(RGB(30, 30, 30));
 HBRUSH buttonDefaultBrush, buttonPressedBrush, buttonActiveBrush;
+HBRUSH buttonGreenBrush, buttonGreenPressedBrush, buttonGreenInactiveBrush, buttonRedBrush, buttonRedPressedBrush, buttonRedInactiveBrush;
+HBRUSH buttonBlueBrush;
+
 HPEN buttonDefaultPen, buttonPressedPen, buttonInactivePen, buttonModePen;
 
 HWND editKSearchHandle, editMinClustersHandle, editCarryDistanceHandle, editMaxClustersHandle, editNonHandle, editSmoothnessHandle, editCurvatureHandle, editFillHoleHandle, editRemoveComponentHandle;
@@ -27,7 +36,7 @@ HWND statusHandle;
 HWND debugHandle;
 int debugWidth = 0;
 TCHAR Keys::kp[256] = { 0 };
-HFONT uiFont;
+HFONT uiFont, smallUiFont;
 HFONT statusFont;
 
 HICON hDeleteIcon;
@@ -55,6 +64,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	ShowWindow(openGLWin.parent, SW_SHOW);
 
 	uiFont = CreateFont(40, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
+	smallUiFont = CreateFont(20, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
 	hTextWalls = GetDlgItem(openGLWin.glWindowParent, IDC_STATIC_WALL);
 	SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
 	SendMessage(hTextWalls, WM_SETFONT, (WPARAM)uiFont, TRUE);
@@ -71,11 +81,18 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 	buttonDefaultBrush = CreateSolidBrush(RGB(20, 20, 20));
 	buttonPressedBrush = CreateSolidBrush(RGB(40, 40, 40));
-	buttonDefaultPen = CreatePen(PS_SOLID, 2, RGB(200, 200, 200));
+	buttonDefaultPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
 	buttonInactivePen = CreatePen(PS_SOLID, 1, RGB(50, 50, 50));
 	buttonPressedPen = CreatePen(PS_SOLID, 2, RGB(160, 160, 160));
 	buttonActiveBrush = CreateSolidBrush(RGB(0, 0, 255));
 	buttonModePen = CreatePen(PS_SOLID, 2, RGB(50, 50, 50));
+	buttonGreenBrush = CreateSolidBrush(RGB(0, 170, 0));
+	buttonGreenInactiveBrush = CreateSolidBrush(RGB(0, 50, 0));
+	buttonBlueBrush = CreateSolidBrush(RGB(0, 0, 170));
+	buttonGreenPressedBrush = CreateSolidBrush(RGB(0, 100, 0));
+	buttonRedBrush = CreateSolidBrush(RGB(170, 0, 0));
+	buttonRedPressedBrush = CreateSolidBrush(RGB(100, 0, 0));
+	buttonRedInactiveBrush = CreateSolidBrush(RGB(50, 0, 0));
 
 	openGLWin.SetWindowMode(SCANNING);
 	//openGLWin.SetWindowState(START);
@@ -146,6 +163,9 @@ void InteractiveFusion::SetWindowState(WindowState wState)
 		ShowWindow(hButtonExport, SW_SHOW);
 		ShowWindow(hButtonReset, SW_SHOW);
 		ShowWindow(hButtonDuplicate, SW_SHOW);
+		ShowWindow(hButtonScale, SW_SHOW);
+		ShowWindow(hButtonRotateHorizontal, SW_SHOW);
+		ShowWindow(hButtonRotateVertical, SW_SHOW);
 		
 		//openGLWin.glControl.ResizeOpenGLViewportFull();
 	}
@@ -252,12 +272,19 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	hDeleteIcon = (HICON)LoadImage(openGLWin.appInstance, MAKEINTRESOURCE(IDI_TRASH), IMAGE_ICON, 100, 100, NULL);
 
 
+	hButtonScale = CreateWindowEx(0, L"BUTTON", L"Scale", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_SCALE, NULL, 0);
+	hButtonRotateVertical = CreateWindowEx(0, L"BUTTON", L"Rotate ^v", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_ROTATE_VERTICAL, NULL, 0);
+	hButtonRotateHorizontal = CreateWindowEx(0, L"BUTTON", L"Rotate <>", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_ROTATE_HORIZONTAL, NULL, 0);
+
 	//hDeleteIcon = (HICON)LoadImage(openGLWin.appInstance, MAKEINTRESOURCE(IDI_TRASH), IMAGE_ICON, 128, 128, NULL);
 	//SendMessage(hButtonDelete, STM_SETIMAGE, IMAGE_ICON, (LPARAM)hDeleteIcon);
 	uiElements.push_back(hButtonYes);
 	uiElements.push_back(hButtonNo);
 	uiElements.push_back(hButtonExport);
 	uiElements.push_back(hButtonDuplicate);
+	uiElements.push_back(hButtonScale);
+	uiElements.push_back(hButtonRotateVertical);
+	uiElements.push_back(hButtonRotateHorizontal);
 	uiElements.push_back(hButtonReset);
 	uiElements.push_back(hTextWalls);
 	//uiElements.push_back(hScanText);
@@ -364,7 +391,10 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lParam;
 		SelectObject(item->hDC, uiFont);
 		FillRect(item->hDC, &item->rcItem, hBackground);
-		SelectObject(item->hDC, hBackground);
+		//SelectObject(item->hDC, hBackground);
+		HBRUSH bgBrush = CreateSolidBrush(RGB(10, 10, 10));
+		HBRUSH inactiveBrush = CreateSolidBrush(RGB(60, 60, 60));
+		SelectObject(item->hDC, bgBrush);
 		if (IsWindowEnabled(item->hwndItem))
 		{
 			SetTextColor(item->hDC, RGB(245, 245, 245));
@@ -379,7 +409,7 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		}
 		else
 		{
-			SelectObject(item->hDC, CreateSolidBrush(RGB(60,60,60)));
+			SelectObject(item->hDC, inactiveBrush);
 		//	FillRect(item->hDC, &item->rcItem, CreateSolidBrush(RGB(50,50,50)));
 			SelectObject(item->hDC, CreatePen(PS_SOLID, 2, RGB(100,100,100)));
 			SetTextColor(item->hDC, RGB(245, 245, 245));
@@ -399,6 +429,8 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		else
 			DrawTextA(item->hDC, lpBuff, len, &item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		DeleteObject(lpBuff);
+		DeleteObject(bgBrush);
+		DeleteObject(inactiveBrush);
 	}
 
 	if (IDC_BUTTON_DELETE == LOWORD(wParam))
@@ -425,33 +457,91 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		|| IDC_BUTTON_YES == LOWORD(wParam)
 		|| IDC_BUTTON_NO == LOWORD(wParam)
 		|| IDC_BUTTON_DUPLICATE == LOWORD(wParam)
-		|| IDC_BUTTON_RESET == LOWORD(wParam))
+		|| IDC_BUTTON_RESET == LOWORD(wParam)
+		|| IDC_BUTTON_SCALE == LOWORD(wParam)
+		|| IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam)
+		|| IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam))
 	{
 		LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lParam;
-		SelectObject(item->hDC, uiFont);
+
+		if (IDC_BUTTON_SCALE == LOWORD(wParam) || IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) || IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam))
+			SelectObject(item->hDC, smallUiFont);
+		else
+			SelectObject(item->hDC, uiFont);
 		FillRect(item->hDC, &item->rcItem, hBackground);
 		SelectObject(item->hDC, buttonDefaultBrush);
 		if (!IsWindowEnabled(item->hwndItem))
 		{
 			SetTextColor(item->hDC, RGB(50, 50, 50));
-			SelectObject(item->hDC, buttonInactivePen);
+
+			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam))
+			{
+				SelectObject(item->hDC, buttonDefaultPen);
+				SelectObject(item->hDC, buttonGreenInactiveBrush);
+			}
+			else if (IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_RESET == LOWORD(wParam))
+			{
+				SelectObject(item->hDC, buttonDefaultPen);
+				SelectObject(item->hDC, buttonRedInactiveBrush);
+			}
+			else
+			{
+				SelectObject(item->hDC, buttonInactivePen);
+			}
 		}
 		else if (item->itemState & ODS_SELECTED)
 		{
 			SetTextColor(item->hDC, RGB(245, 245, 245));
-			SelectObject(item->hDC, buttonPressedBrush);
-			SelectObject(item->hDC, buttonPressedPen);
+			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam))
+			{
+				SelectObject(item->hDC, buttonDefaultPen);
+				SelectObject(item->hDC, buttonGreenPressedBrush);
+			}
+			else if (IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_RESET == LOWORD(wParam))
+			{
+				SelectObject(item->hDC, buttonDefaultPen);
+				SelectObject(item->hDC, buttonRedPressedBrush);
+			}
+			else
+			{
+				SelectObject(item->hDC, buttonPressedBrush);
+				SelectObject(item->hDC, buttonPressedPen);
+			}
 		}
 		else
 		{
-			
 			SetTextColor(item->hDC, RGB(240, 240, 240));
-			SelectObject(item->hDC, buttonDefaultPen);
+			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam))
+			{
+				SelectObject(item->hDC, buttonDefaultPen);
+				SelectObject(item->hDC, buttonGreenBrush);
+			}
+			else if (IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_RESET == LOWORD(wParam))
+			{
+				SelectObject(item->hDC, buttonDefaultPen);
+				SelectObject(item->hDC, buttonRedBrush);
+			}
+			else
+			{
+				SelectObject(item->hDC, buttonDefaultPen);
+			}
 		}
 		if (IDC_BUTTON_DUPLICATE == LOWORD(wParam) && openGLWin.duplicationMode)
 			SelectObject(item->hDC, buttonActiveBrush);
+		if (IDC_BUTTON_SCALE == LOWORD(wParam) && glSelector.GetManipulationMode() == MANIPULATION_SCALE)
+			SelectObject(item->hDC, buttonActiveBrush);
+		else if (IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) && glSelector.GetManipulationMode() == MANIPULATION_ROTATE_Y)
+			SelectObject(item->hDC, buttonActiveBrush);
+		else if (IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) && glSelector.GetManipulationMode() == MANIPULATION_ROTATE_X)
+			SelectObject(item->hDC, buttonActiveBrush);
+			
+		
 		SetBkMode(item->hDC, TRANSPARENT);
-		RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 20, 20);
+		
+		if (true)
+			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 500, 500);
+		else
+			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 20, 20);
 		int len;
 		len = GetWindowTextLength(item->hwndItem);
 		LPSTR lpBuff = new char[len + 1];
@@ -497,8 +587,16 @@ LRESULT CALLBACK GLViewportProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		DeleteObject(buttonPressedBrush);
 		DeleteObject(buttonPressedPen);
 		DeleteObject(buttonActiveBrush);
+		DeleteObject(buttonGreenBrush);
+		DeleteObject(buttonGreenPressedBrush);
+		DeleteObject(buttonGreenInactiveBrush);
+		DeleteObject(buttonRedBrush);
+		DeleteObject(buttonRedPressedBrush);
+		DeleteObject(buttonRedInactiveBrush);
+		DeleteObject(buttonBlueBrush);
 		DeleteObject(statusFont);
 		DeleteObject(uiFont);
+		DeleteObject(smallUiFont);
 		
 		break;
 	default:
@@ -1053,6 +1151,21 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	{
 		openGLWin.duplicationMode = !openGLWin.duplicationMode;
 	}
+	if (IDC_BUTTON_SCALE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		openGLWin.RedrawManipulationButtons();
+		glSelector.SetManipulationMode(MANIPULATION_SCALE);
+	}
+	if (IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		openGLWin.RedrawManipulationButtons();
+		glSelector.SetManipulationMode(MANIPULATION_ROTATE_Y);
+	}
+	if (IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		openGLWin.RedrawManipulationButtons();
+		glSelector.SetManipulationMode(MANIPULATION_ROTATE_X);
+	}
 	if (IDC_BUTTON_YES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//openGLWin.glControl.SetOffSetBottom(0);
@@ -1233,11 +1346,14 @@ void MoveButtonsOnResize()
 	
 		if (openGLWin.GetWindowState() == DEFAULT)
 		{
-		
-			MoveWindow(hButtonExport, width - 200, height - 200, 150, 150, true);
+			MoveWindow(hButtonExport, width - 200, height-200, 150, 150, true);
 			
-			MoveWindow(hButtonDuplicate, width - 200, 250, 150, 150, true);
-			MoveWindow(hButtonReset, width - 200, 50, 150, 150, true);
+			MoveWindow(hButtonDuplicate, width - 200, 300, 150, 150, true);
+			MoveWindow(hButtonReset, width - 200, 100, 150, 150, true);
+
+			MoveWindow(hButtonScale, width - 250, 500, 75, 75, true);
+			MoveWindow(hButtonRotateHorizontal, width - 165, 500, 75, 75, true);
+			MoveWindow(hButtonRotateVertical, width - 80, 500, 75, 75, true);
 		}
 
 		RECT sRect;
@@ -1246,11 +1362,11 @@ void MoveButtonsOnResize()
 
 		if (openGLWin.GetWindowState() == WALL_SELECTION)
 		{
-			MoveWindow(hButtonYes, width / 2 - 175, height - 150, 150, 50, true);
-			MoveWindow(hButtonNo, width / 2 + 25, height - 150, 150, 50, true);
+			MoveWindow(hButtonYes, width / 2 - 275, height - 200, 150, 150, true);
+			MoveWindow(hButtonNo, width / 2 + 25, height - 200, 150, 150, true);
 			RECT rect;
 			GetClientRect(hTextWalls, &rect);
-			MoveWindow(hTextWalls, width / 2 - 250, height - 200, 500, 40, true);
+			MoveWindow(hTextWalls, width / 2 - 275, height - 250, 450, 40, true);
 			SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
 	
 			InvalidateRect(hTextWalls, &rect, TRUE);
@@ -1284,6 +1400,24 @@ bool InteractiveFusion::IsMouseInHandle()
 	return false;
 }
 
+void InteractiveFusion::RedrawManipulationButtons()
+{
+	RECT rect;
+	GetClientRect(hButtonScale, &rect);
+
+	InvalidateRect(hButtonScale, &rect, TRUE);
+
+	GetClientRect(hButtonRotateHorizontal, &rect);
+
+	InvalidateRect(hButtonRotateHorizontal, &rect, TRUE);
+
+	GetClientRect(hButtonRotateVertical, &rect);
+
+	InvalidateRect(hButtonRotateVertical, &rect, TRUE);
+	//MapWindowPoints(hTextWalls, openGLWin.glWindowHandle, (POINT *)&rect, 2);
+	//RedrawWindow(hTextWalls, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
+}
+
 bool InteractiveFusion::IsMouseInOpenGLWindow()
 {
 	POINT pCur;
@@ -1309,11 +1443,6 @@ void InteractiveFusion::ShowStatusBarMessage(wstring message)
 {
 	LPCWSTR statusBarMessage = message.c_str();
 	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, statusBarMessage);
-}
-
-void InteractiveFusion::SetViewportStatusMessage(wstring message)
-{
-	statusMsg = message;
 }
 
 #pragma endregion GUI

@@ -14,6 +14,7 @@
 #pragma region
 
 wstring statusMsg = L"";
+wstring percentMsg = L"";
 //mesh storage
 std::vector<shared_ptr<VCGMeshContainer>> meshData;
 
@@ -79,12 +80,17 @@ void SetViewportStatusMessage(wstring message)
 	statusMsg = message;
 }
 
+void SetViewportPercentMsg(wstring percent)
+{
+	percentMsg = percent;
+}
+
 void ShowStatusMsg()
 {
 	int w = openGLWin.glControl.GetViewportWidth();
 	int h = openGLWin.glControl.GetViewportHeight();
+	float xPos = 0.0f - statusMsg.length() * 0.008f;
 	wstring loadString = statusMsg + L"" + dots[floor(dotCount / 100)];
-	float xPos = 0.0f - statusMsg.size()*0.01f;
 	if (dotCount == 299)
 		dotCount = 0;
 	else
@@ -92,7 +98,15 @@ void ShowStatusMsg()
 
 	glText.PrepareForRender();
 	glText.RenderText(loadString, 25, xPos, 0.05f, 2.0f / w, 2.0f / h);
+
+	if (percentMsg.size() > 0)
+	{
+		float xPercentPos = -0.1f;
+		glText.RenderText(percentMsg, 25, xPercentPos, -0.05f, 2.0f / w, 2.0f / h);
+	}
 }
+
+
 
 void HandleKeyInput()
 {
@@ -203,6 +217,7 @@ void Render(LPVOID lpParam)
 					return;
 			}
 			glSegmentation.InitializePreview();
+			glCamera.SetRotationPoint(glSegmentation.GetPreviewCenterPoint());
 		}
 		else
 		{
