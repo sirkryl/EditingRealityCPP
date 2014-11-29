@@ -98,9 +98,13 @@ bool SelectionHelper::ColorPlacing(bool preview)
 	if (tmpIndex == TRASH_BIN_COLOR)
 	{
 		gl2DHelper.isOpen = true;
+		meshData[selectedIndex]->IsOverTrash(true);
 	}
 	else
+	{
 		gl2DHelper.isOpen = false;
+		meshData[selectedIndex]->IsOverTrash(false);
+	}
 
 	bool found = false;
 	int meshIndex = 0;

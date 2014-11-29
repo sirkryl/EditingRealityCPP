@@ -316,7 +316,11 @@ void VCGMeshContainer::ParseData()
 		float selectScaleFactor = 0.3f / (upperBounds.y - lowerBounds.y);
 		selectScaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3((selectScaleFactor, selectScaleFactor, selectScaleFactor)));
 	}
-
+	if ((upperBounds.y - lowerBounds.y) > 0.05f)
+	{
+		float trashScaleFactor = 0.05f / (upperBounds.y - lowerBounds.y);
+		trashScaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3((trashScaleFactor, trashScaleFactor, trashScaleFactor)));
+	}
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 
 	cDebug::DbgOut(L"parse duration: ", duration);
@@ -459,17 +463,24 @@ void VCGMeshContainer::Draw()
 		}
 		else if (!colorSelection)
 		{
-			modelMatrix = cursorTranslation * selectScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+			//if (isOverTrash)
+			//	modelMatrix = cursorTranslation * trashScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+			//else
+				modelMatrix = cursorTranslation * selectScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
 		}
 	}
 	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
 
+	//if (isOverTrash)
+		//glDisable(GL_DEPTH_TEST);
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glDrawElements(GL_TRIANGLES, indices.size()*3, GL_UNSIGNED_INT, (GLvoid*)0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	glUseProgram(0);
+	//if (isOverTrash)
+		//glEnable(GL_DEPTH_TEST);
 }
 
 void VCGMeshContainer::DrawBB()
@@ -501,7 +512,10 @@ void VCGMeshContainer::DrawBB()
 		}
 		else if (!colorSelection)
 		{
-			modelMatrix = cursorTranslation * selectScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+			//if (isOverTrash)
+			//	modelMatrix = cursorTranslation * trashScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+			//else
+				modelMatrix = cursorTranslation * selectScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
 		}
 	}
 	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
@@ -608,6 +622,12 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 	offSet.z = (centerPoint.z - lowerBounds.z);
 
 	originTransform = glm::translate(glm::mat4(1.0), -centerPoint);
+
+	if ((upperBounds.y - lowerBounds.y) > 0.3f)
+	{
+		float selectScaleFactor = 0.3f / (upperBounds.y - lowerBounds.y);
+		selectScaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3((selectScaleFactor, selectScaleFactor, selectScaleFactor)));
+	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
@@ -810,9 +830,12 @@ bool VCGMeshContainer::CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, g
 void VCGMeshContainer::ClearMesh()
 {
 	currentMesh.Clear();
-	glDeleteBuffers(1, &vbo);
-	glDeleteBuffers(1, &ibo);
-	glDeleteVertexArrays(1, &vao);
+	if (vbo != 0)
+	{ 
+		glDeleteBuffers(1, &vbo);
+		glDeleteBuffers(1, &ibo);
+		glDeleteVertexArrays(1, &vao);
+	}
 	vertices.clear();
 	indices.clear();
 	vertNum = 0;
@@ -1037,6 +1060,11 @@ int VCGMeshContainer::GetColorCode()
 void VCGMeshContainer::TogglePreviewSelection(bool flag)
 {
 	previewSelection = flag;
+}
+
+void VCGMeshContainer::IsOverTrash(bool flag)
+{
+	isOverTrash = flag;
 }
 
 std::vector<Vertex> VCGMeshContainer::GetVertices()

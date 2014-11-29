@@ -21,7 +21,7 @@ HWND hButtonScale, hButtonRotateVertical, hButtonRotateHorizontal;
 HWND hModeArrow;
 HWND hCheckBoxDuplicate;
 HWND hTextWalls;
-HWND hScanText, hInteractionText;
+HWND hPrepareText, hScanText, hInteractionText;
 std::vector<HWND> uiElements;
 WNDPROC oldEditProc;
 HBRUSH hBackground = CreateSolidBrush(RGB(30, 30, 30));
@@ -70,6 +70,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	SendMessage(hTextWalls, WM_SETFONT, (WPARAM)uiFont, TRUE);
 	ShowWindow(hTextWalls, SW_HIDE);
 
+	hPrepareText = CreateWindowEx(0, L"BUTTON", L"PREPARE", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_MODE_PREPARE, NULL, 0);
+
 	hScanText = CreateWindowEx(0, L"BUTTON", L"SCAN", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_MODE_SCAN, NULL, 0);
 
 	hInteractionText = CreateWindowEx(0, L"BUTTON", L"INTERACTION", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_MODE_INTERACTION, NULL, 0);
@@ -94,9 +96,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	buttonRedPressedBrush = CreateSolidBrush(RGB(100, 0, 0));
 	buttonRedInactiveBrush = CreateSolidBrush(RGB(50, 0, 0));
 
-	openGLWin.SetWindowMode(SCANNING);
+	openGLWin.SetWindowMode(PREPARE_SCANNING);
 	//openGLWin.SetWindowState(START);
-	StartKinectFusion(openGLWin.parent, hInstance, StartOpenGLThread, openGLWin.fusionExplorer, openGLWin.fusionHandle);
+	StartKinectFusion(openGLWin.parent, hInstance, StartOpenGLThread, SetWindowMode,openGLWin.fusionExplorer, openGLWin.fusionHandle);
 }
 
 #pragma region
@@ -105,6 +107,7 @@ WindowMode InteractiveFusion::GetWindowMode()
 {
 	return mode;
 }
+
 void InteractiveFusion::SetWindowMode(WindowMode wMode)
 {
 	mode = wMode;
@@ -112,14 +115,28 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 	if (mode == INTERACTION)
 	{
 		ShowWindow(glWindowHandle, SW_SHOW);
+		EnableWindow(hPrepareText, true);
 		EnableWindow(hScanText, true);
 		EnableWindow(hInteractionText, false);
 	}
 	else if (mode == SCANNING)
 	{
 		cDebug::DbgOut(L"activate scanning");
+		EnableWindow(hPrepareText, true);
 		EnableWindow(hScanText, false);
 		EnableWindow(hInteractionText, true);
+		
+	}
+	else if (mode == PREPARE_SCANNING)
+	{
+		EnableWindow(hPrepareText, false);
+		EnableWindow(hScanText, true);
+		EnableWindow(hInteractionText, true);
+		if (openGLWin.fusionExplorer)
+		{ 
+			if (openGLWin.fusionExplorer->GetWindowState() != START)
+				openGLWin.fusionExplorer->SetWindowState(START);
+		}
 	}
 }
 
@@ -143,6 +160,7 @@ void InteractiveFusion::SetWindowState(WindowState wState)
 	HideAllButtons();
 	openGLWin.glControl.SetOffSetBottom(0);
 	openGLWin.glControl.SetOffSetRight(0);
+	ShowWindow(hPrepareText, SW_SHOW);
 	ShowWindow(hScanText, SW_SHOW);
 	ShowWindow(hInteractionText, SW_SHOW);
 	//ShowWindow(hModeArrow, SW_HIDE);
@@ -378,6 +396,11 @@ void StartOpenGLThread(int testMode)
 
 }
 
+void SetWindowMode(int wMode)
+{
+	openGLWin.SetWindowMode((WindowMode)wMode);
+}
+
 DWORD InteractiveFusion::GetThreadID()
 {
 	return threadId;
@@ -386,7 +409,8 @@ DWORD InteractiveFusion::GetThreadID()
 bool DrawButton(WPARAM wParam, LPARAM lParam)
 {
 	if (IDC_BUTTON_MODE_INTERACTION == LOWORD(wParam) ||
-		IDC_BUTTON_MODE_SCAN == LOWORD(wParam))
+		IDC_BUTTON_MODE_SCAN == LOWORD(wParam) ||
+		IDC_BUTTON_MODE_PREPARE == LOWORD(wParam))
 	{
 		LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lParam;
 		SelectObject(item->hDC, uiFont);
@@ -737,7 +761,7 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		break;
 	case WM_NCLBUTTONDBLCLK:
 	case WM_SIZE:
-		if (openGLWin.GetWindowMode() == SCANNING)
+		if (openGLWin.GetWindowMode() == SCANNING || openGLWin.GetWindowMode() == PREPARE_SCANNING)
 		{
 			MoveModeButtonsOnResize();
 			MoveWindow(openGLWin.fusionHandle, 0, 0, LOWORD(lParam), HIWORD(lParam), true);
@@ -1128,16 +1152,29 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 void GLProcessUI(WPARAM wParam, LPARAM lParam)
 {
+	if (IDC_BUTTON_MODE_PREPARE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.GetWindowMode() != PREPARE_SCANNING)
+		{
+			if (openGLWin.GetWindowMode() != SCANNING)
+				openGLWin.ResumeScanning();
+
+			openGLWin.SetWindowMode(PREPARE_SCANNING);
+		}
+	}
 	if (IDC_BUTTON_MODE_SCAN == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
-		if (openGLWin.GetWindowMode() == INTERACTION)
+		if (openGLWin.GetWindowMode() == PREPARE_SCANNING)
+			openGLWin.fusionExplorer->StartScan();
+		else if (openGLWin.GetWindowMode() != SCANNING)
 			openGLWin.ResumeScanning();
+		
 	}
 	if (IDC_BUTTON_MODE_INTERACTION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		SetFocus(hScanText);
 		MoveModeButtonsOnResize();
-		if (openGLWin.GetWindowMode() == SCANNING)
+		if (openGLWin.GetWindowMode() == SCANNING && openGLWin.fusionExplorer->GetWindowState() == SCAN)
 		{
 			openGLWin.fusionExplorer->FinishScan(0);
 		}
@@ -1323,9 +1360,9 @@ void MoveModeButtonsOnResize()
 {
 	RECT rect; GetWindowRect(openGLWin.parent, &rect);
 	//MoveWindow(hModeArrow, 113, 0, 50, 50, true);
-
-	MoveWindow(hScanText, rect.right/2 - 190, 8, 130, 40, true);
-	MoveWindow(hInteractionText, rect.right/2 - 60 , 8, 250, 40, true);
+	MoveWindow(hPrepareText, rect.right / 2 - 265, 8, 150, 40, true);
+	MoveWindow(hScanText, rect.right/2 - 115, 8, 130, 40, true);
+	MoveWindow(hInteractionText, rect.right/2 + 15 , 8, 250, 40, true);
 	//MoveWindow(hScanText, 15, 8, 125, 40, true);
 	//MoveWindow(hInteractionText, 140, 8, 250, 40, true);
 }

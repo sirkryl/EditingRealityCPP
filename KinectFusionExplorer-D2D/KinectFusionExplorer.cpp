@@ -9,6 +9,8 @@
 #include <chrono>
 #include <thread>
 #include <map>
+#include <sstream>
+#include <iomanip>
 // Project includes
 #include "KFKeys.h"
 #include "resource.h"
@@ -22,12 +24,25 @@ LRESULT CALLBACK FusionDebugRouter(HWND hWnd, UINT message, WPARAM wParam, LPARA
 
 //OpenGLWin openGLWin;
 bool initDone = false;
+bool windowsInitialized = false;
 float ratio = 480.0f / 640.0f;
 bool debugMode = true;
 bool resumed = false;
 bool interactionMode = false;
+
+bool mouseDown = false;
+
+POINT sliderAnchor;
+
 HWND hWndApp;
 HWND hButtonTestOne, hButtonTestTwo, hButtonInteractionMode;
+
+HWND hButtonSlider;
+HWND hSliderBackground;
+HWND hSliderText;
+HWND hSliderDescription;
+int sliderPos = -1;
+
 HWND hButtonStart;
 HWND hButtonResetReconstruction;
 HWND fusionDebugHandle;
@@ -41,9 +56,10 @@ HBRUSH bGreenPressedBrush, bRedPressedBrush;
 HBRUSH bRedInactiveBrush, bGreenInactiveBrush;
 HBRUSH bBackground = CreateSolidBrush(RGB(30, 30, 30));
 HPEN bDefaultPen, bPressedPen, bInactivePen;
-HFONT guiFont, countdownFont, smallFont, buttonFont;
+HFONT guiFont, countdownFont, smallFont, buttonFont, sliderTextFont;
 
 void(*ptrStartOpenGL)(int);
+void(*ptrSetWindowMode)(int);
 #define MIN_DEPTH_DISTANCE_MM 350   // Must be greater than 0
 #define MAX_DEPTH_DISTANCE_MM 8000
 #define MIN_INTEGRATION_WEIGHT 1    // Must be greater than 0
@@ -62,12 +78,13 @@ void(*ptrStartOpenGL)(int);
 /// <param name="nCmdShow">whether to display minimized, maximized, or normally</param>
 /// <returns>status</returns>
 //int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
-void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(int), CKinectFusionExplorer*& expl, HWND &fusionHandle)
+void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(int), void(*a_ptrSetWindowMode)(int),CKinectFusionExplorer*& expl, HWND &fusionHandle)
 {
 	
 	CKinectFusionExplorer application;
 	expl = &application;
 	ptrStartOpenGL = a_ptrStartOpenGL;
+	ptrSetWindowMode = a_ptrSetWindowMode;
 	application.Run(parent, hInstance, 0, fusionHandle);// nCmdShow);
 }
 
@@ -150,7 +167,7 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	buttonFont = CreateFont(40, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
 	countdownFont = CreateFont(300, 0, 0, 0, FW_LIGHT, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
 	smallFont = CreateFont(20, 0, 0, 0, FW_LIGHT, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
-
+	sliderTextFont = CreateFont(20, 0, 0, 0, FW_LIGHT, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
 	bDefaultBrush = CreateSolidBrush(RGB(20, 20, 20));
 	bPressedBrush = CreateSolidBrush(RGB(40, 40, 40));
 	bGreenBrush = CreateSolidBrush(RGB(0, 170, 0));
@@ -171,6 +188,14 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	//HANDLE thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&ThreadMain, (LPVOID)hWndApp, 0, 0);
 	
 	hButtonStart = CreateWindowEx(0, L"Button", L"START", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_BUTTON_START, hInstance, 0);
+	hButtonSlider = CreateWindowEx(0, L"Button", L"", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_BUTTON_SLIDER, hInstance, 0);
+	hSliderBackground = CreateWindowEx(0, L"Button", L"", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_BUTTON_SLIDERBACKGROUND, hInstance, 0);
+	hSliderText = CreateWindowEx(0, L"STATIC", L"0m", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, 50, 50, 100, 50, hWndApp, (HMENU)IDC_FUSION_STATIC_SLIDER_TEXT, hInstance, 0);
+	
+	SendMessage(hSliderText, WM_SETFONT, (WPARAM)sliderTextFont, TRUE);
+	
+	hSliderDescription = CreateWindowEx(0, L"STATIC", L"Size", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, 50, 50, 100, 50, hWndApp, (HMENU)IDC_FUSION_STATIC_SLIDER_DESCRIPTION, hInstance, 0);
+	SendMessage(hSliderDescription, WM_SETFONT, (WPARAM)buttonFont, TRUE);
 
 	hStatusText = GetDlgItem(hWndApp, IDC_FUSION_STATIC_STATUS);
 	
@@ -197,6 +222,10 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	fusionUiElements.push_back(hButtonInteractionMode);
 	fusionUiElements.push_back(hButtonResetReconstruction);
 	fusionUiElements.push_back(hButtonStart);
+	fusionUiElements.push_back(hButtonSlider);
+	fusionUiElements.push_back(hSliderBackground);
+	fusionUiElements.push_back(hSliderText);
+	fusionUiElements.push_back(hSliderDescription);
 	fusionUiElements.push_back(hStatusText);
 	fusionUiElements.push_back(hStatusTextSmall);
 	fusionUiElements.push_back(hHelpText);
@@ -359,6 +388,120 @@ bool CKinectFusionExplorer::DrawButton(LPARAM lParam)
 	return TRUE;
 }
 
+bool CKinectFusionExplorer::DrawButtonSlider(LPARAM lParam)
+{
+	LPDRAWITEMSTRUCT Item;
+	Item = (LPDRAWITEMSTRUCT)lParam;
+	SelectObject(Item->hDC, smallFont);
+	FillRect(Item->hDC, &Item->rcItem, bBackground);
+	SelectObject(Item->hDC, bPressedBrush);
+	SetTextColor(Item->hDC, RGB(240, 240, 240));
+	SelectObject(Item->hDC, bDefaultPen);
+	SetBkMode(Item->hDC, TRANSPARENT);
+
+	RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
+	int len;
+	len = GetWindowTextLength(Item->hwndItem);
+	LPSTR lpBuff;
+	lpBuff = new char[len + 1];
+	GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
+
+	DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+	if (sliderPos == -1)
+		UpdateButtonSliderValue();
+
+	return TRUE;
+}
+
+
+bool CKinectFusionExplorer::DrawSliderBackground(LPARAM lParam)
+{
+	LPDRAWITEMSTRUCT Item;
+	Item = (LPDRAWITEMSTRUCT)lParam;
+	SelectObject(Item->hDC, buttonFont);
+	FillRect(Item->hDC, &Item->rcItem, bBackground);
+	SelectObject(Item->hDC, bDefaultBrush);
+	SetTextColor(Item->hDC, RGB(240, 240, 240));
+	SelectObject(Item->hDC, bDefaultPen);
+
+	SetBkMode(Item->hDC, TRANSPARENT);
+
+	RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
+	int len;
+	len = GetWindowTextLength(Item->hwndItem);
+	LPSTR lpBuff;
+	lpBuff = new char[len + 1];
+	GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
+
+	DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+	return TRUE;
+}
+void CKinectFusionExplorer::UpdateButtonSlider()
+{
+	POINT p;
+	GetCursorPos(&p);
+	RECT borderRect; GetClientRect(hSliderBackground, &borderRect);
+	RECT sliderRect; GetClientRect(hButtonSlider, &sliderRect);
+	MapWindowPoints(hSliderBackground, m_hWnd, (POINT *)&borderRect, 2);
+
+	ScreenToClient(m_hWnd, &p);
+	if (p.x != sliderAnchor.x && p.x > borderRect.left + (sliderRect.right / 2) && p.x < borderRect.right - (sliderRect.right / 2))
+	{
+		sliderAnchor.x = p.x;
+		RECT rect; GetClientRect(m_hWnd, &rect);
+
+		sliderPos = p.x - (sliderRect.right / 2.0f) - borderRect.left;
+		MoveButtonSlider(sliderPos);
+		//MoveWindow(hButtonSlider, p.x-50, rect.bottom / 2 + 300, 100, 100, true);
+		//RECT sliderRect; GetWindowRect(hButtonSlider, &sliderRect);
+		//32 <--> 256
+		float channelWidth = borderRect.right - (sliderRect.right / 2) - borderRect.left - (sliderRect.right / 2);
+		float percent = sliderPos / channelWidth;
+		int value = percent * 224.0f -1;
+		m_params.m_reconstructionParams.voxelsPerMeter = 256 - value;
+
+		float volumeWidth = m_params.m_reconstructionParams.voxelCountX / m_params.m_reconstructionParams.voxelsPerMeter;
+		float volumeHeight = m_params.m_reconstructionParams.voxelCountY / m_params.m_reconstructionParams.voxelsPerMeter;
+		float volumeDepth = m_params.m_reconstructionParams.voxelCountZ / m_params.m_reconstructionParams.voxelsPerMeter;
+
+		wchar_t buffer[256];
+		std::wstring s;
+		int slen = swprintf(buffer, 255, L"%4.1fm x %4.1fm x %4.1fm",volumeWidth, volumeHeight, volumeDepth);
+		s.assign(buffer, slen);
+
+		SetDlgItemText(hWndApp, IDC_FUSION_STATIC_SLIDER_TEXT, s.c_str());
+	}
+}
+
+void CKinectFusionExplorer::UpdateButtonSliderValue()
+{
+
+
+
+	RECT borderRect; GetWindowRect(hSliderBackground, &borderRect);
+	RECT sliderRect; GetClientRect(hButtonSlider, &sliderRect);
+
+	int value = 256 - m_params.m_reconstructionParams.voxelsPerMeter;
+	float percent = (value-1) / 224.0f;
+	float channelWidth = borderRect.right - (sliderRect.right / 2) - borderRect.left - (sliderRect.right / 2);
+	sliderPos = percent * channelWidth;
+	//MoveButtonSlider(sliderPos);
+
+	float volumeWidth = m_params.m_reconstructionParams.voxelCountX / m_params.m_reconstructionParams.voxelsPerMeter;
+	float volumeHeight = m_params.m_reconstructionParams.voxelCountY / m_params.m_reconstructionParams.voxelsPerMeter;
+	float volumeDepth = m_params.m_reconstructionParams.voxelCountZ / m_params.m_reconstructionParams.voxelsPerMeter;
+
+	wchar_t buffer[256];
+	std::wstring s;
+	int slen = swprintf(buffer, 255, L"%4.1fm x %4.1fm x %4.1fm", volumeWidth, volumeHeight, volumeDepth);
+	s.assign(buffer, slen);
+
+	SetDlgItemText(hWndApp, IDC_FUSION_STATIC_SLIDER_TEXT, s.c_str());
+	MoveButtonSlider(sliderPos);
+}
+
 LRESULT CALLBACK CKinectFusionExplorer::StartProc(
 	HWND hWnd,
 	UINT message,
@@ -370,12 +513,10 @@ LRESULT CALLBACK CKinectFusionExplorer::StartProc(
 	switch (message)
 	{
 	case WM_INITDIALOG:						  // Bind application window handle
-		
 		m_hWnd = hWnd;
 		break;
 		// Handle button press
 	case WM_COMMAND:
-		OutputDebugString(L"COMMAND");
 		ProcessUI(wParam, lParam);
 		break;
 
@@ -390,7 +531,9 @@ LRESULT CALLBACK CKinectFusionExplorer::StartProc(
 		if ((HWND)lParam == hStatusText ||
 			(HWND)lParam == hCountdownText ||
 			(HWND)lParam == hStatusTextSmall ||
-			(HWND)lParam == hHelpText)
+			(HWND)lParam == hHelpText ||
+			(HWND)lParam == hSliderText ||
+			(HWND)lParam == hSliderDescription)
 		{
 
 			HDC hdc = reinterpret_cast<HDC>(wParam);
@@ -418,11 +561,29 @@ LRESULT CALLBACK CKinectFusionExplorer::StartProc(
 			|| IDC_BUTTON_START == LOWORD(wParam))
 		{
 			return DrawButton(lParam);
-			
 		}
+		else if (IDC_BUTTON_SLIDERBACKGROUND == LOWORD(wParam))
+			return DrawSliderBackground(lParam);
+		else if (IDC_BUTTON_SLIDER == LOWORD(wParam))
+			return DrawButtonSlider(lParam);
+		
 	}
 		break;
+	case WM_LBUTTONDOWN:
+		mouseDown = true;
+		break;
+	case WM_LBUTTONUP:
+		mouseDown = false;
+		break;
+	case WM_MOUSEMOVE:
+		if (mouseDown)
+		{ 
+			if (IsMouseInHandle(hButtonSlider))
+				UpdateButtonSlider();
+		}
+		break;
 	}
+
 
 
 	return FALSE;
@@ -511,7 +672,7 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 
 		m_saveMeshFormat = m_params.m_saveMeshType;
 	}
-		break;
+	break;
 
 	case WM_DESTROY:
 		// Quit the main message pump
@@ -531,6 +692,7 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 		DeleteObject(guiFont);
 		DeleteObject(buttonFont);
 		DeleteObject(smallFont);
+		DeleteObject(sliderTextFont);
 		DeleteObject(countdownFont);
 		m_processor.StopProcessing();
 		PostQuitMessage(0);
@@ -556,14 +718,16 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 			m_processor.ResolveSensorConflict();
 		}
 	}
-		break;
+	break;
 	case WM_CTLCOLORSTATIC:
 		if ((HWND)lParam == hStatusText ||
 			(HWND)lParam == hCountdownText ||
 			(HWND)lParam == hStatusTextSmall ||
-			(HWND)lParam == hHelpText)
+			(HWND)lParam == hHelpText ||
+			(HWND)lParam == hSliderText ||
+			(HWND)lParam == hSliderDescription)
 		{
-			
+
 			HDC hdc = reinterpret_cast<HDC>(wParam);
 			SetBkMode((HDC)wParam, TRANSPARENT);
 			SetTextColor(hdc, RGB(255, 255, 255));
@@ -599,9 +763,9 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 	case WM_SIZE:
 	{
 		MoveUIOnResize();
-		
+
 	}
-		break;
+	break;
 	case WM_DRAWITEM:
 	{
 
@@ -613,10 +777,26 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 		{
 			return DrawButton(lParam);
 		}
+		else if (IDC_BUTTON_SLIDER == LOWORD(wParam))
+			return DrawButtonSlider(lParam);
+		else if (IDC_BUTTON_SLIDERBACKGROUND == LOWORD(wParam))
+			return DrawSliderBackground(lParam);
 	}
+	break;
+	case WM_LBUTTONDOWN:
+		mouseDown = true;
+		break;
+	case WM_LBUTTONUP:
+		mouseDown = false;
+		break;
+	case WM_MOUSEMOVE:
+		if (mouseDown)
+		{
+			if (IsMouseInHandle(hButtonSlider))
+				UpdateButtonSlider();
+		}
 		break;
 	}
-	
 
 	return FALSE;
 }
@@ -1102,6 +1282,10 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 	{
 		// Toggle capture color
 		m_params.m_bCaptureColor = !m_params.m_bCaptureColor;
+		/*if (m_params.m_reconstructionParams.voxelsPerMeter != 64)
+			m_params.m_reconstructionParams.voxelsPerMeter = 64;
+		else
+			m_params.m_reconstructionParams.voxelsPerMeter = 256;*/
 	}
 	// If it was for the display surface normals toggle this variable
 	if (IDC_CHECK_MIRROR_DEPTH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
@@ -1141,6 +1325,8 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_BUTTON_TEST_OPENGL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		FinishScan(2);
+		interactionMode = true;
+		m_params.m_bPauseIntegration = true;
 		/*interactionMode = true;
 		ShowWindow(hWndApp, SW_HIDE);
 		ptrStartOpenGL(reinterpret_cast<CKinectFusionExplorer*>(::GetWindowLongPtr(hWndApp, GWLP_USERDATA)), 2);*/
@@ -1194,7 +1380,8 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 	}
 	if (IDC_BUTTON_START == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
-		CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&CountdownThread, 0, 0, 0);
+		StartScan();
+		
 		//SetWindowState(SCAN);
 	}
 	if (IDC_BUTTON_INTERACTION_MODE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
@@ -1306,6 +1493,14 @@ void CKinectFusionExplorer::ProcessUI(WPARAM wParam, LPARAM lParam)
 	m_processor.SetParams(m_params);
 }
 
+void CKinectFusionExplorer::StartScan()
+{
+	ptrSetWindowMode(1);
+	m_params.m_bPauseIntegration = false;
+	interactionMode = false;
+	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&CountdownThread, 0, 0, 0);
+}
+
 void CKinectFusionExplorer::FinishScan(int testMode)
 {
 	if (testMode == 0)
@@ -1322,7 +1517,7 @@ void CKinectFusionExplorer::FinishScan(int testMode)
 		m_processor.SetParams(m_params);
 
 		INuiFusionColorMesh *mesh = nullptr;
-		HRESULT hr = m_processor.CalculateMesh(&mesh, 2);
+		HRESULT hr = m_processor.CalculateMesh(&mesh, 1);
 
 		if (SUCCEEDED(hr))
 		{
@@ -1343,7 +1538,6 @@ void CKinectFusionExplorer::FinishScan(int testMode)
 		}
 
 		// Restore pause state of integration
-		m_params.m_bPauseIntegration = wasPaused;
 		m_processor.SetParams(m_params);
 
 		m_bSavingMesh = false;
@@ -1351,17 +1545,21 @@ void CKinectFusionExplorer::FinishScan(int testMode)
 	else if (testMode == 1)
 	{
 		interactionMode = true;
+		m_params.m_bPauseIntegration = true;
 		ShowWindow(hWndApp, SW_HIDE);
 		ptrStartOpenGL(1);
 	}
 	else if (testMode == 2)
 	{
 		interactionMode = true;
+		m_params.m_bPauseIntegration = true;
 		ShowWindow(hWndApp, SW_HIDE);
 		ptrStartOpenGL(2);
 	}
 	
 }
+
+
 
 /// <summary>
 /// Update the internal variable values from the UI Horizontal sliders.
@@ -1499,20 +1697,46 @@ void CKinectFusionExplorer::MoveUIOnResize()
 	
 	if (GetWindowState() == START || GetWindowState() == COUNTDOWN)
 	{
-		MoveWindow(hStatusText, rRect.right / 2 - 250, rRect.bottom / 2 - 60, 500, 40, true);
+		MoveWindow(hStatusText, rRect.right / 2 - 250, rRect.bottom / 2 - 210, 500, 40, true);
 
-		MoveWindow(hStatusTextSmall, rRect.right / 2 - 250, rRect.bottom / 2 - 20, 500, 30, true);
+		MoveWindow(hStatusTextSmall, rRect.right / 2 - 250, rRect.bottom / 2 - 170, 500, 30, true);
 
-		MoveWindow(hButtonStart, rRect.right / 2 - 100, rRect.bottom / 2 + 20, 200, 50, true);
-
-		MoveWindow(hHelpText, rRect.right / 2 - 350, rRect.bottom / 2 + 200, 700, 40, true);
+		MoveWindow(hButtonStart, rRect.right / 2 - 100, rRect.bottom / 2 + 170, 200, 50, true);
+		
+		MoveWindow(hHelpText, rRect.right / 2 - 350, rRect.bottom / 2 + 300, 700, 40, true);
 
 		MoveWindow(hCountdownText, rRect.right / 2 - 250, rRect.bottom / 2 - 150, 500, 300, true);
+		
 		
 	}
 	MoveWindow(GetDlgItem(m_hWnd, IDC_FRAMES_PER_SECOND), 0, rRect.bottom - 30, 100, 30, true);
 	MoveWindow(GetDlgItem(m_hWnd, IDC_STATUS), 100, rRect.bottom - 30, rRect.right - 100, 30, true);
 	MoveWindow(fusionDebugHandle, rRect.right - 400, 0, 400, rRect.bottom, true);
+
+	if (sliderPos == -1)
+	{ 
+		MoveButtonSlider(0);
+	}
+	else
+	{
+		
+		MoveButtonSlider(sliderPos);
+	}
+	
+}
+
+void CKinectFusionExplorer::MoveButtonSlider(int pos)
+{
+	RECT rRect;
+	GetClientRect(GetParent(m_hWnd), &rRect);
+	//MoveWindow(hButtonSlider, (rRect.right / 2 - 100) + pos, rRect.bottom / 2 + 300, 50, 50, true);
+	//MoveWindow(hSliderBackground, rRect.right / 2 - 100, rRect.bottom / 2 + 300, 250, 50, true);
+	//MoveWindow(hSliderText, rRect.right / 2 + 310, rRect.bottom / 2 + 325, 300, 25, true);
+
+	MoveWindow(hButtonSlider, rRect.right / 2 - 165 + pos, rRect.bottom / 2 - 30, 50, 50, true);
+	MoveWindow(hSliderBackground, rRect.right / 2 - 165, rRect.bottom / 2 - 30, 400, 50, true);
+	MoveWindow(hSliderText, rRect.right / 2 -45, rRect.bottom / 2 + 30, 200, 25, true);
+	MoveWindow(hSliderDescription, rRect.right / 2 - 235, rRect.bottom / 2 - 25, 60, 50, true);
 }
 
 void CKinectFusionExplorer::InitializeFusionUI()
@@ -1548,6 +1772,12 @@ void CKinectFusionExplorer::SetWindowState(FusionState fState)
 		ShowWindow(hButtonResetReconstruction, SW_SHOW);
 		ShowWindow(hButtonTestOne, SW_SHOW);
 		//ShowWindow(hButtonTestTwo, SW_SHOW);
+		ShowWindow(hButtonSlider, SW_SHOW);
+		EnableWindow(hButtonSlider, false);
+		ShowWindow(hSliderBackground, SW_SHOW);
+		ShowWindow(hSliderText, SW_SHOW);
+		ShowWindow(hSliderDescription, SW_SHOW);
+		EnableWindow(hSliderBackground, false);
 		ShowWindow(hButtonStart, SW_SHOW);
 		ShowWindow(hStatusText, SW_SHOW);
 		ShowWindow(hStatusTextSmall, SW_SHOW);
@@ -1582,9 +1812,36 @@ void CKinectFusionExplorer::SetWindowState(FusionState fState)
 		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_INTERACTION), SW_SHOW);
 		//ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_OPENGL), SW_SHOW);
 		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_RESET_RECONSTRUCTION), SW_SHOW);
-		DlgProc(m_hWnd, WM_INITDIALOG, 0, 0);
+
+		if (!windowsInitialized)
+		{ 
+			DlgProc(m_hWnd, WM_INITDIALOG, 0, 0);
+			windowsInitialized = true;
+		}
+
+		ShowWindow(hButtonSlider, SW_SHOW);
+		EnableWindow(hButtonSlider, false);
+		ShowWindow(hSliderBackground, SW_SHOW);
+		ShowWindow(hSliderText, SW_SHOW);
+		ShowWindow(hSliderDescription, SW_SHOW);
+
+		EnableWindow(hSliderBackground, false);
+
 	}
 	
+}
+
+bool CKinectFusionExplorer::IsMouseInHandle(HWND handle)
+{
+	POINT pCur;
+	GetCursorPos(&pCur);
+
+	RECT rRect; GetWindowRect(handle, &rRect);
+	if (pCur.x >= rRect.left && pCur.x <= rRect.right &&
+		pCur.y >= rRect.top && pCur.y <= rRect.bottom)
+		return true;
+
+	return false;
 }
 
 void ResumeKinectFusion()

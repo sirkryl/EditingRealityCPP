@@ -46,7 +46,7 @@ struct KinectFusionParams
 		m_saveMeshType(Ply),
         m_cDeltaFromReferenceFrameCalculationInterval(2),
         m_cMinSuccessfulTrackingFramesForCameraPoseFinder(45), // only update the camera pose finder initially after 45 successful frames (1.5s)
-        m_cMinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure(150), // resume integration following 200 successful frames after tracking failure (~7s)
+        m_cMinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure(100), // resume integration following 200 successful frames after tracking failure (~7s)
         m_cMaxCameraPoseFinderPoseHistory(NUI_FUSION_CAMERA_POSE_FINDER_DEFAULT_POSE_HISTORY_COUNT),
         m_glCameraPoseFinderFeatureSampleLocationsPerFrame(NUI_FUSION_CAMERA_POSE_FINDER_DEFAULT_FEATURE_LOCATIONS_PER_FRAME_COUNT),
         m_fMaxCameraPoseFinderDepthThreshold(NUI_FUSION_CAMERA_POSE_FINDER_DEFAULT_MAX_DEPTH_THRESHOLD),
@@ -80,7 +80,8 @@ struct KinectFusionParams
 
         // Define a cubic Kinect Fusion reconstruction volume, with the sensor at the center of the
         // front face and the volume directly in front of sensor.
-        m_reconstructionParams.voxelsPerMeter = 256;    // 1000mm / 256vpm = ~3.9mm/voxel
+        //m_reconstructionParams.voxelsPerMeter = 256;    // 1000mm / 256vpm = ~3.9mm/voxel
+		m_reconstructionParams.voxelsPerMeter = 128;
         m_reconstructionParams.voxelCountX = 512;       // 512 / 256vpm = 2m wide reconstruction
         m_reconstructionParams.voxelCountY = 384;       // Memory = 512*384*512 * 4bytes per voxel
         m_reconstructionParams.voxelCountZ = 512;       // This will require a GPU with at least 512MB

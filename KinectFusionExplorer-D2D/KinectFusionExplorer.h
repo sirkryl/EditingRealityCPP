@@ -88,6 +88,7 @@ public:
 	/// </summary>
 	void                        UpdateHSliders();
 
+	void StartScan();
 	void FinishScan(int testMode);
 
 	void HideAllUIElements();
@@ -117,7 +118,13 @@ private:
 
 	bool DrawButton(LPARAM lParam);
 	
+	bool DrawButtonSlider(LPARAM lParam);
 
+	bool DrawSliderBackground(LPARAM lParam);
+	void UpdateButtonSlider();
+	void UpdateButtonSliderValue();
+	void MoveButtonSlider(int pos); 
+	bool IsMouseInHandle(HWND handle);
     /// <summary>
     /// Save a mesh
     /// </summary>
@@ -174,5 +181,5 @@ private:
     DWORD                       m_tickLastStatus;
 };
 
-void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(int), CKinectFusionExplorer*& expl, HWND &fusionHandle);
+void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(int), void(*a_ptrSetWindowMode)(int), CKinectFusionExplorer*& expl, HWND &fusionHandle);
 void ResumeKinectFusion();

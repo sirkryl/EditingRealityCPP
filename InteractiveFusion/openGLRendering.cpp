@@ -119,6 +119,7 @@ void HandleKeyInput()
 void ResetForResume()
 {
 	glSegmentation.ClearForResume();
+	meshData.clear();
 }
 
 void InitialLoading()
@@ -172,6 +173,8 @@ void Initialize(LPVOID lpParam)
 
 void Render(LPVOID lpParam)
 {
+	if (!IsWindowVisible(openGLWin.glWindowHandle))
+		return;
 	//clear window
 	glClearColor(openGLWin.bgRed, openGLWin.bgGreen, openGLWin.bgBlue, 1.0f);
 	glClearDepth(1.0);
@@ -276,7 +279,7 @@ void Render(LPVOID lpParam)
 		glSelector.ProcessSelectedObject();
 	}
 
-	meshHelper.DrawAll();
+	
 	//draw every mesh
 	if (openGLWin.GetWindowState() == DEFAULT)
 	{
@@ -284,7 +287,7 @@ void Render(LPVOID lpParam)
 		gl2DHelper.DrawAll();
 		//glEnable(GL_DEPTH_TEST);
 	}
-	
+	meshHelper.DrawAll();
 	
 
 	//draw helper visuals

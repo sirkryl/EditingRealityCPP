@@ -3,7 +3,6 @@
 #include <windows.h>
 #include <tchar.h>
 #include <vector>
-#include <windows.h>
 #include <Shlobj.h>
 #include <sstream>
 #include <sys/stat.h>

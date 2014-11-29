@@ -2,7 +2,7 @@
 #include "OpenGLControl.h"
 #include "common.h"
 #include <KinectFusionExplorer.h>
-enum WindowMode { SCANNING, INTERACTION };
+enum WindowMode { PREPARE_SCANNING, SCANNING, INTERACTION };
 
 enum WindowState {INITIALIZING, BUFFERS, DEFAULT, SEGMENTATION, SEGMENTATION_FINISHED, WALL_SELECTION, SEGMENTATION_PREVIEW, SHOWSTATUS, SELECTION };
 
@@ -82,7 +82,6 @@ public:
 
 	WindowMode GetWindowMode();
 	void SetWindowMode(WindowMode wMode);
-
 	WindowState GetWindowState();
 	void SetWindowState(WindowState wState);
 
@@ -171,3 +170,4 @@ void Render(LPVOID);
 void Release(LPVOID);
 
 void StartOpenGLThread(int testMode);
+void SetWindowMode(int wMode);

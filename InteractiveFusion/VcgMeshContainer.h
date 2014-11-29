@@ -79,7 +79,7 @@ public:
 	bool IsDuplicate();
 	void ToggleSelectedColor(bool flag);
 	void TogglePreviewSelection(bool flag);
-
+	void IsOverTrash(bool flag);
 	void ClearMesh();
 private:
 	VCGMesh currentMesh;
@@ -90,6 +90,7 @@ private:
 
 	bool is2D = false;
 	bool isDuplicate = false;
+	bool isOverTrash = false;
 	std::vector<Vertex> vertices;
 	std::vector<Triangle> indices;
 	std::vector<float> storedColors;
@@ -111,6 +112,7 @@ private:
 	glm::mat4 zRotation = glm::mat4(1.0f);
 	glm::mat4 scaleMatrix = glm::mat4(1.0f);
 	glm::mat4 selectScaleMatrix = glm::mat4(1.0f);
+	glm::mat4 trashScaleMatrix = glm::mat4(1.0f);
 	glm::vec3 selectTranslation;
 	glm::mat4 cursorTranslation = glm::mat4(1.0f);
 
