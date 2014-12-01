@@ -35,6 +35,7 @@ pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud <pcl::Normal>);
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudWithoutPlane(new pcl::PointCloud<pcl::PointXYZRGB>);
 pcl::PointCloud<pcl::Normal>::Ptr cloudWithoutPlaneNormals(new pcl::PointCloud <pcl::Normal>);
 std::vector<pcl::PointIndices::Ptr > cloudWithoutPlaneIndices;
+pcl::PointIndices::Ptr planeCloudIndicesConfirmed(new pcl::PointIndices);
 
 glm::vec3 minPlane(999.0f, 999.0f, 999.0f);
 glm::vec3 maxPlane(-999.0f, -999.0f, -999.0f);
@@ -84,14 +85,14 @@ bool PCLProcessor::PlaneSegmentation() {
 	
 		segmentation.setMethodType(pcl::SAC_RANSAC);
 		// Set the maximum allowed distance to the model.
-		segmentation.setDistanceThreshold(0.15);
+		segmentation.setDistanceThreshold(0.20);
 		// Enable model coefficient refinement (optional).
 		segmentation.setOptimizeCoefficients(true);
 		pcl::PointIndices::Ptr inlierIndices(new pcl::PointIndices);
 		segmentation.segment(*inlierIndices, *coefficients);
 		
 		statusMsg = L"Trying to detect planes";
-		if (inlierIndices->indices.size() <= mainCloud->points.size()/30)
+		if (inlierIndices->indices.size() <= mainCloud->points.size()/20)
 		{
 			if (axisCnt == 0)
 			{
@@ -141,14 +142,16 @@ bool PCLProcessor::PlaneSegmentation() {
 		PV2->addText("Is this (part of) a floor/wall? (Y/N)", 250, 30, 20,1,1,1);*/
 		
 		wallSegmentCloud = inlierPoints;
-		openGLWin.SetWindowState(WALL_SELECTION);
+		
+		/*openGLWin.SetWindowState(WALL_SELECTION);
 		while (openGLWin.GetWindowState() == WALL_SELECTION)
 		{
 			//if (!openGLWin.wallSelection)
 			//	break;
 			//PV2->spinOnce(100);
 			boost::this_thread::sleep(boost::posix_time::microseconds(100000));
-		}
+		}*/
+
 		wallSegmentCloud->clear();
 		//closeViewer = false;
 
@@ -169,7 +172,8 @@ bool PCLProcessor::PlaneSegmentation() {
 		//pcl::copyPointCloud(*cloud_f, *cloudWithoutPlane);
 		planeSegmentationIndices = testIndices;
 
-		if (openGLWin.isWall)
+		//if (openGLWin.isWall)
+		if (true)
 		{
 			pcl::PointIndices::Ptr newIndices(new pcl::PointIndices);
 			for (int i = 0; i < inlierIndices->indices.size(); i++)
@@ -183,6 +187,8 @@ bool PCLProcessor::PlaneSegmentation() {
 			extract.getRemovedIndices(*newIndices);
 			extract.setNegative(true);
 			extract.filter(*cloudWithoutPlane);
+
+			
 
 			//experimental 
 			//delete outliers (vertices behind wall)
@@ -227,14 +233,7 @@ bool PCLProcessor::PlaneSegmentation() {
 			pass.filter(*testCloud);
 			//experimental end
 
-			/*boost::shared_ptr<pcl::visualization::PCLVisualizer> PV(new pcl::visualization::PCLVisualizer("Plane Viewer"));
-			PV->setBackgroundColor(0, 0, 0);
-			PV->addPointCloud(testCloud, "Plane Windows");
-			while (!PV->wasStopped())
-			{
-			PV->spinOnce(100);
-			boost::this_thread::sleep(boost::posix_time::microseconds(100000));
-			}*/
+			
 
 			if (cloudWithoutPlaneIndices.size() == 0)
 				cloudWithoutPlaneIndices.push_back(newIndices);
@@ -391,7 +390,48 @@ void PCLProcessor::PlaneIndexEstimation()
 	}
 }
 
+void PCLProcessor::ConfirmPlaneIndices(int index)
+{
+	for (int i = 0; i < planeCloudIndices[index]->indices.size(); i++)
+	{
+		planeCloudIndicesConfirmed->indices.push_back(planeCloudIndices[index]->indices[i]);
+	}
+}
 
+void PCLProcessor::PrepareForObjectSegmentation()
+{
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr tempCloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+	pcl::PointCloud<pcl::Normal>::Ptr tempNormals(new pcl::PointCloud <pcl::Normal>);
+
+	pcl::copyPointCloud(*normals, *tempNormals);
+
+	pcl::ExtractIndices<pcl::PointXYZRGB> extract(true);
+	extract.setInputCloud(mainCloud);
+	extract.setIndices(planeCloudIndicesConfirmed);
+	extract.setNegative(false);
+	extract.filter(*tempCloud);
+	extract.getRemovedIndices(*cloudWithoutPlaneIndices[0]);
+	
+	cDebug::DbgOut(L"size: ", (int)planeCloudIndicesConfirmed->indices.size());
+	cDebug::DbgOut(L"size: ", (int)mainCloud->points.size());
+	/*boost::shared_ptr<pcl::visualization::PCLVisualizer> PV(new pcl::visualization::PCLVisualizer("Plane Viewer"));
+	PV->setBackgroundColor(0, 0, 0);
+	PV->addPointCloud(tempCloud, "Plane Windows");
+	while (!PV->wasStopped())
+	{
+		PV->spinOnce(100);
+		boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+	}*/
+
+	cloudWithoutPlaneNormals->clear();
+	cloudWithoutPlaneNormals->points.resize(cloudWithoutPlaneIndices[0]->indices.size());
+	for (int i = 0; i < cloudWithoutPlaneIndices[0]->indices.size(); i++)
+	{
+		cloudWithoutPlaneNormals->points[i] = tempNormals->points[cloudWithoutPlaneIndices[0]->indices[i]];
+	}
+	planeCloudIndicesConfirmed->indices.clear();
+	
+}
 void PCLProcessor::KeyDown(const pcl::visualization::KeyboardEvent &keyEvent, void* viewer_void) {
 	//boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = *static_cast<boost::shared_ptr<pcl::visualization::PCLVisualizer> *> (viewer_void);
 	if (keyEvent.keyDown()){
@@ -670,8 +710,19 @@ bool PCLProcessor::EuclideanSegmentation() {
 	//pcl::ConditionalEuclideanClustering<pcl::PointXYZRGBNormal> ec;
 	pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
 	//ec.setConditionFunction(&EnforceCurvatureOrColor);
-	ec.setClusterTolerance(0.01); // 2cm
-	ec.setMinClusterSize(1000);
+	
+	if (openGLWin.meshQuality == QUALITY_MEDIUM || openGLWin.meshQuality == QUALITY_HIGH || openGLWin.meshQuality == QUALITY_VERYHIGH)
+		ec.setClusterTolerance(0.02); // 2cm
+	if (openGLWin.meshQuality == QUALITY_LOW || openGLWin.meshQuality == QUALITY_VERYLOW)
+		ec.setClusterTolerance(0.04); // 2cm
+
+	if (openGLWin.meshQuality == QUALITY_HIGH || openGLWin.meshQuality == QUALITY_VERYHIGH)
+		ec.setMinClusterSize(1000);
+	else if (openGLWin.meshQuality == QUALITY_MEDIUM || openGLWin.meshQuality == QUALITY_LOW)
+		ec.setMinClusterSize(100);
+	else
+		ec.setMinClusterSize(50);
+
 	ec.setMaxClusterSize(9000000);
 	//ec.setSearchMethod(tree);
 	ec.setInputCloud(mainCloud);
@@ -866,7 +917,7 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> a
 	// THIS IS FOR WALL & FLOOR CROPPING
 	cDebug::DbgOut(L"clusterIndex:", clusterIndex);
 	cDebug::DbgOut(L"planeCoefficients size:", (int)planeCoefficients.size());
-	if (!isPlane)
+	/*if (!isPlane)
 	{
 		glm::vec3 overallCenterPoint = meshHelper.GetCombinedCenterPoint();
 		for (int i = 0; i < planeCoefficients.size(); i++)
@@ -897,7 +948,7 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> a
 				
 		}
 		
-	}
+	}*/
 	//END FOR CROPPING
 
 	QueryPerformanceCounter(&t2);
@@ -1253,6 +1304,26 @@ bool PCLProcessor::IsPlaneSegmented()
 	
 	//pcl::copyPointCloud(*cloud_with_normals, *mainCloud);
 }*/
+
+std::vector<int> PCLProcessor::GetPlaneCloudIndices(int index)
+{
+	std::vector<int> triangles;
+	for (int i = 0; i < planeCloudIndices[index]->indices.size(); i++)
+	{
+		triangles.push_back(planeCloudIndices[index]->indices[i]);
+	}
+	return triangles;
+}
+
+std::vector<int> PCLProcessor::GetColoredCloudIndices(int index)
+{
+	std::vector<int> triangles;
+	for (int i = 0; i < segmentedClusterIndices[index].indices.size(); i ++)
+	{
+		triangles.push_back(segmentedClusterIndices[index].indices[i]);
+	}
+	return triangles;
+}
 
 int PCLProcessor::GetClusterCount() {
 	//return clusterCount;

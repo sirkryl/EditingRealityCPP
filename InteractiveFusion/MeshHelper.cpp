@@ -211,6 +211,7 @@ void MeshHelper::GenerateBuffers()
 	{
 		(*mI)->GenerateVAO();
 	}
+
 }
 
 int MeshHelper::GetNumberOfVertices()
@@ -223,6 +224,23 @@ int MeshHelper::GetNumberOfFaces()
 	return numberOfFaces;
 }
 
+void MeshHelper::HighlightObjects(int index, std::vector<int> triangles, ColorIF color)
+{
+	meshData[index]->HighlightObjects(triangles, color);
+}
+
+void MeshHelper::RemoveHighlightObjects(int index)
+{
+	meshData[index]->ResetHighlights();
+}
+
+void MeshHelper::RemoveAllHighlights()
+{
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		(*mI)->ResetHighlights();
+	}
+}
 void MeshHelper::DrawAll()
 {
 	//cDebug::DbgOut(L"Meshhelper DrawAll");

@@ -1517,7 +1517,7 @@ void CKinectFusionExplorer::FinishScan(int testMode)
 		m_processor.SetParams(m_params);
 
 		INuiFusionColorMesh *mesh = nullptr;
-		HRESULT hr = m_processor.CalculateMesh(&mesh, 1);
+		HRESULT hr = m_processor.CalculateMesh(&mesh, 2);
 
 		if (SUCCEEDED(hr))
 		{
@@ -1829,6 +1829,11 @@ void CKinectFusionExplorer::SetWindowState(FusionState fState)
 
 	}
 	
+}
+
+int CKinectFusionExplorer::GetVoxelsPerMeter()
+{
+	return m_params.m_reconstructionParams.voxelsPerMeter;
 }
 
 bool CKinectFusionExplorer::IsMouseInHandle(HWND handle)

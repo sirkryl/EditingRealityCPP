@@ -6,11 +6,12 @@ enum WindowMode { PREPARE_SCANNING, SCANNING, INTERACTION };
 
 enum WindowState {INITIALIZING, BUFFERS, DEFAULT, SEGMENTATION, SEGMENTATION_FINISHED, WALL_SELECTION, SEGMENTATION_PREVIEW, SHOWSTATUS, SELECTION };
 
+enum MeshQuality {QUALITY_VERYLOW, QUALITY_LOW, QUALITY_MEDIUM, QUALITY_HIGH, QUALITY_VERYHIGH};
 class InteractiveFusion
 {
 public:
 	
-	
+	MeshQuality meshQuality;
 	HWND parent;
 	HWND fusionHandle;
 	HWND glWindowHandle;
@@ -18,7 +19,7 @@ public:
 	OpenGLControl glControl;
 	CKinectFusionExplorer* fusionExplorer;
 	HANDLE interactionThread;
-
+	
 	//background color
 	float bgRed = 30.0f / 255.0f;
 	float bgGreen = 30.0f / 255.0f;
@@ -114,13 +115,14 @@ public:
 private:
 	//application variables
 	
+	
 	WindowMode mode;
 	WindowState state;
 	//fps related variables
 	clock_t tLastFrame;
 	float fFrameInterval;
 
-	
+	void DetermineMeshQuality();
 
 	//thread related variables
 	

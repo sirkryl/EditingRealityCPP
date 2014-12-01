@@ -15,6 +15,11 @@ using namespace std;
 //#include <GL/glut.h>
 #include <glm/glm.hpp>
 
+struct ColorIF
+{
+	float r, g, b;
+};
+
 struct Vertex
 {
 	float x, y, z;

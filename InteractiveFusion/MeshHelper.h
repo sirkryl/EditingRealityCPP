@@ -30,7 +30,9 @@ public:
 	int GetNumberOfVertices();
 
 	int GetNumberOfFaces();
-
+	void HighlightObjects(int index, std::vector<int> triangles, ColorIF color);
+	void RemoveHighlightObjects(int index);
+	void RemoveAllHighlights();
 	void ResetAll();
 
 	glm::vec3 GetCombinedCenterPoint();

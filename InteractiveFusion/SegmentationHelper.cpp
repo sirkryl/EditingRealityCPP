@@ -6,11 +6,15 @@
 #include "OpenGLCamera.h"
 #include "OpenGLText.h"
 #include "MeshHelper.h"
-
+#include <random>
+bool ready = false;
+int currentPlaneIndex = -1;
 PCLProcessor pclProcessor;
 std::vector<Vertex> startingVertices;
 std::vector<Triangle> startingIndices;
-
+std::vector<Vertex> clusterVertices;
+std::vector<Triangle> clusterIndices;
+shared_ptr<VCGMeshContainer> previewMesh(new VCGMeshContainer);
 glm::vec4 planeC;
 
 std::vector<shared_ptr<VCGMeshContainer>> meshData_segTmp;
@@ -22,6 +26,7 @@ bool SegmentationHelper::IsCloudReady()
 
 bool SegmentationHelper::IsPreviewInitialized()
 {
+	return ready;
 	if (previewVertices.size() > 0)
 		return true;
 	else
@@ -31,6 +36,7 @@ bool SegmentationHelper::IsPreviewInitialized()
 void SegmentationHelper::ClearPreviewVertices()
 {
 	previewVertices.clear();
+	ready = false;
 }
 
 void SegmentationHelper::LoadClusterData()
@@ -137,43 +143,51 @@ int WINAPI SegThreadMain()
 		pclProcessor.PlaneIndexEstimation();
 		for (int i = 0; i < pclProcessor.GetPlaneClusterCount(); i++)
 		{
-			std::vector<Vertex> clusterVertices;
-			std::vector<Triangle> clusterIndices;
-			pclProcessor.ConvertToTriangleMesh(i, startingVertices, clusterVertices, clusterIndices, true);
-			cDebug::DbgOut(L"Converted Plane Mesh #", i);
-			shared_ptr<VCGMeshContainer> mesh(new VCGMeshContainer);
-			mesh->SetColorCode(i + 1);
-			//mesh->ParseData(clusterVertices, clusterIndices);
-			mesh->SetWall(true);
-			mesh->ConvertToVCG(clusterVertices, clusterIndices);
-			float threshold = 0.005f;
-			int total = mesh->MergeCloseVertices(threshold);
-			cDebug::DbgOut(_T("Merged close vertices: "), total);
-			//int total = mesh->MergeCloseVertices(0.005f);
-			//cDebug::DbgOut(_T("Merged close vertices: "), total);
-			//cDebug::DbgOut(L"indices: ", (int)mesh->GetVertices().size());
-			//cDebug::DbgOut(L"vertices: " + (int)mesh->GetIndices().size());
+			currentPlaneIndex = i;
+			openGLWin.SetWindowState(WALL_SELECTION);
+			while (openGLWin.GetWindowState() == WALL_SELECTION)
+			{
+				boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+			}
+			if (openGLWin.isWall)
+			{
+				clusterVertices.clear();
+				clusterIndices.clear();
+				//std::vector<Triangle> clusterIndices;
+				pclProcessor.ConvertToTriangleMesh(i, startingVertices, clusterVertices, clusterIndices, true);
 
-			cDebug::DbgOut(_T("Clean PlaneSeg #1"));
-			mesh->CleanMesh();
-			mesh->RemoveSmallComponents(clusterVertices.size() / 5);
+				pclProcessor.ConfirmPlaneIndices(i);
+				cDebug::DbgOut(L"Converted Plane Mesh #", i);
+				shared_ptr<VCGMeshContainer> mesh(new VCGMeshContainer);
+				mesh->SetColorCode(i + 1);
+				mesh->SetWall(true);
+				mesh->ConvertToVCG(clusterVertices, clusterIndices);
+				float threshold = 0.005f;
+				int total = mesh->MergeCloseVertices(threshold);
+				cDebug::DbgOut(_T("Merged close vertices: "), total);
 
-			mesh->RemoveNonManifoldFace();
-			mesh->FillHoles(100000);
-			//cDebug::DbgOut(_T("Clean PlaneSeg #3"));
-			total = mesh->MergeCloseVertices(threshold);
-			cDebug::DbgOut(_T("Merged close vertices 22: "), total);
-			mesh->CleanMesh();
+				cDebug::DbgOut(_T("Clean PlaneSeg #1"));
+				mesh->CleanMesh();
+				mesh->RemoveSmallComponents(clusterVertices.size() / 5);
 
-			//mesh->RemoveSmallComponents(clusterVertices.size() / 3);
-			//mesh->CleanMesh();
-			mesh->ParseData();
-			mesh->SetPlaneParameters(pclProcessor.planeCoefficients[i]->values[0], pclProcessor.planeCoefficients[i]->values[1],
-				pclProcessor.planeCoefficients[i]->values[2], pclProcessor.planeCoefficients[i]->values[3]);
-			planeC = glm::vec4(pclProcessor.planeCoefficients[i]->values[0], pclProcessor.planeCoefficients[i]->values[1], pclProcessor.planeCoefficients[i]->values[2], pclProcessor.planeCoefficients[i]->values[3]);
-			
-			meshData_segTmp.push_back(mesh);
+				mesh->RemoveNonManifoldFace();
+				mesh->FillHoles(100000);
+				total = mesh->MergeCloseVertices(threshold);
+				cDebug::DbgOut(_T("Merged close vertices 22: "), total);
+				mesh->CleanMesh();
+
+				//mesh->RemoveSmallComponents(clusterVertices.size() / 3);
+				//mesh->CleanMesh();
+				mesh->ParseData();
+				mesh->SetPlaneParameters(pclProcessor.planeCoefficients[i]->values[0], pclProcessor.planeCoefficients[i]->values[1],
+					pclProcessor.planeCoefficients[i]->values[2], pclProcessor.planeCoefficients[i]->values[3]);
+				planeC = glm::vec4(pclProcessor.planeCoefficients[i]->values[0], pclProcessor.planeCoefficients[i]->values[1], pclProcessor.planeCoefficients[i]->values[2], pclProcessor.planeCoefficients[i]->values[3]);
+
+				meshData_segTmp.push_back(mesh);
+			}
+			meshHelper.RemoveHighlightObjects(0);
 		}
+		pclProcessor.PrepareForObjectSegmentation();
 
 	}
 
@@ -198,7 +212,18 @@ int WINAPI SegThreadMain()
 	}
 	if (openGLWin.segmentationMode == EUCLIDEAN_SEGMENTATION)
 	{
-		pclProcessor.EuclideanSegmentation();
+		if (openGLWin.GetWindowState() != SEGMENTATION_PREVIEW || openGLWin.previewMode || openGLWin.segmentValuesChanged)
+		{
+			pclProcessor.EuclideanSegmentation();
+			openGLWin.segmentValuesChanged = false;
+		}
+
+		if (openGLWin.previewMode)
+		{
+			openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
+			cDebug::DbgOut(L"Number of clusters: ", pclProcessor.GetClusterCount());
+			return 0;
+		}
 	}
 
 	pclProcessor.IndexEstimation();
@@ -213,8 +238,8 @@ int WINAPI SegThreadMain()
 	QueryPerformanceCounter(&t2);
 	for (int i = 0; i < pclProcessor.GetRegionClusterCount(); i++)
 	{
-		std::vector<Vertex> clusterVertices;
-		std::vector<Triangle> clusterIndices;
+		clusterVertices.clear();
+		clusterIndices.clear();
 		if (!pclProcessor.ConvertToTriangleMesh(i, startingVertices, clusterVertices, clusterIndices, false))
 			continue;
 		//cDebug::DbgOut(L"Converted Triangle Mesh #",i);
@@ -259,7 +284,19 @@ void SegmentationHelper::StartSegmentation()
 
 void SegmentationHelper::GeneratePreviewBuffers()
 {
+	
 	glGenBuffers(1, &segmentVBO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, segmentVBO);
+	glBufferData(GL_ARRAY_BUFFER, previewVertices.size() * sizeof(Vertex), &previewVertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glGenBuffers(1, &segmentIBO);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, segmentIBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, previewIndices.size() * sizeof(Triangle), &previewIndices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
 	glGenVertexArrays(1, &segmentVAO);
 	glBindVertexArray(segmentVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, segmentVBO);
@@ -269,15 +306,81 @@ void SegmentationHelper::GeneratePreviewBuffers()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 3));
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 6));
-
-	cDebug::DbgOut(L"seg mesh:");
-	cDebug::DbgOut(L"vbo: ", (int)segmentVBO);
-	cDebug::DbgOut(L"vao: ", (int)segmentVAO);
 }
 
 bool SegmentationHelper::InitializePreview()
 {
-	pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr pointCloud;
+	/*std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<> dis(0.3f, 0.7f);*/
+	if (openGLWin.GetWindowState() == WALL_SELECTION)
+	{
+		if (currentPlaneIndex == -1)
+			return false;
+		meshHelper.GenerateBuffers();
+		ColorIF color = { 0.4f, 0.0f, 0.0f };
+		meshHelper.HighlightObjects(0, pclProcessor.GetPlaneCloudIndices(currentPlaneIndex), color);
+		ready = true;
+	}
+	else if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+	{
+		//meshHelper.GenerateBuffers();
+		for (int i = 0; i < pclProcessor.GetRegionClusterCount(); i++)
+		{
+			ColorIF color;
+			if (i%3 == 0)
+				color = { 0.4f, 0.0f, 0.0f};
+			if (i % 3 == 1)
+				color = { 0.0f, 0.4f, 0.0f };
+			if (i % 3 == 2)
+				color = { 0.0f, 0.0f, 0.4f };
+			meshHelper.HighlightObjects(0, pclProcessor.GetColoredCloudIndices(i), color);
+		}
+		ready = true;
+	}
+	return true;
+
+	/*previewMesh->ClearMesh();
+	previewMesh->SetColorCode(232 + 1);
+	//mesh->ParseData(clusterVertices, clusterIndices);
+	previewMesh->SetWall(true);
+	previewMesh->ConvertToVCG(clusterVertices, clusterIndices);
+	float threshold = 0.005f;
+	int total = previewMesh->MergeCloseVertices(threshold);
+	cDebug::DbgOut(_T("Merged close vertices: "), total);
+	//int total = mesh->MergeCloseVertices(0.005f);
+	//cDebug::DbgOut(_T("Merged close vertices: "), total);
+	//cDebug::DbgOut(L"indices: ", (int)mesh->GetVertices().size());
+	//cDebug::DbgOut(L"vertices: " + (int)mesh->GetIndices().size());
+
+	cDebug::DbgOut(_T("Clean PlaneSeg #1"));
+	previewMesh->CleanMesh();
+	//previewMesh->RemoveSmallComponents(clusterVertices.size() / 5);
+
+	previewMesh->RemoveNonManifoldFace();
+	previewMesh->FillHoles(100000);
+	//cDebug::DbgOut(_T("Clean PlaneSeg #3"));
+	total = previewMesh->MergeCloseVertices(threshold);
+	cDebug::DbgOut(_T("Merged close vertices 22: "), total);
+	previewMesh->CleanMesh();
+
+	//mesh->RemoveSmallComponents(clusterVertices.size() / 3);
+	//mesh->CleanMesh();
+	previewMesh->ParseData();
+	previewMesh->GenerateBOs();
+	previewMesh->GenerateVAO();
+	glCamera.SetRotationPoint(previewMesh->GetCenterPoint());
+	ready = true;
+
+	return true;*/
+
+
+
+
+
+
+	/*pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr pointCloud;
+	cDebug::DbgOut(L"NO WAY");
 	if (openGLWin.GetWindowState() == WALL_SELECTION)
 	{
 		pointCloud = pclProcessor.wallSegmentCloud;
@@ -317,14 +420,62 @@ bool SegmentationHelper::InitializePreview()
 	{
 		openGLWin.ShowStatusBarMessage(L"Showing region growth segmentation preview with " + to_wstring(pclProcessor.GetClusterCount()) + L"clusters");
 		pclProcessor.coloredCloudReady = false;
+	}*/
+
+}
+
+bool SegmentationHelper::InitializePreview(std::vector<Vertex> vertices, std::vector<Triangle> triangles)
+{
+	
+	previewVertices.clear();
+	previewIndices.clear();
+	for (int i = 0; i < vertices.size(); i++)
+	{
+		previewVertices.push_back(vertices[i]);
+	}
+	for (int i = 0; i < triangles.size(); i++)
+	{
+		previewIndices.push_back(triangles[i]);
 	}
 
+	cDebug::DbgOut(L"previewVertices count: ", (int)previewVertices.size());
+	//if (segmentVBO == 0)
+	//	GeneratePreviewBuffers();
+
+	/*glBindBuffer(GL_ARRAY_BUFFER, segmentVBO);
+	glBufferData(GL_ARRAY_BUFFER, previewVertices.size() * sizeof(Vertex), &previewVertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, segmentIBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, previewIndices.size() * sizeof(Triangle), &previewIndices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);*/
+
+	cDebug::DbgOut(L"SEGMENT VBO: ", (int)segmentVBO);
+	cDebug::DbgOut(L"SEGMENT VAO: ", (int)segmentVAO);
+	cDebug::DbgOut(L"SEGMENT IBO: ", (int)segmentIBO);
+	cDebug::DbgOut(L"previewVertices.size(): ", (int)previewVertices.size());
+	cDebug::DbgOut(L"previewIndices.size(): ", (int)previewIndices.size());
+	if (openGLWin.GetWindowState() == WALL_SELECTION)
+		openGLWin.ShowStatusBarMessage(L"Showing wall preview.");
+	else if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+	{
+		openGLWin.ShowStatusBarMessage(L"Showing region growth segmentation preview with " + to_wstring(pclProcessor.GetClusterCount()) + L"clusters");
+		pclProcessor.coloredCloudReady = false;
+	}
+	return true;
 }
 
 void SegmentationHelper::RenderPreview()
 {
+	int w = openGLWin.glControl.GetViewportWidth();
+	int h = openGLWin.glControl.GetViewportHeight();
+	previewMesh->Draw();
+	glText.PrepareForRender();
+	glText.RenderText(L"Clusters: ", pclProcessor.GetClusterCount(), 20, -0.98f, 0.85f, 2.0f / w, 2.0f / h);
+	glEnable(GL_DEPTH_TEST);
+	return;
 	//openGLWin.SetBackgroundColor(0, 0, 0);
-
+	/*
 	int w = openGLWin.glControl.GetViewportWidth();
 	int h = openGLWin.glControl.GetViewportHeight();
 	shaderColor.UseProgram();
@@ -335,11 +486,18 @@ void SegmentationHelper::RenderPreview()
 	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
 
 	glBindVertexArray(segmentVAO);
-	glPointSize(1.5f);
-	glDrawArrays(GL_POINTS, 0, previewVertices.size());
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, segmentIBO);
+	glDrawElements(GL_TRIANGLES, previewIndices.size() * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-
 	glUseProgram(0);
+
+
+	cDebug::DbgOut(L"SEGMENT VBO: ", (int)segmentVBO);
+	cDebug::DbgOut(L"SEGMENT VAO: ", (int)segmentVAO);
+	cDebug::DbgOut(L"SEGMENT IBO: ", (int)segmentIBO);
+	cDebug::DbgOut(L"previewVertices.size(): ", (int)previewVertices.size());
+	cDebug::DbgOut(L"previewIndices.size(): ", (int)previewIndices.size());
 
 	if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
 	{
@@ -347,7 +505,7 @@ void SegmentationHelper::RenderPreview()
 		glText.RenderText(L"Clusters: ", pclProcessor.GetClusterCount(), 20, -0.98f, 0.85f, 2.0f / w, 2.0f / h);
 	}
 
-	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);*/
 }
 
 glm::vec3 SegmentationHelper::GetPreviewCenterPoint()
@@ -360,6 +518,9 @@ glm::vec3 SegmentationHelper::GetPreviewCenterPoint()
 		centerPoint.z += previewVertices[i].z;
 	}
 	centerPoint = centerPoint / (float)previewVertices.size();
+	cDebug::DbgOut(L"SEGGG centerPoint x:", centerPoint.x);
+	cDebug::DbgOut(L"SEGGG centerPoint y:", centerPoint.y);
+	cDebug::DbgOut(L"SEGGG centerPoint z:", centerPoint.z);
 	return centerPoint;
 }
 
@@ -378,6 +539,7 @@ void SegmentationHelper::CleanUp()
 {
 	glDeleteBuffers(1, &segmentVBO);
 	glDeleteVertexArrays(1, &segmentVAO);
+	glDeleteBuffers(1, &segmentIBO);
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData_segTmp.begin(); mI != meshData_segTmp.end(); ++mI)
 	{
 		(*mI)->ClearMesh();

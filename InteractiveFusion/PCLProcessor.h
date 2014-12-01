@@ -20,11 +20,15 @@ public:
 	void PoissonReconstruction();
 	void PlaneIndexEstimation();
 	void IndexEstimation();
+	void ConfirmPlaneIndices(int index);
 	//void MovingLeastSquares(std::vector<Vertex> vertices, std::vector<float> normals, std::vector<Vertex> &outputVertices, std::vector<GLuint> &outputIndices);
 	bool coloredCloudReady = false;
 	void ShowViewer();
 	bool IsMainCloudInitialized();
 	bool IsPlaneSegmented();
+	std::vector<int> GetPlaneCloudIndices(int index);
+	std::vector<int> GetColoredCloudIndices(int index);
+	void PrepareForObjectSegmentation();
 	int GetClusterCount();
 	int GetRegionClusterCount();
 	int GetPlaneClusterCount();

@@ -192,7 +192,7 @@ void Render(LPVOID lpParam)
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if (openGLWin.wireFrameMode && openGLWin.GetWindowState() != SEGMENTATION_PREVIEW && openGLWin.GetWindowState() != WALL_SELECTION)
+	if (openGLWin.wireFrameMode && openGLWin.GetWindowState() != SEGMENTATION_PREVIEW)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -212,7 +212,7 @@ void Render(LPVOID lpParam)
 	{
 		if (!glSegmentation.IsPreviewInitialized())
 		{
-			if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+			if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW && openGLWin.segmentationMode == REGION_GROWTH_SEGMENTATION)
 			{
 				if (glSegmentation.IsCloudReady())
 					glSegmentation.InitializePreview();
@@ -220,14 +220,16 @@ void Render(LPVOID lpParam)
 					return;
 			}
 			glSegmentation.InitializePreview();
-			glCamera.SetRotationPoint(glSegmentation.GetPreviewCenterPoint());
+
+			//glCamera.SetRotationPoint(glSegmentation.GetPreviewCenterPoint());
 		}
 		else
 		{
-			glSegmentation.RenderPreview();
+			meshHelper.DrawAll();
+			//glSegmentation.RenderPreview();
 			glCamera.mode = CAMERA_FREE;
 		}
-
+		glEnable(GL_DEPTH_TEST);
 		openGLWin.glControl.SwapBuffers();
 		return;
 	}

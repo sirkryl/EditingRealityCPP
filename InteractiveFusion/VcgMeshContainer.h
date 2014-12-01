@@ -33,8 +33,8 @@ public:
 
 	void UpdateBuffers();
 
-
-
+	void HighlightObjects(std::vector<int> objTriangles, ColorIF color);
+	void ResetHighlights();
 	void CleanMesh();
 	int MergeCloseVertices(float threshold);
 	void LaplacianSmooth(int step);
@@ -92,6 +92,7 @@ private:
 	bool isDuplicate = false;
 	bool isOverTrash = false;
 	std::vector<Vertex> vertices;
+	std::vector<Vertex> verticesWithHighlights;
 	std::vector<Triangle> indices;
 	std::vector<float> storedColors;
 

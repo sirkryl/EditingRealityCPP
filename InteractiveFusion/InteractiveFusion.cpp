@@ -114,6 +114,7 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 
 	if (mode == INTERACTION)
 	{
+		DetermineMeshQuality();
 		ShowWindow(glWindowHandle, SW_SHOW);
 		EnableWindow(hPrepareText, true);
 		EnableWindow(hScanText, true);
@@ -1502,6 +1503,21 @@ void InteractiveFusion::UpdateTimer()
 float InteractiveFusion::SpeedOptimizedFloat(float fVal)
 {
 	return fVal*fFrameInterval;
+}
+
+void InteractiveFusion::DetermineMeshQuality()
+{
+	int vpm = fusionExplorer->GetVoxelsPerMeter();
+	if (vpm > 192)
+		meshQuality = QUALITY_VERYHIGH;
+	else if (vpm > 150)
+		meshQuality = QUALITY_HIGH;
+	else if (vpm > 110)
+		meshQuality = QUALITY_MEDIUM;
+	else if (vpm > 64)
+		meshQuality = QUALITY_LOW;
+	else
+		meshQuality = QUALITY_VERYLOW;
 }
 
 #pragma endregion FPS stuff

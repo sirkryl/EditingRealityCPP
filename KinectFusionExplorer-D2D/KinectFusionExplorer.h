@@ -87,7 +87,7 @@ public:
 	/// Update the internal variable values from the UI Horizontal sliders.
 	/// </summary>
 	void                        UpdateHSliders();
-
+	int GetVoxelsPerMeter();
 	void StartScan();
 	void FinishScan(int testMode);
 

@@ -113,6 +113,29 @@ int VCGMeshContainer::MergeCloseVertices(float threshold)
 	return vcg::tri::Clean<VCGMesh>::MergeCloseVertex(currentMesh, threshold);
 }
 
+void VCGMeshContainer::HighlightObjects(std::vector<int> objTriangles, ColorIF color)
+{
+	if (verticesWithHighlights.size() == 0)
+		verticesWithHighlights.insert(verticesWithHighlights.begin(), vertices.begin(), vertices.end());
+	for (int i = 0; i < objTriangles.size(); i++)
+	{
+		verticesWithHighlights[objTriangles[i]].r = min(verticesWithHighlights[objTriangles[i]].r + color.r, 1.0f);
+		verticesWithHighlights[objTriangles[i]].g = min(verticesWithHighlights[objTriangles[i]].g + color.g, 1.0f);
+		verticesWithHighlights[objTriangles[i]].b = min(verticesWithHighlights[objTriangles[i]].b + color.b, 1.0f);
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, verticesWithHighlights.size() * sizeof(Vertex), &verticesWithHighlights[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void VCGMeshContainer::ResetHighlights()
+{
+	verticesWithHighlights.clear();
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 void VCGMeshContainer::LoadMesh(std::vector<Vertex> inputVertices, std::vector<Triangle> inputIndices)
 {
 	currentMesh.Clear();
@@ -372,20 +395,6 @@ void VCGMeshContainer::ConvertToVCG(std::vector<Vertex> inputVertices, std::vect
 
 }
 
-void VCGMeshContainer::GenerateVAO()
-{
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 3));
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 6));
-}
-
 void VCGMeshContainer::GenerateBOs()
 {
 	glGenBuffers(1, &vbo);
@@ -401,6 +410,19 @@ void VCGMeshContainer::GenerateBOs()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+void VCGMeshContainer::GenerateVAO()
+{
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 3));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 6));
+}
 
 void VCGMeshContainer::ToggleSelectedColor(bool flag)
 {
