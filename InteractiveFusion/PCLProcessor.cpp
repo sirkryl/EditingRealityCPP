@@ -4,6 +4,7 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
 #include "MeshHelper.h"
+#include "SegmentationHelper.h"
 //#include <pcl/filters/voxel_grid.h>
 //#include "resource.h"
 //#include <pcl/kdtree/kdtree_flann.h>
@@ -36,7 +37,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudWithoutPlane(new pcl::PointCloud<pcl
 pcl::PointCloud<pcl::Normal>::Ptr cloudWithoutPlaneNormals(new pcl::PointCloud <pcl::Normal>);
 std::vector<pcl::PointIndices::Ptr > cloudWithoutPlaneIndices;
 pcl::PointIndices::Ptr planeCloudIndicesConfirmed(new pcl::PointIndices);
-
+pcl::PointIndices::Ptr planeInlierIndices(new pcl::PointIndices);
 glm::vec3 minPlane(999.0f, 999.0f, 999.0f);
 glm::vec3 maxPlane(-999.0f, -999.0f, -999.0f);
 
@@ -60,9 +61,11 @@ bool PCLProcessor::PlaneSegmentation() {
 	pcl::PointIndices::Ptr planeSegmentationIndices(new pcl::PointIndices);
 	Eigen::Vector3f segAxis(1, 0, 0);
 	
+	bool redoingSegmentation = false;
 	int axisCnt = 0;
 	while (true)
 	{
+		
 		//pcl::search::KdTree<pcl::PointXYZRGB>::Ptr	search(new pcl::search::KdTree<pcl::PointXYZRGB>);
 		// Object for storing the plane model coefficients.
 		pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
@@ -77,7 +80,7 @@ bool PCLProcessor::PlaneSegmentation() {
 			segmentation.setIndices(planeSegmentationIndices);
 		//segmentation.setSamplesMaxDist(0.005, search);
 		segmentation.setAxis(segAxis);
-		segmentation.setNormalDistanceWeight(0.5);
+		segmentation.setNormalDistanceWeight(openGLWin.wallSmoothness);
 		segmentation.setEpsAngle(10.0f * (M_PI / 180.0f));
 		// Configure the object to look for a plane.
 		segmentation.setModelType(pcl::SACMODEL_NORMAL_PLANE);// SACMODEL_NORMAL_PLANE);
@@ -85,14 +88,15 @@ bool PCLProcessor::PlaneSegmentation() {
 	
 		segmentation.setMethodType(pcl::SAC_RANSAC);
 		// Set the maximum allowed distance to the model.
-		segmentation.setDistanceThreshold(0.20);
+		segmentation.setDistanceThreshold(openGLWin.wallThickness);
 		// Enable model coefficient refinement (optional).
 		segmentation.setOptimizeCoefficients(true);
 		pcl::PointIndices::Ptr inlierIndices(new pcl::PointIndices);
+		//inlierIndices->indices.clear();
 		segmentation.segment(*inlierIndices, *coefficients);
 		
 		statusMsg = L"Trying to detect planes";
-		if (inlierIndices->indices.size() <= mainCloud->points.size()/20)
+		if (inlierIndices->indices.size() <= mainCloud->points.size()/20 && !redoingSegmentation)
 		{
 			if (axisCnt == 0)
 			{
@@ -142,17 +146,37 @@ bool PCLProcessor::PlaneSegmentation() {
 		PV2->addText("Is this (part of) a floor/wall? (Y/N)", 250, 30, 20,1,1,1);*/
 		
 		wallSegmentCloud = inlierPoints;
-		
-		/*openGLWin.SetWindowState(WALL_SELECTION);
+		planeInlierIndices->indices.clear();
+		for (int i = 0; i < inlierIndices->indices.size(); i++)
+		{
+			planeInlierIndices->indices.push_back(inlierIndices->indices[i]);
+		}
+		float storedThickness = openGLWin.wallThickness;
+		float storedSmoothness = openGLWin.wallSmoothness;
+		openGLWin.SetWindowState(WALL_SELECTION);
+		if (redoingSegmentation)
+		{ 
+			glSegmentation.ResetInitializedStatus();
+			redoingSegmentation = false;
+		}
 		while (openGLWin.GetWindowState() == WALL_SELECTION)
 		{
+			if (storedThickness != openGLWin.wallThickness || storedSmoothness != openGLWin.wallSmoothness)
+			{
+				cDebug::DbgOut(L"stored not like wall");
+				//openGLWin.SetWindowState(SEGMENTATION);
+				redoingSegmentation = true;
+				break;
+			}
 			//if (!openGLWin.wallSelection)
 			//	break;
 			//PV2->spinOnce(100);
 			boost::this_thread::sleep(boost::posix_time::microseconds(100000));
-		}*/
-
+		}
+		
 		wallSegmentCloud->clear();
+		if (redoingSegmentation)
+			continue;
 		//closeViewer = false;
 
 		for (int i = 0; i < inlierIndices->indices.size(); i++)
@@ -172,8 +196,7 @@ bool PCLProcessor::PlaneSegmentation() {
 		//pcl::copyPointCloud(*cloud_f, *cloudWithoutPlane);
 		planeSegmentationIndices = testIndices;
 
-		//if (openGLWin.isWall)
-		if (true)
+		if (openGLWin.isWall)
 		{
 			pcl::PointIndices::Ptr newIndices(new pcl::PointIndices);
 			for (int i = 0; i < inlierIndices->indices.size(); i++)
@@ -1304,6 +1327,16 @@ bool PCLProcessor::IsPlaneSegmented()
 	
 	//pcl::copyPointCloud(*cloud_with_normals, *mainCloud);
 }*/
+
+std::vector<int> PCLProcessor::GetInlierIndices()
+{
+	std::vector<int> triangles;
+	for (int i = 0; i < planeInlierIndices->indices.size(); i++)
+	{
+		triangles.push_back(planeInlierIndices->indices[i]);
+	}
+	return triangles;
+}
 
 std::vector<int> PCLProcessor::GetPlaneCloudIndices(int index)
 {

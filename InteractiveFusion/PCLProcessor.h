@@ -26,6 +26,7 @@ public:
 	void ShowViewer();
 	bool IsMainCloudInitialized();
 	bool IsPlaneSegmented();
+	std::vector<int> GetInlierIndices();
 	std::vector<int> GetPlaneCloudIndices(int index);
 	std::vector<int> GetColoredCloudIndices(int index);
 	void PrepareForObjectSegmentation();

@@ -17,7 +17,7 @@ wstring statusMsg = L"";
 wstring percentMsg = L"";
 //mesh storage
 std::vector<shared_ptr<VCGMeshContainer>> meshData;
-
+shared_ptr<VCGMeshContainer> originalMesh(new VCGMeshContainer);
 //gl related objects
 SelectionHelper glSelector;
 OpenGLText glText;
@@ -106,13 +106,20 @@ void ShowStatusMsg()
 	}
 }
 
-
-
 void HandleKeyInput()
 {
 	if (Keys::GetKeyStateOnce(VK_F10))
 	{
 		openGLWin.ToggleDebugControls();
+	}
+	if (Keys::GetKeyStateOnce(VK_RETURN))
+	{
+		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+		{
+			openGLWin.previewMode = false;
+			glSegmentation.StartSegmentation();
+		}
+			
 	}
 }
 
@@ -145,7 +152,7 @@ void InitialLoading()
 	//openGLWin.segmentationMode = REGION_GROWTH_SEGMENTATION;
 	
 	openGLWin.segmentationMode = EUCLIDEAN_SEGMENTATION;
-	openGLWin.previewMode = false;
+	openGLWin.previewMode = true;
 	glSegmentation.StartSegmentation();
 
 	//openGLWin.SetWindowState(BUFFERS);
@@ -192,7 +199,7 @@ void Render(LPVOID lpParam)
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if (openGLWin.wireFrameMode && openGLWin.GetWindowState() != SEGMENTATION_PREVIEW)
+	if (openGLWin.wireFrameMode)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -219,13 +226,16 @@ void Render(LPVOID lpParam)
 				else
 					return;
 			}
+			meshHelper.GenerateOriginalBuffers();
 			glSegmentation.InitializePreview();
 
 			//glCamera.SetRotationPoint(glSegmentation.GetPreviewCenterPoint());
 		}
 		else
 		{
-			meshHelper.DrawAll();
+			meshHelper.DrawOriginalMesh();
+			glText.PrepareForRender();
+			glText.RenderText(L"FPS: ", openGLWin.glControl.GetFPS(), 20, -0.98f, 0.85f, 2.0f / storedWidth, 2.0f / storedHeight);
 			//glSegmentation.RenderPreview();
 			glCamera.mode = CAMERA_FREE;
 		}
@@ -235,6 +245,7 @@ void Render(LPVOID lpParam)
 	}
 	else if (glSegmentation.IsPreviewInitialized())
 	{
+		cDebug::DbgOut(L"instant?");
 		glSegmentation.ClearPreviewVertices();
 		glCamera.ResetCameraPosition();
 		glCamera.mode = CAMERA_SENSOR;
@@ -328,6 +339,7 @@ void Release(LPVOID lpParam)
 	glHelper.CleanUp();
 	glSegmentation.CleanUp();
 	gl2DHelper.CleanUp();
+	originalMesh->ClearMesh();
 	for (int i = 0; i < 6; i++)shaders[i].DeleteShader();
 
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)

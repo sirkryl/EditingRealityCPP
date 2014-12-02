@@ -2,6 +2,7 @@
 #include "MeshHelper.h"
 #include "SelectionHelper.h"
 #include "Keys.h"
+#include "SegmentationHelper.h"
 //#include <gdiplus.h>
 
 #pragma region
@@ -11,44 +12,72 @@
 InteractiveFusion openGLWin;
 MeshHelper meshHelper;
 
-HWND hButtonYes, hButtonNo;
+const char className[] = "OpenGLWindow";
+TCHAR Keys::kp[256] = { 0 };
+
+//STATUS BAR
+HWND statusHandle;
+
+//INTERACTION
+std::vector<HWND> interactionUi;
 HWND hButtonExport, hButtonReset;
-
 HWND hButtonDuplicate;
-
 HWND hButtonScale, hButtonRotateVertical, hButtonRotateHorizontal;
 
-HWND hModeArrow;
-HWND hCheckBoxDuplicate;
+//WINDOW MODE TABS
+HWND hPrepareText, hScanText, hSegmentationText, hInteractionText;
+
+//WALL SELECTION
+std::vector<HWND> wallSelectionUi;
+HWND hButtonWallSizePlus, hButtonWallSizeMinus;
+HWND hButtonWallSmoothnessPlus, hButtonWallSmoothnessMinus;
+HWND hTextWallSizeLabel, hTextWallSize;
+HWND hTextWallSmoothnessLabel, hTextWallSmoothness;
 HWND hTextWalls;
-HWND hPrepareText, hScanText, hInteractionText;
-std::vector<HWND> uiElements;
-WNDPROC oldEditProc;
+HWND hHelpText1, hHelpText2;
+HWND hButtonYes, hButtonNo;
+
+//SEGMENTATION PREVIEW
+std::vector<HWND> segmentationPreviewUi;
+HWND hButtonSegmentationFinish;
+
+//FONTS
+HFONT uiFont, mediumUiFont, smallUiFont;
+HFONT statusFont;
+
+//BITMAPS
+HBITMAP trashBmp;
+HBITMAP trashBmp_mask;
+
+//ICONS
+HICON hDeleteIcon;
+
+//BRUSHES
 HBRUSH hBackground = CreateSolidBrush(RGB(30, 30, 30));
 HBRUSH buttonDefaultBrush, buttonPressedBrush, buttonActiveBrush;
 HBRUSH buttonGreenBrush, buttonGreenPressedBrush, buttonGreenInactiveBrush, buttonRedBrush, buttonRedPressedBrush, buttonRedInactiveBrush;
 HBRUSH buttonBlueBrush;
 
+//PENS
 HPEN buttonDefaultPen, buttonPressedPen, buttonInactivePen, buttonModePen;
 
+//EDIT CONTROLS
+WNDPROC oldEditProc;
 HWND editKSearchHandle, editMinClustersHandle, editCarryDistanceHandle, editMaxClustersHandle, editNonHandle, editSmoothnessHandle, editCurvatureHandle, editFillHoleHandle, editRemoveComponentHandle;
-HWND statusHandle;
+
+//DEBUG UI
 HWND debugHandle;
 int debugWidth = 0;
-TCHAR Keys::kp[256] = { 0 };
-HFONT uiFont, smallUiFont;
-HFONT statusFont;
 
-HICON hDeleteIcon;
-HBITMAP trashBmp;
-HBITMAP trashBmp_mask;
 
-//Gdiplus::Bitmap* m_pDeleteBitmap;
+//OTHER STUFF (DO I EVEN NEED THESSE THINGS?)
+HWND hModeArrow;
+HWND hCheckBoxDuplicate;
 
-const char className[] = "OpenGLWindow";
 
 bool winDestroyed = false;
 bool winResized = false;
+
 #pragma endregion variables
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
@@ -64,14 +93,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	ShowWindow(openGLWin.parent, SW_SHOW);
 
 	uiFont = CreateFont(40, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
+	mediumUiFont = CreateFont(30, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
 	smallUiFont = CreateFont(20, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
-	hTextWalls = GetDlgItem(openGLWin.glWindowParent, IDC_STATIC_WALL);
-	SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
-	SendMessage(hTextWalls, WM_SETFONT, (WPARAM)uiFont, TRUE);
-	ShowWindow(hTextWalls, SW_HIDE);
+	
 
 	hPrepareText = CreateWindowEx(0, L"BUTTON", L"PREPARE", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_MODE_PREPARE, NULL, 0);
-
+	hSegmentationText = CreateWindowEx(0, L"BUTTON", L"SEGMENTATION", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_MODE_SEGMENTATION, NULL, 0);
 	hScanText = CreateWindowEx(0, L"BUTTON", L"SCAN", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_MODE_SCAN, NULL, 0);
 
 	hInteractionText = CreateWindowEx(0, L"BUTTON", L"INTERACTION", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_MODE_INTERACTION, NULL, 0);
@@ -96,7 +123,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	buttonRedPressedBrush = CreateSolidBrush(RGB(100, 0, 0));
 	buttonRedInactiveBrush = CreateSolidBrush(RGB(50, 0, 0));
 
-	openGLWin.SetWindowMode(PREPARE_SCANNING);
+	openGLWin.SetWindowMode(MODE_PREPARE_SCANNING);
 	//openGLWin.SetWindowState(START);
 	StartKinectFusion(openGLWin.parent, hInstance, StartOpenGLThread, SetWindowMode,openGLWin.fusionExplorer, openGLWin.fusionHandle);
 }
@@ -112,23 +139,24 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 {
 	mode = wMode;
 
-	if (mode == INTERACTION)
+	if (mode == MODE_INTERACTION)
 	{
 		DetermineMeshQuality();
 		ShowWindow(glWindowHandle, SW_SHOW);
 		EnableWindow(hPrepareText, true);
 		EnableWindow(hScanText, true);
 		EnableWindow(hInteractionText, false);
+		EnableWindow(hSegmentationText, true);
 	}
-	else if (mode == SCANNING)
+	else if (mode == MODE_SCANNING)
 	{
 		cDebug::DbgOut(L"activate scanning");
 		EnableWindow(hPrepareText, true);
 		EnableWindow(hScanText, false);
 		EnableWindow(hInteractionText, true);
-		
+		EnableWindow(hSegmentationText, true);
 	}
-	else if (mode == PREPARE_SCANNING)
+	else if (mode == MODE_PREPARE_SCANNING)
 	{
 		EnableWindow(hPrepareText, false);
 		EnableWindow(hScanText, true);
@@ -138,6 +166,16 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 			if (openGLWin.fusionExplorer->GetWindowState() != START)
 				openGLWin.fusionExplorer->SetWindowState(START);
 		}
+		EnableWindow(hSegmentationText, true);
+	}
+	else if (mode == MODE_SEGMENTATION)
+	{
+		DetermineMeshQuality();
+		ShowWindow(glWindowHandle, SW_SHOW);
+		EnableWindow(hPrepareText, true);
+		EnableWindow(hScanText, true);
+		EnableWindow(hInteractionText, true);
+		EnableWindow(hSegmentationText, false);
 	}
 }
 
@@ -146,11 +184,35 @@ WindowState InteractiveFusion::GetWindowState()
 	return state;
 }
 
-void InteractiveFusion::HideAllButtons()
+void InteractiveFusion::HideUI(std::vector<HWND> handles)
 {
-	for (int i = 0; i < uiElements.size(); i++)
+	for (int i = 0; i < handles.size(); i++)
 	{
-		ShowWindow(uiElements[i], SW_HIDE);
+		ShowWindow(handles[i], SW_HIDE);
+	}
+}
+
+void InteractiveFusion::ShowUI(std::vector<HWND> handles)
+{
+	for (int i = 0; i < handles.size(); i++)
+	{
+		ShowWindow(handles[i], SW_SHOW);
+	}
+}
+
+void InteractiveFusion::HideWholeUI()
+{
+	for (int i = 0; i < segmentationPreviewUi.size(); i++)
+	{
+		ShowWindow(segmentationPreviewUi[i], SW_HIDE);
+	}
+	for (int i = 0; i < wallSelectionUi.size(); i++)
+	{
+		ShowWindow(wallSelectionUi[i], SW_HIDE);
+	}
+	for (int i = 0; i < interactionUi.size(); i++)
+	{
+		ShowWindow(interactionUi[i], SW_HIDE);
 	}
 }
 
@@ -158,35 +220,33 @@ void InteractiveFusion::SetWindowState(WindowState wState)
 {
 	state = wState;
 
-	HideAllButtons();
+	HideWholeUI();
 	openGLWin.glControl.SetOffSetBottom(0);
 	openGLWin.glControl.SetOffSetRight(0);
 	ShowWindow(hPrepareText, SW_SHOW);
+	ShowWindow(hSegmentationText, SW_SHOW);
 	ShowWindow(hScanText, SW_SHOW);
 	ShowWindow(hInteractionText, SW_SHOW);
-	//ShowWindow(hModeArrow, SW_HIDE);
+
 	if (state == WALL_SELECTION)
 	{
-		ShowWindow(hTextWalls, SW_SHOW);
-		ShowWindow(hButtonYes, SW_SHOW);
-		ShowWindow(hButtonNo, SW_SHOW);
 		openGLWin.glControl.SetOffSetBottom(250);
-		//openGLWin.glControl.SetOffSetWidth(100);
-		//RECT rRect; GetClientRect(GetParent(openGLWin.glWindowHandle), &rRect);
-		//openGLWin.glControl.ResizeOpenGLViewportFull(rRect.right, rRect.bottom);
+
+		ShowUI(wallSelectionUi);
+	}
+	if (state == SEGMENTATION_PREVIEW)
+	{
+		openGLWin.glControl.SetOffSetRight(250);
+
+		ShowUI(segmentationPreviewUi);
 	}
 	if (state == DEFAULT)
 	{
+		
 		openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.glControl.SetOffSetRight(250);
-		ShowWindow(hButtonExport, SW_SHOW);
-		ShowWindow(hButtonReset, SW_SHOW);
-		ShowWindow(hButtonDuplicate, SW_SHOW);
-		ShowWindow(hButtonScale, SW_SHOW);
-		ShowWindow(hButtonRotateHorizontal, SW_SHOW);
-		ShowWindow(hButtonRotateVertical, SW_SHOW);
-		
-		//openGLWin.glControl.ResizeOpenGLViewportFull();
+
+		ShowUI(interactionUi);
 	}
 	
 	RECT rRect; GetClientRect(GetParent(openGLWin.glWindowHandle), &rRect);
@@ -282,8 +342,62 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	statusFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
 	
 	//hbitmap = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BUTTON), IMAGE_BITMAP, 84, 36, LR_DEFAULTCOLOR);
-	hButtonYes = CreateWindowEx(0, L"Button", L"Yes", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_YES, openGLWin.appInstance, 0);
-	hButtonNo = CreateWindowEx(0, L"Button", L"No", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_NO, openGLWin.appInstance, 0);
+	hButtonYes = CreateWindowEx(0, L"Button", L"Wall", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_YES, openGLWin.appInstance, 0);
+	hButtonNo = CreateWindowEx(0, L"Button", L"No Wall", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_NO, openGLWin.appInstance, 0);
+
+	hButtonSegmentationFinish = CreateWindowEx(0, L"Button", L"Done", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_SEGMENTATION_FINISH, openGLWin.appInstance, 0);
+
+	segmentationPreviewUi.push_back(hButtonSegmentationFinish);
+
+	hButtonWallSizePlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_WALLSIZE_PLUS, openGLWin.appInstance, 0);
+	hButtonWallSizeMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_WALLSIZE_MINUS, openGLWin.appInstance, 0);
+	hButtonWallSmoothnessPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_WALLSMOOTHNESS_PLUS, openGLWin.appInstance, 0);
+	hButtonWallSmoothnessMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_WALLSMOOTHNESS_MINUS, openGLWin.appInstance, 0);
+	
+
+	hTextWalls = CreateWindowEx(0, L"STATIC", L"Is the highlighted area (part of) a wall, floor or ceiling?", WS_CHILD | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_WALL, openGLWin.appInstance, 0);
+	SendMessage(hTextWalls, WM_SETFONT, (WPARAM)uiFont, TRUE);
+
+
+	hTextWallSize = CreateWindowEx(0, L"STATIC", L"2cm", WS_CHILD | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_WALLSIZE, openGLWin.appInstance, 0);
+
+	//SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_TEXT_WALLSIZE, L"Is this (part of) a floor/wall?");
+	SendMessage(hTextWallSize, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
+	hTextWallSizeLabel = CreateWindowEx(0, L"STATIC", L"Thickness", WS_CHILD | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_WALLSIZE_LABEL, openGLWin.appInstance, 0);
+	//SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_TEXT_WALLSIZE, L"Is this (part of) a floor/wall?");
+	SendMessage(hTextWallSizeLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
+
+	hTextWallSmoothness = CreateWindowEx(0, L"STATIC", L"2cm", WS_CHILD | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_WALLSMOOTHNESS, openGLWin.appInstance, 0);
+	//SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_TEXT_WALLSIZE, L"Is this (part of) a floor/wall?");
+	SendMessage(hTextWallSmoothness, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
+
+	hTextWallSmoothnessLabel = CreateWindowEx(0, L"STATIC", L"Smoothness", WS_CHILD | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_WALLSMOOTHNESS_LABEL, openGLWin.appInstance, 0);
+	//SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_TEXT_WALLSIZE, L"Is this (part of) a floor/wall?");
+	SendMessage(hTextWallSmoothnessLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
+
+	openGLWin.UpdateWallSelectionValues();
+	
+
+	hHelpText1 = CreateWindowEx(0, L"STATIC", L"If the highlighted area is too thick or too thin, change the wall thickness.", WS_CHILD | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_HELP1, openGLWin.appInstance, 0);
+	SendMessage(hHelpText1, WM_SETFONT, (WPARAM)smallUiFont, TRUE);
+
+	hHelpText2 = CreateWindowEx(0, L"STATIC", L"If the highlighted area has gaps, decrease smoothness. If it is not flat enough (contains other objects), increase it.", WS_CHILD | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_HELP2, openGLWin.appInstance, 0);
+	SendMessage(hHelpText2, WM_SETFONT, (WPARAM)smallUiFont, TRUE);
+	
+	wallSelectionUi.push_back(hTextWalls);
+	wallSelectionUi.push_back(hTextWallSize);
+	wallSelectionUi.push_back(hTextWallSizeLabel);
+	wallSelectionUi.push_back(hTextWallSmoothness);
+	wallSelectionUi.push_back(hTextWallSmoothnessLabel);
+	wallSelectionUi.push_back(hHelpText1);
+	wallSelectionUi.push_back(hHelpText2);
+	wallSelectionUi.push_back(hButtonYes);
+	wallSelectionUi.push_back(hButtonNo);
+	wallSelectionUi.push_back(hButtonWallSizePlus);
+	wallSelectionUi.push_back(hButtonWallSizeMinus);
+	wallSelectionUi.push_back(hButtonWallSmoothnessPlus);
+	wallSelectionUi.push_back(hButtonWallSmoothnessMinus);
+
 	//hTextWalls = CreateWindowEx(0, L"Text", L"Is this (part of) a floor/wall?", WS_CHILD | WS_VISIBLE | BS_BITMAP, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_NO, appInstance, 0);
 	hButtonExport = CreateWindowEx(0, L"BUTTON", L"Export", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_EXPORT, NULL, 0);
 	hButtonDuplicate = CreateWindowEx(0, L"BUTTON", L"Duplicate", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_DUPLICATE, NULL, 0);
@@ -295,20 +409,15 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	hButtonRotateVertical = CreateWindowEx(0, L"BUTTON", L"Rotate ^v", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_ROTATE_VERTICAL, NULL, 0);
 	hButtonRotateHorizontal = CreateWindowEx(0, L"BUTTON", L"Rotate <>", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_ROTATE_HORIZONTAL, NULL, 0);
 
+	interactionUi.push_back(hButtonExport);
+	interactionUi.push_back(hButtonDuplicate);
+	interactionUi.push_back(hButtonScale);
+	interactionUi.push_back(hButtonRotateVertical);
+	interactionUi.push_back(hButtonRotateHorizontal);
+	interactionUi.push_back(hButtonReset);
 	//hDeleteIcon = (HICON)LoadImage(openGLWin.appInstance, MAKEINTRESOURCE(IDI_TRASH), IMAGE_ICON, 128, 128, NULL);
 	//SendMessage(hButtonDelete, STM_SETIMAGE, IMAGE_ICON, (LPARAM)hDeleteIcon);
-	uiElements.push_back(hButtonYes);
-	uiElements.push_back(hButtonNo);
-	uiElements.push_back(hButtonExport);
-	uiElements.push_back(hButtonDuplicate);
-	uiElements.push_back(hButtonScale);
-	uiElements.push_back(hButtonRotateVertical);
-	uiElements.push_back(hButtonRotateHorizontal);
-	uiElements.push_back(hButtonReset);
-	uiElements.push_back(hTextWalls);
-	//uiElements.push_back(hScanText);
-	//uiElements.push_back(hInteractionText);
-	HideAllButtons();
+	HideWholeUI();
 
 
 	
@@ -359,9 +468,10 @@ void InteractiveFusion::ShutdownWindow()
 
 void InteractiveFusion::ResumeScanning()
 {
-	HideAllButtons();
+	HideWholeUI();
+	//HideAllButtons();
 	ShowWindow(openGLWin.glWindowHandle, SW_HIDE);
-	openGLWin.SetWindowMode(SCANNING);
+	openGLWin.SetWindowMode(MODE_SCANNING);
 	ResumeKinectFusion();
 }
 
@@ -378,7 +488,7 @@ void StartOpenGLThread(int testMode)
 	
 		
 	openGLWin.testMode = testMode;
-	openGLWin.SetWindowMode(INTERACTION);
+	openGLWin.SetWindowMode(MODE_INTERACTION);
 	openGLWin.SetWindowState(INITIALIZING);
 
 	if (openGLWin.glWindowHandle)
@@ -411,7 +521,8 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 {
 	if (IDC_BUTTON_MODE_INTERACTION == LOWORD(wParam) ||
 		IDC_BUTTON_MODE_SCAN == LOWORD(wParam) ||
-		IDC_BUTTON_MODE_PREPARE == LOWORD(wParam))
+		IDC_BUTTON_MODE_PREPARE == LOWORD(wParam) ||
+		IDC_BUTTON_MODE_SEGMENTATION == LOWORD(wParam))
 	{
 		LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lParam;
 		SelectObject(item->hDC, uiFont);
@@ -485,7 +596,12 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		|| IDC_BUTTON_RESET == LOWORD(wParam)
 		|| IDC_BUTTON_SCALE == LOWORD(wParam)
 		|| IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam)
-		|| IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam))
+		|| IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam)
+		|| IDC_BUTTON_WALLSIZE_MINUS == LOWORD(wParam)
+		|| IDC_BUTTON_WALLSIZE_PLUS == LOWORD(wParam)
+		|| IDC_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam)
+		|| IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam)
+		|| IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam))
 	{
 		LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lParam;
 
@@ -499,12 +615,12 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		{
 			SetTextColor(item->hDC, RGB(50, 50, 50));
 
-			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam))
+			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonGreenInactiveBrush);
 			}
-			else if (IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_RESET == LOWORD(wParam))
+			else if (IDC_BUTTON_RESET == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonRedInactiveBrush);
@@ -517,12 +633,12 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		else if (item->itemState & ODS_SELECTED)
 		{
 			SetTextColor(item->hDC, RGB(245, 245, 245));
-			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam))
+			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonGreenPressedBrush);
 			}
-			else if (IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_RESET == LOWORD(wParam))
+			else if (IDC_BUTTON_RESET == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonRedPressedBrush);
@@ -536,12 +652,12 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		else
 		{
 			SetTextColor(item->hDC, RGB(240, 240, 240));
-			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam))
+			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonGreenBrush);
 			}
-			else if (IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_RESET == LOWORD(wParam))
+			else if (IDC_BUTTON_RESET == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonRedBrush);
@@ -563,10 +679,12 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		
 		SetBkMode(item->hDC, TRANSPARENT);
 		
-		if (true)
-			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 500, 500);
-		else
+		if (IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_WALLSIZE_MINUS == LOWORD(wParam)
+			|| IDC_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) || IDC_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) ||
+			IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam))
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 20, 20);
+		else
+			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 500, 500);
 		int len;
 		len = GetWindowTextLength(item->hwndItem);
 		LPSTR lpBuff = new char[len + 1];
@@ -601,6 +719,22 @@ LRESULT CALLBACK GLViewportProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		return DrawButton(wParam, lParam);
 		break;
+	case WM_CTLCOLORSTATIC:
+		if ((HWND)lParam == hTextWalls
+			|| (HWND)lParam == hTextWallSize
+			|| (HWND)lParam == hTextWallSizeLabel
+			|| (HWND)lParam == hTextWallSmoothness
+			|| (HWND)lParam == hTextWallSmoothnessLabel
+			|| (HWND)lParam == hHelpText1 
+			|| (HWND)lParam == hHelpText2)
+		{
+			HDC hdc = reinterpret_cast<HDC>(wParam);
+			SetBkMode((HDC)wParam, TRANSPARENT);
+			SetTextColor(hdc, RGB(255, 255, 255));
+
+			return (LRESULT)hBackground;
+		}
+		break;
 	case WM_SIZE:	
 		break;
 	case WM_DESTROY:
@@ -622,6 +756,7 @@ LRESULT CALLBACK GLViewportProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		DeleteObject(statusFont);
 		DeleteObject(uiFont);
 		DeleteObject(smallUiFont);
+		DeleteObject(mediumUiFont);
 		
 		break;
 	default:
@@ -745,7 +880,9 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		return DrawButton(wParam, lParam);
 		break;
 	case WM_CTLCOLORSTATIC:
-		if ((HWND)lParam == hTextWalls)
+		if ((HWND)lParam == hTextWalls
+			|| (HWND)lParam == hTextWallSize
+			|| (HWND)lParam == hTextWallSizeLabel)
 		{
 			HDC hdc = reinterpret_cast<HDC>(wParam);
 			SetBkMode((HDC)wParam, TRANSPARENT);
@@ -762,7 +899,7 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		break;
 	case WM_NCLBUTTONDBLCLK:
 	case WM_SIZE:
-		if (openGLWin.GetWindowMode() == SCANNING || openGLWin.GetWindowMode() == PREPARE_SCANNING)
+		if (openGLWin.GetWindowMode() == MODE_SCANNING || openGLWin.GetWindowMode() == MODE_PREPARE_SCANNING)
 		{
 			MoveModeButtonsOnResize();
 			MoveWindow(openGLWin.fusionHandle, 0, 0, LOWORD(lParam), HIWORD(lParam), true);
@@ -1155,30 +1292,108 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 {
 	if (IDC_BUTTON_MODE_PREPARE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
-		if (openGLWin.GetWindowMode() != PREPARE_SCANNING)
+		if (openGLWin.GetWindowMode() != MODE_PREPARE_SCANNING)
 		{
-			if (openGLWin.GetWindowMode() != SCANNING)
+			if (openGLWin.GetWindowMode() != MODE_SCANNING)
 				openGLWin.ResumeScanning();
 
-			openGLWin.SetWindowMode(PREPARE_SCANNING);
+			openGLWin.SetWindowMode(MODE_PREPARE_SCANNING);
 		}
 	}
 	if (IDC_BUTTON_MODE_SCAN == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
-		if (openGLWin.GetWindowMode() == PREPARE_SCANNING)
+		if (openGLWin.GetWindowMode() == MODE_PREPARE_SCANNING)
 			openGLWin.fusionExplorer->StartScan();
-		else if (openGLWin.GetWindowMode() != SCANNING)
+		else if (openGLWin.GetWindowMode() != MODE_SCANNING)
 			openGLWin.ResumeScanning();
 		
+	}
+	if (IDC_BUTTON_MODE_SEGMENTATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.GetWindowMode() != MODE_SEGMENTATION)
+		{
+			openGLWin.SetWindowMode(MODE_SEGMENTATION);
+		}
 	}
 	if (IDC_BUTTON_MODE_INTERACTION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		SetFocus(hScanText);
 		MoveModeButtonsOnResize();
-		if (openGLWin.GetWindowMode() == SCANNING && openGLWin.fusionExplorer->GetWindowState() == SCAN)
+		if (openGLWin.GetWindowMode() == MODE_SCANNING && openGLWin.fusionExplorer->GetWindowState() == SCAN)
 		{
 			openGLWin.fusionExplorer->FinishScan(0);
 		}
+	}
+	if (IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+		{
+			openGLWin.previewMode = false;
+			glSegmentation.StartSegmentation();
+		}
+	}
+	if (IDC_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		float step = 0.0f;
+		if (openGLWin.wallThickness > 0.30f)
+			step = 0.1f;
+		else if (openGLWin.wallThickness > 0.10f)
+			step = 0.05f;
+		else
+			step = 0.01f;
+		openGLWin.wallThickness += step;
+		//meshHelper.RemoveAllHighlights();
+
+		openGLWin.UpdateWallSelectionValues();
+	}
+	if (IDC_BUTTON_WALLSIZE_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.wallThickness <= 0.01f)
+			return;
+		float step = 0.0f;
+		if (openGLWin.wallThickness >= 0.30f)
+			step = 0.1f;
+		else if (openGLWin.wallThickness > 0.10f)
+			step = 0.05f;
+		else
+			step = 0.01f;
+
+		openGLWin.wallThickness -= step;
+		//meshHelper.RemoveAllHighlights();
+		
+		openGLWin.UpdateWallSelectionValues();
+	}
+	if (IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.wallSmoothness >= 1.00f)
+			return;
+		float step = 0.0f;
+		if (openGLWin.wallSmoothness > 0.30f)
+			step = 0.1f;
+		else if (openGLWin.wallSmoothness > 0.10f)
+			step = 0.05f;
+		else
+			step = 0.01f;
+		openGLWin.wallSmoothness += step;
+		//meshHelper.RemoveAllHighlights();
+		
+		openGLWin.UpdateWallSelectionValues();
+	}
+	if (IDC_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.wallSmoothness <= 0.00f)
+			return;
+		float step = 0.0f;
+		if (openGLWin.wallSmoothness > 0.30f)
+			step = 0.1f;
+		else if (openGLWin.wallSmoothness > 0.10f)
+			step = 0.05f;
+		else
+			step = 0.01f;
+		openGLWin.wallSmoothness -= step;
+		//meshHelper.RemoveAllHighlights();
+		
+		openGLWin.UpdateWallSelectionValues();
 	}
 	if (IDC_BUTTON_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -1209,6 +1424,9 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 		//openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.SetWindowState(SEGMENTATION);
 		openGLWin.isWall = true;
+		openGLWin.wallThickness = 0.2f;
+		openGLWin.wallSmoothness = 0.5f;
+		meshHelper.RemoveAllHighlights();
 		ShowWindow(hTextWalls, SW_HIDE);
 	}
 	if (IDC_BUTTON_NO == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
@@ -1216,6 +1434,9 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 		//openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.SetWindowState(SEGMENTATION);
 		openGLWin.isWall = false;
+		openGLWin.wallThickness = 0.2f;
+		openGLWin.wallSmoothness = 0.5f;
+		meshHelper.RemoveAllHighlights();
 		ShowWindow(hTextWalls, SW_HIDE);
 		//openGLWin.glControl.ResizeOpenGLViewportFull();
 	}
@@ -1357,31 +1578,68 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	}
 }
 
+void InteractiveFusion::UpdateWallSelectionValues()
+{
+	int thicknessLabel = openGLWin.wallThickness * 100;
+	wstring thicknessString = to_wstring(thicknessLabel) + L"cm";
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_WALLSIZE, thicknessString.c_str());
+
+	int smoothnessLabel = openGLWin.wallSmoothness * 100;
+	wstring smoothnessString = to_wstring(smoothnessLabel) + L"%";
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_WALLSMOOTHNESS, smoothnessString.c_str());
+}
+
 void MoveModeButtonsOnResize()
 {
 	RECT rect; GetWindowRect(openGLWin.parent, &rect);
 	//MoveWindow(hModeArrow, 113, 0, 50, 50, true);
-	MoveWindow(hPrepareText, rect.right / 2 - 265, 8, 150, 40, true);
-	MoveWindow(hScanText, rect.right/2 - 115, 8, 130, 40, true);
-	MoveWindow(hInteractionText, rect.right/2 + 15 , 8, 250, 40, true);
+	MoveWindow(hPrepareText, rect.right / 2 - 390, 8, 150, 40, true);
+	MoveWindow(hScanText, rect.right/2 - 240, 8, 130, 40, true);
+	MoveWindow(hSegmentationText, rect.right / 2 - 110, 8, 250, 40, true);
+	MoveWindow(hInteractionText, rect.right/2 + 140 , 8, 250, 40, true);
 	//MoveWindow(hScanText, 15, 8, 125, 40, true);
 	//MoveWindow(hInteractionText, 140, 8, 250, 40, true);
 }
 
 void MoveButtonsOnResize()
 {
-	if (openGLWin.GetWindowMode() == INTERACTION)
+	int width = openGLWin.glControl.GetViewportWidth() + openGLWin.glControl.GetOffSetRight();
+	int height = openGLWin.glControl.GetViewportHeight() + openGLWin.glControl.GetOffSetBottom();
+	if (openGLWin.GetWindowMode() == MODE_SEGMENTATION)
 	{
-		int width = openGLWin.glControl.GetViewportWidth() + openGLWin.glControl.GetOffSetRight();
-		int height = openGLWin.glControl.GetViewportHeight() + openGLWin.glControl.GetOffSetBottom();
-	
-		if (IsWindowVisible(debugHandle))
+		if (openGLWin.GetWindowState() == WALL_SELECTION)
 		{
-			RECT rRect;
-			GetClientRect(debugHandle, &rRect);
-			MoveWindow(debugHandle, width - rRect.right, 0, rRect.right, rRect.bottom, true);
+			MoveWindow(hButtonYes, width - 200, height - 200, 150, 150, true);
+			MoveWindow(hButtonNo, 50, height - 200, 150, 150, true);
+			//RECT rect;
+			//GetClientRect(hTextWalls, &rect);
+			MoveWindow(hTextWalls, 0, 48, width, 40, true);
+			//SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
+
+			//InvalidateRect(hTextWalls, &rect, TRUE);
+			//MapWindowPoints(hTextWalls, openGLWin.glWindowHandle, (POINT *)&rect, 2);
+			//RedrawWindow(hTextWalls, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
+
+			MoveWindow(hHelpText1, width / 2 - 275, height - 240, 550, 40, true);
+			MoveWindow(hTextWallSizeLabel, width / 2 - 200, height - 195, 150, 50, true);
+			MoveWindow(hButtonWallSizeMinus, width / 2 - 25, height - 200, 50, 50, true);
+			MoveWindow(hTextWallSize, width / 2 + 50, height - 195, 75, 50, true);
+			MoveWindow(hButtonWallSizePlus, width / 2 + 150, height - 200, 50, 50, true);
+
+
+			MoveWindow(hHelpText2, width / 2 - 275, height - 135, 550, 40, true);
+			MoveWindow(hTextWallSmoothnessLabel, width / 2 - 225, height - 80, 175, 50, true);
+			MoveWindow(hButtonWallSmoothnessMinus, width / 2 - 25, height - 85, 50, 50, true);
+			MoveWindow(hTextWallSmoothness, width / 2 + 50, height - 80, 75, 50, true);
+			MoveWindow(hButtonWallSmoothnessPlus, width / 2 + 150, height - 85, 50, 50, true);
 		}
-	
+		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+		{
+			MoveWindow(hButtonSegmentationFinish, width - 200, height - 200, 150, 150, true);
+		}
+	}
+	if (openGLWin.GetWindowMode() == MODE_INTERACTION)
+	{
 		if (openGLWin.GetWindowState() == DEFAULT)
 		{
 			MoveWindow(hButtonExport, width - 200, height-200, 150, 150, true);
@@ -1393,29 +1651,20 @@ void MoveButtonsOnResize()
 			MoveWindow(hButtonRotateHorizontal, width - 165, 500, 75, 75, true);
 			MoveWindow(hButtonRotateVertical, width - 80, 500, 75, 75, true);
 		}
-
-		RECT sRect;
-		GetWindowRect(statusHandle, &sRect);
-		MoveWindow(statusHandle, 0, height - 30, width, 30, true);
-
-		if (openGLWin.GetWindowState() == WALL_SELECTION)
-		{
-			MoveWindow(hButtonYes, width / 2 - 275, height - 200, 150, 150, true);
-			MoveWindow(hButtonNo, width / 2 + 25, height - 200, 150, 150, true);
-			RECT rect;
-			GetClientRect(hTextWalls, &rect);
-			MoveWindow(hTextWalls, width / 2 - 275, height - 250, 450, 40, true);
-			SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
-	
-			InvalidateRect(hTextWalls, &rect, TRUE);
-			MapWindowPoints(hTextWalls, openGLWin.glWindowHandle, (POINT *)&rect, 2);
-			RedrawWindow(hTextWalls, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
-		}
-
-
-		MoveModeButtonsOnResize();
-
 	}
+
+	MoveModeButtonsOnResize();
+
+	RECT sRect; GetWindowRect(statusHandle, &sRect);
+	MoveWindow(statusHandle, 0, height - 30, width, 30, true);
+
+	if (IsWindowVisible(debugHandle))
+	{
+		RECT rRect;
+		GetClientRect(debugHandle, &rRect);
+		MoveWindow(debugHandle, width - rRect.right, 0, rRect.right, rRect.bottom, true);
+	}
+
 	/*RECT ddRect;
 	GetClientRect(hButtonDelete, &ddRect);
 	InvalidateRect(hButtonDelete, &ddRect, TRUE);*/
@@ -1425,11 +1674,26 @@ bool InteractiveFusion::IsMouseInHandle()
 {
 	POINT pCur;
 	GetCursorPos(&pCur);
-	for (int i = 0; i < uiElements.size(); i++)
+
+	if (IsMouseInUI(wallSelectionUi))
+		return true;
+	if (IsMouseInUI(segmentationPreviewUi))
+		return true;
+	if (IsMouseInUI(interactionUi))
+		return true;
+
+	return false;
+}
+
+bool InteractiveFusion::IsMouseInUI(std::vector<HWND> handles)
+{
+	POINT pCur;
+	GetCursorPos(&pCur);
+	for (int i = 0; i < handles.size(); i++)
 	{
-		if (IsWindowVisible(uiElements[i]) && uiElements[i])
+		if (IsWindowVisible(handles[i]) && handles[i])
 		{
-			RECT rRect; GetWindowRect(uiElements[i], &rRect);
+			RECT rRect; GetWindowRect(handles[i], &rRect);
 			if (pCur.x >= rRect.left && pCur.x <= rRect.right &&
 				pCur.y >= rRect.top && pCur.y <= rRect.bottom)
 				return true;

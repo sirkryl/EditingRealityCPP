@@ -8,15 +8,18 @@
 
 void MeshHelper::InitialLoadFromFile(const char* fileName)
 {
+	if (originalMesh->GetNumberOfVertices() != 0)
+		originalMesh->ClearMesh();
+	
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		(*mI)->ClearMesh();
 	}
 	meshData.clear();
 	shared_ptr<VCGMeshContainer> mesh(new VCGMeshContainer);
-	mesh->SetColorCode(1);
-	mesh->LoadMesh(fileName);
-	meshData.push_back(mesh);
+	originalMesh->SetColorCode(1);
+	originalMesh->LoadMesh(fileName);
+	//meshData.push_back(mesh);
 }
 
 void MeshHelper::FillHoles(int holeSize)
@@ -195,6 +198,16 @@ void MeshHelper::CombineAndExport()
 	vcg::tri::io::ExporterPLY<VCGMesh>::Save(combinedMesh, filePath.c_str(), vcg::tri::io::Mask::IOM_VERTCOLOR);
 }
 
+void MeshHelper::GenerateOriginalBuffers()
+{
+	if (!originalMesh->AreBuffersInitialized())
+	{ 
+		cDebug::DbgOut(L"INITIALIZE ONCE");
+		originalMesh->GenerateBOs();
+		originalMesh->GenerateVAO();
+	}
+}
+
 void MeshHelper::GenerateBuffers()
 {
 	cDebug::DbgOut(L"MeshHelper Generate Buffers");
@@ -224,6 +237,11 @@ int MeshHelper::GetNumberOfFaces()
 	return numberOfFaces;
 }
 
+void MeshHelper::HighlightObjectsInOriginal(std::vector<int> triangles, ColorIF color)
+{
+	originalMesh->HighlightObjects(triangles, color);
+}
+
 void MeshHelper::HighlightObjects(int index, std::vector<int> triangles, ColorIF color)
 {
 	meshData[index]->HighlightObjects(triangles, color);
@@ -240,7 +258,14 @@ void MeshHelper::RemoveAllHighlights()
 	{
 		(*mI)->ResetHighlights();
 	}
+	originalMesh->ResetHighlights();
 }
+
+void MeshHelper::DrawOriginalMesh()
+{
+	originalMesh->Draw();
+}
+
 void MeshHelper::DrawAll()
 {
 	//cDebug::DbgOut(L"Meshhelper DrawAll");
@@ -264,6 +289,9 @@ void MeshHelper::DrawAllForColorPicking()
 
 glm::vec3 MeshHelper::GetCombinedCenterPoint()
 {
+	if (meshData.size() == 0)
+		return originalMesh->GetCenterPoint();
+
 	glm::vec3 centerPoint(0.0f, 0.0f, 0.0f);
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{

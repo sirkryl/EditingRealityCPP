@@ -33,6 +33,8 @@ public:
 
 	void UpdateBuffers();
 
+	bool AreBuffersInitialized();
+
 	void HighlightObjects(std::vector<int> objTriangles, ColorIF color);
 	void ResetHighlights();
 	void CleanMesh();

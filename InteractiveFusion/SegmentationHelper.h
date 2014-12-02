@@ -11,7 +11,7 @@ public:
 	bool InitializePreview();
 	bool InitializePreview(std::vector<Vertex> vertices, std::vector<Triangle> triangles);
 	void RenderPreview();
-
+	void ResetInitializedStatus();
 	bool IsPreviewInitialized();
 
 	void ClearPreviewVertices();
@@ -19,7 +19,7 @@ public:
 	bool IsCloudReady();
 
 	glm::vec3 GetPreviewCenterPoint();
-
+	
 	void ClearForResume();
 
 	void CleanUp();

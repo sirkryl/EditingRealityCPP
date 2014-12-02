@@ -857,9 +857,11 @@ void VCGMeshContainer::ClearMesh()
 		glDeleteBuffers(1, &vbo);
 		glDeleteBuffers(1, &ibo);
 		glDeleteVertexArrays(1, &vao);
+		vbo = 0;
 	}
 	vertices.clear();
 	indices.clear();
+	verticesWithHighlights.clear();
 	vertNum = 0;
 }
 
@@ -1107,6 +1109,11 @@ int VCGMeshContainer::GetNumberOfVertices()
 int VCGMeshContainer::GetNumberOfTriangles()
 {
 	return indices.size();
+}
+
+bool VCGMeshContainer::AreBuffersInitialized()
+{
+	return vbo != 0;
 }
 
 void VCGMeshContainer::CleanAndParse(std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices)

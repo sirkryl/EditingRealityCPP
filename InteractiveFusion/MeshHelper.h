@@ -7,6 +7,8 @@ public:
 
 	void InitialLoadFromFile(const char* fileName);
 
+	void DrawOriginalMesh();
+
 	void DrawAll();
 
 	void DrawAllForColorPicking();
@@ -21,6 +23,7 @@ public:
 
 	void CleanAndParse(const char* fileName, std::vector<Vertex> &startingVertices, std::vector<Triangle> &startingIndices);
 
+	void GenerateOriginalBuffers();
 	void GenerateBuffers();
 
 	void DeleteMesh(int index);
@@ -30,6 +33,7 @@ public:
 	int GetNumberOfVertices();
 
 	int GetNumberOfFaces();
+	void HighlightObjectsInOriginal(std::vector<int> triangles, ColorIF color);
 	void HighlightObjects(int index, std::vector<int> triangles, ColorIF color);
 	void RemoveHighlightObjects(int index);
 	void RemoveAllHighlights();
@@ -44,5 +48,5 @@ private:
 //extern int numberOfVertices;
 //extern int numberOfFaces;
 extern std::vector<shared_ptr<VCGMeshContainer>> meshData;
-
+extern shared_ptr < VCGMeshContainer > originalMesh;
 extern MeshHelper meshHelper;

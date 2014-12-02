@@ -2,7 +2,7 @@
 #include "OpenGLControl.h"
 #include "common.h"
 #include <KinectFusionExplorer.h>
-enum WindowMode { PREPARE_SCANNING, SCANNING, INTERACTION };
+enum WindowMode { MODE_PREPARE_SCANNING, MODE_SCANNING, MODE_SEGMENTATION, MODE_INTERACTION };
 
 enum WindowState {INITIALIZING, BUFFERS, DEFAULT, SEGMENTATION, SEGMENTATION_FINISHED, WALL_SELECTION, SEGMENTATION_PREVIEW, SHOWSTATUS, SELECTION };
 
@@ -44,7 +44,8 @@ public:
 	int maxComponentSize = 100;
 	int carryDistance = 5;
 
-
+	float wallThickness = 0.2f;
+	float wallSmoothness = 0.5f;
 	bool showBB = false;
 	bool wireFrameMode = false;
 	//flag indicating whether a segmentation value has been changed or not
@@ -88,6 +89,7 @@ public:
 
 	//cursor and/or mouse related methods
 	bool IsMouseInHandle();
+	bool IsMouseInUI(std::vector<HWND> handles);
 	bool IsMouseInOpenGLWindow();
 
 	void InitWallConfirmation();
@@ -100,9 +102,10 @@ public:
 	void ResumeScanning();
 
 	void SetBackgroundColor(int redValue, int greenValue, int blueValue);
-
-	void HideAllButtons();
-
+	void UpdateWallSelectionValues();
+	void HideUI(std::vector<HWND> handles);
+	void ShowUI(std::vector<HWND> handles);
+	void HideWholeUI();
 	void RedrawManipulationButtons();
 
 	//thread related methods
@@ -122,6 +125,7 @@ private:
 	clock_t tLastFrame;
 	float fFrameInterval;
 
+	
 	void DetermineMeshQuality();
 
 	//thread related variables
