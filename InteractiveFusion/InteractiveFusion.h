@@ -46,6 +46,7 @@ public:
 
 	float wallThickness = 0.2f;
 	float wallSmoothness = 0.5f;
+	float clusterTolerance = 0.02f;
 	bool showBB = false;
 	bool wireFrameMode = false;
 	//flag indicating whether a segmentation value has been changed or not
@@ -103,6 +104,7 @@ public:
 
 	void SetBackgroundColor(int redValue, int greenValue, int blueValue);
 	void UpdateWallSelectionValues();
+	void UpdateSegmentationPreviewValues();
 	void HideUI(std::vector<HWND> handles);
 	void ShowUI(std::vector<HWND> handles);
 	void HideWholeUI();

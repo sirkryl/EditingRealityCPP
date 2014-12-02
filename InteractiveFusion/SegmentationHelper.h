@@ -1,6 +1,8 @@
 #pragma once
 #include "common.h"
 
+enum SegmentationMode { SEGMENTATION_REGIONGROWTH, SEGMENTATION_EUCLIDEAN};
+
 class SegmentationHelper
 {
 public:
@@ -18,6 +20,9 @@ public:
 
 	bool IsCloudReady();
 
+	SegmentationMode GetSegmentationMode();
+	void SetSegmentationMode(SegmentationMode mode);
+
 	glm::vec3 GetPreviewCenterPoint();
 	
 	void ClearForResume();
@@ -31,6 +36,7 @@ private:
 	//thread related
 	HANDLE segmentationThread;
 	DWORD sThreadId;
+	SegmentationMode segMode = SEGMENTATION_EUCLIDEAN;
 
 	//vaos and vbos for helper visualizations
 	GLuint segmentVBO{ 0 }, segmentVAO{ 0 }, segmentIBO{ 0 };

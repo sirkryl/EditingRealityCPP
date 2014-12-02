@@ -734,10 +734,13 @@ bool PCLProcessor::EuclideanSegmentation() {
 	pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
 	//ec.setConditionFunction(&EnforceCurvatureOrColor);
 	
+	
 	if (openGLWin.meshQuality == QUALITY_MEDIUM || openGLWin.meshQuality == QUALITY_HIGH || openGLWin.meshQuality == QUALITY_VERYHIGH)
 		ec.setClusterTolerance(0.02); // 2cm
 	if (openGLWin.meshQuality == QUALITY_LOW || openGLWin.meshQuality == QUALITY_VERYLOW)
 		ec.setClusterTolerance(0.04); // 2cm
+
+	ec.setClusterTolerance(openGLWin.clusterTolerance);
 
 	if (openGLWin.meshQuality == QUALITY_HIGH || openGLWin.meshQuality == QUALITY_VERYHIGH)
 		ec.setMinClusterSize(1000);
@@ -758,38 +761,6 @@ bool PCLProcessor::EuclideanSegmentation() {
 	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
 	cDebug::DbgOut(L"Euclidean clustering in ", elapsedTime);
 	
-	//boost::shared_ptr<pcl::visualization::PCLVisualizer> PV(new pcl::visualization::PCLVisualizer("Normals Viewer"));
-	//PV->setBackgroundColor(0, 0, 0);
-	
-	int cnt = 1;
-	for (std::vector<pcl::PointIndices>::const_iterator it = segmentedClusterIndices.begin(); it != segmentedClusterIndices.end(); ++it)
-	{
-		pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZRGB>);
-		for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end(); pit++)
-		{
-			cloud_cluster->points.push_back(mainCloud->points[*pit]); //*
-		}
-		for (int i = 0; i < cloud_cluster->points.size(); i++)
-		{
-			cloud_cluster->points[i].r = min(15 * cnt, 255);
-			cloud_cluster->points[i].g = max(255 - 15 * cnt, 15);
-			cloud_cluster->points[i].b = min(0 + 15 * cnt, 15);
-		}
-		cloud_cluster->width = cloud_cluster->points.size();
-		cloud_cluster->height = 1;
-		cloud_cluster->is_dense = true;
-		//pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGB> single_color(cloud_cluster, fminf(15 * cnt, 255), fmaxf(255 - 25 * cnt, 15), fmaxf(125 - 5 * cnt, 15));
-		//PV->addPointCloud(cloud_cluster, "sample"+cnt);
-		cnt++;
-	}
-	/* while (!PV->wasStopped())
-	{
-			PV->spinOnce(100);
-		boost::this_thread::sleep(boost::posix_time::microseconds(100000));
-}*/
-
-	//pcl::PointCloud <pcl::PointXYZRGB>::Ptr colored_cloud = reg.getColoredCloud();
-	//ShowViewer();
 	return true;
 }
 

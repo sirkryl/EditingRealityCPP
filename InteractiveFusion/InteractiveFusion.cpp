@@ -40,6 +40,15 @@ HWND hButtonYes, hButtonNo;
 //SEGMENTATION PREVIEW
 std::vector<HWND> segmentationPreviewUi;
 HWND hButtonSegmentationFinish;
+HWND hButtonSegmentationBegin;
+HWND hButtonClusterTolerancePlus, hButtonClusterToleranceMinus;
+HWND hTextClusterToleranceLabel, hTextClusterTolerance;
+
+std::vector<HWND> regionGrowthUi;
+std::vector<HWND> euclideanUi;
+HWND hButtonRegionGrowthSegmentation, hButtonEuclideanSegmentation;
+HWND hButtonRGSmoothnessPlus, hButtonRGSmoothnessMinus;
+HWND hTextRGSmoothnessLabel, hTextRGSmoothness;
 
 //FONTS
 HFONT uiFont, mediumUiFont, smallUiFont;
@@ -206,6 +215,14 @@ void InteractiveFusion::HideWholeUI()
 	{
 		ShowWindow(segmentationPreviewUi[i], SW_HIDE);
 	}
+	for (int i = 0; i < euclideanUi.size(); i++)
+	{
+		ShowWindow(euclideanUi[i], SW_HIDE);
+	}
+	for (int i = 0; i < regionGrowthUi.size(); i++)
+	{
+		ShowWindow(regionGrowthUi[i], SW_HIDE);
+	}
 	for (int i = 0; i < wallSelectionUi.size(); i++)
 	{
 		ShowWindow(wallSelectionUi[i], SW_HIDE);
@@ -239,6 +256,10 @@ void InteractiveFusion::SetWindowState(WindowState wState)
 		openGLWin.glControl.SetOffSetRight(250);
 
 		ShowUI(segmentationPreviewUi);
+		if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
+			ShowUI(regionGrowthUi);
+		else if (glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN)
+			ShowUI(euclideanUi);
 	}
 	if (state == DEFAULT)
 	{
@@ -347,7 +368,47 @@ bool InteractiveFusion::CreateOpenGLWindow()
 
 	hButtonSegmentationFinish = CreateWindowEx(0, L"Button", L"Done", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_SEGMENTATION_FINISH, openGLWin.appInstance, 0);
 
+	hButtonSegmentationBegin = CreateWindowEx(0, L"Button", L"Segment", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_SEGMENTATION_BEGIN, openGLWin.appInstance, 0);
+
+	hTextClusterTolerance = CreateWindowEx(0, L"STATIC", L"2cm", WS_CHILD | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_CLUSTERTOLERANCE, openGLWin.appInstance, 0);
+
+	SendMessage(hTextClusterTolerance, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
+	hTextClusterToleranceLabel = CreateWindowEx(0, L"STATIC", L"Tolerance", WS_CHILD | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_CLUSTERTOLERANCE_LABEL, openGLWin.appInstance, 0);
+	
+	SendMessage(hTextClusterToleranceLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
+
+	hButtonClusterTolerancePlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_CLUSTERTOLERANCE_PLUS, openGLWin.appInstance, 0);
+	hButtonClusterToleranceMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_CLUSTERTOLERANCE_MINUS, openGLWin.appInstance, 0);
+
+	hButtonRegionGrowthSegmentation = CreateWindowEx(0, L"Button", L"RG", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_SEGMENTATION_REGIONGROWTH, openGLWin.appInstance, 0);
+	hButtonEuclideanSegmentation = CreateWindowEx(0, L"Button", L"Euclidean", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_SEGMENTATION_EUCLIDEAN, openGLWin.appInstance, 0);
+	
+	hButtonRGSmoothnessPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RG_SMOOTHNESS_PLUS, openGLWin.appInstance, 0);
+	hButtonRGSmoothnessMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RG_SMOOTHNESS_MINUS, openGLWin.appInstance, 0);
+
+	hTextRGSmoothness = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_RG_SMOOTHNESS, openGLWin.appInstance, 0);
+
+	SendMessage(hTextRGSmoothness, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
+	hTextRGSmoothnessLabel = CreateWindowEx(0, L"STATIC", L"Smoothness", WS_CHILD | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_RG_SMOOTHNESS_LABEL, openGLWin.appInstance, 0);
+
+	SendMessage(hTextRGSmoothnessLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
+
 	segmentationPreviewUi.push_back(hButtonSegmentationFinish);
+	segmentationPreviewUi.push_back(hButtonSegmentationBegin);
+	segmentationPreviewUi.push_back(hButtonRegionGrowthSegmentation);
+	segmentationPreviewUi.push_back(hButtonEuclideanSegmentation);
+
+	regionGrowthUi.push_back(hButtonRGSmoothnessPlus);
+	regionGrowthUi.push_back(hButtonRGSmoothnessMinus);
+	regionGrowthUi.push_back(hTextRGSmoothness);
+	regionGrowthUi.push_back(hTextRGSmoothnessLabel);
+
+	euclideanUi.push_back(hTextClusterTolerance);
+	euclideanUi.push_back(hTextClusterToleranceLabel);
+	euclideanUi.push_back(hButtonClusterTolerancePlus);
+	euclideanUi.push_back(hButtonClusterToleranceMinus);
+	
+	openGLWin.UpdateSegmentationPreviewValues();
 
 	hButtonWallSizePlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_WALLSIZE_PLUS, openGLWin.appInstance, 0);
 	hButtonWallSizeMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_WALLSIZE_MINUS, openGLWin.appInstance, 0);
@@ -522,10 +583,16 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 	if (IDC_BUTTON_MODE_INTERACTION == LOWORD(wParam) ||
 		IDC_BUTTON_MODE_SCAN == LOWORD(wParam) ||
 		IDC_BUTTON_MODE_PREPARE == LOWORD(wParam) ||
-		IDC_BUTTON_MODE_SEGMENTATION == LOWORD(wParam))
+		IDC_BUTTON_MODE_SEGMENTATION == LOWORD(wParam) ||
+		IDC_BUTTON_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) ||
+		IDC_BUTTON_SEGMENTATION_EUCLIDEAN == LOWORD(wParam))
 	{
 		LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lParam;
-		SelectObject(item->hDC, uiFont);
+		if (IDC_BUTTON_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) ||
+			IDC_BUTTON_SEGMENTATION_EUCLIDEAN == LOWORD(wParam))
+			SelectObject(item->hDC, mediumUiFont);
+		else
+			SelectObject(item->hDC, uiFont);
 		FillRect(item->hDC, &item->rcItem, hBackground);
 		//SelectObject(item->hDC, hBackground);
 		HBRUSH bgBrush = CreateSolidBrush(RGB(10, 10, 10));
@@ -601,7 +668,12 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		|| IDC_BUTTON_WALLSIZE_PLUS == LOWORD(wParam)
 		|| IDC_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam)
 		|| IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam)
-		|| IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam))
+		|| IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam)
+		|| IDC_BUTTON_CLUSTERTOLERANCE_MINUS == LOWORD(wParam)
+		|| IDC_BUTTON_CLUSTERTOLERANCE_PLUS == LOWORD(wParam)
+		|| IDC_BUTTON_SEGMENTATION_BEGIN == LOWORD(wParam)
+		|| IDC_BUTTON_RG_SMOOTHNESS_PLUS == LOWORD(wParam)
+		|| IDC_BUTTON_RG_SMOOTHNESS_MINUS == LOWORD(wParam))
 	{
 		LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lParam;
 
@@ -681,7 +753,8 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		
 		if (IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_WALLSIZE_MINUS == LOWORD(wParam)
 			|| IDC_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) || IDC_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) ||
-			IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam))
+			IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) || IDC_BUTTON_RG_SMOOTHNESS_PLUS == LOWORD(wParam)
+			|| IDC_BUTTON_RG_SMOOTHNESS_MINUS == LOWORD(wParam))
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 20, 20);
 		else
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 500, 500);
@@ -720,20 +793,13 @@ LRESULT CALLBACK GLViewportProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		return DrawButton(wParam, lParam);
 		break;
 	case WM_CTLCOLORSTATIC:
-		if ((HWND)lParam == hTextWalls
-			|| (HWND)lParam == hTextWallSize
-			|| (HWND)lParam == hTextWallSizeLabel
-			|| (HWND)lParam == hTextWallSmoothness
-			|| (HWND)lParam == hTextWallSmoothnessLabel
-			|| (HWND)lParam == hHelpText1 
-			|| (HWND)lParam == hHelpText2)
-		{
+	{
 			HDC hdc = reinterpret_cast<HDC>(wParam);
 			SetBkMode((HDC)wParam, TRANSPARENT);
 			SetTextColor(hdc, RGB(255, 255, 255));
 
 			return (LRESULT)hBackground;
-		}
+	}
 		break;
 	case WM_SIZE:	
 		break;
@@ -880,16 +946,13 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		return DrawButton(wParam, lParam);
 		break;
 	case WM_CTLCOLORSTATIC:
-		if ((HWND)lParam == hTextWalls
-			|| (HWND)lParam == hTextWallSize
-			|| (HWND)lParam == hTextWallSizeLabel)
-		{
+	{
 			HDC hdc = reinterpret_cast<HDC>(wParam);
 			SetBkMode((HDC)wParam, TRANSPARENT);
 			SetTextColor(hdc, RGB(255,255,255));
 			
 			return (LRESULT)hBackground;
-		}
+	}
 		break;
 	case  WM_HSCROLL:
 		//UpdateGLHSliders();
@@ -1324,6 +1387,14 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 			openGLWin.fusionExplorer->FinishScan(0);
 		}
 	}
+	if (IDC_BUTTON_SEGMENTATION_BEGIN == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+		{
+			openGLWin.previewMode = true;
+			glSegmentation.StartSegmentation();
+		}
+	}
 	if (IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
@@ -1332,12 +1403,108 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 			glSegmentation.StartSegmentation();
 		}
 	}
+	if (IDC_BUTTON_SEGMENTATION_EUCLIDEAN == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+		{
+			glSegmentation.SetSegmentationMode(SEGMENTATION_EUCLIDEAN);
+			EnableWindow(hButtonRegionGrowthSegmentation, true);
+			EnableWindow(hButtonEuclideanSegmentation, false);
+			openGLWin.HideUI(regionGrowthUi);
+			openGLWin.ShowUI(euclideanUi);
+			MoveButtonsOnResize();
+		}
+	}
+	if (IDC_BUTTON_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+		{
+			glSegmentation.SetSegmentationMode(SEGMENTATION_REGIONGROWTH);
+			EnableWindow(hButtonRegionGrowthSegmentation, false);
+			EnableWindow(hButtonEuclideanSegmentation, true);
+			openGLWin.HideUI(euclideanUi);
+			openGLWin.ShowUI(regionGrowthUi);
+			MoveButtonsOnResize();
+		}
+	}
+	if (IDC_BUTTON_RG_SMOOTHNESS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+		{
+			float step = 0.0f;
+			if (openGLWin.smoothnessThreshold > 100)
+				step = 10;
+			else if (openGLWin.smoothnessThreshold > 20)
+				step = 5;
+			else
+				step = 1;
+
+			openGLWin.segmentValuesChanged = true;
+			openGLWin.smoothnessThreshold += step;
+			openGLWin.UpdateSegmentationPreviewValues();
+		}
+	}
+	if (IDC_BUTTON_RG_SMOOTHNESS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+		{
+			if (openGLWin.smoothnessThreshold <= 1)
+				return;
+			float step = 0.0f;
+			if (openGLWin.smoothnessThreshold > 100)
+				step = 10;
+			else if (openGLWin.smoothnessThreshold > 20)
+				step = 5;
+			else
+				step = 1;
+
+			openGLWin.segmentValuesChanged = true;
+			openGLWin.smoothnessThreshold -= step;
+			openGLWin.UpdateSegmentationPreviewValues();
+		}
+	}
+	if (IDC_BUTTON_CLUSTERTOLERANCE_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+		{
+			float step = 0.0f;
+			if (openGLWin.clusterTolerance > 0.05f)
+				step = 0.01f;
+			else if (openGLWin.clusterTolerance > 0.01f)
+				step = 0.005f;
+			else
+				step = 0.001f;
+
+			openGLWin.segmentValuesChanged = true;
+			openGLWin.clusterTolerance += step;
+			openGLWin.UpdateSegmentationPreviewValues();
+		}
+	}
+	if (IDC_BUTTON_CLUSTERTOLERANCE_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+		{
+			if (openGLWin.clusterTolerance <= 0.001f)
+				return;
+			float step = 0.0f;
+			if (openGLWin.clusterTolerance > 0.05f)
+				step = 0.01f;
+			else if (openGLWin.clusterTolerance > 0.01f)
+				step = 0.005f;
+			else
+				step = 0.001f;
+
+			openGLWin.segmentValuesChanged = true;
+			openGLWin.clusterTolerance -= step;
+			openGLWin.UpdateSegmentationPreviewValues();
+		}
+	}
 	if (IDC_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		float step = 0.0f;
-		if (openGLWin.wallThickness > 0.30f)
+		if (openGLWin.wallThickness >= 0.30f)
 			step = 0.1f;
-		else if (openGLWin.wallThickness > 0.10f)
+		else if (openGLWin.wallThickness >= 0.10f)
 			step = 0.05f;
 		else
 			step = 0.01f;
@@ -1351,7 +1518,7 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 		if (openGLWin.wallThickness <= 0.01f)
 			return;
 		float step = 0.0f;
-		if (openGLWin.wallThickness >= 0.30f)
+		if (openGLWin.wallThickness > 0.30f)
 			step = 0.1f;
 		else if (openGLWin.wallThickness > 0.10f)
 			step = 0.05f;
@@ -1589,6 +1756,17 @@ void InteractiveFusion::UpdateWallSelectionValues()
 	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_WALLSMOOTHNESS, smoothnessString.c_str());
 }
 
+void InteractiveFusion::UpdateSegmentationPreviewValues()
+{
+	int clusterToleranceLabel = openGLWin.clusterTolerance * 1000;
+	wstring clusterToleranceString = to_wstring(clusterToleranceLabel) + L"cm";
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_CLUSTERTOLERANCE, clusterToleranceString.c_str());
+
+	int smoothnessLabel = openGLWin.smoothnessThreshold;
+	wstring smoothnessString = to_wstring(smoothnessLabel) + L"";
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_RG_SMOOTHNESS, smoothnessString.c_str());
+}
+
 void MoveModeButtonsOnResize()
 {
 	RECT rect; GetWindowRect(openGLWin.parent, &rect);
@@ -1636,6 +1814,25 @@ void MoveButtonsOnResize()
 		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
 		{
 			MoveWindow(hButtonSegmentationFinish, width - 200, height - 200, 150, 150, true);
+			MoveWindow(hButtonSegmentationBegin, width - 200, height - 400, 150, 150, true);
+
+			MoveWindow(hButtonEuclideanSegmentation, width - 300, 200, 150, 50, true);
+			MoveWindow(hButtonRegionGrowthSegmentation, width - 150, 200, 150, 50, true);
+
+			if (glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN)
+			{ 
+				MoveWindow(hTextClusterToleranceLabel, width - 250, 300, 150, 50, true);
+				MoveWindow(hButtonClusterToleranceMinus, width - 250, 350, 50, 50, true);
+				MoveWindow(hTextClusterTolerance, width - 175, 350, 75, 50, true);
+				MoveWindow(hButtonClusterTolerancePlus, width -75, 350, 50, 50, true);
+			}
+			else if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
+			{
+				MoveWindow(hTextRGSmoothnessLabel, width - 250, 300, 150, 50, true);
+				MoveWindow(hButtonRGSmoothnessMinus, width - 250, 350, 50, 50, true);
+				MoveWindow(hTextRGSmoothness, width - 175, 350, 75, 50, true);
+				MoveWindow(hButtonRGSmoothnessPlus, width - 75, 350, 50, 50, true);
+			}
 		}
 	}
 	if (openGLWin.GetWindowMode() == MODE_INTERACTION)

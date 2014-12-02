@@ -151,7 +151,7 @@ void InitialLoading()
 
 	//openGLWin.segmentationMode = REGION_GROWTH_SEGMENTATION;
 	
-	openGLWin.segmentationMode = EUCLIDEAN_SEGMENTATION;
+	//openGLWin.segmentationMode = EUCLIDEAN_SEGMENTATION;
 	openGLWin.previewMode = true;
 	glSegmentation.StartSegmentation();
 

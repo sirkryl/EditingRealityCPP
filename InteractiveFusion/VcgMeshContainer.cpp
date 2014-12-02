@@ -119,9 +119,12 @@ void VCGMeshContainer::HighlightObjects(std::vector<int> objTriangles, ColorIF c
 		verticesWithHighlights.insert(verticesWithHighlights.begin(), vertices.begin(), vertices.end());
 	for (int i = 0; i < objTriangles.size(); i++)
 	{
-		verticesWithHighlights[objTriangles[i]].r = min(verticesWithHighlights[objTriangles[i]].r + color.r, 1.0f);
-		verticesWithHighlights[objTriangles[i]].g = min(verticesWithHighlights[objTriangles[i]].g + color.g, 1.0f);
-		verticesWithHighlights[objTriangles[i]].b = min(verticesWithHighlights[objTriangles[i]].b + color.b, 1.0f);
+		verticesWithHighlights[objTriangles[i]].r = color.r;
+		verticesWithHighlights[objTriangles[i]].g = color.g;
+		verticesWithHighlights[objTriangles[i]].b = color.b;
+		//verticesWithHighlights[objTriangles[i]].r = min(verticesWithHighlights[objTriangles[i]].r + color.r, 1.0f);
+		//verticesWithHighlights[objTriangles[i]].g = min(verticesWithHighlights[objTriangles[i]].g + color.g, 1.0f);
+		//verticesWithHighlights[objTriangles[i]].b = min(verticesWithHighlights[objTriangles[i]].b + color.b, 1.0f);
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, verticesWithHighlights.size() * sizeof(Vertex), &verticesWithHighlights[0], GL_STATIC_DRAW);

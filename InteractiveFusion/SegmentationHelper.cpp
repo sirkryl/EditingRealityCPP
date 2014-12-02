@@ -176,7 +176,7 @@ int WINAPI SegThreadMain()
 
 	}
 
-	if (openGLWin.segmentationMode == REGION_GROWTH_SEGMENTATION)
+	if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
 	{
 		if (openGLWin.GetWindowState() != SEGMENTATION_PREVIEW || openGLWin.previewMode || openGLWin.segmentValuesChanged)
 		{
@@ -195,7 +195,7 @@ int WINAPI SegThreadMain()
 		}
 
 	}
-	if (openGLWin.segmentationMode == EUCLIDEAN_SEGMENTATION)
+	if (glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN)
 	{
 		if (openGLWin.GetWindowState() != SEGMENTATION_PREVIEW || openGLWin.previewMode || openGLWin.segmentValuesChanged)
 		{
@@ -297,9 +297,9 @@ void SegmentationHelper::GeneratePreviewBuffers()
 
 bool SegmentationHelper::InitializePreview()
 {
-	/*std::random_device rd;
+	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<> dis(0.3f, 0.7f);*/
+	std::uniform_real_distribution<> dis(0.3f, 0.7f);
 	if (openGLWin.GetWindowState() == WALL_SELECTION)
 	{
 		//if (currentPlaneIndex == -1)
@@ -316,13 +316,13 @@ bool SegmentationHelper::InitializePreview()
 		//meshHelper.GenerateBuffers();
 		for (int i = 0; i < pclProcessor.GetRegionClusterCount(); i++)
 		{
-			ColorIF color;
-			if (i%3 == 0)
+			ColorIF color = { dis(gen), dis(gen), dis(gen) };
+			/*if (i%3 == 0)
 				color = { 0.4f, 0.0f, 0.0f};
 			if (i % 3 == 1)
 				color = { 0.0f, 0.4f, 0.0f };
 			if (i % 3 == 2)
-				color = { 0.0f, 0.0f, 0.4f };
+				color = { 0.0f, 0.0f, 0.4f };*/
 			meshHelper.HighlightObjectsInOriginal(pclProcessor.GetColoredCloudIndices(i), color);
 		}
 		isPreviewInitialized = true;
@@ -512,6 +512,17 @@ glm::vec3 SegmentationHelper::GetPreviewCenterPoint()
 	cDebug::DbgOut(L"SEGGG centerPoint z:", centerPoint.z);
 	return centerPoint;
 }
+
+SegmentationMode SegmentationHelper::GetSegmentationMode()
+{
+	return segMode;
+}
+
+void SegmentationHelper::SetSegmentationMode(SegmentationMode mode)
+{
+	segMode = mode;
+}
+
 
 void SegmentationHelper::ClearForResume()
 {
