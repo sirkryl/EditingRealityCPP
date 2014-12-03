@@ -401,6 +401,13 @@ void SelectionHelper::SetManipulationMode(ManipulationMode mode)
 	manipMode = mode;
 }
 
+void SelectionHelper::Unselect()
+{
+	if (selectedIndex != -1)
+		meshData[selectedIndex]->SetSelected(false);
+	selectedIndex = -1;
+}
+
 ManipulationMode SelectionHelper::GetManipulationMode()
 {
 	return manipMode;

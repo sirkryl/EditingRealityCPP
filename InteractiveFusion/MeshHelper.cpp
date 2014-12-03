@@ -93,6 +93,7 @@ void MeshHelper::ResetAll()
 		DeleteMesh(removeIndices[i]-cnt);
 		cnt++;
 	}
+
 }
 
 void MeshHelper::DeleteMesh(int index)
@@ -237,14 +238,14 @@ int MeshHelper::GetNumberOfFaces()
 	return numberOfFaces;
 }
 
-void MeshHelper::HighlightObjectsInOriginal(std::vector<int> triangles, ColorIF color)
+void MeshHelper::HighlightObjectsInOriginal(std::vector<int> triangles, ColorIF color, bool additive)
 {
-	originalMesh->HighlightObjects(triangles, color);
+	originalMesh->HighlightObjects(triangles, color, additive);
 }
 
-void MeshHelper::HighlightObjects(int index, std::vector<int> triangles, ColorIF color)
+void MeshHelper::HighlightObjects(int index, std::vector<int> triangles, ColorIF color, bool additive)
 {
-	meshData[index]->HighlightObjects(triangles, color);
+	meshData[index]->HighlightObjects(triangles, color, additive);
 }
 
 void MeshHelper::RemoveHighlightObjects(int index)

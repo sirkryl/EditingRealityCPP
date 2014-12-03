@@ -26,10 +26,6 @@ bool SegmentationHelper::IsCloudReady()
 bool SegmentationHelper::IsPreviewInitialized()
 {
 	return isPreviewInitialized;
-	if (previewVertices.size() > 0)
-		return true;
-	else
-		return false;
 }
 
 void SegmentationHelper::ResetInitializedStatus()
@@ -122,6 +118,8 @@ int WINAPI SegThreadMain()
 	if (!pclProcessor.IsMainCloudInitialized())
 	{
 		statusMsg = L"Converting mesh to point cloud";
+		openGLWin.SetProgressionText(L"Converting mesh to point cloud");
+		openGLWin.SetProgressionPercent(L"");
 		pclProcessor.ConvertToCloud(startingVertices, startingIndices);
 	}
 	QueryPerformanceCounter(&t2);
@@ -250,6 +248,7 @@ int WINAPI SegThreadMain()
 	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
 	cDebug::DbgOut(L"Filled MeshData in ", elapsedTime);
 	SetViewportPercentMsg(L"");
+	openGLWin.SetProgressionPercent(L"");
 	//UNCOMMENT UNTIL HERE FOR SEGMENTATION
 	openGLWin.SetWindowState(SEGMENTATION_FINISHED);
 	openGLWin.SetWindowMode(MODE_INTERACTION);
@@ -297,9 +296,7 @@ void SegmentationHelper::GeneratePreviewBuffers()
 
 bool SegmentationHelper::InitializePreview()
 {
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<> dis(0.3f, 0.7f);
+	
 	if (openGLWin.GetWindowState() == WALL_SELECTION)
 	{
 		//if (currentPlaneIndex == -1)
@@ -307,12 +304,16 @@ bool SegmentationHelper::InitializePreview()
 		//meshHelper.GenerateBuffers();
 		ColorIF color = { 0.4f, 0.0f, 0.0f };
 		meshHelper.RemoveAllHighlights();
-		meshHelper.HighlightObjectsInOriginal(pclProcessor.GetInlierIndices(), color);
+		meshHelper.HighlightObjectsInOriginal(pclProcessor.GetInlierIndices(), color, false);
 		//meshHelper.HighlightObjectsInOriginal(pclProcessor.GetPlaneCloudIndices(currentPlaneIndex), color);
 		isPreviewInitialized = true;
 	}
 	else if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
 	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<> dis(0.3f, 0.7f);
+		meshHelper.RemoveAllHighlights();
 		//meshHelper.GenerateBuffers();
 		for (int i = 0; i < pclProcessor.GetRegionClusterCount(); i++)
 		{
@@ -323,7 +324,7 @@ bool SegmentationHelper::InitializePreview()
 				color = { 0.0f, 0.4f, 0.0f };
 			if (i % 3 == 2)
 				color = { 0.0f, 0.0f, 0.4f };*/
-			meshHelper.HighlightObjectsInOriginal(pclProcessor.GetColoredCloudIndices(i), color);
+			meshHelper.HighlightObjectsInOriginal(pclProcessor.GetColoredCloudIndices(i), color, false);
 		}
 		isPreviewInitialized = true;
 	}

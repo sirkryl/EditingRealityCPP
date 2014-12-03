@@ -33,8 +33,8 @@ public:
 	int GetNumberOfVertices();
 
 	int GetNumberOfFaces();
-	void HighlightObjectsInOriginal(std::vector<int> triangles, ColorIF color);
-	void HighlightObjects(int index, std::vector<int> triangles, ColorIF color);
+	void HighlightObjectsInOriginal(std::vector<int> triangles, ColorIF color, bool additive);
+	void HighlightObjects(int index, std::vector<int> triangles, ColorIF color, bool additive);
 	void RemoveHighlightObjects(int index);
 	void RemoveAllHighlights();
 	void ResetAll();

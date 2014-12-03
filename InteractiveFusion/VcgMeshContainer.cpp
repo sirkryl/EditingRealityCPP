@@ -74,6 +74,8 @@ void VCGMeshContainer::LoadMesh(const char* filename)
 	CleanMesh();
 	statusMsg = L"Parsing data for interaction";
 	ParseData();
+
+	isLoaded = true;
 }
 
 void VCGMeshContainer::RemoveNonManifoldFace()
@@ -113,15 +115,24 @@ int VCGMeshContainer::MergeCloseVertices(float threshold)
 	return vcg::tri::Clean<VCGMesh>::MergeCloseVertex(currentMesh, threshold);
 }
 
-void VCGMeshContainer::HighlightObjects(std::vector<int> objTriangles, ColorIF color)
+void VCGMeshContainer::HighlightObjects(std::vector<int> objTriangles, ColorIF color, bool additive)
 {
 	if (verticesWithHighlights.size() == 0)
 		verticesWithHighlights.insert(verticesWithHighlights.begin(), vertices.begin(), vertices.end());
 	for (int i = 0; i < objTriangles.size(); i++)
 	{
-		verticesWithHighlights[objTriangles[i]].r = color.r;
-		verticesWithHighlights[objTriangles[i]].g = color.g;
-		verticesWithHighlights[objTriangles[i]].b = color.b;
+		if (additive)
+		{ 
+			verticesWithHighlights[objTriangles[i]].r = min(verticesWithHighlights[objTriangles[i]].r + color.r, 1.0f);
+			verticesWithHighlights[objTriangles[i]].g = min(verticesWithHighlights[objTriangles[i]].g + color.g, 1.0f);
+			verticesWithHighlights[objTriangles[i]].b = min(verticesWithHighlights[objTriangles[i]].b + color.b, 1.0f);
+		}
+		else
+		{ 
+			verticesWithHighlights[objTriangles[i]].r = color.r;
+			verticesWithHighlights[objTriangles[i]].g = color.g;
+			verticesWithHighlights[objTriangles[i]].b = color.b;
+		}
 		//verticesWithHighlights[objTriangles[i]].r = min(verticesWithHighlights[objTriangles[i]].r + color.r, 1.0f);
 		//verticesWithHighlights[objTriangles[i]].g = min(verticesWithHighlights[objTriangles[i]].g + color.g, 1.0f);
 		//verticesWithHighlights[objTriangles[i]].b = min(verticesWithHighlights[objTriangles[i]].b + color.b, 1.0f);
@@ -464,6 +475,7 @@ void VCGMeshContainer::Draw()
 {
 	shaderColor.UseProgram();
 	shaderColor.SetUniform("colorPicking", false);
+	shaderColor.SetUniform("transparent", false);
 	glm::mat4 modelMatrix;
 	if (is2D)
 	{
@@ -512,6 +524,7 @@ void VCGMeshContainer::DrawBB()
 {
 	shaderColor.UseProgram();
 	shaderColor.SetUniform("colorPicking", true);
+	shaderColor.SetUniform("transparent", false);
 	shaderColor.SetUniform("pickColor", colorCoding::IntToColor(colorCode));
 	glm::mat4 modelMatrix;
 	if (is2D)
@@ -577,6 +590,11 @@ void VCGMeshContainer::SetSnapTransform(std::vector<int> orien)
 
 	snapOrientation = orien;
 	snapTransform = glm::translate(glm::mat4(1.0), snapPoint);
+}
+
+bool VCGMeshContainer::IsLoaded()
+{
+	return isLoaded;
 }
 
 void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int> orien)
@@ -866,6 +884,7 @@ void VCGMeshContainer::ClearMesh()
 	indices.clear();
 	verticesWithHighlights.clear();
 	vertNum = 0;
+	isLoaded = false;
 }
 
 void VCGMeshContainer::SetScale(bool positive)

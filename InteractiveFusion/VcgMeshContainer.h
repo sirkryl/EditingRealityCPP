@@ -35,7 +35,7 @@ public:
 
 	bool AreBuffersInitialized();
 
-	void HighlightObjects(std::vector<int> objTriangles, ColorIF color);
+	void HighlightObjects(std::vector<int> objTriangles, ColorIF color, bool additive);
 	void ResetHighlights();
 	void CleanMesh();
 	int MergeCloseVertices(float threshold);
@@ -55,6 +55,8 @@ public:
 	bool CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output);
 	void TranslateVerticesToPoint(glm::vec3 point, std::vector<int> orien);
 	
+	bool IsLoaded();
+
 	void SetSelected(bool val);
 	void SetColorCode(int value);
 	void SetTranslation(glm::vec3 trans);
@@ -124,6 +126,7 @@ private:
 	float angleZ = 0;
 	float scaleFactor = 1.0f;
 
+	bool isLoaded = false;
 	bool previewSelection = false;
 	bool isSelected = false;
 	bool colorSelection = false;

@@ -107,8 +107,12 @@ public:
 	void UpdateSegmentationPreviewValues();
 	void HideUI(std::vector<HWND> handles);
 	void ShowUI(std::vector<HWND> handles);
+	bool IsHandleInUI(HWND handle, std::vector<HWND> handles);
 	void HideWholeUI();
 	void RedrawManipulationButtons();
+
+	void SetProgressionText(wstring text);
+	void SetProgressionPercent(wstring percent);
 
 	//thread related methods
 	//bool StartOpenGLThread(HWND parentWin, HINSTANCE currHInstance, KinectFusionProcessor* proc);

@@ -87,6 +87,12 @@ void SetViewportPercentMsg(wstring percent)
 
 void ShowStatusMsg()
 {
+	glDisable(GL_DEPTH_TEST);
+	if (!gl2DHelper.IsRectangleInitialized())
+		gl2DHelper.InitializeRectangle();
+
+	gl2DHelper.DrawRectangle();
+	
 	int w = openGLWin.glControl.GetViewportWidth();
 	int h = openGLWin.glControl.GetViewportHeight();
 	float xPos = 0.0f - statusMsg.length() * 0.008f;
@@ -104,6 +110,7 @@ void ShowStatusMsg()
 		float xPercentPos = -0.1f;
 		glText.RenderText(percentMsg, 25, xPercentPos, -0.05f, 2.0f / w, 2.0f / h);
 	}
+	glEnable(GL_DEPTH_TEST);
 }
 
 void HandleKeyInput()
@@ -180,11 +187,15 @@ void Initialize(LPVOID lpParam)
 
 void Render(LPVOID lpParam)
 {
+	cDebug::DbgOut(L"State: ", openGLWin.GetWindowState());
+	cDebug::DbgOut(L"Mode: ", openGLWin.GetWindowMode());
 	if (!IsWindowVisible(openGLWin.glWindowHandle))
 		return;
 	//clear window
 	glClearColor(openGLWin.bgRed, openGLWin.bgGreen, openGLWin.bgBlue, 1.0f);
 	glClearDepth(1.0);
+
+	
 
 	HandleKeyInput();
 
@@ -245,10 +256,9 @@ void Render(LPVOID lpParam)
 	}
 	else if (glSegmentation.IsPreviewInitialized())
 	{
-		cDebug::DbgOut(L"instant?");
 		glSegmentation.ClearPreviewVertices();
 		glCamera.ResetCameraPosition();
-		glCamera.mode = CAMERA_SENSOR;
+		//glCamera.mode = CAMERA_SENSOR;
 	}
 
 	//SEGMENTATION IS FINISHED, LOAD RELEVANT DATA
@@ -262,8 +272,25 @@ void Render(LPVOID lpParam)
 		return;
 	}
 
+	if (openGLWin.GetWindowState() == SEGMENTATION)
+	{
+		if (originalMesh->IsLoaded())
+		{ 
+			if (!originalMesh->AreBuffersInitialized())
+				meshHelper.GenerateOriginalBuffers();
+		
+			meshHelper.DrawOriginalMesh();
+		}
+		ShowStatusMsg();
+
+		glCamera.mode = CAMERA_FREE;
+		glEnable(GL_DEPTH_TEST);
+		openGLWin.glControl.SwapBuffers();
+		return;
+	}
+
 	//WHENEVER MESSAGES SHOULD BE DISPLAYED
-	if (openGLWin.GetWindowState() == INITIALIZING || openGLWin.GetWindowState() == SEGMENTATION)
+	if (openGLWin.GetWindowState() == INITIALIZING)
 	{
 		ShowStatusMsg();
 		openGLWin.glControl.SwapBuffers();
@@ -287,7 +314,7 @@ void Render(LPVOID lpParam)
 	}
 
 	//process currently selected object (attach to cursor, rotation/scaling etc.)
-	if (glSelector.selectedIndex != -1 && !openGLWin.colorSelection)
+	if (glSelector.selectedIndex != -1 && !openGLWin.colorSelection && openGLWin.IsMouseInOpenGLWindow())
 	{
 		glSelector.ProcessSelectedObject();
 	}
@@ -295,13 +322,11 @@ void Render(LPVOID lpParam)
 	
 	//draw every mesh
 	if (openGLWin.GetWindowState() == DEFAULT)
-	{
-		//glDisable(GL_DEPTH_TEST);
+	{	
 		gl2DHelper.DrawAll();
-		//glEnable(GL_DEPTH_TEST);
 	}
+
 	meshHelper.DrawAll();
-	
 
 	//draw helper visuals
 	if (openGLWin.helpingVisuals && glHelper.IsRayInitialized())

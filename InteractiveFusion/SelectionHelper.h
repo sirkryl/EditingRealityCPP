@@ -20,6 +20,7 @@ public:
 	void SetManipulationMode(ManipulationMode mode);
 	ManipulationMode GetManipulationMode();
 
+	void Unselect();
 	void ResetWallObject();
 	void SelectWallObject();
 private:

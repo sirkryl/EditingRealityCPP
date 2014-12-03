@@ -617,6 +617,8 @@ bool PCLProcessor::RegionGrowingSegmentation() {
 
 	openGLWin.ShowStatusBarMessage(L"Segmenting mesh...");
 	SetViewportStatusMessage(L"Segmenting mesh");
+	SetViewportPercentMsg(L"");
+	//openGLWin.SetProgressionText(L"Segmenting mesh...");
 
 	pcl::RegionGrowing<pcl::PointXYZRGB, pcl::Normal> reg;
 	reg.setMinClusterSize(openGLWin.minClusterSize);
@@ -728,6 +730,9 @@ bool PCLProcessor::EuclideanSegmentation() {
 	segmentedClusterIndices.clear();
 
 	SetViewportStatusMessage(L"Segmenting mesh");
+	SetViewportPercentMsg(L"");
+	//openGLWin.SetProgressionText(L"Segmenting mesh");
+	//openGLWin.SetProgressionPercent(L"");
 	openGLWin.ShowStatusBarMessage(L"Processing segmentation...");
 
 	//pcl::ConditionalEuclideanClustering<pcl::PointXYZRGBNormal> ec;
@@ -798,7 +803,8 @@ std::vector<int> PCLProcessor::CalculateIndicesForCluster(pcl::PointCloud<pcl::P
 bool PCLProcessor::ConvertToCloud(std::vector<Vertex> startingVertices, std::vector<Triangle> startingIndices)
 {
 	SetViewportStatusMessage(L"Converting mesh to point cloud");
-
+	SetViewportPercentMsg(L"");
+	//openGLWin.SetProgressionText(L"Converting mesh to point cloud");
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
 	indexMap.clear();
 	clusterIndexCount = 0;
@@ -849,6 +855,7 @@ bool PCLProcessor::ConvertToCloud(std::vector<Vertex> startingVertices, std::vec
 			{
 				int percent = (((float)i / (float)startingIndices.size()) * 100.0f);
 				//openGLWin.ShowStatusBarMessage(L"Converting mesh to point cloud... " + to_wstring(percent) + L"%");
+				openGLWin.SetProgressionPercent(to_wstring(percent) + L"% (1 of 1)");
 				SetViewportPercentMsg(to_wstring(percent) + L"% (1 of 1)");
 			}
 
@@ -857,6 +864,7 @@ bool PCLProcessor::ConvertToCloud(std::vector<Vertex> startingVertices, std::vec
 	pcl::copyPointCloud(*cloud, *mainCloud);
 
 	SetViewportPercentMsg(L"");
+	openGLWin.SetProgressionPercent(L"");
 	return true;
 }
 
@@ -966,6 +974,7 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> a
 	QueryPerformanceFrequency(&frequency);
 	QueryPerformanceCounter(&t1);
 	SetViewportStatusMessage(L"Converting cloud to triangle mesh");
+	//openGLWin.SetProgressionText(L"Converting cloud to triangle mesh");
 
 	//in this loop, we try to recreate the appropriate index values for the mesh cluster by using the data collected at ConvertToCloud()
 	for (int i = 0; i < cloudIndices.size(); i++)
@@ -1159,6 +1168,7 @@ bool PCLProcessor::ConvertToTriangleMesh(int clusterIndex, std::vector<Vertex> a
 			openGLWin.ShowStatusBarMessage(L"Converting cloud to triangle mesh ( " + to_wstring(percent) + L"% " + to_wstring(clusterIndex + 1) + L" of " + to_wstring(clusteredClouds.size()) + L")");
 
 			//SetViewportStatusMessage(L"Converting cloud to triangle mesh ( " + to_wstring(percent) + L"% " + to_wstring(clusterIndex + 1) + L" of " + to_wstring(clusteredClouds.size()) + L")");
+			openGLWin.SetProgressionPercent(to_wstring(percent) + L"% (" + to_wstring(clusterIndex + 1) + L" of " + to_wstring(clusteredClouds.size()) + L")");
 			SetViewportPercentMsg(to_wstring(percent) + L"% (" + to_wstring(clusterIndex + 1) + L" of " + to_wstring(clusteredClouds.size()) + L")");
 		}
 
