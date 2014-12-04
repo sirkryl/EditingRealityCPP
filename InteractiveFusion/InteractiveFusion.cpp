@@ -50,10 +50,12 @@ std::vector<HWND> segmentationPreviewUi;
 HWND hButtonSegmentationFinish;
 HWND hButtonSegmentationBegin;
 
+//EUCLIDEAN UI
 std::vector<HWND> euclideanUi;
 HWND hButtonClusterTolerancePlus, hButtonClusterToleranceMinus;
 HWND hTextClusterToleranceLabel, hTextClusterTolerance;
 
+//REGION GROWTH UI
 std::vector<HWND> regionGrowthUi;
 HWND hButtonRegionGrowthSegmentation, hButtonEuclideanSegmentation;
 HWND hButtonRGSmoothnessPlus, hButtonRGSmoothnessMinus;
@@ -64,6 +66,13 @@ HWND hButtonRGNeighborsPlus, hButtonRGNeighborsMinus;
 HWND hTextRGNeighborsLabel, hTextRGNeighbors;
 HWND hButtonRGKSearchPlus, hButtonRGKSearchMinus;
 HWND hTextRGKSearchLabel, hTextRGKSearch;
+
+//PROCESSING UI
+std::vector<HWND> processingUi;
+HWND hButtonFillHoles, hButtonRemoveComponents;
+HWND hButtonRemoveComponentsPlus, hButtonRemoveComponentsMinus;
+HWND hTextRemoveComponentsLabel, hTextRemoveComponents;
+HWND hButtonProcessingDone;
 
 //FONTS
 HFONT uiFont, mediumUiFont, smallUiFont;
@@ -263,6 +272,10 @@ void InteractiveFusion::HideWholeUI()
 	{
 		ShowWindow(progressionUI[i], SW_HIDE);
 	}
+	for (int i = 0; i < processingUi.size(); i++)
+	{
+		ShowWindow(processingUi[i], SW_HIDE);
+	}
 }
 
 void InteractiveFusion::DeactivateWholeUI()
@@ -290,6 +303,10 @@ void InteractiveFusion::DeactivateWholeUI()
 	for (int i = 0; i < progressionUI.size(); i++)
 	{
 		EnableWindow(progressionUI[i], false);
+	}
+	for (int i = 0; i < processingUi.size(); i++)
+	{
+		EnableWindow(processingUi[i], false);
 	}
 }
 
@@ -319,6 +336,10 @@ void InteractiveFusion::ActivateWholeUI()
 	{
 		EnableWindow(progressionUI[i], true);
 	}
+	for (int i = 0; i < processingUi.size(); i++)
+	{
+		EnableWindow(processingUi[i], true);
+	}
 }
 
 void InteractiveFusion::SetWindowState(WindowState wState)
@@ -331,6 +352,8 @@ void InteractiveFusion::SetWindowState(WindowState wState)
 	ShowWindow(hSegmentationText, SW_SHOW);
 	ShowWindow(hScanText, SW_SHOW);
 	ShowWindow(hInteractionText, SW_SHOW);
+
+	openGLWin.colorSelection = false;
 
 	if (state == WALL_SELECTION)
 	{
@@ -368,6 +391,14 @@ void InteractiveFusion::SetWindowState(WindowState wState)
 		openGLWin.glControl.SetOffSetRight(250);
 
 		ShowUI(interactionUi);
+	}
+	if (state == PROCESSING)
+	{
+		glCamera.mode = CAMERA_FREE;
+		openGLWin.glControl.SetOffSetBottom(0);
+		openGLWin.glControl.SetOffSetRight(250);
+		ShowUI(processingUi);
+		openGLWin.colorSelection = true;
 	}
 	
 	RECT rRect; GetClientRect(GetParent(openGLWin.glWindowHandle), &rRect);
@@ -508,6 +539,32 @@ bool InteractiveFusion::CreateOpenGLWindow()
 
 	progressionUI.push_back(statusText);
 	progressionUI.push_back(statusPercentText);
+
+	hTextRemoveComponents = CreateWindowEx(0, L"STATIC", L"200", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_REMOVECOMPONENTS, openGLWin.appInstance, 0);
+
+	SendMessage(hTextRemoveComponents, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
+	hTextRemoveComponentsLabel = CreateWindowEx(0, L"STATIC", L"Remove C", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_REMOVECOMPONENTS_LABEL, openGLWin.appInstance, 0);
+
+	SendMessage(hTextRemoveComponentsLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
+
+	hButtonRemoveComponentsPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_REMOVECOMPONENTS_PLUS, openGLWin.appInstance, 0);
+	hButtonRemoveComponentsMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_REMOVECOMPONENTS_MINUS, openGLWin.appInstance, 0);
+
+	hButtonRemoveComponents = CreateWindowEx(0, L"Button", L"Remove Comps", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_REMOVECOMPONENTS, openGLWin.appInstance, 0);
+
+	hButtonFillHoles = CreateWindowEx(0, L"Button", L"Fill Holes", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_PROCESSING_FILLHOLES, openGLWin.appInstance, 0);
+
+	hButtonProcessingDone = CreateWindowEx(0, L"Button", L"DONE", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_PROCESSING_DONE, openGLWin.appInstance, 0);
+
+	processingUi.push_back(hButtonFillHoles);
+	processingUi.push_back(hButtonRemoveComponents);
+	processingUi.push_back(hButtonRemoveComponentsMinus);
+	processingUi.push_back(hButtonRemoveComponentsPlus);
+	processingUi.push_back(hTextRemoveComponents);
+	processingUi.push_back(hTextRemoveComponentsLabel);
+	processingUi.push_back(hButtonProcessingDone);
+
+	openGLWin.UpdateProcessingValues();
 
 	//hbitmap = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BUTTON), IMAGE_BITMAP, 84, 36, LR_DEFAULTCOLOR);
 	hButtonYes = CreateWindowEx(0, L"Button", L"Wall", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_YES, openGLWin.appInstance, 0);
@@ -859,10 +916,11 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		|| IDC_BUTTON_SEGMENTATION_BEGIN == LOWORD(wParam)
 		|| openGLWin.IsHandleInUI(item->hwndItem, wallSelectionUi)
 		|| openGLWin.IsHandleInUI(item->hwndItem, euclideanUi)
-		|| openGLWin.IsHandleInUI(item->hwndItem, regionGrowthUi))
+		|| openGLWin.IsHandleInUI(item->hwndItem, regionGrowthUi)
+		|| openGLWin.IsHandleInUI(item->hwndItem, processingUi))
 	{
 
-		if (IDC_BUTTON_SCALE == LOWORD(wParam) || IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) || IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam))
+		if (IDC_BUTTON_SCALE == LOWORD(wParam) || IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) || IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) || IDC_BUTTON_PROCESSING_FILLHOLES == LOWORD(wParam) || IDC_BUTTON_REMOVECOMPONENTS == LOWORD(wParam))
 			SelectObject(item->hDC, smallUiFont);
 		else
 			SelectObject(item->hDC, uiFont);
@@ -872,7 +930,7 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		{
 			SetTextColor(item->hDC, RGB(50, 50, 50));
 
-			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam))
+			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam) || IDC_BUTTON_PROCESSING_DONE == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonGreenInactiveBrush);
@@ -890,7 +948,7 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		else if (item->itemState & ODS_SELECTED)
 		{
 			SetTextColor(item->hDC, RGB(245, 245, 245));
-			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam))
+			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam) || IDC_BUTTON_PROCESSING_DONE == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonGreenPressedBrush);
@@ -909,7 +967,7 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		else
 		{
 			SetTextColor(item->hDC, RGB(240, 240, 240));
-			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam))
+			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam) || IDC_BUTTON_PROCESSING_DONE == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonGreenBrush);
@@ -938,7 +996,7 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		
 		if (IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_WALLSIZE_MINUS == LOWORD(wParam)
 			|| IDC_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) || IDC_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) ||
-			IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam))
+			IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) || IDC_BUTTON_PROCESSING_FILLHOLES == LOWORD(wParam) || IDC_BUTTON_REMOVECOMPONENTS == LOWORD(wParam))
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 20, 20);
 		else
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 500, 500);
@@ -1901,6 +1959,26 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 		openGLWin.ShowStatusBarMessage(L"Filling holes...");
 		meshHelper.FillHoles(openGLWin.holeSize);
 	}
+	if (IDC_BUTTON_PROCESSING_FILLHOLES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		openGLWin.ShowStatusBarMessage(L"Filling holes...");
+	
+
+		if (glSelector.selectedIndex != -1)
+		{ 
+			meshData[glSelector.selectedIndex]->ToggleSelectedColor(false);
+			meshHelper.FillHoles(glSelector.selectedIndex, openGLWin.holeSize);
+			meshData[glSelector.selectedIndex]->ToggleSelectedColor(true);
+		}
+		else
+			meshHelper.FillHoles(openGLWin.holeSize);
+
+		openGLWin.holeSize += 1000;
+	}
+	if (IDC_BUTTON_PROCESSING_DONE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		openGLWin.SetWindowState(DEFAULT);
+	}
 	if (IDC_BUTTON_RG_RESETVALUES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.segmentValuesChanged = true;
@@ -1975,6 +2053,35 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 		cDebug::DbgOut(L"select Remove Segments: ");
 		int size = GetDlgItemInt(debugHandle, IDC_EDIT_REMOVESEGMENTS, NULL, FALSE);
 		meshHelper.RemoveSmallComponents(size);
+	}
+	if (IDC_BUTTON_REMOVECOMPONENTS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		int step = 100;
+		if (openGLWin.removeClusterSize < 100)
+			step = 10;
+
+		openGLWin.removeClusterSize += step;
+		cDebug::DbgOut(L"select Remove Segments: ");
+		openGLWin.UpdateProcessingValues();
+		//meshHelper.RemoveSmallComponents(1000);
+	}
+	if (IDC_BUTTON_REMOVECOMPONENTS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.removeClusterSize <= 10)
+			return;
+		int step = 100;
+		if (openGLWin.removeClusterSize <= 100)
+			step = 10;
+
+		openGLWin.removeClusterSize -= step;
+		openGLWin.UpdateProcessingValues();
+		//meshHelper.RemoveSmallComponents(1000);
+	}
+	if (IDC_BUTTON_REMOVECOMPONENTS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		cDebug::DbgOut(L"select Remove Segments: ");
+		//int size = GetDlgItemInt(debugHandle, IDC_EDIT_REMOVESEGMENTS, NULL, FALSE);
+		meshHelper.RemoveSmallComponents(openGLWin.removeClusterSize);
 	}
 	if (IDC_BUTTON_RESETWALL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -2067,6 +2174,13 @@ void InteractiveFusion::UpdateSegmentationPreviewValues()
 	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_RG_KSEARCH, kSearchString.c_str());
 }
 
+void InteractiveFusion::UpdateProcessingValues()
+{
+	int componentSizeLabel = openGLWin.removeClusterSize;
+	wstring componentSizeString = to_wstring(componentSizeLabel) + L"";
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_REMOVECOMPONENTS, componentSizeString.c_str());
+}
+
 void MoveModeButtonsOnResize()
 {
 	RECT rect; GetWindowRect(openGLWin.parent, &rect);
@@ -2096,6 +2210,20 @@ void MoveButtonsOnResize()
 	{ 
 		MoveWindow(statusText, 0, height / 2 - 75, width, 150, true);
 		
+	}
+
+	if (openGLWin.GetWindowMode() == PROCESSING)
+	{
+		MoveWindow(hTextRemoveComponentsLabel, width - 180, 290, 100, 30, true);
+		MoveWindow(hButtonRemoveComponentsMinus, width - 250, 300, 50, 50, true);
+		MoveWindow(hTextRemoveComponents, width - 180, 320, 100, 30, true);
+		MoveWindow(hButtonRemoveComponentsPlus, width - 60, 300, 50, 50, true);
+
+		MoveWindow(hButtonRemoveComponents, width - 225, 370, 200, 50, true);
+
+		MoveWindow(hButtonFillHoles, width - 225, 470, 200, 50, true);
+
+		MoveWindow(hButtonProcessingDone, width - 200, height - 200, 150, 150, true);
 	}
 
 	if (openGLWin.GetWindowMode() == MODE_SEGMENTATION)

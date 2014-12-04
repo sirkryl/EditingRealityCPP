@@ -14,7 +14,7 @@ public:
 	void DrawAllForColorPicking();
 
 	void FillHoles(int holeSize);
-
+	void FillHoles(int index, int holeSize);
 	void RemoveSmallComponents(int size);
 
 	void CleanMesh();

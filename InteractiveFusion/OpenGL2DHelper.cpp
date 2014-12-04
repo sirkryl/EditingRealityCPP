@@ -154,7 +154,7 @@ void OpenGL2DHelper::DrawRectangle()
 {
 	shaderColor.UseProgram();
 	shaderColor.SetUniform("colorPicking", false);
-	shaderColor.SetUniform("alpha", 0.8f);
+	shaderColor.SetUniform("alpha", 0.5f);
 	glm::mat4 modelMatrix;
 	shaderColor.SetUniform("matrices.projectionMatrix", glm::mat4(1.0f));
 	shaderColor.SetUniform("matrices.viewMatrix", glm::mat4(1.0f));

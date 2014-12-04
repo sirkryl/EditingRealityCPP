@@ -4,7 +4,7 @@
 #include <KinectFusionExplorer.h>
 enum WindowMode { MODE_PREPARE_SCANNING, MODE_SCANNING, MODE_SEGMENTATION, MODE_INTERACTION };
 
-enum WindowState {INITIALIZING, BUFFERS, DEFAULT, SEGMENTATION, SEGMENTATION_FINISHED, WALL_SELECTION, SEGMENTATION_PREVIEW, SHOWSTATUS, SELECTION };
+enum WindowState {INITIALIZING, BUFFERS, DEFAULT, PROCESSING, SEGMENTATION, SEGMENTATION_FINISHED, WALL_SELECTION, SEGMENTATION_PREVIEW, SHOWSTATUS, SELECTION };
 
 enum Answer {ANSWER_NOTAVAILABLE, ANSWER_YES, ANSWER_NO};
 
@@ -47,7 +47,7 @@ public:
 	double curvatureThreshold = 10;
 	int maxComponentSize = 100;
 	int carryDistance = 5;
-
+	int removeClusterSize = 100;
 	float wallThickness = 0.2f;
 	float wallSmoothness = 0.5f;
 	float clusterTolerance = 0.02f;
@@ -58,7 +58,7 @@ public:
 	
 
 	//hole filling values
-	int holeSize = 1;
+	int holeSize = 1000;
 
 	//checkbox values
 	bool helpingVisuals = false;
@@ -113,6 +113,7 @@ public:
 	void SetBackgroundColor(int redValue, int greenValue, int blueValue);
 	void UpdateWallSelectionValues();
 	void UpdateSegmentationPreviewValues();
+	void UpdateProcessingValues();
 	void HideUI(std::vector<HWND> handles);
 	void ShowUI(std::vector<HWND> handles);
 	bool IsHandleInUI(HWND handle, std::vector<HWND> handles);

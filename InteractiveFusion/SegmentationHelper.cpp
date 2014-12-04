@@ -161,7 +161,7 @@ int WINAPI SegThreadMain()
 			mesh->RemoveSmallComponents(clusterVertices.size() / 5);
 
 			mesh->RemoveNonManifoldFace();
-			mesh->FillHoles(100000);
+			//mesh->FillHoles(100000);
 			total = mesh->MergeCloseVertices(threshold);
 			cDebug::DbgOut(_T("Merged close vertices 22: "), total);
 			mesh->CleanMesh();

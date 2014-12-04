@@ -31,16 +31,16 @@ void MeshHelper::FillHoles(int holeSize)
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		cnt++;
-		if ((*mI)->GetNumberOfVertices() <= 1000)
-		{
+		//if ((*mI)->GetNumberOfVertices() <= 1000)
+		//{
 			numberOfVertices += (*mI)->GetNumberOfVertices();
 			numberOfFaces += (*mI)->GetNumberOfTriangles();
 			cDebug::DbgOut(L"no hole filling #", cnt);
 			continue;
-		}
+		//}
 		cDebug::DbgOut(L"fill hole #", cnt);
 		(*mI)->ConvertToVCG();
-		holeCnt += (*mI)->FillHoles(holeSize * 100);
+		holeCnt += (*mI)->FillHoles(holeSize);
 		(*mI)->ParseData();
 		(*mI)->UpdateBuffers();
 		numberOfVertices += (*mI)->GetNumberOfVertices();
@@ -48,6 +48,20 @@ void MeshHelper::FillHoles(int holeSize)
 
 		openGLWin.ShowStatusBarMessage(L"Filling holes..." + to_wstring(cnt + 1) + L"% of " + to_wstring(meshData.size()));
 	}
+	openGLWin.ShowStatusBarMessage(L"Filled " + to_wstring(holeCnt) + L" holes in " + to_wstring(cnt) + L"segments.");
+}
+
+void MeshHelper::FillHoles(int index, int holeSize)
+{
+	int cnt = 0;
+	int holeCnt = 0;
+	cDebug::DbgOut(L"fill hole #", cnt);
+	meshData[index]->ConvertToVCG();
+	holeCnt += meshData[index]->FillHoles(holeSize);
+	meshData[index]->ParseData();
+	meshData[index]->UpdateBuffers();
+
+	openGLWin.ShowStatusBarMessage(L"Filling holes..." + to_wstring(cnt + 1) + L"% of " + to_wstring(meshData.size()));
 	openGLWin.ShowStatusBarMessage(L"Filled " + to_wstring(holeCnt) + L" holes in " + to_wstring(cnt) + L"segments.");
 }
 

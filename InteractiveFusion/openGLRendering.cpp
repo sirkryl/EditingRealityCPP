@@ -170,12 +170,6 @@ void HandleKeyInput()
 	}
 	if (Keys::GetKeyStateOnce(VK_RETURN))
 	{
-		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
-		{
-			openGLWin.previewMode = false;
-			glSegmentation.StartSegmentation();
-		}
-			
 	}
 }
 
@@ -316,7 +310,7 @@ void Render(LPVOID lpParam)
 		//gl2DHelper.GenerateBuffers();
 		glCamera.ResetCameraPosition();
 		glSegmentation.ResetInitializedStatus();
-		openGLWin.SetWindowState(DEFAULT);
+		openGLWin.SetWindowState(PROCESSING);
 		//return;
 	}
 	/*else if (openGLWin.GetWindowState() == SEGMENTATION)
@@ -349,9 +343,9 @@ void Render(LPVOID lpParam)
 		//openGLWin.glControl.SwapBuffers();
 		//return;
 	}
-	else if (openGLWin.GetWindowState() == DEFAULT)
+	else if (openGLWin.GetWindowState() == DEFAULT || openGLWin.GetWindowState() == PROCESSING)
 	{	
-		if (Keys::GetKeyStateOnce(VK_LBUTTON) && glCamera.mode == CAMERA_SENSOR && openGLWin.IsMouseInOpenGLWindow() && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
+		if (Keys::GetKeyStateOnce(VK_LBUTTON) && (glCamera.mode == CAMERA_SENSOR || openGLWin.colorSelection) && openGLWin.IsMouseInOpenGLWindow() && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
 		{
 			if (glSelector.selectedIndex == -1)
 			{

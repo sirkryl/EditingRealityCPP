@@ -349,7 +349,7 @@ void SelectionHelper::ProcessPicking()
 {
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
-		if (!(*mI)->IsWall())
+		if (!(*mI)->IsWall() || openGLWin.colorSelection)
 			(*mI)->DrawBB();
 	}
 	int tmpIndex = GetColorUnderCursor();

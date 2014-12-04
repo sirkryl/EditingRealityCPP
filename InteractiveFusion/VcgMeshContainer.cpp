@@ -1012,7 +1012,7 @@ int VCGMeshContainer::FillHoles(int holeSize)
 	vcg::tri::RequirePerVertexNormal(currentMesh);
 	vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(currentMesh);
 	RemoveNonManifoldFace();
-	LaplacianSmooth(3);
+	//LaplacianSmooth(3);
 	return holeCnt;
 }
 
