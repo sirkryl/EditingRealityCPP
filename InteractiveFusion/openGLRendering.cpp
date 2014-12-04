@@ -15,6 +15,7 @@
 
 wstring statusMsg = L"";
 wstring percentMsg = L"";
+wstring helpMsg = L"";
 //mesh storage
 std::vector<shared_ptr<VCGMeshContainer>> meshData;
 shared_ptr<VCGMeshContainer> originalMesh(new VCGMeshContainer);
@@ -85,12 +86,55 @@ void SetViewportPercentMsg(wstring percent)
 	percentMsg = percent;
 }
 
+
+void ShowWallMessage()
+{
+	glDisable(GL_DEPTH_TEST);
+	if (!gl2DHelper.IsRectangleInitialized())
+		gl2DHelper.InitializeRectangle();
+
+	gl2DHelper.DrawRectangle(0.7f, 0.8f, 0.2f);
+
+	wstring wallMessage = L"Is the highlighted area (part of) a wall, floor or ceiling?";
+
+	int w = openGLWin.glControl.GetViewportWidth();
+	int h = openGLWin.glControl.GetViewportHeight();
+	float xPos = 0.0f - wallMessage.length() * 0.008f;
+
+	glText.PrepareForRender();
+	glText.RenderText(wallMessage, 30, xPos, 0.67f, 2.0f / w, 2.0f / h);
+
+	glEnable(GL_DEPTH_TEST);
+}
+
+void ShowHelpDialog()
+{
+	glDisable(GL_DEPTH_TEST);
+	if (!gl2DHelper.IsRectangleInitialized())
+		gl2DHelper.InitializeRectangle();
+
+	gl2DHelper.DrawRectangle(0.0f, 0.5f, 3.0f);
+	gl2DHelper.DrawRectangle();
+
+	wstring helpMessage = L"Please do something and be happy about it.";
+
+	int w = openGLWin.glControl.GetViewportWidth();
+	int h = openGLWin.glControl.GetViewportHeight();
+	float xPos = 0.0f - helpMessage.length() * 0.008f;
+
+	glText.PrepareForRender();
+	glText.RenderText(helpMessage, 30, xPos, 0.05f, 2.0f / w, 2.0f / h);
+
+	glEnable(GL_DEPTH_TEST);
+}
+
 void ShowStatusMsg()
 {
 	glDisable(GL_DEPTH_TEST);
 	if (!gl2DHelper.IsRectangleInitialized())
 		gl2DHelper.InitializeRectangle();
 
+	gl2DHelper.DrawRectangle(0.0f, 0.5f, 3.0f);
 	gl2DHelper.DrawRectangle();
 	
 	int w = openGLWin.glControl.GetViewportWidth();
@@ -103,12 +147,17 @@ void ShowStatusMsg()
 		dotCount++;
 
 	glText.PrepareForRender();
-	glText.RenderText(loadString, 25, xPos, 0.05f, 2.0f / w, 2.0f / h);
+	
 
 	if (percentMsg.size() > 0)
 	{
+		glText.RenderText(loadString, 25, xPos, 0.05f, 2.0f / w, 2.0f / h);
 		float xPercentPos = -0.1f;
 		glText.RenderText(percentMsg, 25, xPercentPos, -0.05f, 2.0f / w, 2.0f / h);
+	}
+	else
+	{
+		glText.RenderText(loadString, 25, xPos, 0.00f, 2.0f / w, 2.0f / h);
 	}
 	glEnable(GL_DEPTH_TEST);
 }
@@ -151,8 +200,7 @@ void InitialLoading()
 		break;
 	}
 
-	gl2DHelper.InitialLoadFromFile("data\\models\\trash.ply", TRASH_BIN_COLOR);
-	gl2DHelper.InitialLoadFromFile("data\\models\\trash_open.ply", TRASH_BIN_COLOR);
+	gl2DHelper.InitialLoadFromFile("data\\models\\trash.ply", "data\\models\\trash_open.ply", TRASH_BIN_COLOR);
 	glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
 
 
@@ -183,12 +231,14 @@ void Initialize(LPVOID lpParam)
 	glText.Initialize("OpenSans-Regular.ttf");
 
 	glCamera = OpenGLCamera(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f, 0.1f);
+
+	//ColorIF defaultColor = { 0.08f, 0.08f, 0.08f, 1.0f };
+	//ColorIF pressedColor = { 0.2f, 0.2f, 0.2f, 1.0f };
+	//gl2DHelper.InitializeButton(OPENGL_BUTTON_OK, 0.0f, -0.125f, 0.2f, 0.10f, defaultColor, pressedColor, L"ALRIGHT");
 }
 
 void Render(LPVOID lpParam)
 {
-	cDebug::DbgOut(L"State: ", openGLWin.GetWindowState());
-	cDebug::DbgOut(L"Mode: ", openGLWin.GetWindowMode());
 	if (!IsWindowVisible(openGLWin.glWindowHandle))
 		return;
 	//clear window
@@ -215,64 +265,61 @@ void Render(LPVOID lpParam)
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+
+	
+
+	if (Keys::GetKeyState(VK_LBUTTON) && openGLWin.IsMouseInOpenGLWindow())
+	{
+		glSelector.ProcessButtonClicks();
+	}
+	else
+		glSelector.UnselectButtons();
+
 	//for initializing without segmentation..debug purposes
 	if (openGLWin.GetWindowState() == BUFFERS)
 	{
-		gl2DHelper.GenerateBuffers();
+		//gl2DHelper.GenerateBuffers();
 		meshHelper.GenerateBuffers();
 		
 		openGLWin.SetWindowState(DEFAULT);
-		return;
+		//return;
 	}
-
-	//USER SELECTS WALL OR SEES SOME OTHER PREVIEW
-	if (openGLWin.GetWindowState() == WALL_SELECTION || openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+	else if (openGLWin.GetWindowState() == WALL_SELECTION || openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
 	{
 		if (!glSegmentation.IsPreviewInitialized())
 		{
-			if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW && openGLWin.segmentationMode == REGION_GROWTH_SEGMENTATION)
-			{
+			if (openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
+			{ 
 				if (glSegmentation.IsCloudReady())
+				{
+					meshHelper.GenerateOriginalBuffers();
 					glSegmentation.InitializePreview();
-				else
-					return;
+				}
 			}
-			meshHelper.GenerateOriginalBuffers();
-			glSegmentation.InitializePreview();
-
-			//glCamera.SetRotationPoint(glSegmentation.GetPreviewCenterPoint());
+			
 		}
-		else
+		if (originalMesh->AreBuffersInitialized())
 		{
 			meshHelper.DrawOriginalMesh();
-			glText.PrepareForRender();
-			glText.RenderText(L"FPS: ", openGLWin.glControl.GetFPS(), 20, -0.98f, 0.85f, 2.0f / storedWidth, 2.0f / storedHeight);
-			//glSegmentation.RenderPreview();
-			glCamera.mode = CAMERA_FREE;
 		}
-		glEnable(GL_DEPTH_TEST);
-		openGLWin.glControl.SwapBuffers();
-		return;
-	}
-	else if (glSegmentation.IsPreviewInitialized())
-	{
-		glSegmentation.ClearPreviewVertices();
-		glCamera.ResetCameraPosition();
-		//glCamera.mode = CAMERA_SENSOR;
-	}
 
-	//SEGMENTATION IS FINISHED, LOAD RELEVANT DATA
-	if (openGLWin.GetWindowState() == SEGMENTATION_FINISHED)
+		if (openGLWin.GetWindowState() == WALL_SELECTION)
+			ShowWallMessage();
+
+		glCamera.mode = CAMERA_FREE;
+	}
+	else if (openGLWin.GetWindowState() == SEGMENTATION_FINISHED)
 	{
 		
 		glSegmentation.LoadClusterData();
 		glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
-		gl2DHelper.GenerateBuffers();
+		//gl2DHelper.GenerateBuffers();
+		glCamera.ResetCameraPosition();
+		glSegmentation.ResetInitializedStatus();
 		openGLWin.SetWindowState(DEFAULT);
-		return;
+		//return;
 	}
-
-	if (openGLWin.GetWindowState() == SEGMENTATION)
+	/*else if (openGLWin.GetWindowState() == SEGMENTATION)
 	{
 		if (originalMesh->IsLoaded())
 		{ 
@@ -284,50 +331,63 @@ void Render(LPVOID lpParam)
 		ShowStatusMsg();
 
 		glCamera.mode = CAMERA_FREE;
-		glEnable(GL_DEPTH_TEST);
-		openGLWin.glControl.SwapBuffers();
-		return;
-	}
-
-	//WHENEVER MESSAGES SHOULD BE DISPLAYED
-	if (openGLWin.GetWindowState() == INITIALIZING)
+		//glEnable(GL_DEPTH_TEST);
+		//openGLWin.glControl.SwapBuffers();
+		//return;
+	}*/
+	else if (openGLWin.GetWindowState() == INITIALIZING)
 	{
-		ShowStatusMsg();
-		openGLWin.glControl.SwapBuffers();
-		return;
-	}
-
-	//if user clicks with left mouse button -> picking/placing
-	if (Keys::GetKeyStateOnce(VK_LBUTTON) && glCamera.mode == CAMERA_SENSOR && openGLWin.IsMouseInOpenGLWindow())
-	{
-		if (glSelector.selectedIndex == -1)
+		if (originalMesh->IsLoaded())
 		{
-			glSelector.ProcessPicking();
+			if (!originalMesh->AreBuffersInitialized())
+				meshHelper.GenerateOriginalBuffers();
+
+			meshHelper.DrawOriginalMesh();
 		}
-		else
-			if (openGLWin.colorSelection)
-				glSelector.ProcessPicking();
-			else
-				glSelector.ProcessPlacing();
-			
-		return;
+		ShowStatusMsg();
+		glCamera.mode = CAMERA_FREE;
+		//openGLWin.glControl.SwapBuffers();
+		//return;
 	}
-
-	//process currently selected object (attach to cursor, rotation/scaling etc.)
-	if (glSelector.selectedIndex != -1 && !openGLWin.colorSelection && openGLWin.IsMouseInOpenGLWindow())
-	{
-		glSelector.ProcessSelectedObject();
-	}
-
-	
-	//draw every mesh
-	if (openGLWin.GetWindowState() == DEFAULT)
+	else if (openGLWin.GetWindowState() == DEFAULT)
 	{	
-		gl2DHelper.DrawAll();
+		if (Keys::GetKeyStateOnce(VK_LBUTTON) && glCamera.mode == CAMERA_SENSOR && openGLWin.IsMouseInOpenGLWindow() && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
+		{
+			if (glSelector.selectedIndex == -1)
+			{
+				glSelector.ProcessPicking();
+			}
+			else
+				if (openGLWin.colorSelection)
+					glSelector.ProcessPicking();
+				else
+					glSelector.ProcessPlacing();
+
+			//return;
+		}
+
+		//process currently selected object (attach to cursor, rotation/scaling etc.)
+		if (glSelector.selectedIndex != -1 && !openGLWin.colorSelection && openGLWin.IsMouseInOpenGLWindow())
+		{
+			glSelector.ProcessSelectedObject();
+		}
+		
+		
+		meshHelper.DrawAll();
+		if (!gl2DHelper.AreBuffersGenerated())
+			gl2DHelper.GenerateBuffers();
+		gl2DHelper.DrawTrash();
+		//render info text on screen
+		glText.PrepareForRender();
+		glText.RenderText(L"FPS: ", openGLWin.glControl.GetFPS(), 20, -0.98f, 0.85f, 2.0f / storedWidth, 2.0f / storedHeight);
+		glText.RenderText(L"Meshs: ", meshData.size(), 15, -0.98f, 0.75f, 2.0f / storedWidth, 2.0f / storedHeight);
+		glText.RenderText(L"Verts: ", meshHelper.GetNumberOfVertices(), 15, -0.98f, 0.70f, 2.0f / storedWidth, 2.0f / storedHeight);
+		glText.RenderText(L"Faces: ", meshHelper.GetNumberOfFaces(), 15, -0.98f, 0.65f, 2.0f / storedWidth, 2.0f / storedHeight);
+		glText.RenderText(L"Sel: ", glSelector.selectedIndex, 15, -0.98f, 0.6f, 2.0f / storedWidth, 2.0f / storedHeight);
+
+		//if user clicks with left mouse button -> picking/placing
+		
 	}
-
-	meshHelper.DrawAll();
-
 	//draw helper visuals
 	if (openGLWin.helpingVisuals && glHelper.IsRayInitialized())
 	{
@@ -341,16 +401,15 @@ void Render(LPVOID lpParam)
 		meshHelper.DrawAllForColorPicking();
 	}
 
-	//render info text on screen
-	glText.PrepareForRender();
-	glText.RenderText(L"FPS: ", openGLWin.glControl.GetFPS(), 20, -0.98f, 0.85f, 2.0f / storedWidth, 2.0f / storedHeight);
-	glText.RenderText(L"Meshs: ", meshData.size(), 15, -0.98f, 0.75f, 2.0f / storedWidth, 2.0f / storedHeight);
-	glText.RenderText(L"Verts: ", meshHelper.GetNumberOfVertices(), 15, -0.98f, 0.70f, 2.0f / storedWidth, 2.0f / storedHeight);
-	glText.RenderText(L"Faces: ", meshHelper.GetNumberOfFaces(), 15, -0.98f, 0.65f, 2.0f / storedWidth, 2.0f / storedHeight);
-	glText.RenderText(L"Sel: ", glSelector.selectedIndex, 15, -0.98f, 0.6f, 2.0f / storedWidth, 2.0f / storedHeight);
+	if (openGLWin.GetWindowBusyState() == IF_BUSYSTATE_BUSY)
+	{
+		ShowStatusMsg();
+		//gl2DHelper.DrawButtons();
+	}
+
+	
 
 	glEnable(GL_DEPTH_TEST);
-
 	//swap buffers to actually display the changes
 	openGLWin.glControl.SwapBuffers();
 }
@@ -365,7 +424,7 @@ void Release(LPVOID lpParam)
 	glSegmentation.CleanUp();
 	gl2DHelper.CleanUp();
 	originalMesh->ClearMesh();
-	for (int i = 0; i < 6; i++)shaders[i].DeleteShader();
+	for (int i = 0; i < 8; i++)shaders[i].DeleteShader();
 
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{

@@ -94,6 +94,7 @@
     <ClInclude Include="Keys.h" />
     <ClInclude Include="MeshHelper.h" />
     <ClInclude Include="OpenGL2DHelper.h" />
+    <ClInclude Include="OpenGLButton.h" />
     <ClInclude Include="OpenGLCamera.h" />
     <ClInclude Include="OpenGLControl.h" />
     <ClInclude Include="VisualizationHelper.h" />
@@ -112,6 +113,7 @@
     <ClCompile Include="Keys.cpp" />
     <ClCompile Include="MeshHelper.cpp" />
     <ClCompile Include="OpenGL2DHelper.cpp" />
+    <ClCompile Include="OpenGLButton.cpp" />
     <ClCompile Include="OpenGLCamera.cpp" />
     <ClCompile Include="OpenGLControl.cpp" />
     <ClCompile Include="VisualizationHelper.cpp" />
@@ -130,6 +132,8 @@
   <ItemGroup>
     <None Include="data\shaders\2dimage.frag" />
     <None Include="data\shaders\2dimage.vert" />
+    <None Include="data\shaders\button.frag" />
+    <None Include="data\shaders\button.vert" />
     <None Include="data\shaders\color.frag" />
     <None Include="data\shaders\color.vert" />
     <None Include="data\shaders\font.frag" />

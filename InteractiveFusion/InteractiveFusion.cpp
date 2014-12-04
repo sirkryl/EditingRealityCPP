@@ -23,6 +23,9 @@ std::vector<HWND> progressionUI;
 HWND statusText;
 HWND statusPercentText;
 
+//HELP DIALOG
+HWND hButtonHelp;
+
 //INTERACTION
 std::vector<HWND> interactionUi;
 HWND hButtonExport, hButtonReset;
@@ -71,6 +74,7 @@ HBITMAP trashBmp;
 HBITMAP trashBmp_mask;
 
 //ICONS
+std::vector<HWND> helpUi;
 HICON hDeleteIcon;
 
 //BRUSHES
@@ -261,10 +265,65 @@ void InteractiveFusion::HideWholeUI()
 	}
 }
 
+void InteractiveFusion::DeactivateWholeUI()
+{
+	for (int i = 0; i < segmentationPreviewUi.size(); i++)
+	{
+		EnableWindow(segmentationPreviewUi[i], false);
+	}
+	for (int i = 0; i < euclideanUi.size(); i++)
+	{
+		EnableWindow(euclideanUi[i], false);
+	}
+	for (int i = 0; i < regionGrowthUi.size(); i++)
+	{
+		EnableWindow(regionGrowthUi[i], false);
+	}
+	for (int i = 0; i < wallSelectionUi.size(); i++)
+	{
+		EnableWindow(wallSelectionUi[i], false);
+	}
+	for (int i = 0; i < interactionUi.size(); i++)
+	{
+		EnableWindow(interactionUi[i], false);
+	}
+	for (int i = 0; i < progressionUI.size(); i++)
+	{
+		EnableWindow(progressionUI[i], false);
+	}
+}
+
+void InteractiveFusion::ActivateWholeUI()
+{
+	for (int i = 0; i < segmentationPreviewUi.size(); i++)
+	{
+		EnableWindow(segmentationPreviewUi[i], true);
+	}
+	for (int i = 0; i < euclideanUi.size(); i++)
+	{
+		EnableWindow(euclideanUi[i], true);
+	}
+	for (int i = 0; i < regionGrowthUi.size(); i++)
+	{
+		EnableWindow(regionGrowthUi[i], true);
+	}
+	for (int i = 0; i < wallSelectionUi.size(); i++)
+	{
+		EnableWindow(wallSelectionUi[i], true);
+	}
+	for (int i = 0; i < interactionUi.size(); i++)
+	{
+		EnableWindow(interactionUi[i], true);
+	}
+	for (int i = 0; i < progressionUI.size(); i++)
+	{
+		EnableWindow(progressionUI[i], true);
+	}
+}
+
 void InteractiveFusion::SetWindowState(WindowState wState)
 {
 	state = wState;
-
 	HideWholeUI();
 	openGLWin.glControl.SetOffSetBottom(0);
 	openGLWin.glControl.SetOffSetRight(0);
@@ -287,9 +346,9 @@ void InteractiveFusion::SetWindowState(WindowState wState)
 		//ShowUI(progressionUI);
 		/*ShowUI(segmentationPreviewUi);
 		if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
-			ShowUI(regionGrowthUi);
+		ShowUI(regionGrowthUi);
 		else if (glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN)
-			ShowUI(euclideanUi);*/
+		ShowUI(euclideanUi);*/
 	}
 	if (state == SEGMENTATION_PREVIEW)
 	{
@@ -317,6 +376,39 @@ void InteractiveFusion::SetWindowState(WindowState wState)
 	
 }
 
+void InteractiveFusion::SetWindowBusyState(WindowBusyState bState)
+{
+	busyState = bState;
+
+	if (busyState == IF_BUSYSTATE_BUSY)
+	{ 
+		//ShowUI(helpUi);
+		//DeactivateWholeUI();
+	}
+	else if (busyState == IF_BUSYSTATE_DEFAULT)
+	{ 
+		//HideUI(helpUi);
+		//ActivateWholeUI();
+	}
+
+	MoveButtonsOnResize();
+
+}
+
+WindowBusyState InteractiveFusion::GetWindowBusyState()
+{
+	return busyState;
+}
+
+void InteractiveFusion::SetAnswer(Answer ans)
+{
+	answer = ans;
+}
+
+Answer InteractiveFusion::GetAnswer()
+{
+	return answer;
+}
 LPCWSTR InteractiveFusion::GetLastErrorStdStr()
 {
 	DWORD error = GetLastError();
@@ -400,7 +492,12 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	openGLWin.glWindowHandle = hWnd;
 
 
+	hButtonHelp = CreateWindowEx(0, L"Button", L"Alright", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_HELP_OK, openGLWin.appInstance, 0);
 	
+	helpUi.push_back(hButtonHelp);
+
+	HideUI(helpUi);
+
 	statusFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
 	
 	statusText = CreateWindowEx(0, L"STATIC", L"Is the highlighted area (part of) a wall, floor or ceiling?", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_STATUS, openGLWin.appInstance, 0);
@@ -533,10 +630,10 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	openGLWin.UpdateWallSelectionValues();
 	
 
-	hHelpText1 = CreateWindowEx(0, L"STATIC", L"If the highlighted area is too thick or too thin, change the wall thickness.", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_HELP1, openGLWin.appInstance, 0);
+	hHelpText1 = CreateWindowEx(0, L"STATIC", L"If the highlighted area is too thick or too thin, change the wall thickness.", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_HELP1, openGLWin.appInstance, 0);
 	SendMessage(hHelpText1, WM_SETFONT, (WPARAM)smallUiFont, TRUE);
 
-	hHelpText2 = CreateWindowEx(0, L"STATIC", L"If the highlighted area has gaps, decrease smoothness. If it is not flat enough (contains other objects), increase it.", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_HELP2, openGLWin.appInstance, 0);
+	hHelpText2 = CreateWindowEx(0, L"STATIC", L"If the highlighted area has gaps, decrease smoothness. If it is not flat enough (contains other objects), increase it.", WS_CHILD | WS_VISIBLE | SS_CENTER | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_HELP2, openGLWin.appInstance, 0);
 	SendMessage(hHelpText2, WM_SETFONT, (WPARAM)smallUiFont, TRUE);
 	
 	wallSelectionUi.push_back(hTextWalls);
@@ -680,7 +777,8 @@ bool DrawButton(WPARAM wParam, LPARAM lParam)
 		IDC_BUTTON_MODE_PREPARE == LOWORD(wParam) ||
 		IDC_BUTTON_MODE_SEGMENTATION == LOWORD(wParam) ||
 		IDC_BUTTON_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) ||
-		IDC_BUTTON_SEGMENTATION_EUCLIDEAN == LOWORD(wParam))
+		IDC_BUTTON_SEGMENTATION_EUCLIDEAN == LOWORD(wParam) ||
+		IDC_BUTTON_HELP_OK == LOWORD(wParam))
 	{
 		if (IDC_BUTTON_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) ||
 			IDC_BUTTON_SEGMENTATION_EUCLIDEAN == LOWORD(wParam))
@@ -1439,6 +1537,13 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 void GLProcessUI(WPARAM wParam, LPARAM lParam)
 {
+	if (IDC_BUTTON_HELP_OK == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (openGLWin.GetWindowBusyState() == IF_BUSYSTATE_BUSY)
+		{
+			openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
+		}
+	}
 	if (IDC_BUTTON_MODE_PREPARE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() != MODE_PREPARE_SCANNING)
@@ -1766,7 +1871,8 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_BUTTON_YES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//openGLWin.glControl.SetOffSetBottom(0);
-		openGLWin.SetWindowState(SEGMENTATION);
+		openGLWin.SetAnswer(ANSWER_YES);
+		//openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
 		openGLWin.isWall = true;
 		openGLWin.wallThickness = 0.2f;
 		openGLWin.wallSmoothness = 0.5f;
@@ -1776,7 +1882,8 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_BUTTON_NO == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//openGLWin.glControl.SetOffSetBottom(0);
-		openGLWin.SetWindowState(SEGMENTATION);
+		openGLWin.SetAnswer(ANSWER_NO);
+		//openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
 		openGLWin.isWall = false;
 		openGLWin.wallThickness = 0.2f;
 		openGLWin.wallSmoothness = 0.5f;
@@ -1902,10 +2009,14 @@ void GLProcessUI(WPARAM wParam, LPARAM lParam)
 
 	if (IDC_BUTTON_CLEANMESH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
-		cDebug::DbgOut(L"clean mesh", 0);
+		if (openGLWin.GetWindowBusyState() == IF_BUSYSTATE_DEFAULT)
+			openGLWin.SetWindowBusyState(IF_BUSYSTATE_BUSY);
+		else 
+		openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
+		/*cDebug::DbgOut(L"clean mesh", 0);
 		openGLWin.ShowStatusBarMessage(L"Cleaning mesh...");
-		meshHelper.CleanMesh();
-		//m_processor.ResetReconstruction();
+		meshHelper.CleanMesh();*/
+		
 	}
 	if (IDC_BUTTON_RG_PREVIEW == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -1993,65 +2104,58 @@ void MoveButtonsOnResize()
 		{
 			MoveWindow(hButtonYes, width - 200, height - 200, 150, 150, true);
 			MoveWindow(hButtonNo, 50, height - 200, 150, 150, true);
-			//RECT rect;
-			//GetClientRect(hTextWalls, &rect);
-			MoveWindow(hTextWalls, 0, 48, width, 40, true);
-			//SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_WALL, L"Is this (part of) a floor/wall?");
 
-			//InvalidateRect(hTextWalls, &rect, TRUE);
-			//MapWindowPoints(hTextWalls, openGLWin.glWindowHandle, (POINT *)&rect, 2);
-			//RedrawWindow(hTextWalls, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
+		//	MoveWindow(hTextWalls, 0, 48, width, 40, true);
+			MoveWindow(hTextWalls, 0, 48, 0, 0, true);
 
-			MoveWindow(hHelpText1, width / 2 - 275, height - 240, 550, 40, true);
+			MoveWindow(hHelpText1, 0, height - 240, width, 40, true);
 			MoveWindow(hTextWallSizeLabel, width / 2 - 200, height - 195, 150, 50, true);
 			MoveWindow(hButtonWallSizeMinus, width / 2 - 25, height - 200, 50, 50, true);
 			MoveWindow(hTextWallSize, width / 2 + 50, height - 195, 75, 50, true);
 			MoveWindow(hButtonWallSizePlus, width / 2 + 150, height - 200, 50, 50, true);
 
 
-			MoveWindow(hHelpText2, width / 2 - 275, height - 135, 550, 40, true);
+			MoveWindow(hHelpText2, 0, height - 135, width, 40, true);
 			MoveWindow(hTextWallSmoothnessLabel, width / 2 - 225, height - 80, 175, 50, true);
 			MoveWindow(hButtonWallSmoothnessMinus, width / 2 - 25, height - 85, 50, 50, true);
 			MoveWindow(hTextWallSmoothness, width / 2 + 50, height - 80, 75, 50, true);
 			MoveWindow(hButtonWallSmoothnessPlus, width / 2 + 150, height - 85, 50, 50, true);
 		}
-		if (openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+
+		MoveWindow(hButtonSegmentationFinish, width - 200, height - 200, 150, 150, true);
+		MoveWindow(hButtonSegmentationBegin, width - 200, height - 400, 150, 150, true);
+
+		MoveWindow(hButtonEuclideanSegmentation, width - 300, 200, 150, 50, true);
+		MoveWindow(hButtonRegionGrowthSegmentation, width - 150, 200, 150, 50, true);
+
+		if (glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN)
+		{ 
+			MoveWindow(hTextClusterToleranceLabel, width - 180, 290, 100, 30, true);
+			MoveWindow(hButtonClusterToleranceMinus, width - 250, 300, 50, 50, true);
+			MoveWindow(hTextClusterTolerance, width - 180, 320, 100, 30, true);
+			MoveWindow(hButtonClusterTolerancePlus, width -60, 300, 50, 50, true);
+		}
+		else if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
 		{
-			MoveWindow(hButtonSegmentationFinish, width - 200, height - 200, 150, 150, true);
-			MoveWindow(hButtonSegmentationBegin, width - 200, height - 400, 150, 150, true);
+			MoveWindow(hTextRGSmoothnessLabel, width - 180, 290, 100, 30, true);
+			MoveWindow(hButtonRGSmoothnessMinus, width - 250, 300, 50, 50, true);
+			MoveWindow(hTextRGSmoothness, width - 180, 320, 100, 30, true);
+			MoveWindow(hButtonRGSmoothnessPlus, width - 60, 300, 50, 50, true);
 
-			MoveWindow(hButtonEuclideanSegmentation, width - 300, 200, 150, 50, true);
-			MoveWindow(hButtonRegionGrowthSegmentation, width - 150, 200, 150, 50, true);
+			MoveWindow(hTextRGCurvatureLabel, width - 180, 360, 100, 30, true);
+			MoveWindow(hButtonRGCurvatureMinus, width - 250, 370, 50, 50, true);
+			MoveWindow(hTextRGCurvature, width - 180, 390, 100, 30, true);
+			MoveWindow(hButtonRGCurvaturePlus, width - 60, 370, 50, 50, true);
 
-			if (glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN)
-			{ 
-				MoveWindow(hTextClusterToleranceLabel, width - 180, 290, 100, 30, true);
-				MoveWindow(hButtonClusterToleranceMinus, width - 250, 300, 50, 50, true);
-				MoveWindow(hTextClusterTolerance, width - 180, 320, 100, 30, true);
-				MoveWindow(hButtonClusterTolerancePlus, width -60, 300, 50, 50, true);
-			}
-			else if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
-			{
-				MoveWindow(hTextRGSmoothnessLabel, width - 180, 290, 100, 30, true);
-				MoveWindow(hButtonRGSmoothnessMinus, width - 250, 300, 50, 50, true);
-				MoveWindow(hTextRGSmoothness, width - 180, 320, 100, 30, true);
-				MoveWindow(hButtonRGSmoothnessPlus, width - 60, 300, 50, 50, true);
+			MoveWindow(hTextRGNeighborsLabel, width - 180, 430, 100, 30, true);
+			MoveWindow(hButtonRGNeighborsMinus, width - 250, 440, 50, 50, true);
+			MoveWindow(hTextRGNeighbors, width - 180, 460, 100, 30, true);
+			MoveWindow(hButtonRGNeighborsPlus, width - 60, 440, 50, 50, true);
 
-				MoveWindow(hTextRGCurvatureLabel, width - 180, 360, 100, 30, true);
-				MoveWindow(hButtonRGCurvatureMinus, width - 250, 370, 50, 50, true);
-				MoveWindow(hTextRGCurvature, width - 180, 390, 100, 30, true);
-				MoveWindow(hButtonRGCurvaturePlus, width - 60, 370, 50, 50, true);
-
-				MoveWindow(hTextRGNeighborsLabel, width - 180, 430, 100, 30, true);
-				MoveWindow(hButtonRGNeighborsMinus, width - 250, 440, 50, 50, true);
-				MoveWindow(hTextRGNeighbors, width - 180, 460, 100, 30, true);
-				MoveWindow(hButtonRGNeighborsPlus, width - 60, 440, 50, 50, true);
-
-				MoveWindow(hTextRGKSearchLabel, width - 180, 500, 100, 30, true);
-				MoveWindow(hButtonRGKSearchMinus, width - 250, 510, 50, 50, true);
-				MoveWindow(hTextRGKSearch, width - 180, 530, 100, 30, true);
-				MoveWindow(hButtonRGKSearchPlus, width - 60, 510, 50, 50, true);
-			}
+			MoveWindow(hTextRGKSearchLabel, width - 180, 500, 100, 30, true);
+			MoveWindow(hButtonRGKSearchMinus, width - 250, 510, 50, 50, true);
+			MoveWindow(hTextRGKSearch, width - 180, 530, 100, 30, true);
+			MoveWindow(hButtonRGKSearchPlus, width - 60, 510, 50, 50, true);
 		}
 	}
 	if (openGLWin.GetWindowMode() == MODE_INTERACTION)
@@ -2069,6 +2173,13 @@ void MoveButtonsOnResize()
 		}
 	}
 
+	if (openGLWin.GetWindowBusyState() == IF_BUSYSTATE_BUSY)
+	{
+		if (openGLWin.glControl.GetViewportHeight() != 0)
+		{ 
+			MoveWindow(hButtonHelp, openGLWin.glControl.GetViewportWidth() / 2 - 75, (openGLWin.glControl.GetViewportHeight() / 2), 150, 50, true);
+		}
+	}
 	MoveModeButtonsOnResize();
 
 	RECT sRect; GetWindowRect(statusHandle, &sRect);

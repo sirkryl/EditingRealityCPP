@@ -4,7 +4,7 @@ smooth in vec4 theColor;
 
 uniform vec4 pickColor;
 uniform bool colorPicking = false;
-uniform bool transparent = false;
+uniform float alpha;
 out vec4 outputColor;
 
 void main()
@@ -14,7 +14,6 @@ void main()
 	else
 	{
 		outputColor = theColor;
-		if(transparent)
-			outputColor.w = 0.8;
+		outputColor.w = alpha;
 	}
 }

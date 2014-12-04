@@ -43,7 +43,7 @@ void OpenGLText::PrepareForRender()
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, fontVBO);
 
-	shaderFont.SetUniform("color", glm::vec4(1, 1, 1, 1));
+	shaderFont.SetUniform("color", glm::vec4(0.95f, 0.95f, 0.95f, 1));
 
 	shaderFont.SetUniform("tex", 0);
 
@@ -77,6 +77,8 @@ void OpenGLText::RenderText(const std::wstring &str, int pixelSize, float x, flo
 		const float w = glyph->bitmap.width * sx;
 		const float h = glyph->bitmap.rows * sy;
 
+		if (str == L"ALRIGHT")
+			cDebug::DbgOut(L"width: ", glyph->bitmap.width);
 		struct {
 			float x, y, s, t;
 		} data[6] = {

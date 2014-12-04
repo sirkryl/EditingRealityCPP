@@ -140,24 +140,27 @@ glm::mat4 OpenGLCamera::GetViewMatrix()
 {
 	if (mode == CAMERA_FREE)
 	{
+		
 		GetCursorPos(&pCur);
 
 		camDirection = glm::normalize(camPosition - camLookAt);
 
-		UpdateZoom();
-		//UpdateStrafe();
+		if (openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
+		{ 
+			UpdateZoom();
+			//UpdateStrafe();
 
-		if (Keys::GetKeyState(VK_LBUTTON) &&
-			openGLWin.IsMouseInOpenGLWindow())
-			Orbit();
+			if (Keys::GetKeyState(VK_LBUTTON) &&
+				openGLWin.IsMouseInOpenGLWindow())
+				Orbit();
 
-		if (Keys::GetKeyState(VK_MBUTTON) &&
-			openGLWin.IsMouseInOpenGLWindow())
-			UpdateStrafe();
+			if (Keys::GetKeyState(VK_MBUTTON) &&
+				openGLWin.IsMouseInOpenGLWindow())
+				UpdateStrafe();
 
-		oldX = pCur.x;
-		oldY = pCur.y;
-
+			oldX = pCur.x;
+			oldY = pCur.y;
+		}
 		camLookAt = rotationPoint;
 
 

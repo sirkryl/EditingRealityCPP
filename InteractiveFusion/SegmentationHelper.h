@@ -18,6 +18,7 @@ public:
 
 	void ClearPreviewVertices();
 
+	bool IsWallReady();
 	bool IsCloudReady();
 
 	SegmentationMode GetSegmentationMode();

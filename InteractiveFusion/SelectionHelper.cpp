@@ -92,17 +92,17 @@ bool SelectionHelper::ColorPlacing(bool preview)
 			(*mI)->DrawBB();
 		cnt++;
 	}
-	gl2DHelper.DrawAllBB();
+	gl2DHelper.DrawTrashBB();
 	int tmpIndex = GetColorUnderCursor();
 
 	if (tmpIndex == TRASH_BIN_COLOR)
 	{
-		gl2DHelper.isOpen = true;
+		gl2DHelper.isTrashOpen = true;
 		meshData[selectedIndex]->IsOverTrash(true);
 	}
 	else
 	{
-		gl2DHelper.isOpen = false;
+		gl2DHelper.isTrashOpen = false;
 		meshData[selectedIndex]->IsOverTrash(false);
 	}
 
@@ -156,7 +156,7 @@ bool SelectionHelper::ColorPlacing(bool preview)
 		{
 			meshHelper.DeleteMesh(selectedIndex);
 			selectedIndex = -1;
-			gl2DHelper.isOpen = false;
+			gl2DHelper.isTrashOpen = false;
 		}
 		else
 		{
@@ -310,6 +310,41 @@ void SelectionHelper::ProcessSelectedObject()
 	//}
 }
 
+void SelectionHelper::ProcessButtonClicks()
+{
+	gl2DHelper.DrawButtonsBB();
+	int color = GetColorUnderCursor();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if (gl2DHelper.SelectButton(color))
+	{
+		selectedButton = color;
+		
+	}
+	else
+	{
+		selectedButton = -1;
+		gl2DHelper.UnselectButtons();
+	}
+		
+	
+}
+
+void SelectionHelper::UnselectButtons()
+{
+	if (selectedButton != -1)
+	{
+		if (selectedButton == OPENGL_BUTTON_OK)
+		{
+			if (openGLWin.GetWindowBusyState() == IF_BUSYSTATE_BUSY)
+			{
+				openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
+			}
+		}
+	}
+	selectedButton = -1;
+	gl2DHelper.UnselectButtons();
+}
+
 void SelectionHelper::ProcessPicking()
 {
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
@@ -318,6 +353,10 @@ void SelectionHelper::ProcessPicking()
 			(*mI)->DrawBB();
 	}
 	int tmpIndex = GetColorUnderCursor();
+
+	
+		
+	
 
 	bool found = false;
 	int meshIndex = 0;

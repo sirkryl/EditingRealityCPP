@@ -75,6 +75,9 @@
     <ClInclude Include="OpenGL2DHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="OpenGLButton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="plylib.cpp">
@@ -122,6 +125,9 @@
     <ClCompile Include="OpenGL2DHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="OpenGLButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\color.frag">
@@ -140,6 +146,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="data\shaders\2dimage.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="data\shaders\button.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="data\shaders\button.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

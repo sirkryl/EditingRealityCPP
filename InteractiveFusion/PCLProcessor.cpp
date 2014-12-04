@@ -159,7 +159,8 @@ bool PCLProcessor::PlaneSegmentation() {
 			glSegmentation.ResetInitializedStatus();
 			redoingSegmentation = false;
 		}
-		while (openGLWin.GetWindowState() == WALL_SELECTION)
+		openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
+		while (openGLWin.GetAnswer() == ANSWER_NOTAVAILABLE)
 		{
 			if (storedThickness != openGLWin.wallThickness || storedSmoothness != openGLWin.wallSmoothness)
 			{
@@ -173,7 +174,9 @@ bool PCLProcessor::PlaneSegmentation() {
 			//PV2->spinOnce(100);
 			boost::this_thread::sleep(boost::posix_time::microseconds(100000));
 		}
-		
+		openGLWin.SetAnswer(ANSWER_NOTAVAILABLE);
+		openGLWin.SetWindowBusyState(IF_BUSYSTATE_BUSY);
+		glSegmentation.ResetInitializedStatus();
 		wallSegmentCloud->clear();
 		if (redoingSegmentation)
 			continue;
@@ -309,7 +312,6 @@ bool PCLProcessor::PlaneSegmentation() {
 	}*/
 
 	
-
 
 
 
@@ -666,7 +668,6 @@ bool PCLProcessor::RegionGrowingSegmentation() {
 
 	//pcl::PointCloud <pcl::PointXYZRGB>::Ptr colored_cloud = reg.getColoredCloud();
 	coloredSegmentedCloud = reg.getColoredCloud();
-	cDebug::DbgOut(L"COLORED CLOUD ", (int)coloredSegmentedCloud->points.size());
 	if (clusterCount > 0)
 		coloredCloudReady = true;
 	//ShowViewer();
@@ -765,7 +766,6 @@ bool PCLProcessor::EuclideanSegmentation() {
 	QueryPerformanceCounter(&t2);
 	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
 	cDebug::DbgOut(L"Euclidean clustering in ", elapsedTime);
-	
 	return true;
 }
 

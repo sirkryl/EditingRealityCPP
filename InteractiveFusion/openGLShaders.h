@@ -39,6 +39,7 @@ public:
 	void SetUniform(string name, const glm::mat4 mMatrix);
 	void SetUniform(string name, const int value);
 	void SetUniform(string name, const glm::vec3 vector);
+	void SetUniform(string name, const float value);
 private:
 	UINT glProgram; 
 	bool linked; 
@@ -46,5 +47,5 @@ private:
 
 bool PrepareShaderPrograms();
 
-extern OpenGLShader shaders[6];
-extern OpenGLShaderProgram shaderColor, shaderFont, shader2d;
+extern OpenGLShader shaders[8];
+extern OpenGLShaderProgram shaderColor, shaderFont, shader2d, shaderButton;

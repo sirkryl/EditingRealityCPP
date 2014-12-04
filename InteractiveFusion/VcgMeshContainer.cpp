@@ -475,7 +475,7 @@ void VCGMeshContainer::Draw()
 {
 	shaderColor.UseProgram();
 	shaderColor.SetUniform("colorPicking", false);
-	shaderColor.SetUniform("transparent", false);
+	shaderColor.SetUniform("alpha", 1.0f);
 	glm::mat4 modelMatrix;
 	if (is2D)
 	{
@@ -524,7 +524,7 @@ void VCGMeshContainer::DrawBB()
 {
 	shaderColor.UseProgram();
 	shaderColor.SetUniform("colorPicking", true);
-	shaderColor.SetUniform("transparent", false);
+	shaderColor.SetUniform("alpha", 1.0f);
 	shaderColor.SetUniform("pickColor", colorCoding::IntToColor(colorCode));
 	glm::mat4 modelMatrix;
 	if (is2D)

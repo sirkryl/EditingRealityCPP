@@ -17,7 +17,7 @@ using namespace std;
 
 struct ColorIF
 {
-	float r, g, b;
+	float r, g, b, a;
 };
 
 struct Vertex

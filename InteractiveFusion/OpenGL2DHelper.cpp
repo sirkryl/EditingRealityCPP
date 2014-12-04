@@ -2,19 +2,44 @@
 #include "OpenGLShaders.h"
 #include "InteractiveFusion.h"
 #include <glm/gtc/matrix_transform.hpp>
-void OpenGL2DHelper::InitialLoadFromFile(const char* fileName, int colorCode)
+#include "OpenGLButton.h"
+
+shared_ptr < VCGMeshContainer > trashOpen(new VCGMeshContainer);
+shared_ptr < VCGMeshContainer > trashClosed(new VCGMeshContainer);
+
+map<int, shared_ptr<OpenGLButton>> buttons;
+
+void OpenGL2DHelper::InitialLoadFromFile(const char* fileName, const char* fileName2, int colorCode)
 {
-	shared_ptr<VCGMeshContainer> meshTo(new VCGMeshContainer);
-	//meshTo->SetColorCode(100);
-	meshTo->Load2DMesh(fileName);
-	meshTo->SetColorCode(colorCode);
-	meshTo->CleanMesh();
-	meshTo->ParseData();
-	//mesh->GenerateBOs();
-	//mesh->GenerateVAO();
-	//cDebug::DbgOut(L"vertices: " + mesh->GetNumberOfVertices());
-	meshData2d.push_back(meshTo);
+	trashClosed->Load2DMesh(fileName);
+	trashClosed->SetColorCode(colorCode);
+	trashClosed->CleanMesh();
+	trashClosed->ParseData();
+	trashOpen->Load2DMesh(fileName2);
+	trashOpen->SetColorCode(colorCode);
+	trashOpen->CleanMesh();
+	trashOpen->ParseData();
 	
+}
+
+bool OpenGL2DHelper::SelectButton(int colorCode)
+{
+	if (buttons.count(colorCode) != 0)
+	{
+		buttons[colorCode]->SetClicked(true);
+		return true;
+	}
+	return false;
+}
+
+void OpenGL2DHelper::UnselectButtons()
+{
+	map<int, shared_ptr<OpenGLButton>>::iterator iter;
+
+	for (iter = buttons.begin(); iter != buttons.end(); ++iter)
+	{
+		iter->second->SetClicked(false);
+	}
 }
 
 void OpenGL2DHelper::GenerateBuffers()
@@ -31,6 +56,26 @@ void OpenGL2DHelper::GenerateBuffers()
 	{
 		(*mI)->GenerateVAO();
 	}
+	map<int, shared_ptr<OpenGLButton>>::iterator iter;
+
+	for (iter = buttons.begin(); iter != buttons.end(); ++iter)
+	{
+		iter->second->GenerateBuffers();
+	}
+	
+	trashOpen->GenerateBOs();
+	trashOpen->GenerateVAO();
+	trashClosed->GenerateBOs();
+	trashClosed->GenerateVAO();
+
+	buffersInitialized = true;
+}
+
+void OpenGL2DHelper::InitializeButton(int colorCode, float x, float y, float w, float h, ColorIF defaultColor, ColorIF pressedColor, wstring text)
+{
+	shared_ptr<OpenGLButton> button(new OpenGLButton(colorCode, x, y, w, h, defaultColor, pressedColor, text));
+
+	buttons[colorCode] = button;
 }
 
 void OpenGL2DHelper::InitializeRectangle()
@@ -80,11 +125,36 @@ bool OpenGL2DHelper::IsRectangleInitialized()
 	return rectangleVBO != 0;
 }
 
+bool OpenGL2DHelper::AreBuffersGenerated()
+{
+	return buffersInitialized;
+}
+
+void OpenGL2DHelper::DrawButtons()
+{
+	map<int, shared_ptr<OpenGLButton>>::iterator iter;
+
+	for (iter = buttons.begin(); iter != buttons.end(); ++iter)
+	{
+		iter->second->Draw();
+	}
+}
+
+void OpenGL2DHelper::DrawButtonsBB()
+{
+	map<int, shared_ptr<OpenGLButton>>::iterator iter;
+
+	for (iter = buttons.begin(); iter != buttons.end(); ++iter)
+	{
+		iter->second->DrawBB();
+	}
+}
+
 void OpenGL2DHelper::DrawRectangle()
 {
 	shaderColor.UseProgram();
 	shaderColor.SetUniform("colorPicking", false);
-	shaderColor.SetUniform("transparent", true);
+	shaderColor.SetUniform("alpha", 0.8f);
 	glm::mat4 modelMatrix;
 	shaderColor.SetUniform("matrices.projectionMatrix", glm::mat4(1.0f));
 	shaderColor.SetUniform("matrices.viewMatrix", glm::mat4(1.0f));
@@ -103,11 +173,11 @@ void OpenGL2DHelper::DrawRectangle()
 	//glEnable(GL_DEPTH_TEST);
 }
 
-void OpenGL2DHelper::DrawRectangle(float y)
+void OpenGL2DHelper::DrawRectangle(float y, float alpha)
 {
 	shaderColor.UseProgram();
 	shaderColor.SetUniform("colorPicking", false);
-	shaderColor.SetUniform("transparent", true);
+	shaderColor.SetUniform("alpha", alpha);
 	glm::mat4 modelMatrix;
 	shaderColor.SetUniform("matrices.projectionMatrix", glm::mat4(1.0f));
 	shaderColor.SetUniform("matrices.viewMatrix", glm::mat4(1.0f));
@@ -126,12 +196,40 @@ void OpenGL2DHelper::DrawRectangle(float y)
 	//glEnable(GL_DEPTH_TEST);
 }
 
-void OpenGL2DHelper::DrawAll()
+void OpenGL2DHelper::DrawRectangle(float y, float alpha, float h)
 {
-	if (!isOpen)
-		meshData2d[0]->Draw();
+	shaderColor.UseProgram();
+	shaderColor.SetUniform("colorPicking", false);
+	shaderColor.SetUniform("alpha", alpha);
+	glm::mat4 modelMatrix;
+	shaderColor.SetUniform("matrices.projectionMatrix", glm::mat4(1.0f));
+	shaderColor.SetUniform("matrices.viewMatrix", glm::mat4(1.0f));
+	float scaleY = h / 0.4f;
+	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, y, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, scaleY, 1.0f));
+
+	
+	//modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, scaleY, 1.0f)) * modelMatrix;
+	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
+
+	//if (isOverTrash)
+	//glDisable(GL_DEPTH_TEST);
+	glBindVertexArray(rectangleVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);
+	glUseProgram(0);
+	//if (isOverTrash)
+	//glEnable(GL_DEPTH_TEST);
+}
+
+void OpenGL2DHelper::DrawTrash()
+{
+	//cDebug::DbgOut(L"DRAWTRASH");
+	//glDisable(GL_DEPTH_TEST);
+	if (!isTrashOpen)
+		trashClosed->Draw();
 	else
-		meshData2d[1]->Draw();
+		trashOpen->Draw();
+	//glEnable(GL_DEPTH_TEST);
 	//cDebug::DbgOut(L"2D DrawAll");
 	/*for (vector <shared_ptr<Mesh2D>>::iterator mI = meshData2d.begin(); mI != meshData2d.end(); ++mI)
 	{
@@ -139,13 +237,10 @@ void OpenGL2DHelper::DrawAll()
 	}*/
 }
 
-void OpenGL2DHelper::DrawAllBB()
+void OpenGL2DHelper::DrawTrashBB()
 {
-	//cDebug::DbgOut(L"2D DrawAll");
-	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData2d.begin(); mI != meshData2d.end(); ++mI)
-	{
-		(*mI)->DrawBB();
-	}
+	trashClosed->DrawBB();
+	trashOpen->DrawBB();
 }
 
 void OpenGL2DHelper::CleanUp()

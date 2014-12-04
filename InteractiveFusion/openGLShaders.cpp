@@ -8,8 +8,8 @@ OpenGLShader::OpenGLShader()
 	ready = false;
 }
 
-OpenGLShader shaders[6];
-OpenGLShaderProgram shaderColor, shaderFont, shader2d;
+OpenGLShader shaders[8];
+OpenGLShaderProgram shaderColor, shaderFont, shader2d, shaderButton;
 
 /*-----------------------------------------------
 
@@ -25,10 +25,10 @@ bool PrepareShaderPrograms()
 {
 	// Load shaders and create shader program
 
-	string fileNames[] = { "color.vert", "color.frag", "font.vert", "font.frag", "2dimage.vert", "2dimage.frag"
+	string fileNames[] = { "color.vert", "color.frag", "font.vert", "font.frag", "2dimage.vert", "2dimage.frag", "button.vert", "button.frag"
 	};
 
-	for(int i = 0; i < 6; i++)
+	for(int i = 0; i < 8; i++)
 	{
 		string sExt = fileNames[i].substr((int)fileNames[i].size() - 4, 4);
 		int shaderType = -1;
@@ -56,6 +56,11 @@ bool PrepareShaderPrograms()
 	shader2d.AddShaderToProgram(&shaders[4]);
 	shader2d.AddShaderToProgram(&shaders[5]);
 	shader2d.LinkProgram();
+
+	shaderButton.CreateProgram();
+	shaderButton.AddShaderToProgram(&shaders[6]);
+	shaderButton.AddShaderToProgram(&shaders[7]);
+	shaderButton.LinkProgram();
 	return true;
 }
 
@@ -347,4 +352,10 @@ void OpenGLShaderProgram::SetUniform(string name, const int value)
 {
 	int iLoc = glGetUniformLocation(glProgram, name.c_str());
 	glUniform1i(iLoc, value);
+}
+
+void OpenGLShaderProgram::SetUniform(string name, const float value)
+{
+	int iLoc = glGetUniformLocation(glProgram, name.c_str());
+	glUniform1f(iLoc, value);
 }

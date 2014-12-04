@@ -20,6 +20,9 @@ public:
 	void SetManipulationMode(ManipulationMode mode);
 	ManipulationMode GetManipulationMode();
 
+	void ProcessButtonClicks();
+	void UnselectButtons();
+
 	void Unselect();
 	void ResetWallObject();
 	void SelectWallObject();
@@ -27,6 +30,7 @@ private:
 
 	ManipulationMode manipMode = MANIPULATION_NONE;
 
+	int selectedButton = -1;
 	int GetColorUnderCursor();
 	bool PlacingPreview();
 	bool ColorPlacing(bool preview);

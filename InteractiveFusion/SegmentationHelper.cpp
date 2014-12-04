@@ -20,7 +20,10 @@ std::vector<shared_ptr<VCGMeshContainer>> meshData_segTmp;
 
 bool SegmentationHelper::IsCloudReady()
 {
-	return pclProcessor.coloredCloudReady;
+	if(openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
+		return pclProcessor.GetRegionClusterCount() > 0;
+	else if (openGLWin.GetWindowState() == WALL_SELECTION)
+		return pclProcessor.GetInlierIndices().size() > 0;
 }
 
 bool SegmentationHelper::IsPreviewInitialized()
@@ -134,6 +137,8 @@ int WINAPI SegThreadMain()
 	if (!pclProcessor.IsPlaneSegmented())
 	{
 		pclProcessor.PlaneSegmentation();
+		if (openGLWin.previewMode)
+			openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
 		pclProcessor.PlaneIndexEstimation();
 		for (int i = 0; i < pclProcessor.GetPlaneClusterCount(); i++)
 		{
@@ -188,7 +193,9 @@ int WINAPI SegThreadMain()
 		if (openGLWin.previewMode)
 		{
 			openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
+			openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
 			cDebug::DbgOut(L"Number of clusters: ", pclProcessor.GetClusterCount());
+			isPreviewInitialized = false;
 			return 0;
 		}
 
@@ -204,7 +211,9 @@ int WINAPI SegThreadMain()
 		if (openGLWin.previewMode)
 		{
 			openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
+			openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
 			cDebug::DbgOut(L"Number of clusters: ", pclProcessor.GetClusterCount());
+			isPreviewInitialized = false;
 			return 0;
 		}
 	}
@@ -255,7 +264,7 @@ int WINAPI SegThreadMain()
 	//showColoredSegments = false;
 	//segFinished = true;
 	openGLWin.ShowStatusBarMessage(L"Segmented mesh in " + to_wstring(pclProcessor.GetRegionClusterCount()) + L"clusters.");
-
+	openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
 	return 0;
 
 }
@@ -264,7 +273,7 @@ void SegmentationHelper::StartSegmentation()
 {
 	//segmenting = true;
 	openGLWin.SetWindowMode(MODE_SEGMENTATION);
-	openGLWin.SetWindowState(SEGMENTATION);
+	openGLWin.SetWindowBusyState(IF_BUSYSTATE_BUSY);
 	segmentationThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&SegThreadMain, 0, 0, &sThreadId);
 }
 
@@ -294,9 +303,13 @@ void SegmentationHelper::GeneratePreviewBuffers()
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float)* 6));
 }
 
+bool SegmentationHelper::IsWallReady()
+{
+	return pclProcessor.GetInlierIndices().size() > 0;
+}
+
 bool SegmentationHelper::InitializePreview()
 {
-	
 	if (openGLWin.GetWindowState() == WALL_SELECTION)
 	{
 		//if (currentPlaneIndex == -1)
@@ -328,6 +341,7 @@ bool SegmentationHelper::InitializePreview()
 		}
 		isPreviewInitialized = true;
 	}
+	openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
 	return true;
 
 	/*previewMesh->ClearMesh();

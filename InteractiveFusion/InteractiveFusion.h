@@ -6,6 +6,10 @@ enum WindowMode { MODE_PREPARE_SCANNING, MODE_SCANNING, MODE_SEGMENTATION, MODE_
 
 enum WindowState {INITIALIZING, BUFFERS, DEFAULT, SEGMENTATION, SEGMENTATION_FINISHED, WALL_SELECTION, SEGMENTATION_PREVIEW, SHOWSTATUS, SELECTION };
 
+enum Answer {ANSWER_NOTAVAILABLE, ANSWER_YES, ANSWER_NO};
+
+enum WindowBusyState {IF_BUSYSTATE_BUSY, IF_BUSYSTATE_DEFAULT};
+
 enum MeshQuality {QUALITY_VERYLOW, QUALITY_LOW, QUALITY_MEDIUM, QUALITY_HIGH, QUALITY_VERYHIGH};
 class InteractiveFusion
 {
@@ -87,6 +91,10 @@ public:
 	void SetWindowMode(WindowMode wMode);
 	WindowState GetWindowState();
 	void SetWindowState(WindowState wState);
+	WindowBusyState GetWindowBusyState();
+	void SetWindowBusyState(WindowBusyState bState);
+	void SetAnswer(Answer ans);
+	Answer GetAnswer();
 
 	//cursor and/or mouse related methods
 	bool IsMouseInHandle();
@@ -109,6 +117,8 @@ public:
 	void ShowUI(std::vector<HWND> handles);
 	bool IsHandleInUI(HWND handle, std::vector<HWND> handles);
 	void HideWholeUI();
+	void DeactivateWholeUI();
+	void ActivateWholeUI();
 	void RedrawManipulationButtons();
 
 	void SetProgressionText(wstring text);
@@ -124,9 +134,10 @@ public:
 private:
 	//application variables
 	
-	
+	Answer answer = ANSWER_NOTAVAILABLE;
 	WindowMode mode;
 	WindowState state;
+	WindowBusyState busyState = IF_BUSYSTATE_DEFAULT;
 	//fps related variables
 	clock_t tLastFrame;
 	float fFrameInterval;
