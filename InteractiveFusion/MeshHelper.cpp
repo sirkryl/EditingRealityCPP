@@ -26,25 +26,14 @@ void MeshHelper::FillHoles(int holeSize)
 {
 	int cnt = 0;
 	int holeCnt = 0;
-	numberOfVertices = 0;
-	numberOfFaces = 0;
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		cnt++;
-		//if ((*mI)->GetNumberOfVertices() <= 1000)
-		//{
-			numberOfVertices += (*mI)->GetNumberOfVertices();
-			numberOfFaces += (*mI)->GetNumberOfTriangles();
-			cDebug::DbgOut(L"no hole filling #", cnt);
-			continue;
-		//}
 		cDebug::DbgOut(L"fill hole #", cnt);
 		(*mI)->ConvertToVCG();
 		holeCnt += (*mI)->FillHoles(holeSize);
 		(*mI)->ParseData();
 		(*mI)->UpdateBuffers();
-		numberOfVertices += (*mI)->GetNumberOfVertices();
-		numberOfFaces += (*mI)->GetNumberOfTriangles();
 
 		openGLWin.ShowStatusBarMessage(L"Filling holes..." + to_wstring(cnt + 1) + L"% of " + to_wstring(meshData.size()));
 	}
@@ -69,8 +58,6 @@ void MeshHelper::RemoveSmallComponents(int size)
 {
 	int cnt = 0;
 	int cmpCnt = 0;
-	numberOfVertices = 0;
-	numberOfFaces = 0;
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		cnt++;
@@ -78,8 +65,6 @@ void MeshHelper::RemoveSmallComponents(int size)
 		cmpCnt += (*mI)->RemoveSmallComponents(size);
 		(*mI)->ParseData();
 		(*mI)->UpdateBuffers();
-		numberOfVertices += (*mI)->GetNumberOfVertices();
-		numberOfFaces += (*mI)->GetNumberOfTriangles();
 	}
 	openGLWin.ShowStatusBarMessage(L"Deleted " + to_wstring(cmpCnt) + L"components");
 }
@@ -112,8 +97,6 @@ void MeshHelper::ResetAll()
 
 void MeshHelper::DeleteMesh(int index)
 {
-	numberOfVertices -= meshData[index]->GetNumberOfVertices();
-	numberOfFaces -= meshData[index]->GetNumberOfTriangles();
 	meshData[index]->ClearMesh();
 	//delete meshData[index];
 	meshData.erase(meshData.begin() + index);// std::remove(meshData.begin(), meshData.end(), meshData[index]), meshData.end());
@@ -129,31 +112,48 @@ int MeshHelper::DuplicateMesh(int index)
 	mesh->SetDuplicate(true);
 	mesh->GenerateBOs();
 	mesh->GenerateVAO();
-	numberOfVertices += mesh->GetNumberOfVertices();
-	numberOfFaces += mesh->GetNumberOfTriangles();
 	meshData.push_back(mesh);
 	return meshData.size()-1;
 }
 
 void MeshHelper::CleanMesh()
 {
-	numberOfVertices = 0;
-	numberOfFaces = 0;
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		(*mI)->CleanMesh();
 		(*mI)->ParseData();
 		(*mI)->UpdateBuffers();
-
-		numberOfVertices += (*mI)->GetNumberOfVertices();
-		numberOfFaces += (*mI)->GetNumberOfTriangles();
 	}
 }
 
 void MeshHelper::CombineAndExport()
 {
+
+	OPENFILENAME ofn;
+
+	char szFileName[MAX_PATH] = "";
+
+	ZeroMemory(&ofn, sizeof(ofn));
+
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = NULL;
+	ofn.lpstrFilter = (LPCWSTR)L"PLY Files (*.ply)\0*.ply;\0STL Files (*.stl)\0*.stl\0OBJ Files (*.obj)\0*.obj\0OFF Files (*.off)\0*.off\0All Files (*.*)\0*.*\0";
+	ofn.lpstrFile = (LPWSTR)szFileName;
+	ofn.nMaxFile = MAX_PATH;
+	ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+	ofn.lpstrDefExt = (LPCWSTR)L"ply";
+
+	if (!GetSaveFileName(&ofn))
+		return;
+
+	char fileNameBuffer[500];
+
+	// First arg is the pointer to destination char, second arg is
+	// the pointer to source wchar_t, last arg is the size of char buffer
+	wcstombs(fileNameBuffer, ofn.lpstrFile, 500);
+
 	VCGMesh combinedMesh;
-	vcg::tri::Allocator<VCGMesh>::AddVertices(combinedMesh, numberOfVertices);
+	vcg::tri::Allocator<VCGMesh>::AddVertices(combinedMesh, GetNumberOfVertices());
 
 	std::vector<int> vertOffset;
 	vertOffset.push_back(0);
@@ -177,7 +177,7 @@ void MeshHelper::CombineAndExport()
 	std::vector<int> faceOffset;
 	faceOffset.push_back(0);
 	meshCnt = 0;
-	vcg::tri::Allocator<VCGMesh>::AddFaces(combinedMesh, numberOfFaces);
+	vcg::tri::Allocator<VCGMesh>::AddFaces(combinedMesh, GetNumberOfFaces());
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		std::vector<Triangle> indices = (*mI)->GetIndices();
@@ -191,26 +191,45 @@ void MeshHelper::CombineAndExport()
 		faceOffset.push_back(faceOffset[meshCnt] + faceCount);
 		meshCnt++;
 	}
-	string path = "data\\output\\";
-	string fileName = "combined";
-	string ext = ".ply";
-	struct stat buffer;
-	string filePath = path;
-	filePath.append(fileName);
-	filePath.append(ext);
-	int cnt = 1;
-	while (stat(filePath.c_str(), &buffer) != -1)
-	{
-		ostringstream convert;
-		convert << cnt;
-		fileName = "combined_" + convert.str();
-		filePath = path;
+	
+	//without save file dialog
+	if (false)
+	{ 
+		string path = "data\\output\\";
+		string fileName = "combined";
+		string ext = ".ply";
+		struct stat buffer;
+		string filePath = path;
 		filePath.append(fileName);
 		filePath.append(ext);
-		cnt++;
+		int cnt = 1;
+		while (stat(filePath.c_str(), &buffer) != -1)
+		{
+			ostringstream convert;
+			convert << cnt;
+			fileName = "combined_" + convert.str();
+			filePath = path;
+			filePath.append(fileName);
+			filePath.append(ext);
+			cnt++;
+		}
 	}
+	
+	//cDebug::DbgOut(L"the path is : %s\n", ofn.lpstrFile);
+	//getchar();
+	//TCHAR iFileName;
+	//wcsncpy(iFileName, ofn.lpstrFile, MAX__LENGTH);
+	if (strstr(fileNameBuffer, ".ply"))
+		vcg::tri::io::ExporterPLY<VCGMesh>::Save(combinedMesh, fileNameBuffer, vcg::tri::io::Mask::IOM_VERTCOLOR);
+	else if (strstr(fileNameBuffer, ".obj"))
+		vcg::tri::io::ExporterOBJ<VCGMesh>::Save(combinedMesh, fileNameBuffer, vcg::tri::io::Mask::IOM_VERTCOLOR);
+	else if (strstr(fileNameBuffer, ".stl"))
+		vcg::tri::io::ExporterSTL<VCGMesh>::Save(combinedMesh, fileNameBuffer, vcg::tri::io::Mask::IOM_VERTCOLOR);
+	else if (strstr(fileNameBuffer, ".off"))
+		vcg::tri::io::ExporterOFF<VCGMesh>::Save(combinedMesh, fileNameBuffer, vcg::tri::io::Mask::IOM_VERTCOLOR);
+	else
+		vcg::tri::io::ExporterPLY<VCGMesh>::Save(combinedMesh, fileNameBuffer, vcg::tri::io::Mask::IOM_VERTCOLOR);
 
-	vcg::tri::io::ExporterPLY<VCGMesh>::Save(combinedMesh, filePath.c_str(), vcg::tri::io::Mask::IOM_VERTCOLOR);
 }
 
 void MeshHelper::GenerateOriginalBuffers()
@@ -226,13 +245,9 @@ void MeshHelper::GenerateOriginalBuffers()
 void MeshHelper::GenerateBuffers()
 {
 	cDebug::DbgOut(L"MeshHelper Generate Buffers");
-	numberOfVertices = 0;
-	numberOfFaces = 0;
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
 		(*mI)->GenerateBOs();
-		numberOfVertices += (*mI)->GetNumberOfVertices();
-		numberOfFaces += (*mI)->GetNumberOfTriangles();
 
 	}
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
@@ -244,12 +259,22 @@ void MeshHelper::GenerateBuffers()
 
 int MeshHelper::GetNumberOfVertices()
 {
-	return numberOfVertices;
+	int noV = 0;
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		noV += (*mI)->GetNumberOfVertices();
+	}
+	return noV;
 }
 
 int MeshHelper::GetNumberOfFaces()
 {
-	return numberOfFaces;
+	int noF = 0;
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		noF += (*mI)->GetNumberOfTriangles();
+	}
+	return noF;
 }
 
 void MeshHelper::HighlightObjectsInOriginal(std::vector<int> triangles, ColorIF color, bool additive)

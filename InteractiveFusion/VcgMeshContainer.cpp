@@ -308,7 +308,6 @@ void VCGMeshContainer::ParseData()
 
 		numvert++;
 	}
-	vertNum = (currentMesh).vn;
 
 	//vertices.insert(vertices.end(), colors.begin(), colors.end());
 
@@ -883,7 +882,6 @@ void VCGMeshContainer::ClearMesh()
 	vertices.clear();
 	indices.clear();
 	verticesWithHighlights.clear();
-	vertNum = 0;
 	isLoaded = false;
 }
 
@@ -1125,7 +1123,7 @@ std::vector<Triangle> VCGMeshContainer::GetIndices()
 
 int VCGMeshContainer::GetNumberOfVertices()
 {
-	return vertNum;
+	return vertices.size();
 }
 
 int VCGMeshContainer::GetNumberOfTriangles()

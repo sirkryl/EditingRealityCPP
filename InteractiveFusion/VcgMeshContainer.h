@@ -104,7 +104,7 @@ private:
 	std::vector<int> orientation;
 	// -1 = no plane, 0 = x, 1 = y, 2 = z
 	glm::mat4 storedTranslation;
-	int vertNum;
+	//int vertNum;
 
 	GLuint vbo{ 0 }, vao{ 0 }, ibo{ 0 };
 	GLuint bbVBO{ 0 }, bbVAO{ 0 }, bbIBO{ 0 };

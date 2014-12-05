@@ -1855,3 +1855,10 @@ void ResumeKinectFusion()
 	interactionMode = false;
 	resumed = true;
 }
+
+void HideKinectFusion()
+{
+	ShowWindow(hWndApp, SW_HIDE);
+	interactionMode = true;
+	resumed = false;
+}

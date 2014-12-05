@@ -934,6 +934,7 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 
 	if (mode == IF_MODE_INTERACTION)
 	{
+		HideKinectFusion();
 		glCamera.mode = CAMERA_SENSOR;
 		glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
 		glCamera.ResetCameraPosition();
@@ -943,7 +944,6 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 		EnableWindow(hScanText, true);
 		EnableWindow(hInteractionText, false);
 		EnableWindow(hSegmentationText, true);
-
 		
 		openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.glControl.SetOffSetRight(250);
@@ -972,6 +972,7 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 	}
 	else if (mode == IF_MODE_SEGMENTATION)
 	{
+		HideKinectFusion();
 		//ANYWAYS
 		DetermineMeshQuality();
 		ShowWindow(glWindowHandle, SW_SHOW);
@@ -1003,6 +1004,7 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 	}
 	else if (mode == IF_MODE_PROCESSING)
 	{
+		HideKinectFusion();
 		glCamera.ResetCameraPosition();
 		glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
 		glCamera.mode = CAMERA_FREE;
@@ -1131,6 +1133,8 @@ void InteractiveFusion::ProcessParentUI(WPARAM wParam, LPARAM lParam)
 	{
 		if (openGLWin.GetWindowMode() != IF_MODE_SEGMENTATION && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
 		{
+			if (glSegmentation.IsCloudReady())
+				glSegmentation.SetSegmentationState(IF_SEGSTATE_OBJECT_SEGMENTATION);
 			openGLWin.SetWindowMode(IF_MODE_SEGMENTATION);
 		}
 	}

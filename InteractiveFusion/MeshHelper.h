@@ -41,8 +41,6 @@ public:
 
 	glm::vec3 GetCombinedCenterPoint();
 private:
-	int numberOfVertices = 0;
-	int numberOfFaces = 0;
 };
 
 //extern int numberOfVertices;

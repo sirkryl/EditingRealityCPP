@@ -183,3 +183,4 @@ private:
 
 void StartKinectFusion(HWND parent, HINSTANCE hInstance, void(*a_ptrStartOpenGL)(int), void(*a_ptrSetWindowMode)(int), CKinectFusionExplorer*& expl, HWND &fusionHandle);
 void ResumeKinectFusion();
+void HideKinectFusion();
