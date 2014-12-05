@@ -2,13 +2,14 @@
 #include "OpenGLControl.h"
 #include "common.h"
 #include <KinectFusionExplorer.h>
-enum WindowMode { MODE_PREPARE_SCANNING, MODE_SCANNING, MODE_SEGMENTATION, MODE_INTERACTION };
-
-enum WindowState {INITIALIZING, BUFFERS, DEFAULT, PROCESSING, SEGMENTATION, SEGMENTATION_FINISHED, WALL_SELECTION, SEGMENTATION_PREVIEW, SHOWSTATUS, SELECTION };
+enum WindowMode { IF_MODE_PREPARE_SCAN, IF_MODE_SCAN, IF_MODE_SEGMENTATION, IF_MODE_PROCESSING, IF_MODE_INTERACTION };
 
 enum Answer {ANSWER_NOTAVAILABLE, ANSWER_YES, ANSWER_NO};
 
 enum WindowBusyState {IF_BUSYSTATE_BUSY, IF_BUSYSTATE_DEFAULT};
+
+enum Reset {IF_RESET, IF_NO_RESET};
+
 
 enum MeshQuality {QUALITY_VERYLOW, QUALITY_LOW, QUALITY_MEDIUM, QUALITY_HIGH, QUALITY_VERYHIGH};
 class InteractiveFusion
@@ -32,11 +33,8 @@ public:
 	//test mode flag
 	int testMode = 0;
 
-	//segmentation mode flags
-	int segmentationMode = -1;
 	bool previewMode = false;
 	bool wallSelection = false;
-	bool isWall = false;
 	bool duplicationMode = false;
 	//segmentation values
 	int kSearchValue = 20;
@@ -89,18 +87,21 @@ public:
 
 	WindowMode GetWindowMode();
 	void SetWindowMode(WindowMode wMode);
-	WindowState GetWindowState();
-	void SetWindowState(WindowState wState);
+	//WindowState GetWindowState();
+	//void SetWindowState(WindowState wState);
 	WindowBusyState GetWindowBusyState();
 	void SetWindowBusyState(WindowBusyState bState);
 	void SetAnswer(Answer ans);
 	Answer GetAnswer();
-
+	void SetReset(Reset res);
+	Reset GetReset();
+	bool DrawButton(WPARAM wParam, LPARAM lParam);
 	//cursor and/or mouse related methods
 	bool IsMouseInHandle();
 	bool IsMouseInUI(std::vector<HWND> handles);
 	bool IsMouseInOpenGLWindow();
-
+	void MoveModeButtonsOnResize();
+	void MoveButtonsOnResize();
 	void InitWallConfirmation();
 
 	void ShowStatusBarMessage(string message);
@@ -118,13 +119,19 @@ public:
 	void ShowUI(std::vector<HWND> handles);
 	bool IsHandleInUI(HWND handle, std::vector<HWND> handles);
 	void HideWholeUI();
+	void DeactivateUI(std::vector<HWND> handles);
 	void DeactivateWholeUI();
+	void ActivateUI(std::vector<HWND> handles);
 	void ActivateWholeUI();
 	void RedrawManipulationButtons();
 
 	void SetProgressionText(wstring text);
 	void SetProgressionPercent(wstring percent);
 
+	void ProcessOpenGLUI(WPARAM wParam, LPARAM lParam);
+	void ProcessDebugUI(WPARAM wParam, LPARAM lParam);
+	void ProcessParentUI(WPARAM wParam, LPARAM lParam);
+	void UpdateSegmentationUI();
 	//thread related methods
 	//bool StartOpenGLThread(HWND parentWin, HINSTANCE currHInstance, KinectFusionProcessor* proc);
 	
@@ -135,9 +142,10 @@ public:
 private:
 	//application variables
 	
+	Reset reset = IF_NO_RESET;
 	Answer answer = ANSWER_NOTAVAILABLE;
 	WindowMode mode;
-	WindowState state;
+	//WindowState state;
 	WindowBusyState busyState = IF_BUSYSTATE_DEFAULT;
 	//fps related variables
 	clock_t tLastFrame;
@@ -161,7 +169,6 @@ LRESULT CALLBACK DebugDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 //process UI
-void GLProcessUI(WPARAM wParam, LPARAM lParam);
 
 
 void SetViewportStatusMessage(wstring message);
@@ -172,8 +179,6 @@ void UpdateSliderText();
 void UpdateGLHSliders();
 void ResetEditControls();
 void ResetSliders();
-void MoveModeButtonsOnResize();
-void MoveButtonsOnResize();
 
 void ResetForResume();
 void InitialLoading();
@@ -182,8 +187,6 @@ void ResetCameraPosition();
 void ToggleCameraMode();
 
 void RemoveSelectionColor();
-
-void StartSegmentation();
 
 void SelectWallObject();
 void ResetWallObject();

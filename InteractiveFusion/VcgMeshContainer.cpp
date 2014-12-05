@@ -871,10 +871,10 @@ bool VCGMeshContainer::CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, g
 }
 
 void VCGMeshContainer::ClearMesh()
-{
-	currentMesh.Clear();
+{		
 	if (vbo != 0)
 	{ 
+		currentMesh.Clear();
 		glDeleteBuffers(1, &vbo);
 		glDeleteBuffers(1, &ibo);
 		glDeleteVertexArrays(1, &vao);

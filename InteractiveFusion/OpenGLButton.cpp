@@ -76,11 +76,6 @@ void OpenGLButton::GenerateBuffers()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
 }
 
-bool OpenGLButton::IsMouseInHandle()
-{
-
-}
-
 void OpenGLButton::Draw()
 {
 	float hRatio = ((float)openGLWin.glControl.GetViewportHeight() + (float)openGLWin.glControl.GetOffSetBottom()) / ((float)openGLWin.glControl.GetViewportWidth() + (float)openGLWin.glControl.GetOffSetRight());

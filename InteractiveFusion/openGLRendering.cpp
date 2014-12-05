@@ -67,12 +67,6 @@ void ToggleCameraMode()
 		glCamera.mode = CAMERA_FREE;
 }
 
-void StartSegmentation()
-{
-	glSegmentation.StartSegmentation();
-}
-
-
 #pragma endregion calls from UI
 
 
@@ -177,6 +171,7 @@ void ResetForResume()
 {
 	glSegmentation.ClearForResume();
 	meshData.clear();
+	originalMesh->ClearMesh();
 }
 
 void InitialLoading()
@@ -201,6 +196,7 @@ void InitialLoading()
 	//openGLWin.segmentationMode = REGION_GROWTH_SEGMENTATION;
 	
 	//openGLWin.segmentationMode = EUCLIDEAN_SEGMENTATION;
+	statusMsg = L"Segmenting mesh";
 	openGLWin.previewMode = true;
 	glSegmentation.StartSegmentation();
 
@@ -239,8 +235,6 @@ void Render(LPVOID lpParam)
 	glClearColor(openGLWin.bgRed, openGLWin.bgGreen, openGLWin.bgBlue, 1.0f);
 	glClearDepth(1.0);
 
-	
-
 	HandleKeyInput();
 
 	if (storedWidth != openGLWin.glControl.GetViewportWidth() ||
@@ -259,9 +253,6 @@ void Render(LPVOID lpParam)
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-
-	
-
 	if (Keys::GetKeyState(VK_LBUTTON) && openGLWin.IsMouseInOpenGLWindow())
 	{
 		glSelector.ProcessButtonClicks();
@@ -270,16 +261,21 @@ void Render(LPVOID lpParam)
 		glSelector.UnselectButtons();
 
 	//for initializing without segmentation..debug purposes
-	if (openGLWin.GetWindowState() == BUFFERS)
+	/*if (openGLWin.GetWindowState() == BUFFERS)
 	{
 		//gl2DHelper.GenerateBuffers();
 		meshHelper.GenerateBuffers();
 		
 		openGLWin.SetWindowState(DEFAULT);
 		//return;
-	}
-	else if (openGLWin.GetWindowState() == WALL_SELECTION || openGLWin.GetWindowState() == SEGMENTATION_PREVIEW)
-	{
+	}*/
+	if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION)
+	{ 
+		if (openGLWin.GetReset() == IF_RESET)
+		{
+			ResetForResume();
+			openGLWin.SetReset(IF_NO_RESET);
+		}
 		if (!glSegmentation.IsPreviewInitialized())
 		{
 			if (openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
@@ -297,53 +293,22 @@ void Render(LPVOID lpParam)
 			meshHelper.DrawOriginalMesh();
 		}
 
-		if (openGLWin.GetWindowState() == WALL_SELECTION)
+		if (glSegmentation.GetSegmentationState() == IF_SEGSTATE_PLANE_SEGMENTATION && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
 			ShowWallMessage();
 
-		glCamera.mode = CAMERA_FREE;
-	}
-	else if (openGLWin.GetWindowState() == SEGMENTATION_FINISHED)
-	{
-		
-		glSegmentation.LoadClusterData();
-		glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
-		//gl2DHelper.GenerateBuffers();
-		glCamera.ResetCameraPosition();
-		glSegmentation.ResetInitializedStatus();
-		openGLWin.SetWindowState(PROCESSING);
-		//return;
-	}
-	/*else if (openGLWin.GetWindowState() == SEGMENTATION)
-	{
-		if (originalMesh->IsLoaded())
-		{ 
-			if (!originalMesh->AreBuffersInitialized())
-				meshHelper.GenerateOriginalBuffers();
-		
-			meshHelper.DrawOriginalMesh();
-		}
-		ShowStatusMsg();
-
-		glCamera.mode = CAMERA_FREE;
-		//glEnable(GL_DEPTH_TEST);
-		//openGLWin.glControl.SwapBuffers();
-		//return;
-	}*/
-	else if (openGLWin.GetWindowState() == INITIALIZING)
-	{
-		if (originalMesh->IsLoaded())
+		if (glSegmentation.GetSegmentationState() == IF_SEGSTATE_FINISHED)
 		{
-			if (!originalMesh->AreBuffersInitialized())
-				meshHelper.GenerateOriginalBuffers();
-
-			meshHelper.DrawOriginalMesh();
+			glSegmentation.LoadClusterData();
+			glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
+			glCamera.ResetCameraPosition();
+			glSegmentation.ResetInitializedStatus();
+			glSegmentation.SetSegmentationState(IF_SEGSTATE_NONE);
+			openGLWin.SetWindowMode(IF_MODE_PROCESSING);
+			openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
+			//return;
 		}
-		ShowStatusMsg();
-		glCamera.mode = CAMERA_FREE;
-		//openGLWin.glControl.SwapBuffers();
-		//return;
 	}
-	else if (openGLWin.GetWindowState() == DEFAULT || openGLWin.GetWindowState() == PROCESSING)
+	else if (openGLWin.GetWindowMode() == IF_MODE_INTERACTION || openGLWin.GetWindowMode() == IF_MODE_PROCESSING)
 	{	
 		if (Keys::GetKeyStateOnce(VK_LBUTTON) && (glCamera.mode == CAMERA_SENSOR || openGLWin.colorSelection) && openGLWin.IsMouseInOpenGLWindow() && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
 		{

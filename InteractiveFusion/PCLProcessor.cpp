@@ -1,28 +1,37 @@
+#include <unordered_set>
+
 #include "common.h"
 #include "PCLProcessor.h"
 #include "InteractiveFusion.h"
-#include <pcl/filters/extract_indices.h>
-#include <pcl/filters/passthrough.h>
 #include "MeshHelper.h"
 #include "SegmentationHelper.h"
+
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/common/common.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/segmentation/region_growing.h>
+#include <pcl/segmentation/conditional_euclidean_clustering.h>
+#include <pcl/features/normal_3d.h>
+
 //#include <pcl/filters/voxel_grid.h>
 //#include "resource.h"
 //#include <pcl/kdtree/kdtree_flann.h>
 //#include <pcl/surface/mls.h>
-#include <unordered_set>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/common/common.h>
-#include <pcl/segmentation/organized_multi_plane_segmentation.h>
-#include <pcl/segmentation/extract_clusters.h>
+
+
+//#include <pcl/segmentation/organized_multi_plane_segmentation.h>
+
 //#include <pcl/surface/gp3.h>
-#include <pcl/ModelCoefficients.h>
+
 //#include <pcl/io/vtk_lib_io.h>
 //#include <pcl/ros/conversions.h>
 //#include <pcl/visualization/cloud_viewer.h>
-#include <pcl/segmentation/region_growing.h>
+
 //#include <pcl/surface/poisson.h>
-#include <pcl/segmentation/conditional_euclidean_clustering.h>
-#include <pcl/features/normal_3d.h>
+
 //#include <pcl/sample_consensus/method_types.h>
 //#include <pcl/sample_consensus/model_types.h>
 //#include <pcl/surface/marching_cubes_rbf.h>
@@ -63,9 +72,12 @@ bool PCLProcessor::PlaneSegmentation() {
 	
 	bool redoingSegmentation = false;
 	int axisCnt = 0;
+
+	planeCoefficients.clear();
+	planeCloudIndices.clear();
+	cloudWithoutPlaneIndices.clear();
 	while (true)
 	{
-		
 		//pcl::search::KdTree<pcl::PointXYZRGB>::Ptr	search(new pcl::search::KdTree<pcl::PointXYZRGB>);
 		// Object for storing the plane model coefficients.
 		pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
@@ -95,7 +107,7 @@ bool PCLProcessor::PlaneSegmentation() {
 		//inlierIndices->indices.clear();
 		segmentation.segment(*inlierIndices, *coefficients);
 		
-		statusMsg = L"Trying to detect planes";
+		
 		if (inlierIndices->indices.size() <= mainCloud->points.size()/20 && !redoingSegmentation)
 		{
 			if (axisCnt == 0)
@@ -153,18 +165,18 @@ bool PCLProcessor::PlaneSegmentation() {
 		}
 		float storedThickness = openGLWin.wallThickness;
 		float storedSmoothness = openGLWin.wallSmoothness;
-		openGLWin.SetWindowState(WALL_SELECTION);
+		//openGLWin.SetWindowState(WALL_SELECTION);
 		if (redoingSegmentation)
 		{ 
 			glSegmentation.ResetInitializedStatus();
 			redoingSegmentation = false;
 		}
 		openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
+		openGLWin.SetAnswer(ANSWER_NOTAVAILABLE);
 		while (openGLWin.GetAnswer() == ANSWER_NOTAVAILABLE)
 		{
 			if (storedThickness != openGLWin.wallThickness || storedSmoothness != openGLWin.wallSmoothness)
 			{
-				cDebug::DbgOut(L"stored not like wall");
 				//openGLWin.SetWindowState(SEGMENTATION);
 				redoingSegmentation = true;
 				break;
@@ -174,7 +186,14 @@ bool PCLProcessor::PlaneSegmentation() {
 			//PV2->spinOnce(100);
 			boost::this_thread::sleep(boost::posix_time::microseconds(100000));
 		}
-		openGLWin.SetAnswer(ANSWER_NOTAVAILABLE);
+		
+		
+		if (redoingSegmentation)
+			statusMsg = L"Updating plane segmentation";
+		else if (planeCoefficients.size() == 0)
+			statusMsg = L"Trying to find planes";
+		else
+			statusMsg = L"Trying to find additional planes";
 		openGLWin.SetWindowBusyState(IF_BUSYSTATE_BUSY);
 		glSegmentation.ResetInitializedStatus();
 		wallSegmentCloud->clear();
@@ -199,7 +218,7 @@ bool PCLProcessor::PlaneSegmentation() {
 		//pcl::copyPointCloud(*cloud_f, *cloudWithoutPlane);
 		planeSegmentationIndices = testIndices;
 
-		if (openGLWin.isWall)
+		if (openGLWin.GetAnswer() == ANSWER_YES)
 		{
 			pcl::PointIndices::Ptr newIndices(new pcl::PointIndices);
 			for (int i = 0; i < inlierIndices->indices.size(); i++)
@@ -618,7 +637,7 @@ bool PCLProcessor::RegionGrowingSegmentation() {
 	segmentedClusterIndices.clear();
 
 	openGLWin.ShowStatusBarMessage(L"Segmenting mesh...");
-	SetViewportStatusMessage(L"Segmenting mesh");
+	//SetViewportStatusMessage(L"Segmenting mesh");
 	SetViewportPercentMsg(L"");
 	//openGLWin.SetProgressionText(L"Segmenting mesh...");
 
@@ -730,7 +749,7 @@ bool PCLProcessor::EuclideanSegmentation() {
 	//std::vector<pcl::PointIndices> cluster_indices;
 	segmentedClusterIndices.clear();
 
-	SetViewportStatusMessage(L"Segmenting mesh");
+	//SetViewportStatusMessage(L"Segmenting mesh");
 	SetViewportPercentMsg(L"");
 	//openGLWin.SetProgressionText(L"Segmenting mesh");
 	//openGLWin.SetProgressionPercent(L"");
@@ -1376,7 +1395,7 @@ void PCLProcessor::ClearAll() {
 	segmentedClusterIndices.clear();
 	planeCoefficients.clear();
 	planeCloudIndices.clear();
-
+	planeInlierIndices->indices.clear();
 	isPlaneSegmented = false;
 	coloredCloudReady = false;
 	isWall = false;

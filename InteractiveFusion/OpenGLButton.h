@@ -8,7 +8,6 @@ public:
 	OpenGLButton(int _colorCode, float _x, float _y, float _w, float _h, ColorIF _defaultColor, ColorIF _pressedColor, wstring _text);
 	~OpenGLButton();
 	void GenerateBuffers();
-	bool IsMouseInHandle();
 	void SetColorCode(int code);
 
 	void SetClicked(bool flag);
