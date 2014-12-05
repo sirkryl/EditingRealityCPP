@@ -1456,8 +1456,9 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		//openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.SetAnswer(ANSWER_YES);
 		//openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
-		openGLWin.wallThickness = 0.2f;
-		openGLWin.wallSmoothness = 0.5f;
+		openGLWin.wallThickness = 0.1f;
+		openGLWin.wallSmoothness = 0.05f;
+		openGLWin.UpdateSegmentationPreviewValues();
 		meshHelper.RemoveAllHighlights();
 		ShowWindow(hTextWalls, SW_HIDE);
 	}
@@ -1466,8 +1467,9 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		//openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.SetAnswer(ANSWER_NO);
 		//openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
-		openGLWin.wallThickness = 0.2f;
-		openGLWin.wallSmoothness = 0.5f;
+		openGLWin.wallThickness = 0.1f;
+		openGLWin.wallSmoothness = 0.05f;
+		openGLWin.UpdateSegmentationPreviewValues();
 		meshHelper.RemoveAllHighlights();
 		ShowWindow(hTextWalls, SW_HIDE);
 		//openGLWin.glControl.ResizeOpenGLViewportFull();

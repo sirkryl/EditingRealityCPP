@@ -46,8 +46,8 @@ public:
 	int maxComponentSize = 100;
 	int carryDistance = 5;
 	int removeClusterSize = 100;
-	float wallThickness = 0.2f;
-	float wallSmoothness = 0.5f;
+	float wallThickness = 0.1f;
+	float wallSmoothness = 0.05f;
 	float clusterTolerance = 0.02f;
 	bool showBB = false;
 	bool wireFrameMode = false;

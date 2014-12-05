@@ -137,7 +137,7 @@ void MeshHelper::CombineAndExport()
 
 	ofn.lStructSize = sizeof(ofn);
 	ofn.hwndOwner = NULL;
-	ofn.lpstrFilter = (LPCWSTR)L"PLY Files (*.ply)\0*.ply;\0STL Files (*.stl)\0*.stl\0OBJ Files (*.obj)\0*.obj\0OFF Files (*.off)\0*.off\0All Files (*.*)\0*.*\0";
+	ofn.lpstrFilter = (LPCWSTR)L"PLY (*.ply)\0*.ply;\0STL (*.stl)\0*.stl\0OBJ (*.obj)\0*.obj\0OFF (*.off)\0*.off\0All Files (*.*)\0*.*\0";
 	ofn.lpstrFile = (LPWSTR)szFileName;
 	ofn.nMaxFile = MAX_PATH;
 	ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;

@@ -231,7 +231,8 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	fusionUiElements.push_back(hHelpText);
 	fusionUiElements.push_back(hCountdownText);
 	fusionUiElements.push_back(GetDlgItem(m_hWnd, IDC_RECONSTRUCTION_VIEW));
-
+	fusionUiElements.push_back(GetDlgItem(m_hWnd, IDC_DEPTH_VIEW));
+	fusionUiElements.push_back(GetDlgItem(m_hWnd, IDC_TRACKING_RESIDUALS_VIEW));
 	SetWindowState(START);
 
 	//SetForegroundWindow(parent);
@@ -1690,6 +1691,8 @@ void CKinectFusionExplorer::MoveUIOnResize()
 		recoWidth = recoHeight / ratio;
 	}
 	MoveWindow(GetDlgItem(m_hWnd, IDC_RECONSTRUCTION_VIEW), (rRect.right - (recoWidth- (55/ratio)))/2, 55, recoWidth- (55/ratio), recoHeight-55, true);
+	MoveWindow(GetDlgItem(m_hWnd, IDC_TRACKING_RESIDUALS_VIEW), 30, 55, 200, 200, true);
+	MoveWindow(GetDlgItem(m_hWnd, IDC_DEPTH_VIEW), 30, 255, 200, 200, true);
 	MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_INTERACTION_MODE), rRect.right - 200, rRect.bottom/2 + 50, 150, 150, true);
 	MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_INTERACTION), rRect.right - 350, 10, 300, 50, true);
 	MoveWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_OPENGL), rRect.right - 350, 400, 300, 50, true);
@@ -1808,6 +1811,8 @@ void CKinectFusionExplorer::SetWindowState(FusionState fState)
 		EnableWindow(hButtonTestOne, true);
 		//EnableWindow(hButtonTestTwo, true);
 		ShowWindow(GetDlgItem(m_hWnd, IDC_RECONSTRUCTION_VIEW), SW_SHOW);
+		ShowWindow(GetDlgItem(m_hWnd, IDC_DEPTH_VIEW), SW_SHOW);
+		ShowWindow(GetDlgItem(m_hWnd, IDC_TRACKING_RESIDUALS_VIEW), SW_SHOW);
 		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_INTERACTION_MODE), SW_SHOW);
 		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_INTERACTION), SW_SHOW);
 		//ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_OPENGL), SW_SHOW);
