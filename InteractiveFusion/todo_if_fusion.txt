@@ -1,0 +1,14 @@
+tap = left click
+hold = right click
+drag = drag & drop
+drag up down -> window scroll
+
+
+
+Text size and positioning change on 1280x720 (tablet):
+
+- Wall text move down
+- Percent and Status msg too close to one another (maybe increase status rectangle in the middle?)
+- Check buttons for consistency
+- ROTATE/SCALE AND MOUSE PLACEMENT IS FUCKED UP IN 1280x720 - probably wrong Cursorposition Calculation somewhere?
+- Adjust Selection Mode to Tablet Touchcontrols (look above) in Tabletmode

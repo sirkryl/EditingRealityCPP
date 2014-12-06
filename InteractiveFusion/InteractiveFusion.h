@@ -12,6 +12,8 @@ enum Reset {IF_RESET, IF_NO_RESET};
 
 
 enum MeshQuality {QUALITY_VERYLOW, QUALITY_LOW, QUALITY_MEDIUM, QUALITY_HIGH, QUALITY_VERYHIGH};
+
+enum DeviceClass {IF_DEVICE_PC, IF_DEVICE_TABLET, IF_DEVICE_PHONE};
 class InteractiveFusion
 {
 public:
@@ -66,8 +68,8 @@ public:
 	bool snapToVertex = false;
 	bool placeWithRaycast = false;
 	//resolution
-	int height = 768;
-	int width = 1024;
+	//int height = 768;
+	//int width = 1024;
 
 	//mouse related variables
 	short wheelDelta = 0;
@@ -95,6 +97,8 @@ public:
 	Answer GetAnswer();
 	void SetReset(Reset res);
 	Reset GetReset();
+	void SetDeviceClass(DeviceClass dC);
+	DeviceClass GetDeviceClass();
 	bool DrawButton(WPARAM wParam, LPARAM lParam);
 	//cursor and/or mouse related methods
 	bool IsMouseInHandle();
@@ -147,6 +151,7 @@ private:
 	WindowMode mode;
 	//WindowState state;
 	WindowBusyState busyState = IF_BUSYSTATE_DEFAULT;
+	DeviceClass deviceClass = IF_DEVICE_TABLET;
 	//fps related variables
 	clock_t tLastFrame;
 	float fFrameInterval;

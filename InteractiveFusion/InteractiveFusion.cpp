@@ -1069,6 +1069,17 @@ void InteractiveFusion::SetReset(Reset res)
 	reset = res;
 }
 
+DeviceClass InteractiveFusion::GetDeviceClass()
+{
+	return deviceClass;
+}
+
+void InteractiveFusion::SetDeviceClass(DeviceClass dC)
+{
+	deviceClass = dC;
+}
+
+
 LPCWSTR InteractiveFusion::GetLastErrorStdStr()
 {
 	DWORD error = GetLastError();
@@ -1667,8 +1678,11 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 
 		if (IDC_BUTTON_SCALE == LOWORD(wParam) || IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) || IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) || IDC_BUTTON_PROCESSING_FILLHOLES == LOWORD(wParam) || IDC_BUTTON_REMOVECOMPONENTS == LOWORD(wParam))
 			SelectObject(item->hDC, smallUiFont);
+		else if (IDC_BUTTON_DUPLICATE == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+			SelectObject(item->hDC, smallUiFont);
 		else
 			SelectObject(item->hDC, uiFont);
+
 		FillRect(item->hDC, &item->rcItem, hBackground);
 		SelectObject(item->hDC, buttonDefaultBrush);
 		if (!IsWindowEnabled(item->hwndItem))
@@ -1739,9 +1753,13 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 
 		SetBkMode(item->hDC, TRANSPARENT);
 
-		if (IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_WALLSIZE_MINUS == LOWORD(wParam)
+		if (IDC_BUTTON_SEGMENTATION_BEGIN == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+		{
+			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 50, 50);
+		}
+		else if (IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_WALLSIZE_MINUS == LOWORD(wParam)
 			|| IDC_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) || IDC_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) ||
-			IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) || IDC_BUTTON_PROCESSING_FILLHOLES == LOWORD(wParam) || IDC_BUTTON_REMOVECOMPONENTS == LOWORD(wParam))
+			IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) || IDC_BUTTON_PROCESSING_FILLHOLES == LOWORD(wParam) || IDC_BUTTON_REMOVECOMPONENTS == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_BEGIN == LOWORD(wParam))
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 20, 20);
 		else
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 500, 500);
@@ -1789,16 +1807,32 @@ void InteractiveFusion::MoveButtonsOnResize()
 
 	if (openGLWin.GetWindowMode() == IF_MODE_PROCESSING)
 	{
-		MoveWindow(hTextRemoveComponentsLabel, width - 180, 290, 100, 30, true);
-		MoveWindow(hButtonRemoveComponentsMinus, width - 250, 300, 50, 50, true);
-		MoveWindow(hTextRemoveComponents, width - 180, 320, 100, 30, true);
-		MoveWindow(hButtonRemoveComponentsPlus, width - 60, 300, 50, 50, true);
+		if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
+		{ 
+			MoveWindow(hTextRemoveComponentsLabel, width - 180, 290, 100, 30, true);
+			MoveWindow(hButtonRemoveComponentsMinus, width - 250, 300, 50, 50, true);
+			MoveWindow(hTextRemoveComponents, width - 180, 320, 100, 30, true);
+			MoveWindow(hButtonRemoveComponentsPlus, width - 60, 300, 50, 50, true);
 
-		MoveWindow(hButtonRemoveComponents, width - 225, 370, 200, 50, true);
+			MoveWindow(hButtonRemoveComponents, width - 225, 370, 200, 50, true);
 
-		MoveWindow(hButtonFillHoles, width - 225, 470, 200, 50, true);
+			MoveWindow(hButtonFillHoles, width - 225, 470, 200, 50, true);
 
-		MoveWindow(hButtonProcessingDone, width - 200, height - 200, 150, 150, true);
+			MoveWindow(hButtonProcessingDone, width - 200, height - 200, 150, 150, true);
+		}
+		else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+		{
+			MoveWindow(hTextRemoveComponentsLabel, width - 180, 140, 100, 30, true);
+			MoveWindow(hButtonRemoveComponentsMinus, width - 250, 150, 50, 50, true);
+			MoveWindow(hTextRemoveComponents, width - 180, 170, 100, 30, true);
+			MoveWindow(hButtonRemoveComponentsPlus, width - 60, 150, 50, 50, true);
+
+			MoveWindow(hButtonRemoveComponents, width - 225, 250, 200, 50, true);
+
+			MoveWindow(hButtonFillHoles, width - 225, 350, 200, 50, true);
+
+			MoveWindow(hButtonProcessingDone, width - 200, height - 200, 150, 150, true);
+		}
 	}
 
 	if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION)
@@ -1825,52 +1859,111 @@ void InteractiveFusion::MoveButtonsOnResize()
 			MoveWindow(hButtonWallSmoothnessPlus, width / 2 + 150, height - 85, 50, 50, true);
 		}
 
-		MoveWindow(hButtonSegmentationFinish, width - 200, height - 200, 150, 150, true);
-		MoveWindow(hButtonSegmentationBegin, width - 200, height - 400, 150, 150, true);
-
-		MoveWindow(hButtonEuclideanSegmentation, width - 300, 200, 150, 50, true);
-		MoveWindow(hButtonRegionGrowthSegmentation, width - 150, 200, 150, 50, true);
-
-		if (glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN)
+		if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
 		{ 
-			MoveWindow(hTextClusterToleranceLabel, width - 180, 290, 100, 30, true);
-			MoveWindow(hButtonClusterToleranceMinus, width - 250, 300, 50, 50, true);
-			MoveWindow(hTextClusterTolerance, width - 180, 320, 100, 30, true);
-			MoveWindow(hButtonClusterTolerancePlus, width -60, 300, 50, 50, true);
+
+			MoveWindow(hButtonSegmentationFinish, width - 200, height - 200, 150, 150, true);
+			MoveWindow(hButtonSegmentationBegin, width - 250, height - 400, 200, 75, true);
+
+			MoveWindow(hButtonEuclideanSegmentation, width - 300, 200, 150, 50, true);
+			MoveWindow(hButtonRegionGrowthSegmentation, width - 150, 200, 150, 50, true);
+
+			if (glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN)
+			{ 
+				MoveWindow(hTextClusterToleranceLabel, width - 180, 290, 100, 30, true);
+				MoveWindow(hButtonClusterToleranceMinus, width - 250, 300, 50, 50, true);
+				MoveWindow(hTextClusterTolerance, width - 180, 320, 100, 30, true);
+				MoveWindow(hButtonClusterTolerancePlus, width -60, 300, 50, 50, true);
+			}
+			else if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
+			{
+				MoveWindow(hTextRGSmoothnessLabel, width - 180, 290, 100, 30, true);
+				MoveWindow(hButtonRGSmoothnessMinus, width - 250, 300, 50, 50, true);
+				MoveWindow(hTextRGSmoothness, width - 180, 320, 100, 30, true);
+				MoveWindow(hButtonRGSmoothnessPlus, width - 60, 300, 50, 50, true);
+
+				MoveWindow(hTextRGCurvatureLabel, width - 180, 360, 100, 30, true);
+				MoveWindow(hButtonRGCurvatureMinus, width - 250, 370, 50, 50, true);
+				MoveWindow(hTextRGCurvature, width - 180, 390, 100, 30, true);
+				MoveWindow(hButtonRGCurvaturePlus, width - 60, 370, 50, 50, true);
+
+				MoveWindow(hTextRGNeighborsLabel, width - 180, 430, 100, 30, true);
+				MoveWindow(hButtonRGNeighborsMinus, width - 250, 440, 50, 50, true);
+				MoveWindow(hTextRGNeighbors, width - 180, 460, 100, 30, true);
+				MoveWindow(hButtonRGNeighborsPlus, width - 60, 440, 50, 50, true);
+
+				MoveWindow(hTextRGKSearchLabel, width - 180, 500, 100, 30, true);
+				MoveWindow(hButtonRGKSearchMinus, width - 250, 510, 50, 50, true);
+				MoveWindow(hTextRGKSearch, width - 180, 530, 100, 30, true);
+				MoveWindow(hButtonRGKSearchPlus, width - 60, 510, 50, 50, true);
+			}
 		}
-		else if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
+		else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
 		{
-			MoveWindow(hTextRGSmoothnessLabel, width - 180, 290, 100, 30, true);
-			MoveWindow(hButtonRGSmoothnessMinus, width - 250, 300, 50, 50, true);
-			MoveWindow(hTextRGSmoothness, width - 180, 320, 100, 30, true);
-			MoveWindow(hButtonRGSmoothnessPlus, width - 60, 300, 50, 50, true);
+			MoveWindow(hButtonSegmentationFinish, width - 200, height - 200, 150, 150, true);
 
-			MoveWindow(hTextRGCurvatureLabel, width - 180, 360, 100, 30, true);
-			MoveWindow(hButtonRGCurvatureMinus, width - 250, 370, 50, 50, true);
-			MoveWindow(hTextRGCurvature, width - 180, 390, 100, 30, true);
-			MoveWindow(hButtonRGCurvaturePlus, width - 60, 370, 50, 50, true);
+			MoveWindow(hButtonEuclideanSegmentation, width - 250, 70, 125, 50, true);
+			MoveWindow(hButtonRegionGrowthSegmentation, width - 125, 70, 125, 50, true);
 
-			MoveWindow(hTextRGNeighborsLabel, width - 180, 430, 100, 30, true);
-			MoveWindow(hButtonRGNeighborsMinus, width - 250, 440, 50, 50, true);
-			MoveWindow(hTextRGNeighbors, width - 180, 460, 100, 30, true);
-			MoveWindow(hButtonRGNeighborsPlus, width - 60, 440, 50, 50, true);
+			if (glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN)
+			{
+				MoveWindow(hButtonSegmentationBegin, width - 225, 210, 200, 60, true);
 
-			MoveWindow(hTextRGKSearchLabel, width - 180, 500, 100, 30, true);
-			MoveWindow(hButtonRGKSearchMinus, width - 250, 510, 50, 50, true);
-			MoveWindow(hTextRGKSearch, width - 180, 530, 100, 30, true);
-			MoveWindow(hButtonRGKSearchPlus, width - 60, 510, 50, 50, true);
+				MoveWindow(hTextClusterToleranceLabel, width - 180, 140, 100, 30, true);
+				MoveWindow(hButtonClusterToleranceMinus, width - 250, 150, 50, 50, true);
+				MoveWindow(hTextClusterTolerance, width - 180, 170, 100, 30, true);
+				MoveWindow(hButtonClusterTolerancePlus, width - 60, 150, 50, 50, true);
+			}
+			else if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
+			{
+				MoveWindow(hButtonSegmentationBegin, width - 225, height - 275, 200, 60, true);
+
+				MoveWindow(hTextRGSmoothnessLabel, width - 180, 140, 100, 30, true);
+				MoveWindow(hButtonRGSmoothnessMinus, width - 250, 150, 50, 50, true);
+				MoveWindow(hTextRGSmoothness, width - 180, 170, 100, 30, true);
+				MoveWindow(hButtonRGSmoothnessPlus, width - 60, 150, 50, 50, true);
+
+				MoveWindow(hTextRGCurvatureLabel, width - 180, 210, 100, 30, true);
+				MoveWindow(hButtonRGCurvatureMinus, width - 250, 220, 50, 50, true);
+				MoveWindow(hTextRGCurvature, width - 180, 240, 100, 30, true);
+				MoveWindow(hButtonRGCurvaturePlus, width - 60, 220, 50, 50, true);
+
+				MoveWindow(hTextRGNeighborsLabel, width - 180, 280, 100, 30, true);
+				MoveWindow(hButtonRGNeighborsMinus, width - 250, 290, 50, 50, true);
+				MoveWindow(hTextRGNeighbors, width - 180, 310, 100, 30, true);
+				MoveWindow(hButtonRGNeighborsPlus, width - 60, 290, 50, 50, true);
+
+				MoveWindow(hTextRGKSearchLabel, width - 180, 350, 100, 30, true);
+				MoveWindow(hButtonRGKSearchMinus, width - 250, 360, 50, 50, true);
+				MoveWindow(hTextRGKSearch, width - 180, 380, 100, 30, true);
+				MoveWindow(hButtonRGKSearchPlus, width - 60, 360, 50, 50, true);
+			}
 		}
 	}
 	if (openGLWin.GetWindowMode() == IF_MODE_INTERACTION)
 	{
-		MoveWindow(hButtonExport, width - 200, height-200, 150, 150, true);
-			
-		MoveWindow(hButtonDuplicate, width - 200, 300, 150, 150, true);
-		MoveWindow(hButtonReset, width - 200, 100, 150, 150, true);
+		if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
+		{
+			MoveWindow(hButtonExport, width - 200, height - 200, 150, 150, true);
 
-		MoveWindow(hButtonScale, width - 250, 500, 75, 75, true);
-		MoveWindow(hButtonRotateHorizontal, width - 165, 500, 75, 75, true);
-		MoveWindow(hButtonRotateVertical, width - 80, 500, 75, 75, true);
+			MoveWindow(hButtonDuplicate, width - 200, 300, 150, 150, true);
+			MoveWindow(hButtonReset, width - 200, 100, 150, 150, true);
+
+			MoveWindow(hButtonScale, width - 250, 500, 75, 75, true);
+			MoveWindow(hButtonRotateHorizontal, width - 165, 500, 75, 75, true);
+			MoveWindow(hButtonRotateVertical, width - 80, 500, 75, 75, true);
+		}
+		else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+		{
+			MoveWindow(hButtonExport, width - 200, height - 150, 150, 150, true);
+
+			MoveWindow(hButtonDuplicate, width - 175, 250, 100, 100, true);
+			MoveWindow(hButtonReset, width - 175, 100, 100, 100, true);
+
+			MoveWindow(hButtonScale, width - 250, 350, 75, 75, true);
+			MoveWindow(hButtonRotateHorizontal, width - 165, 350, 75, 75, true);
+			MoveWindow(hButtonRotateVertical, width - 80, 350, 75, 75, true);
+		}
 	}
 
 	if (openGLWin.GetWindowBusyState() == IF_BUSYSTATE_BUSY)
