@@ -22,6 +22,17 @@ VCGMeshContainer::VCGMeshContainer() {
 	snapOrientation.push_back(0);
 	snapOrientation.push_back(0);
 	snapOrientation.push_back(0);
+
+	if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
+	{
+		rotateBy = 20;
+		scaleBy = 0.1f;
+	}
+	else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+	{
+		rotateBy = 5;
+		scaleBy = 0.025f;
+	}
 }
 
 VCGMeshContainer::~VCGMeshContainer() { }
@@ -888,9 +899,9 @@ void VCGMeshContainer::ClearMesh()
 void VCGMeshContainer::SetScale(bool positive)
 {
 	if (positive)
-		scaleFactor += 0.1f;
+		scaleFactor += scaleBy;
 	else
-		scaleFactor -= 0.1f;
+		scaleFactor -= scaleBy;
 
 	scaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(scaleFactor, scaleFactor, scaleFactor));
 }
@@ -898,9 +909,9 @@ void VCGMeshContainer::SetScale(bool positive)
 void VCGMeshContainer::SetAngleX(bool positive)
 {
 	if (positive)
-		angleX += 20;
+		angleX += rotateBy;
 	else
-		angleX -= 20;
+		angleX -= rotateBy;
 
 	xRotation = glm::rotate(glm::mat4(1.0), angleX, glm::vec3(1.0f, 0.0f, 0.0f));
 }
@@ -908,9 +919,9 @@ void VCGMeshContainer::SetAngleX(bool positive)
 void VCGMeshContainer::SetAngleY(bool positive)
 {
 	if (positive)
-		angleY += 20;
+		angleY += rotateBy;
 	else
-		angleY -= 20;
+		angleY -= rotateBy;
 
 	yRotation = glm::rotate(glm::mat4(1.0), angleY, glm::vec3(0.0f, 1.0f, 0.0f));
 }
@@ -918,9 +929,9 @@ void VCGMeshContainer::SetAngleY(bool positive)
 void VCGMeshContainer::SetAngleZ(bool positive)
 {
 	if (positive)
-		angleZ += 20;
+		angleZ += rotateBy;
 	else
-		angleZ -= 20;
+		angleZ -= rotateBy;
 
 	zRotation = glm::rotate(glm::mat4(1.0), angleZ, glm::vec3(0.0f, 0.0f, 1.0f));
 }

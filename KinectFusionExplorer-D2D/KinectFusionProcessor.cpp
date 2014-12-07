@@ -363,8 +363,10 @@ DWORD KinectFusionProcessor::MainLoop()
 					// Set an introductory message on success
 					if (SUCCEEDED(m_hrRecreateVolume))
 					{
+						//SetStatusMessage(
+							//L"Click ‘Near Mode’ to change sensor range, and ‘Reset Reconstruction’ to clear!");
 						SetStatusMessage(
-							L"Click ‘Near Mode’ to change sensor range, and ‘Reset Reconstruction’ to clear!");
+							L"Click ‘RESET’ to start over, and ‘DONE’ when you are finished!");
 					}
 				}
 				else if (bRecreateVolume)

@@ -56,7 +56,7 @@ HBRUSH bGreenPressedBrush, bRedPressedBrush;
 HBRUSH bRedInactiveBrush, bGreenInactiveBrush;
 HBRUSH bBackground = CreateSolidBrush(RGB(30, 30, 30));
 HPEN bDefaultPen, bPressedPen, bInactivePen;
-HFONT guiFont, countdownFont, smallFont, buttonFont, sliderTextFont;
+HFONT guiFont, countdownFont, smallFont, buttonFont, sliderTextFont, statusTextFont, mediumFont;
 
 void(*ptrStartOpenGL)(int);
 void(*ptrSetWindowMode)(int);
@@ -167,7 +167,14 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	buttonFont = CreateFont(40, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
 	countdownFont = CreateFont(300, 0, 0, 0, FW_LIGHT, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
 	smallFont = CreateFont(20, 0, 0, 0, FW_LIGHT, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
+	mediumFont = CreateFont(30, 0, 0, 0, FW_LIGHT, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
+
 	sliderTextFont = CreateFont(20, 0, 0, 0, FW_LIGHT, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
+
+	statusTextFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
+
+	SendMessage(GetDlgItem(hWndApp, IDC_STATUS), WM_SETFONT, (WPARAM)statusTextFont, 0);
+
 	bDefaultBrush = CreateSolidBrush(RGB(20, 20, 20));
 	bPressedBrush = CreateSolidBrush(RGB(40, 40, 40));
 	bGreenBrush = CreateSolidBrush(RGB(0, 170, 0));
@@ -214,8 +221,8 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 
 	hHelpText = GetDlgItem(hWndApp, IDC_FUSION_STATIC_HELP);
 
-	SetDlgItemText(hWndApp, IDC_FUSION_STATIC_HELP, L"Press 'Reset' to start over and 'Finished' if you're satisfied with your scan.");
-	SendMessage(hHelpText, WM_SETFONT, (WPARAM)smallFont, TRUE);
+	SetDlgItemText(hWndApp, IDC_FUSION_STATIC_HELP, L"Press 'RESET' to start over and 'DONE' if you're satisfied with your scan.");
+	SendMessage(hHelpText, WM_SETFONT, (WPARAM)mediumFont, TRUE);
 
 	fusionUiElements.push_back(hButtonTestOne);
 	fusionUiElements.push_back(hButtonTestTwo);
@@ -234,6 +241,8 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	fusionUiElements.push_back(GetDlgItem(m_hWnd, IDC_DEPTH_VIEW));
 	fusionUiElements.push_back(GetDlgItem(m_hWnd, IDC_TRACKING_RESIDUALS_VIEW));
 	SetWindowState(START);
+	//ShowWindow(GetDlgItem(m_hWnd, IDC_STATUS), SW_HIDE);
+	ShowWindow(GetDlgItem(m_hWnd, IDC_FRAMES_PER_SECOND), SW_HIDE);
 
 	//SetForegroundWindow(parent);
 	// Main message loop
@@ -529,20 +538,13 @@ LRESULT CALLBACK CKinectFusionExplorer::StartProc(
 		return (LRESULT)bBackground;
 		break;
 	case WM_CTLCOLORSTATIC:
-		if ((HWND)lParam == hStatusText ||
-			(HWND)lParam == hCountdownText ||
-			(HWND)lParam == hStatusTextSmall ||
-			(HWND)lParam == hHelpText ||
-			(HWND)lParam == hSliderText ||
-			(HWND)lParam == hSliderDescription)
-		{
+	{
+		HDC hdc = reinterpret_cast<HDC>(wParam);
+		SetBkMode((HDC)wParam, TRANSPARENT);
+		SetTextColor(hdc, RGB(255, 255, 255));
 
-			HDC hdc = reinterpret_cast<HDC>(wParam);
-			SetBkMode((HDC)wParam, TRANSPARENT);
-			SetTextColor(hdc, RGB(255, 255, 255));
-
-			return (LRESULT)bBackground;
-		}
+		return (LRESULT)bBackground;
+	}
 		break;
 	case WM_UPDATESENSORSTATUS:
 		if (m_pSensorChooserUI != nullptr)
@@ -693,8 +695,10 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 		DeleteObject(guiFont);
 		DeleteObject(buttonFont);
 		DeleteObject(smallFont);
+		DeleteObject(mediumFont);
 		DeleteObject(sliderTextFont);
 		DeleteObject(countdownFont);
+		DeleteObject(statusTextFont);
 		m_processor.StopProcessing();
 		PostQuitMessage(0);
 		break;
@@ -721,21 +725,14 @@ LRESULT CALLBACK CKinectFusionExplorer::DlgProc(
 	}
 	break;
 	case WM_CTLCOLORSTATIC:
-		if ((HWND)lParam == hStatusText ||
-			(HWND)lParam == hCountdownText ||
-			(HWND)lParam == hStatusTextSmall ||
-			(HWND)lParam == hHelpText ||
-			(HWND)lParam == hSliderText ||
-			(HWND)lParam == hSliderDescription)
-		{
+	{
+		HDC hdc = reinterpret_cast<HDC>(wParam);
+		SetBkMode((HDC)wParam, TRANSPARENT);
+		SetTextColor(hdc, RGB(255, 255, 255));
 
-			HDC hdc = reinterpret_cast<HDC>(wParam);
-			SetBkMode((HDC)wParam, TRANSPARENT);
-			SetTextColor(hdc, RGB(255, 255, 255));
-
-			return (LRESULT)bBackground;
-		}
-		break;
+		return (LRESULT)bBackground;
+	}
+	break;
 	case WM_FRAMEREADY:
 		HandleCompletedFrame();
 		break;
@@ -1616,6 +1613,7 @@ void CKinectFusionExplorer::SetStatusMessage(const WCHAR * szMessage)
 	if (length > 0)
 	{
 		SendDlgItemMessageW(m_hWnd, IDC_STATUS, WM_SETTEXT, 0, (LPARAM)szMessage);
+		//ptrShowStatusMsg(szMessage);
 		m_tickLastStatus = GetTickCount();
 	}
 	else
@@ -1624,6 +1622,7 @@ void CKinectFusionExplorer::SetStatusMessage(const WCHAR * szMessage)
 		if (GetTickCount() - m_tickLastStatus > cStatusTimeoutInMilliseconds &&
 			m_fFramesPerSecond > 0)
 		{
+			//ptrShowStatusMsg(L"");
 			SendDlgItemMessageW(m_hWnd, IDC_STATUS, WM_SETTEXT, 0, 0);
 			m_tickLastStatus = GetTickCount();
 		}
@@ -1704,16 +1703,16 @@ void CKinectFusionExplorer::MoveUIOnResize()
 
 		MoveWindow(hStatusTextSmall, rRect.right / 2 - 250, rRect.bottom / 2 - 170, 500, 30, true);
 
-		MoveWindow(hButtonStart, rRect.right / 2 - 100, rRect.bottom / 2 + 170, 200, 50, true);
+		MoveWindow(hButtonStart, rRect.right / 2 - 100, rRect.bottom - 220, 200, 50, true);
 		
-		MoveWindow(hHelpText, rRect.right / 2 - 350, rRect.bottom / 2 + 300, 700, 40, true);
+		MoveWindow(hHelpText, rRect.right / 2 - 450, rRect.bottom - 150, 900, 40, true);
 
 		MoveWindow(hCountdownText, rRect.right / 2 - 250, rRect.bottom / 2 - 150, 500, 300, true);
 		
 		
 	}
-	MoveWindow(GetDlgItem(m_hWnd, IDC_FRAMES_PER_SECOND), 0, rRect.bottom - 30, 100, 30, true);
-	MoveWindow(GetDlgItem(m_hWnd, IDC_STATUS), 100, rRect.bottom - 30, rRect.right - 100, 30, true);
+	//MoveWindow(GetDlgItem(m_hWnd, IDC_FRAMES_PER_SECOND), 0, rRect.bottom - 30, 100, 30, true);
+	MoveWindow(GetDlgItem(m_hWnd, IDC_STATUS), 0, rRect.bottom - 30, rRect.right, 30, true);
 	MoveWindow(fusionDebugHandle, rRect.right - 400, 0, 400, rRect.bottom, true);
 
 	if (sliderPos == -1)

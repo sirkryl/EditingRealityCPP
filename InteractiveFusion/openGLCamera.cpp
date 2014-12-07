@@ -5,6 +5,9 @@
 #include "Keys.h"
 float angleX = 5.0f;
 float zoomFactor = 1.0f;
+float zoomBy = 0.2f;
+float orbitX = 0.2f;
+float orbitY = 0.15f;
 float strafeX = 0.0f;
 float strafeY = 0.0f;
 float cumAngle = 5.0f;
@@ -12,7 +15,10 @@ int oldX;
 int oldY;
 float theta = 0;
 float phi = 0;
+bool lMouseFirst = false;
+bool mMouseFirst = false;
 const float PI = float(atan(1.0)*4.0);
+
 
 glm::vec3 camDirection;
 glm::vec3 camRight;
@@ -25,6 +31,18 @@ OpenGLCamera::OpenGLCamera()
 	moveBy = glm::vec3(0.0f, 0.0f, 0.0f);
 	moveSpeed = 25.0f;
 	rotationSensitivity = 0.1f;
+	if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
+	{ 
+		orbitX = 0.2f;
+		orbitY = 0.15f;
+		zoomBy = 0.2f;
+	}
+	else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+	{
+		orbitX = 0.3f;
+		orbitY = 0.2f;
+		zoomBy = 0.05f;
+	}
 }
 
 OpenGLCamera::OpenGLCamera(glm::vec3 position, glm::vec3 lookAt, glm::vec3 upDirection, float mvSpeed, float sensitivity)
@@ -35,6 +53,11 @@ OpenGLCamera::OpenGLCamera(glm::vec3 position, glm::vec3 lookAt, glm::vec3 upDir
 	moveSpeed = mvSpeed;
 	rotationSensitivity = sensitivity;
 	moveBy = glm::vec3(0.0f, 0.0f, 0.0f);
+	if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
+		zoomBy = 0.2f;
+	else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+		zoomBy = 0.05f;
+
 }
 
 void OpenGLCamera::GetRotation(glm::mat4 &rotation)
@@ -69,11 +92,11 @@ void OpenGLCamera::UpdateZoom()
 	{
 		if (openGLWin.wheelDelta > 0)
 		{
-			zoomFactor -= 0.2f;
+			zoomFactor -= zoomBy;
 		}
 		else if (openGLWin.wheelDelta < 0)
 		{
-			zoomFactor += 0.2f;
+			zoomFactor += zoomBy;
 		}
 		openGLWin.wheelDelta = 0;
 	}
@@ -100,9 +123,8 @@ void OpenGLCamera::UpdateStrafe()
 
 void OpenGLCamera::Orbit()
 {
-
-	float offSetX = (float)(oldY - pCur.y)*0.20f;
-	float offSetY = (float)(oldX - pCur.x)*0.150f;
+	float offSetX = (float)(oldY - pCur.y)*orbitX;
+	float offSetY = (float)(oldX - pCur.x)*orbitY;
 	if (offSetX != 0 || offSetY != 0)
 	{
 		glm::vec4 pos4 = glm::vec4(camPosition, 1.0f);
@@ -141,7 +163,7 @@ glm::mat4 OpenGLCamera::GetViewMatrix()
 	if (mode == CAMERA_FREE)
 	{
 		
-		GetCursorPos(&pCur);
+		
 
 		camDirection = glm::normalize(camPosition - camLookAt);
 
@@ -152,14 +174,31 @@ glm::mat4 OpenGLCamera::GetViewMatrix()
 
 			if (Keys::GetKeyState(VK_LBUTTON) &&
 				openGLWin.IsMouseInOpenGLWindow())
-				Orbit();
+			{
+				GetCursorPos(&pCur);
+				if (lMouseFirst)
+					Orbit();
+				oldX = pCur.x;
+				oldY = pCur.y;
+				lMouseFirst = true;
+			}
+			else
+				lMouseFirst = false;
 
 			if (Keys::GetKeyState(VK_MBUTTON) &&
 				openGLWin.IsMouseInOpenGLWindow())
-				UpdateStrafe();
+			{
+				GetCursorPos(&pCur);
+				if (mMouseFirst)
+					UpdateStrafe();
+				oldX = pCur.x;
+				oldY = pCur.y;
+				mMouseFirst = true;
+			}
+			else
+				mMouseFirst = false;
 
-			oldX = pCur.x;
-			oldY = pCur.y;
+			
 		}
 		camLookAt = rotationPoint;
 

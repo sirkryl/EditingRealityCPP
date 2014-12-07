@@ -95,6 +95,10 @@ private:
 	bool is2D = false;
 	bool isDuplicate = false;
 	bool isOverTrash = false;
+
+	int rotateBy = 20;
+	float scaleBy = 0.1f;
+
 	std::vector<Vertex> vertices;
 	std::vector<Vertex> verticesWithHighlights;
 	std::vector<Triangle> indices;

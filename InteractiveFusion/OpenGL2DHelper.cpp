@@ -204,7 +204,7 @@ void OpenGL2DHelper::DrawRectangle(float y, float alpha, float h)
 	glm::mat4 modelMatrix;
 	shaderColor.SetUniform("matrices.projectionMatrix", glm::mat4(1.0f));
 	shaderColor.SetUniform("matrices.viewMatrix", glm::mat4(1.0f));
-	float scaleY = h / 0.4f;
+	float scaleY = h / 0.3f;
 	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, y, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, scaleY, 1.0f));
 
 	

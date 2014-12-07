@@ -137,6 +137,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 	hInteractionText = CreateWindowEx(0, L"BUTTON", L"INTERACTION", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_MODE_INTERACTION, NULL, 0);
 
+	statusFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
+
+	statusHandle = GetDlgItem(openGLWin.parent, IDC_IM_STATUS);
+
+	SendMessage(statusHandle, WM_SETFONT, (WPARAM)statusFont, 0);
+	ShowWindow(statusHandle, SW_SHOW);
+
 	modeUi.push_back(hPrepareText);
 	modeUi.push_back(hSegmentationText);
 	modeUi.push_back(hScanText);
@@ -164,7 +171,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 	openGLWin.SetWindowMode(IF_MODE_PREPARE_SCAN);
 	//openGLWin.SetWindowState(START);
-	StartKinectFusion(openGLWin.parent, hInstance, StartOpenGLThread, SetWindowMode,openGLWin.fusionExplorer, openGLWin.fusionHandle);
+	StartKinectFusion(openGLWin.parent, hInstance, StartOpenGLThread, SetWindowMode, openGLWin.fusionExplorer, openGLWin.fusionHandle);
 }
 
 #pragma region
@@ -474,7 +481,7 @@ bool InteractiveFusion::CreateOpenGLWindow()
 
 	HideUI(helpUi);
 
-	statusFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
+	
 
 	statusText = CreateWindowEx(0, L"STATIC", L"Is the highlighted area (part of) a wall, floor or ceiling?", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_STATUS, openGLWin.appInstance, 0);
 	SendMessage(statusText, WM_SETFONT, (WPARAM)uiFont, TRUE);
@@ -930,6 +937,7 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 	ShowWindow(hSegmentationText, SW_SHOW);
 	ShowWindow(hScanText, SW_SHOW);
 	ShowWindow(hInteractionText, SW_SHOW);
+	ShowWindow(statusHandle, SW_SHOW);
 	openGLWin.colorSelection = false;
 
 	if (mode == IF_MODE_INTERACTION)
@@ -1782,6 +1790,8 @@ void InteractiveFusion::MoveModeButtonsOnResize()
 	MoveWindow(hScanText, rect.right/2 - 240, 8, 130, 40, true);
 	MoveWindow(hSegmentationText, rect.right / 2 - 110, 8, 250, 40, true);
 	MoveWindow(hInteractionText, rect.right/2 + 140 , 8, 250, 40, true);
+
+	
 	//MoveWindow(hScanText, 15, 8, 125, 40, true);
 	//MoveWindow(hInteractionText, 140, 8, 250, 40, true);
 }
@@ -1843,7 +1853,11 @@ void InteractiveFusion::MoveButtonsOnResize()
 			MoveWindow(hButtonNo, 50, height - 200, 150, 150, true);
 
 		//	MoveWindow(hTextWalls, 0, 48, width, 40, true);
-			MoveWindow(hTextWalls, 0, 48, 0, 0, true);
+
+			if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
+				MoveWindow(hTextWalls, 0, 48, 0, 0, true);
+			else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+				MoveWindow(hTextWalls, 0, 68, 0, 0, true);
 
 			MoveWindow(hHelpText1, 0, height - 240, width, 40, true);
 			MoveWindow(hTextWallSizeLabel, width / 2 - 200, height - 195, 150, 50, true);
@@ -2012,13 +2026,13 @@ void InteractiveFusion::ShowStatusBarMessage(string message)
 {
 	std::wstring ws = Util::StringToWString(message);
 	LPCWSTR statusBarMessage = ws.c_str();
-	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, statusBarMessage);
+	SetDlgItemText(openGLWin.parent, IDC_IM_STATUS, statusBarMessage);
 }
 
 void InteractiveFusion::ShowStatusBarMessage(wstring message)
 {
 	LPCWSTR statusBarMessage = message.c_str();
-	SetDlgItemText(openGLWin.glWindowParent, IDC_IM_STATUS, statusBarMessage);
+	SetDlgItemText(openGLWin.parent, IDC_IM_STATUS, statusBarMessage);
 }
 
 void InteractiveFusion::ResumeScanning()
@@ -2313,10 +2327,7 @@ void InitializeGLUIControls()
 
 	//PostMessage(hCheck, BM_SETCHECK, BST_CHECKED, 0);
 
-	statusHandle = GetDlgItem(openGLWin.glWindowParent, IDC_IM_STATUS);
-
-	SendMessage(statusHandle, WM_SETFONT, (WPARAM)statusFont, 0);
-	ShowWindow(statusHandle, SW_SHOW);
+	
 	ResetEditControls();
 
 	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_KSEARCH_VALUE, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_KSEARCH_VALUE, MAX_RG_KSEARCH_VALUE));

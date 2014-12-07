@@ -140,9 +140,10 @@ bool SelectionHelper::ColorPlacing(bool preview)
 		{
 			meshData[selectedIndex]->SetSelected(false);
 
-			if (Keys::GetKeyState('D') || openGLWin.duplicationMode)
+			if ((Keys::GetKeyState('D') || openGLWin.duplicationMode) && openGLWin.GetDeviceClass() == IF_DEVICE_PC)
 			{
 				int newIndex = meshHelper.DuplicateMesh(selectedIndex);
+
 				selectedIndex = newIndex;
 				meshData[selectedIndex]->SetSelected(true);
 			}
@@ -380,10 +381,22 @@ void SelectionHelper::ProcessPicking()
 			meshData[selectedIndex]->SetSelected(false);
 		}
 		openGLWin.ShowStatusBarMessage(L"Selecting object #" + to_wstring(tmpIndex));
-		meshData[tmpIndex]->SetSelected(true);
-		if (openGLWin.colorSelection)
-			meshData[tmpIndex]->ToggleSelectedColor(true);
-		selectedIndex = tmpIndex;
+
+		if ((Keys::GetKeyState('D') || openGLWin.duplicationMode) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+		{
+			int newIndex = meshHelper.DuplicateMesh(tmpIndex);
+
+			selectedIndex = newIndex;
+			meshData[selectedIndex]->SetSelected(true);
+
+		}
+		else
+		{ 
+			meshData[tmpIndex]->SetSelected(true);
+			if (openGLWin.colorSelection)
+				meshData[tmpIndex]->ToggleSelectedColor(true);
+			selectedIndex = tmpIndex;
+		}
 	}
 	else
 	{

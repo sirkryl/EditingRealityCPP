@@ -87,7 +87,10 @@ void ShowWallMessage()
 	if (!gl2DHelper.IsRectangleInitialized())
 		gl2DHelper.InitializeRectangle();
 
-	gl2DHelper.DrawRectangle(0.7f, 0.8f, 0.2f);
+	if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
+		gl2DHelper.DrawRectangle(0.7f, 0.8f, 0.2f);
+	else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+		gl2DHelper.DrawRectangle(0.64f, 0.8f, 0.25f);
 
 	wstring wallMessage = L"Is the highlighted area (part of) a wall, floor or ceiling?";
 
@@ -96,8 +99,10 @@ void ShowWallMessage()
 	float xPos = 0.0f - wallMessage.length() * 0.008f;
 
 	glText.PrepareForRender();
-	glText.RenderText(wallMessage, 30, xPos, 0.67f, 2.0f / w, 2.0f / h);
-
+	if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
+		glText.RenderText(wallMessage, 30, xPos, 0.67f, 2.0f / w, 2.0f / h);
+	else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+		glText.RenderText(wallMessage, 30, xPos, 0.60f, 2.0f / w, 2.0f / h);
 	glEnable(GL_DEPTH_TEST);
 }
 
@@ -108,7 +113,8 @@ void ShowHelpDialog()
 		gl2DHelper.InitializeRectangle();
 
 	gl2DHelper.DrawRectangle(0.0f, 0.5f, 3.0f);
-	gl2DHelper.DrawRectangle();
+
+		gl2DHelper.DrawRectangle();
 
 	wstring helpMessage = L"Please do something and be happy about it.";
 
@@ -129,7 +135,11 @@ void ShowStatusMsg()
 		gl2DHelper.InitializeRectangle();
 
 	gl2DHelper.DrawRectangle(0.0f, 0.5f, 3.0f);
-	gl2DHelper.DrawRectangle();
+
+	if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
+		gl2DHelper.DrawRectangle();
+	else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+		gl2DHelper.DrawRectangle(0.0f, 0.5f, 0.4f);
 	
 	int w = openGLWin.glControl.GetViewportWidth();
 	int h = openGLWin.glControl.GetViewportHeight();
@@ -145,9 +155,18 @@ void ShowStatusMsg()
 
 	if (percentMsg.size() > 0)
 	{
-		glText.RenderText(loadString, 25, xPos, 0.05f, 2.0f / w, 2.0f / h);
-		float xPercentPos = -0.1f;
-		glText.RenderText(percentMsg, 25, xPercentPos, -0.05f, 2.0f / w, 2.0f / h);
+		if (glSegmentation.GetSegmentationState() == IF_SEGSTATE_PLANE_SEGMENTATION)
+		{
+			glText.RenderText(loadString, 25, xPos, 0.05f, 2.0f / w, 2.0f / h);
+			float xPercentPos = -0.05f;
+			glText.RenderText(percentMsg, 20, xPercentPos, -0.11f, 2.0f / w, 2.0f / h);
+		}
+		else
+		{
+			glText.RenderText(loadString, 25, xPos, 0.05f, 2.0f / w, 2.0f / h);
+			float xPercentPos = -0.05f;
+			glText.RenderText(percentMsg, 20, xPercentPos, -0.08f, 2.0f / w, 2.0f / h);
+		}
 	}
 	else
 	{
@@ -310,28 +329,45 @@ void Render(LPVOID lpParam)
 	}
 	else if (openGLWin.GetWindowMode() == IF_MODE_INTERACTION || openGLWin.GetWindowMode() == IF_MODE_PROCESSING)
 	{	
-		if (Keys::GetKeyStateOnce(VK_LBUTTON) && (glCamera.mode == CAMERA_SENSOR || openGLWin.colorSelection) && openGLWin.IsMouseInOpenGLWindow() && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
+		if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
 		{
-			if (glSelector.selectedIndex == -1)
+			if (Keys::GetKeyStateOnce(VK_LBUTTON) && (glCamera.mode == CAMERA_SENSOR || openGLWin.colorSelection) && openGLWin.IsMouseInOpenGLWindow() && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
 			{
-				glSelector.ProcessPicking();
+				if (glSelector.selectedIndex == -1)
+				{
+					glSelector.ProcessPicking();
+				}
+				else
+					if (openGLWin.colorSelection)
+						glSelector.ProcessPicking();
+					else
+						glSelector.ProcessPlacing();
+
+				//return;
 			}
-			else
+			if (glSelector.selectedIndex != -1 && !openGLWin.colorSelection && openGLWin.IsMouseInOpenGLWindow())
+			{
+				glSelector.ProcessSelectedObject();
+			}
+		}
+		else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+		{
+			if (Keys::GetKeyState(VK_LBUTTON) && (glCamera.mode == CAMERA_SENSOR || openGLWin.colorSelection) && openGLWin.IsMouseInOpenGLWindow() && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
+			{
+				if (glSelector.selectedIndex == -1)
+					glSelector.ProcessPicking();
+				else if (glSelector.selectedIndex != -1 && !openGLWin.colorSelection && openGLWin.IsMouseInOpenGLWindow())
+					glSelector.ProcessSelectedObject();
+			}
+			else if (glSelector.selectedIndex != -1)
+			{ 
 				if (openGLWin.colorSelection)
 					glSelector.ProcessPicking();
 				else
 					glSelector.ProcessPlacing();
+			}			
+		}	
 
-			//return;
-		}
-
-		//process currently selected object (attach to cursor, rotation/scaling etc.)
-		if (glSelector.selectedIndex != -1 && !openGLWin.colorSelection && openGLWin.IsMouseInOpenGLWindow())
-		{
-			glSelector.ProcessSelectedObject();
-		}
-		
-		
 		meshHelper.DrawAll();
 		if (!gl2DHelper.AreBuffersGenerated())
 			gl2DHelper.GenerateBuffers();
