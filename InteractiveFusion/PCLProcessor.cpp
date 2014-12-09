@@ -176,7 +176,7 @@ bool PCLProcessor::PlaneSegmentation() {
 		while (openGLWin.GetAnswer() == ANSWER_NOTAVAILABLE)
 		{
 			boost::this_thread::sleep(boost::posix_time::microseconds(10000));
-			if (storedThickness != openGLWin.wallThickness || storedSmoothness != openGLWin.wallSmoothness)
+			if ((storedThickness != openGLWin.wallThickness || storedSmoothness != openGLWin.wallSmoothness) && openGLWin.GetAnswer() == ANSWER_NOTAVAILABLE)
 			{
 				cDebug::DbgOut(L"NOTICED: ", openGLWin.wallSmoothness);
 				//openGLWin.SetWindowState(SEGMENTATION);

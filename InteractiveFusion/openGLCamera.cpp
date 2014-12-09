@@ -18,7 +18,18 @@ float phi = 0;
 bool lMouseFirst = false;
 bool mMouseFirst = false;
 const float PI = float(atan(1.0)*4.0);
-
+int p1 = 1;
+int p2 = -1;
+int p3 = -1;
+int u1 = -1;
+int u2 = 1;
+int u3 = 1;
+int l1 = -1;
+int l2 = 1;
+int l3 = 1;
+int v1 = 1;
+int v2 = -1;
+int v3 = -1;
 
 glm::vec3 camDirection;
 glm::vec3 camRight;
@@ -214,9 +225,89 @@ glm::mat4 OpenGLCamera::GetViewMatrix()
 		strafeY = 0.0f;
 		glm::mat4 cameraTransform = openGLWin.glControl.GetKinectViewMatrix();
 
-		camPosition = glm::vec3(-cameraTransform[3][0], cameraTransform[3][1], cameraTransform[3][2]);// +moveBy;
-		camLookAt = camPosition + glm::vec3(-cameraTransform[2][0], cameraTransform[2][1], -cameraTransform[2][2]);// +moveBy;
-		camUpDirection = glm::vec3(cameraTransform[1][0], cameraTransform[1][1], cameraTransform[1][2]);
+		/*if (Keys::GetKeyStateOnce('1'))
+			p1 = p1 * -1;
+		if (Keys::GetKeyStateOnce('2'))
+			p2 = p2 * -1;
+		if (Keys::GetKeyStateOnce('3'))
+			p3 = p3 * -1;
+		if (Keys::GetKeyStateOnce('4'))
+			l1 = l1 * -1;
+		if (Keys::GetKeyStateOnce('5'))
+			l2 = l2 * -1;
+		if (Keys::GetKeyStateOnce('6'))
+			l3 = l3 * -1;
+		if (Keys::GetKeyStateOnce('7'))
+			u1 = u1 * -1;
+		if (Keys::GetKeyStateOnce('8'))
+			u2 = u2 * -1;
+		if (Keys::GetKeyStateOnce('9'))
+			u3 = u3 * -1;
+		if (Keys::GetKeyStateOnce('A'))
+			v1 = v1 * -1;
+		if (Keys::GetKeyStateOnce('S'))
+			v2 = v2 * -1;
+		if (Keys::GetKeyStateOnce('D'))
+			v3 = v3 * -1;*/
+
+		glm::mat4 viewMatrix;
+		viewMatrix[0][0] = p1* cameraTransform[0][0];
+		viewMatrix[0][1] = p2*cameraTransform[0][1];
+		viewMatrix[0][2] = p3*cameraTransform[0][2];
+		viewMatrix[0][3] = cameraTransform[0][3];
+		viewMatrix[1][0] = l1*cameraTransform[1][0];
+		viewMatrix[1][1] = l2*cameraTransform[1][1];
+		viewMatrix[1][2] = l3*cameraTransform[1][2];
+		viewMatrix[1][3] = cameraTransform[1][3];
+		viewMatrix[2][0] = u1*cameraTransform[2][0];
+		viewMatrix[2][1] = u2*cameraTransform[2][1];
+		viewMatrix[2][2] = u3*cameraTransform[2][2];
+		viewMatrix[2][3] = cameraTransform[2][3];
+		viewMatrix[3][0] = v1*cameraTransform[3][0];
+		viewMatrix[3][1] = v2*cameraTransform[3][1];
+		viewMatrix[3][2] = v3*cameraTransform[3][2];
+		viewMatrix[3][3] = cameraTransform[3][3];
+
+		/*cDebug::DbgOut(L"cameraTransform 0 0: ", viewMatrix[0][0]);
+		cDebug::DbgOut(L"cameraTransform 0 1: ", viewMatrix[0][1]);
+		cDebug::DbgOut(L"cameraTransform 0 2: ", viewMatrix[0][2]);
+		cDebug::DbgOut(L"cameraTransform 0 3: ", viewMatrix[0][3]);
+		cDebug::DbgOut(L"cameraTransform 1 0: ", viewMatrix[1][0]);
+		cDebug::DbgOut(L"cameraTransform 1 1: ", viewMatrix[1][1]);
+		cDebug::DbgOut(L"cameraTransform 1 2: ", viewMatrix[1][2]);
+		cDebug::DbgOut(L"cameraTransform 1 3: ", viewMatrix[1][3]);
+		cDebug::DbgOut(L"cameraTransform 2 0: ", viewMatrix[2][0]);
+		cDebug::DbgOut(L"cameraTransform 2 1: ", viewMatrix[2][1]);
+		cDebug::DbgOut(L"cameraTransform 2 2: ", viewMatrix[2][2]);
+		cDebug::DbgOut(L"cameraTransform 2 3: ", viewMatrix[2][3]);
+		cDebug::DbgOut(L"cameraTransform 3 0: ", viewMatrix[3][0]);
+		cDebug::DbgOut(L"cameraTransform 3 1: ", viewMatrix[3][1]);
+		cDebug::DbgOut(L"cameraTransform 3 2: ", viewMatrix[3][2]);
+		cDebug::DbgOut(L"cameraTransform 3 3: ", viewMatrix[3][3]);*/
+
+		return viewMatrix;
+		camPosition = glm::vec3(p1*-cameraTransform[3][0], p2*cameraTransform[3][1], p3*cameraTransform[3][2]);// +moveBy;
+		camLookAt = glm::vec3(l1*-cameraTransform[2][0], l2*cameraTransform[2][1], l3*-cameraTransform[2][2]);// +moveBy;
+		camUpDirection = glm::vec3(u1*cameraTransform[1][0], u2*cameraTransform[1][1], u3*-cameraTransform[1][2]);
+		//camPosition = glm::vec3(-cameraTransform[3][0], cameraTransform[3][1], cameraTransform[3][2]);// +moveBy;
+		//camLookAt = camPosition + glm::vec3(-cameraTransform[2][0], cameraTransform[2][1], -cameraTransform[2][2]);// +moveBy;
+		//camUpDirection = glm::vec3(cameraTransform[1][0], cameraTransform[1][1], cameraTransform[1][2]);
+		cDebug::DbgOut(L"cameraTransform 0 0: ", cameraTransform[0][0]);
+		cDebug::DbgOut(L"cameraTransform 0 1: ", cameraTransform[0][1]);
+		cDebug::DbgOut(L"cameraTransform 0 2: ", cameraTransform[0][2]);
+		cDebug::DbgOut(L"cameraTransform 0 3: ", cameraTransform[0][3]);
+		cDebug::DbgOut(L"cameraTransform 1 0: ", cameraTransform[1][0]);
+		cDebug::DbgOut(L"cameraTransform 1 1: ", cameraTransform[1][1]);
+		cDebug::DbgOut(L"cameraTransform 1 2: ", cameraTransform[1][2]);
+		cDebug::DbgOut(L"cameraTransform 1 3: ", cameraTransform[1][3]);
+		cDebug::DbgOut(L"cameraTransform 2 0: ", cameraTransform[2][0]);
+		cDebug::DbgOut(L"cameraTransform 2 1: ", cameraTransform[2][1]);
+		cDebug::DbgOut(L"cameraTransform 2 2: ", cameraTransform[2][2]);
+		cDebug::DbgOut(L"cameraTransform 2 3: ", cameraTransform[2][3]);
+		cDebug::DbgOut(L"cameraTransform 3 0: ", cameraTransform[3][0]);
+		cDebug::DbgOut(L"cameraTransform 3 1: ", cameraTransform[3][1]);
+		cDebug::DbgOut(L"cameraTransform 3 2: ", cameraTransform[3][2]);
+		cDebug::DbgOut(L"cameraTransform 3 3: ", cameraTransform[3][3]);
 		camDirection = glm::normalize(camPosition - camLookAt);
 		return glm::lookAt(camPosition, camLookAt, camUpDirection);
 	}

@@ -216,6 +216,9 @@ void InitialLoading()
 	
 	//openGLWin.segmentationMode = EUCLIDEAN_SEGMENTATION;
 	statusMsg = L"Segmenting mesh";
+	
+	//openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
+	//openGLWin.SetWindowMode(IF_MODE_DEBUG);
 	openGLWin.previewMode = true;
 	glSegmentation.StartSegmentation();
 
@@ -288,6 +291,13 @@ void Render(LPVOID lpParam)
 		openGLWin.SetWindowState(DEFAULT);
 		//return;
 	}*/
+	if (openGLWin.GetWindowMode() == IF_MODE_DEBUG)
+	{
+		if (originalMesh->IsLoaded() && !originalMesh->AreBuffersInitialized())
+			meshHelper.GenerateBuffers();
+		else if (originalMesh->IsLoaded() && originalMesh->AreBuffersInitialized())
+			meshHelper.DrawOriginalMesh();
+	}
 	if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION)
 	{ 
 		if (openGLWin.GetReset() == IF_RESET)
@@ -414,7 +424,8 @@ void Render(LPVOID lpParam)
 			}
 		}	
 
-		meshHelper.DrawAll();
+		if (openGLWin.GetWindowMode() != IF_MODE_DEBUG)
+			meshHelper.DrawAll();
 		if (!gl2DHelper.AreBuffersGenerated())
 			gl2DHelper.GenerateBuffers();
 		gl2DHelper.DrawTrash();

@@ -29,6 +29,8 @@ HWND hButtonHelp;
 std::vector<HWND> interactionUi;
 HWND hButtonExport, hButtonReset;
 HWND hButtonDuplicate;
+HWND hButtonTransformation;
+HWND hButtonFreeCamera;
 HWND hButtonScale, hButtonRotateVertical, hButtonRotateHorizontal;
 
 //WINDOW MODE TABS
@@ -122,7 +124,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 		nullptr,
 		(DLGPROC)GLDlgProc,
 		0);
-
+	//SetWindowLong(openGLWin.parent, GWL_STYLE, 0);
+	//SetWindowLong(openGLWin.parent, GWL_STYLE, WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+	//ShowCursor(false);
 	ShowWindow(openGLWin.parent, SW_SHOW);
 
 	uiFont = CreateFont(40, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
@@ -274,7 +278,7 @@ void StartOpenGLThread(int testMode)
 	openGLWin.testMode = testMode;
 	openGLWin.SetWindowMode(IF_MODE_SEGMENTATION);
 	openGLWin.SetWindowBusyState(IF_BUSYSTATE_BUSY);
-	//openGLWin.SetWindowState(INITIALIZING);
+
 
 	if (openGLWin.glWindowHandle)
 	{
@@ -665,16 +669,32 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	hButtonReset = CreateWindowEx(0, L"BUTTON", L"Reset", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RESET, NULL, 0);
 	hDeleteIcon = (HICON)LoadImage(openGLWin.appInstance, MAKEINTRESOURCE(IDI_TRASH), IMAGE_ICON, 100, 100, NULL);
 
+	hButtonTransformation = CreateWindowEx(0, L"BUTTON", L"Transform", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_TRANSFORMATION, NULL, 0);
+	hButtonFreeCamera = CreateWindowEx(0, L"BUTTON", L"Free Camera", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW | BS_MULTILINE, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_FREE_CAMERA, NULL, 0);
 
 	hButtonScale = CreateWindowEx(0, L"BUTTON", L"Scale", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_SCALE, NULL, 0);
 	hButtonRotateVertical = CreateWindowEx(0, L"BUTTON", L"Rotate ^v", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_ROTATE_VERTICAL, NULL, 0);
 	hButtonRotateHorizontal = CreateWindowEx(0, L"BUTTON", L"Rotate <>", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_ROTATE_HORIZONTAL, NULL, 0);
 
+	if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
+	{
+		interactionUi.push_back(hButtonScale);
+		interactionUi.push_back(hButtonRotateVertical);
+		interactionUi.push_back(hButtonRotateHorizontal);
+		ShowWindow(hButtonTransformation, SW_HIDE);
+		ShowWindow(hButtonFreeCamera, SW_HIDE);
+	}
+	else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+	{
+		interactionUi.push_back(hButtonTransformation);
+		interactionUi.push_back(hButtonFreeCamera);
+		ShowWindow(hButtonRotateVertical, SW_HIDE);
+		ShowWindow(hButtonScale, SW_HIDE);
+		ShowWindow(hButtonRotateHorizontal, SW_HIDE);
+	}
 	interactionUi.push_back(hButtonExport);
 	interactionUi.push_back(hButtonDuplicate);
-	interactionUi.push_back(hButtonScale);
-	interactionUi.push_back(hButtonRotateVertical);
-	interactionUi.push_back(hButtonRotateHorizontal);
+	
 	interactionUi.push_back(hButtonReset);
 	//hDeleteIcon = (HICON)LoadImage(openGLWin.appInstance, MAKEINTRESOURCE(IDI_TRASH), IMAGE_ICON, 128, 128, NULL);
 	//SendMessage(hButtonDelete, STM_SETIMAGE, IMAGE_ICON, (LPARAM)hDeleteIcon);
@@ -1207,6 +1227,39 @@ void InteractiveFusion::ProcessParentUI(WPARAM wParam, LPARAM lParam)
 
 void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 {
+	if (IDC_BUTTON_TRANSFORMATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		if (glSelector.GetManipulationMode() == MANIPULATION_NONE)
+		{
+			if (openGLWin.duplicationMode)
+			{
+				glSelector.ResetTransformationBasePoint();
+				glSelector.Unselect();
+				openGLWin.duplicationMode = false;
+				RedrawManipulationButtons();
+			}
+			openGLWin.colorSelection = true;
+			glSelector.SetManipulationMode(MANIPULATION_SCALE);
+		}
+		else
+		{
+			openGLWin.colorSelection = false;
+			glSelector.Unselect();
+			glSelector.SetManipulationMode(MANIPULATION_NONE);
+		}
+	}
+	if (IDC_BUTTON_FREE_CAMERA == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+
+		glCamera.ResetCameraPosition();
+		
+		if (glCamera.mode == CAMERA_SENSOR)
+		{ 
+			glCamera.mode = CAMERA_FREE;
+		}
+		else
+			glCamera.mode = CAMERA_SENSOR;
+	}
 	if (IDC_BUTTON_HELP_OK == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowBusyState() == IF_BUSYSTATE_BUSY)
@@ -1494,6 +1547,14 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_BUTTON_DUPLICATE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.duplicationMode = !openGLWin.duplicationMode;
+
+		if (openGLWin.duplicationMode && glSelector.GetManipulationMode() != MANIPULATION_NONE)
+		{
+			glSelector.Unselect();
+			openGLWin.colorSelection = false;
+			glSelector.SetManipulationMode(MANIPULATION_NONE);
+			RedrawManipulationButtons();
+		}
 	}
 	if (IDC_BUTTON_SCALE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -1545,9 +1606,9 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		//openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.SetAnswer(ANSWER_YES);
 		//openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
-		//openGLWin.wallThickness = 0.1f;
-		//openGLWin.wallSmoothness = 0.05f;
-		//openGLWin.UpdateSegmentationPreviewValues();
+		openGLWin.wallThickness = 0.1f;
+		openGLWin.wallSmoothness = 0.05f;
+		openGLWin.UpdateSegmentationPreviewValues();
 		meshHelper.RemoveAllHighlights();
 		ShowWindow(hTextWalls, SW_HIDE);
 	}
@@ -1556,9 +1617,9 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		//openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.SetAnswer(ANSWER_NO);
 		//openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
-		//openGLWin.wallThickness = 0.1f;
-		//openGLWin.wallSmoothness = 0.05f;
-		//openGLWin.UpdateSegmentationPreviewValues();
+		openGLWin.wallThickness = 0.1f;
+		openGLWin.wallSmoothness = 0.05f;
+		openGLWin.UpdateSegmentationPreviewValues();
 		meshHelper.RemoveAllHighlights();
 		ShowWindow(hTextWalls, SW_HIDE);
 		//openGLWin.glControl.ResizeOpenGLViewportFull();
@@ -1663,10 +1724,7 @@ void InteractiveFusion::UpdateProcessingValues()
 bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 {
 	LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lParam;
-	if (IDC_BUTTON_MODE_INTERACTION == LOWORD(wParam) ||
-		IDC_BUTTON_MODE_SCAN == LOWORD(wParam) ||
-		IDC_BUTTON_MODE_PREPARE == LOWORD(wParam) ||
-		IDC_BUTTON_MODE_SEGMENTATION == LOWORD(wParam) ||
+	if (IsHandleInUI(item->hwndItem, modeUi) ||
 		IDC_BUTTON_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) ||
 		IDC_BUTTON_SEGMENTATION_EUCLIDEAN == LOWORD(wParam) ||
 		IDC_BUTTON_HELP_OK == LOWORD(wParam))
@@ -1779,6 +1837,8 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		|| IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam)
 		|| IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam)
 		|| IDC_BUTTON_SEGMENTATION_BEGIN == LOWORD(wParam)
+		|| IDC_BUTTON_FREE_CAMERA == LOWORD(wParam)
+		|| IDC_BUTTON_TRANSFORMATION == LOWORD(wParam)
 		|| openGLWin.IsHandleInUI(item->hwndItem, wallSelectionUi)
 		|| openGLWin.IsHandleInUI(item->hwndItem, euclideanUi)
 		|| openGLWin.IsHandleInUI(item->hwndItem, regionGrowthUi)
@@ -1787,8 +1847,12 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 
 		if (IDC_BUTTON_SCALE == LOWORD(wParam) || IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) || IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) || IDC_BUTTON_PROCESSING_FILLHOLES == LOWORD(wParam) || IDC_BUTTON_REMOVECOMPONENTS == LOWORD(wParam))
 			SelectObject(item->hDC, smallUiFont);
-		else if (IDC_BUTTON_DUPLICATE == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+		else if (IDC_BUTTON_DUPLICATE == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET
+			|| IDC_BUTTON_TRANSFORMATION == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
 			SelectObject(item->hDC, smallUiFont);
+		else if (IDC_BUTTON_FREE_CAMERA == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET
+			)
+			SelectObject(item->hDC, mediumUiFont);
 		else
 			SelectObject(item->hDC, uiFont);
 
@@ -1858,7 +1922,10 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 			SelectObject(item->hDC, buttonActiveBrush);
 		else if (IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) && glSelector.GetManipulationMode() == MANIPULATION_ROTATE_X)
 			SelectObject(item->hDC, buttonActiveBrush);
-
+		else if (IDC_BUTTON_TRANSFORMATION == LOWORD(wParam) && glSelector.GetManipulationMode() != MANIPULATION_NONE)
+			SelectObject(item->hDC, buttonActiveBrush);
+		else if (IDC_BUTTON_FREE_CAMERA == LOWORD(wParam) && glCamera.mode == CAMERA_FREE)
+			SelectObject(item->hDC, buttonActiveBrush);
 
 		SetBkMode(item->hDC, TRANSPARENT);
 
@@ -1868,7 +1935,7 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		}
 		else if (IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_WALLSIZE_MINUS == LOWORD(wParam)
 			|| IDC_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) || IDC_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) ||
-			IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) || IDC_BUTTON_PROCESSING_FILLHOLES == LOWORD(wParam) || IDC_BUTTON_REMOVECOMPONENTS == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_BEGIN == LOWORD(wParam))
+			IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) || IDC_BUTTON_PROCESSING_FILLHOLES == LOWORD(wParam) || IDC_BUTTON_REMOVECOMPONENTS == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_BEGIN == LOWORD(wParam) || IDC_BUTTON_TRANSFORMATION == LOWORD(wParam) || IDC_BUTTON_DUPLICATE == LOWORD(wParam) || IDC_BUTTON_FREE_CAMERA == LOWORD(wParam))
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 20, 20);
 		else
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 500, 500);
@@ -2067,17 +2134,20 @@ void InteractiveFusion::MoveButtonsOnResize()
 			MoveWindow(hButtonScale, width - 250, 500, 75, 75, true);
 			MoveWindow(hButtonRotateHorizontal, width - 165, 500, 75, 75, true);
 			MoveWindow(hButtonRotateVertical, width - 80, 500, 75, 75, true);
+
+			MoveWindow(hButtonFreeCamera, width - 250, 350, 75, 75, true);
 		}
 		else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
 		{
-			MoveWindow(hButtonExport, width - 200, height - 150, 150, 150, true);
+			
 
-			MoveWindow(hButtonDuplicate, width - 175, 250, 100, 100, true);
-			MoveWindow(hButtonReset, width - 175, 100, 100, 100, true);
-
-			MoveWindow(hButtonScale, width - 250, 350, 75, 75, true);
-			MoveWindow(hButtonRotateHorizontal, width - 165, 350, 75, 75, true);
-			MoveWindow(hButtonRotateVertical, width - 80, 350, 75, 75, true);
+			
+			MoveWindow(hButtonReset, width - 187, height - 600, 125, 125, true);
+			MoveWindow(hButtonFreeCamera, width - 225, height - 425, 200, 100, true);
+			MoveWindow(hButtonDuplicate, width - 125, height - 300, 120, 75, true);
+			MoveWindow(hButtonTransformation, width - 245, height - 300, 120, 75, true);
+			
+			MoveWindow(hButtonExport, width - 187, height - 175, 125, 125, true);
 		}
 	}
 
@@ -2119,6 +2189,13 @@ void InteractiveFusion::RedrawManipulationButtons()
 	GetClientRect(hButtonRotateVertical, &rect);
 
 	InvalidateRect(hButtonRotateVertical, &rect, TRUE);
+
+	GetClientRect(hButtonTransformation, &rect);
+
+	InvalidateRect(hButtonTransformation, &rect, TRUE);
+	GetClientRect(hButtonDuplicate, &rect);
+
+	InvalidateRect(hButtonDuplicate, &rect, TRUE);
 	//MapWindowPoints(hTextWalls, openGLWin.glWindowHandle, (POINT *)&rect, 2);
 	//RedrawWindow(hTextWalls, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
 }
