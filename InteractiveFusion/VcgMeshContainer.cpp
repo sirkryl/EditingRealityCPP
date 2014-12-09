@@ -3,6 +3,7 @@
 #include "OpenGLShaders.h"
 #include "InteractiveFusion.h"
 #include "OpenGLCamera.h"
+#include "SelectionHelper.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <vcg/complex/algorithms/hole.h>
@@ -501,6 +502,10 @@ void VCGMeshContainer::Draw()
 		shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
 		shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
 	
+		/*if (colorSelection && glSelector.GetManipulationMode() != MANIPULATION_NONE)
+		{
+			modelMatrix = glm::translate(glm::mat4(1.0), centerPoint) * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+		}*/
 		if (!isSelected || previewSelection)
 		{
 			//if (previewSelection)
@@ -551,6 +556,10 @@ void VCGMeshContainer::DrawBB()
 		shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
 		shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
 
+		/*if (colorSelection && glSelector.GetManipulationMode() != MANIPULATION_NONE)
+		{
+			modelMatrix = glm::translate(glm::mat4(1.0), centerPoint) * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+		} else */
 		if (!isSelected || previewSelection)
 		{
 			//if (previewSelection)
@@ -607,6 +616,11 @@ bool VCGMeshContainer::IsLoaded()
 	return isLoaded;
 }
 
+glm::vec3 VCGMeshContainer::GetBasePoint()
+{
+	basePoint = glm::vec3(centerPoint.x, lowerBounds.y, centerPoint.z);
+	return basePoint;
+}
 void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int> orien)
 {
 	//glm::vec3 oldLowBounds;
@@ -934,6 +948,18 @@ void VCGMeshContainer::SetAngleZ(bool positive)
 		angleZ -= rotateBy;
 
 	zRotation = glm::rotate(glm::mat4(1.0), angleZ, glm::vec3(0.0f, 0.0f, 1.0f));
+}
+
+void VCGMeshContainer::RotateX(int angle)
+{
+	angleX = angle;
+	xRotation = glm::rotate(glm::mat4(1.0), angleX, glm::vec3(1.0f, 0.0f, 0.0f));
+}
+
+void VCGMeshContainer::RotateY(int angle)
+{
+	angleY = angle;
+	yRotation = glm::rotate(glm::mat4(1.0), angleY, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 void VCGMeshContainer::SetColorCode(int value)

@@ -11,6 +11,8 @@ public:
 	glm::vec3 hitPoint{ -1, -1, -1 };
 	glm::vec3 nearPoint;
 
+	void ProcessObjectManipulation();
+
 	void ProcessSelectedObject();
 
 	void ProcessPicking();
@@ -26,10 +28,15 @@ public:
 	void Unselect();
 	void ResetWallObject();
 	void SelectWallObject();
+
+	void ResetTransformationBasePoint();
 private:
 
 	ManipulationMode manipMode = MANIPULATION_NONE;
 
+
+	glm::vec3 manipulationBasePoint;
+	bool manipulationPointInitialized = false;
 	int selectedButton = -1;
 	int GetColorUnderCursor();
 	bool PlacingPreview();

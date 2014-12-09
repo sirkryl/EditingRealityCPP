@@ -63,6 +63,10 @@ public:
 	void SetAngleX(bool positive);
 	void SetAngleY(bool positive);
 	void SetAngleZ(bool positive);
+
+	void RotateX(int degree);
+	void RotateY(int degree);
+
 	void SetScale(bool positive);
 	void ResetSelectedTransformation();
 
@@ -85,13 +89,14 @@ public:
 	void TogglePreviewSelection(bool flag);
 	void IsOverTrash(bool flag);
 	void ClearMesh();
+	glm::vec3 GetBasePoint();
 private:
 	VCGMesh currentMesh;
 	void SetSnapTransform(std::vector<int> orien);
 	glm::vec3 FindClosestPoint(glm::vec3 inputPoint);
 	glm::vec3 offSet;
 	glm::vec3 snapPoint;
-
+	glm::vec3 basePoint;
 	bool is2D = false;
 	bool isDuplicate = false;
 	bool isOverTrash = false;

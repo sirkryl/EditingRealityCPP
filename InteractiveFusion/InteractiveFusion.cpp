@@ -929,7 +929,7 @@ WindowMode InteractiveFusion::GetWindowMode()
 void InteractiveFusion::SetWindowMode(WindowMode wMode)
 {
 	mode = wMode;
-
+	glSelector.Unselect();
 	HideWholeUI();
 	openGLWin.glControl.SetOffSetBottom(0);
 	openGLWin.glControl.SetOffSetRight(0);
@@ -1042,18 +1042,55 @@ void InteractiveFusion::SetWindowBusyState(WindowBusyState bState)
 
 	if (busyState == IF_BUSYSTATE_BUSY)
 	{ 
-		//ShowUI(helpUi);
-		DeactivateWholeUI();
+		
+		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION)
+		{
+			if (glSegmentation.GetSegmentationState() == IF_SEGSTATE_PLANE_SEGMENTATION)
+				DeactivateUI(wallSelectionUi);
+			else
+			{ 
+				DeactivateUI(segmentationPreviewUi);
+				DeactivateUI(euclideanUi);
+				DeactivateUI(regionGrowthUi);
+			}
+		}
+		else if (openGLWin.GetWindowMode() == IF_MODE_INTERACTION)
+		{
+			DeactivateUI(interactionUi);
+		}
+		else if (openGLWin.GetWindowMode() == IF_MODE_PROCESSING)
+		{
+			DeactivateUI(processingUi);
+		}
+		DeactivateUI(modeUi);
 		//DeactivateUI(modeUi);
 	}
 	else if (busyState == IF_BUSYSTATE_DEFAULT)
 	{ 
 		//HideUI(helpUi);
-		ActivateWholeUI();
-		//ActivateUI(modeUi);
+		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION)
+		{
+			if (glSegmentation.GetSegmentationState() == IF_SEGSTATE_PLANE_SEGMENTATION)
+				ActivateUI(wallSelectionUi);
+			else
+			{
+				ActivateUI(segmentationPreviewUi);
+				ActivateUI(euclideanUi);
+				ActivateUI(regionGrowthUi);
+			}
+		}
+		else if (openGLWin.GetWindowMode() == IF_MODE_INTERACTION)
+		{
+			ActivateUI(interactionUi);
+		}
+		else if (openGLWin.GetWindowMode() == IF_MODE_PROCESSING)
+		{
+			ActivateUI(processingUi);
+		}
+		ActivateUI(modeUi);
 	}
 
-	MoveButtonsOnResize();
+	//MoveButtonsOnResize();
 
 }
 
@@ -1413,6 +1450,9 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 	}
 	if (IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
+
+		cDebug::DbgOut(L"BEGINNING: ", openGLWin.wallSmoothness);
+
 		if (openGLWin.wallSmoothness >= 1.00f)
 			return;
 		float step = 0.0f;
@@ -1425,8 +1465,8 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		openGLWin.wallSmoothness += step;
 		cDebug::DbgOut(L"PLUS: ", openGLWin.wallSmoothness);
 		//meshHelper.RemoveAllHighlights();
-		
 		openGLWin.UpdateWallSelectionValues();
+		cDebug::DbgOut(L"UPDATED: ", openGLWin.wallSmoothness);
 	}
 	if (IDC_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -1458,26 +1498,56 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_BUTTON_SCALE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.RedrawManipulationButtons();
-		glSelector.SetManipulationMode(MANIPULATION_SCALE);
+		if (glSelector.GetManipulationMode() != MANIPULATION_SCALE)
+		{ 
+			openGLWin.colorSelection = true;
+			glSelector.SetManipulationMode(MANIPULATION_SCALE);
+		}
+		else
+		{ 
+			openGLWin.colorSelection = false;
+			glSelector.Unselect();
+			glSelector.SetManipulationMode(MANIPULATION_NONE);
+		}
 	}
 	if (IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.RedrawManipulationButtons();
-		glSelector.SetManipulationMode(MANIPULATION_ROTATE_Y);
+		if (glSelector.GetManipulationMode() != MANIPULATION_ROTATE_Y)
+		{
+			openGLWin.colorSelection = true;
+			glSelector.SetManipulationMode(MANIPULATION_ROTATE_Y);
+		}
+		else
+		{
+			openGLWin.colorSelection = false;
+			glSelector.Unselect();
+			glSelector.SetManipulationMode(MANIPULATION_NONE);
+		}
 	}
 	if (IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.RedrawManipulationButtons();
-		glSelector.SetManipulationMode(MANIPULATION_ROTATE_X);
+		if (glSelector.GetManipulationMode() != MANIPULATION_ROTATE_X)
+		{
+			openGLWin.colorSelection = true;
+			glSelector.SetManipulationMode(MANIPULATION_ROTATE_X);
+		}
+		else
+		{
+			openGLWin.colorSelection = false;
+			glSelector.Unselect();
+			glSelector.SetManipulationMode(MANIPULATION_NONE);
+		}
 	}
 	if (IDC_BUTTON_YES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.SetAnswer(ANSWER_YES);
 		//openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
-		openGLWin.wallThickness = 0.1f;
-		openGLWin.wallSmoothness = 0.05f;
-		openGLWin.UpdateSegmentationPreviewValues();
+		//openGLWin.wallThickness = 0.1f;
+		//openGLWin.wallSmoothness = 0.05f;
+		//openGLWin.UpdateSegmentationPreviewValues();
 		meshHelper.RemoveAllHighlights();
 		ShowWindow(hTextWalls, SW_HIDE);
 	}
@@ -1486,9 +1556,9 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		//openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.SetAnswer(ANSWER_NO);
 		//openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
-		openGLWin.wallThickness = 0.1f;
-		openGLWin.wallSmoothness = 0.05f;
-		openGLWin.UpdateSegmentationPreviewValues();
+		//openGLWin.wallThickness = 0.1f;
+		//openGLWin.wallSmoothness = 0.05f;
+		//openGLWin.UpdateSegmentationPreviewValues();
 		meshHelper.RemoveAllHighlights();
 		ShowWindow(hTextWalls, SW_HIDE);
 		//openGLWin.glControl.ResizeOpenGLViewportFull();
@@ -1611,27 +1681,58 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		HBRUSH bgBrush = CreateSolidBrush(RGB(10, 10, 10));
 		HBRUSH inactiveBrush = CreateSolidBrush(RGB(60, 60, 60));
 		SelectObject(item->hDC, bgBrush);
-		if (IsWindowEnabled(item->hwndItem))
+		if (IsHandleInUI(item->hwndItem, modeUi) || IsHandleInUI(item->hwndItem, segmentationPreviewUi))
 		{
-			SetTextColor(item->hDC, RGB(245, 245, 245));
-			SelectObject(item->hDC, buttonModePen);
-		}
-		else if (item->itemState & ODS_SELECTED)
-		{
-			SetTextColor(item->hDC, RGB(245, 245, 245));
-			SelectObject(item->hDC, buttonModePen);
-			//SelectObject(item->hDC, buttonPressedBrush);
-			//SelectObject(item->hDC, buttonPressedPen);
+			if (item->hwndItem == hPrepareText && openGLWin.GetWindowMode() == IF_MODE_PREPARE_SCAN ||
+				item->hwndItem == hScanText && openGLWin.GetWindowMode() == IF_MODE_SCAN ||
+				item->hwndItem == hSegmentationText && openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION ||
+				item->hwndItem == hInteractionText && openGLWin.GetWindowMode() == IF_MODE_INTERACTION ||
+				item->hwndItem == hInteractionText && openGLWin.GetWindowMode() == IF_MODE_PROCESSING ||
+				item->hwndItem == hButtonEuclideanSegmentation && glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN ||
+				item->hwndItem == hButtonRegionGrowthSegmentation && glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
+			{
+				SelectObject(item->hDC, inactiveBrush);
+				//	FillRect(item->hDC, &item->rcItem, CreateSolidBrush(RGB(50,50,50)));
+				SelectObject(item->hDC, CreatePen(PS_SOLID, 2, RGB(100, 100, 100)));
+				SetTextColor(item->hDC, RGB(245, 245, 245));
+			}
+			else if (item->itemState & ODS_SELECTED)
+			{
+				SetTextColor(item->hDC, RGB(245, 245, 245));
+				SelectObject(item->hDC, buttonModePen);
+				//SelectObject(item->hDC, buttonPressedBrush);
+				//SelectObject(item->hDC, buttonPressedPen);
+			}
+			else
+			{
+				SetTextColor(item->hDC, RGB(245, 245, 245));
+				SelectObject(item->hDC, buttonModePen);
+			}
+			
 		}
 		else
 		{
-			SelectObject(item->hDC, inactiveBrush);
-			//	FillRect(item->hDC, &item->rcItem, CreateSolidBrush(RGB(50,50,50)));
-			SelectObject(item->hDC, CreatePen(PS_SOLID, 2, RGB(100, 100, 100)));
-			SetTextColor(item->hDC, RGB(245, 245, 245));
-			//SelectObject(item->hDC, buttonDefaultPen);
+			if (IsWindowEnabled(item->hwndItem))
+			{
+				SetTextColor(item->hDC, RGB(245, 245, 245));
+				SelectObject(item->hDC, buttonModePen);
+			}
+			else if (item->itemState & ODS_SELECTED)
+			{
+				SetTextColor(item->hDC, RGB(245, 245, 245));
+				SelectObject(item->hDC, buttonModePen);
+				//SelectObject(item->hDC, buttonPressedBrush);
+				//SelectObject(item->hDC, buttonPressedPen);
+			}
+			else
+			{
+				SelectObject(item->hDC, inactiveBrush);
+				//	FillRect(item->hDC, &item->rcItem, CreateSolidBrush(RGB(50,50,50)));
+				SelectObject(item->hDC, CreatePen(PS_SOLID, 2, RGB(100, 100, 100)));
+				SetTextColor(item->hDC, RGB(245, 245, 245));
+				//SelectObject(item->hDC, buttonDefaultPen);
+			}
 		}
-
 		SetBkMode(item->hDC, TRANSPARENT);
 
 		RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 0, 0);

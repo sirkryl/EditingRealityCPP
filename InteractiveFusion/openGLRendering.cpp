@@ -352,20 +352,66 @@ void Render(LPVOID lpParam)
 		}
 		else if (openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
 		{
-			if (Keys::GetKeyState(VK_LBUTTON) && (glCamera.mode == CAMERA_SENSOR || openGLWin.colorSelection) && openGLWin.IsMouseInOpenGLWindow() && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
-			{
-				if (glSelector.selectedIndex == -1)
-					glSelector.ProcessPicking();
-				else if (glSelector.selectedIndex != -1 && !openGLWin.colorSelection && openGLWin.IsMouseInOpenGLWindow())
-					glSelector.ProcessSelectedObject();
-			}
-			else if (glSelector.selectedIndex != -1)
+			if ((glCamera.mode == CAMERA_SENSOR || openGLWin.colorSelection) && openGLWin.IsMouseInOpenGLWindow() && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
 			{ 
-				if (openGLWin.colorSelection)
-					glSelector.ProcessPicking();
+				if (!openGLWin.colorSelection)
+				{
+					if (Keys::GetKeyState(VK_LBUTTON))
+					{
+						if (glSelector.selectedIndex == -1)
+							glSelector.ProcessPicking();
+						else if (glSelector.selectedIndex != -1 && !openGLWin.colorSelection && openGLWin.IsMouseInOpenGLWindow())
+							glSelector.ProcessSelectedObject();
+					}
+					else if (glSelector.selectedIndex != -1 && glSelector.GetManipulationMode() == MANIPULATION_NONE)
+					{
+						glSelector.ProcessPlacing();
+					}
+				}
 				else
+				{
+					if (Keys::GetKeyStateOnce(VK_LBUTTON))
+					{
+						//glSelector.ResetTransformationBasePoint();
+						glSelector.ProcessPicking();
+					}
+					else if (glSelector.selectedIndex != -1 && glSelector.GetManipulationMode() != MANIPULATION_NONE)
+					{
+						glSelector.ProcessObjectManipulation();
+					}
+				}
+				/*if (glSelector.GetManipulationMode() != MANIPULATION_NONE && openGLWin.colorSelection)
+				{
+					if(Keys::GetKeyStateOnce(VK_LBUTTON))
+					{ 
+						if (glSelector.selectedIndex == -1)
+							glSelector.ProcessPicking();
+						else
+							glSelector.ProcessPlacing();
+					}
+					if (glSelector.selectedIndex != -1)
+					{
+						glSelector.ProcessSelectedObject();
+					}
+				}
+				else if (Keys::GetKeyState(VK_LBUTTON) && !openGLWin.colorSelection)
+				{
+					if (glSelector.selectedIndex == -1)
+						glSelector.ProcessPicking();
+					else if (glSelector.selectedIndex != -1 && !openGLWin.colorSelection && openGLWin.IsMouseInOpenGLWindow())
+						glSelector.ProcessSelectedObject();
+				}
+				else if (Keys::GetKeyStateOnce(VK_LBUTTON) && openGLWin.colorSelection)
+				{
+					glSelector.ProcessPicking();
+				}
+				else if (glSelector.selectedIndex != -1 && glSelector.GetManipulationMode() == MANIPULATION_NONE && !openGLWin.colorSelection)
+				{ 
 					glSelector.ProcessPlacing();
-			}			
+				}*/
+
+				
+			}
 		}	
 
 		meshHelper.DrawAll();

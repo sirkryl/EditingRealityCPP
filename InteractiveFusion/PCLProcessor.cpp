@@ -175,8 +175,10 @@ bool PCLProcessor::PlaneSegmentation() {
 		openGLWin.SetAnswer(ANSWER_NOTAVAILABLE);
 		while (openGLWin.GetAnswer() == ANSWER_NOTAVAILABLE)
 		{
+			boost::this_thread::sleep(boost::posix_time::microseconds(10000));
 			if (storedThickness != openGLWin.wallThickness || storedSmoothness != openGLWin.wallSmoothness)
 			{
+				cDebug::DbgOut(L"NOTICED: ", openGLWin.wallSmoothness);
 				//openGLWin.SetWindowState(SEGMENTATION);
 				redoingSegmentation = true;
 				break;
@@ -184,10 +186,10 @@ bool PCLProcessor::PlaneSegmentation() {
 			//if (!openGLWin.wallSelection)
 			//	break;
 			//PV2->spinOnce(100);
-			boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+
 		}
 		
-		
+		cDebug::DbgOut(L"GETTING BUSY: ", openGLWin.wallSmoothness);
 		if (redoingSegmentation)
 			statusMsg = L"Updating plane segmentation";
 		else if (planeCoefficients.size() == 0)

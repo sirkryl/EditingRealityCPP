@@ -10,6 +10,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Keys.h"
 
+int oldPosX;
+int oldPosY;
+bool firstClick = false;
 int SelectionHelper::GetColorUnderCursor()
 {
 	POINT cursorPos;
@@ -35,7 +38,7 @@ void SelectionHelper::RayCast(glm::vec3* v1, glm::vec3* v2)
 	GetClientRect(openGLWin.glWindowHandle, &rect);
 	cursorPos.y = rect.bottom - cursorPos.y;
 
-	glm::vec4 viewport = glm::vec4(0.0f, (float)openGLWin.glControl.GetOffSetBottom(), openGLWin.glControl.GetViewportWidth(), openGLWin.glControl.GetViewportHeight());
+	glm::vec4 viewport = glm::vec4(0.0f, 0.0f, openGLWin.glControl.GetViewportWidth(), openGLWin.glControl.GetViewportHeight());
 
 	*v1 = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 0.0f), glCamera.GetViewMatrix(), openGLWin.glControl.GetProjectionMatrix(), viewport);
 	*v2 = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 1.0f), glCamera.GetViewMatrix(), openGLWin.glControl.GetProjectionMatrix(), viewport);
@@ -238,12 +241,66 @@ bool SelectionHelper::PlacingPreview()
 	}
 }
 
+void SelectionHelper::ResetTransformationBasePoint()
+{
+	manipulationPointInitialized = false;
+}
+
+void SelectionHelper::ProcessObjectManipulation()
+{
+	if (!manipulationPointInitialized)
+	{
+		manipulationPointInitialized = true;
+		manipulationBasePoint = meshData[selectedIndex]->GetBasePoint();
+	}
+	meshData[selectedIndex]->TranslateVerticesToPoint(manipulationBasePoint, { 0, 1, 0 });
+
+
+	if (Keys::GetKeyState(VK_LBUTTON) &&
+		openGLWin.IsMouseInOpenGLWindow())
+	{
+		POINT pCur;
+		GetCursorPos(&pCur);
+		int offSetX = (pCur.y - oldPosY)*0.2f;
+		int offSetY = (pCur.x - oldPosX)*0.2f;
+
+		if (firstClick)
+		{ 
+			meshData[selectedIndex]->RotateX(offSetX);
+			meshData[selectedIndex]->RotateY(offSetY);
+		}
+		oldPosX = pCur.x;
+		oldPosY = pCur.y;
+		firstClick = true;
+	}
+	else
+		firstClick = false;
+
+	if (Keys::GetKeyState(VK_DELETE))
+	{
+		meshHelper.DeleteMesh(selectedIndex);
+		selectedIndex = -1;
+		cDebug::DbgOut(L"pressed ENTF alright");
+	}
+	if (openGLWin.wheelDelta < 0)
+	{
+		meshData[selectedIndex]->SetScale(false);
+	}
+	else if (openGLWin.wheelDelta > 0)
+	{
+		meshData[selectedIndex]->SetScale(true);
+	}
+	openGLWin.wheelDelta = 0;
+
+}
+
 void SelectionHelper::ProcessSelectedObject()
 {
 	//while (previewThreadActive)
 	//{
 	//cDebug::DbgOut(L"ahoi", 1);
 	//boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+
 	if (!PlacingPreview())
 	{
 		meshData[selectedIndex]->TogglePreviewSelection(false);
@@ -350,7 +407,7 @@ void SelectionHelper::ProcessPicking()
 {
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
-		if (!(*mI)->IsWall() || openGLWin.colorSelection)
+		if (!(*mI)->IsWall() || (openGLWin.colorSelection && GetManipulationMode() == MANIPULATION_NONE))
 			(*mI)->DrawBB();
 	}
 	int tmpIndex = GetColorUnderCursor();
@@ -377,7 +434,10 @@ void SelectionHelper::ProcessPicking()
 		if (selectedIndex != -1)
 		{
 			if (openGLWin.colorSelection)
+			{ 
 				meshData[selectedIndex]->ToggleSelectedColor(false);
+				ResetTransformationBasePoint();
+			}
 			meshData[selectedIndex]->SetSelected(false);
 		}
 		openGLWin.ShowStatusBarMessage(L"Selecting object #" + to_wstring(tmpIndex));
@@ -405,7 +465,12 @@ void SelectionHelper::ProcessPicking()
 			openGLWin.ShowStatusBarMessage(L"Unselecting object #" + to_wstring(selectedIndex));
 
 			if (openGLWin.colorSelection)
-				meshData[selectedIndex]->ToggleSelectedColor(false);
+			{
+				if (GetManipulationMode() == MANIPULATION_NONE)
+					meshData[selectedIndex]->ToggleSelectedColor(false);
+				else
+					return;
+			}
 			meshData[selectedIndex]->SetSelected(false);
 			selectedIndex = -1;
 		}
@@ -456,7 +521,11 @@ void SelectionHelper::SetManipulationMode(ManipulationMode mode)
 void SelectionHelper::Unselect()
 {
 	if (selectedIndex != -1)
+	{
 		meshData[selectedIndex]->SetSelected(false);
+		meshData[selectedIndex]->ToggleSelectedColor(false);
+		ResetTransformationBasePoint();
+	}
 	selectedIndex = -1;
 }
 

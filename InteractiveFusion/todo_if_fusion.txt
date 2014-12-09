@@ -7,7 +7,8 @@ drag up down -> window scroll
 
 Text size and positioning change on 1280x720 (tablet):
 
-- Wall text move down
+
 - Percent and Status msg too close to one another (maybe increase status rectangle in the middle?)
 - Check buttons for consistency
 - Adjust Selection Mode to Tablet Touchcontrols (look above) in Tabletmode
+- SCALE/ROTATE etc should be different on tablet (maybe fix object in the center of screen and rotate with drag and drop and scale with zoom)
