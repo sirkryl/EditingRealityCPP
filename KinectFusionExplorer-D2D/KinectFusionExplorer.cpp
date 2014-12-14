@@ -224,8 +224,10 @@ int CKinectFusionExplorer::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, H
 	SetDlgItemText(hWndApp, IDC_FUSION_STATIC_HELP, L"Press 'RESET' to start over and 'DONE' if you're satisfied with your scan.");
 	SendMessage(hHelpText, WM_SETFONT, (WPARAM)mediumFont, TRUE);
 
-	fusionUiElements.push_back(hButtonTestOne);
-	fusionUiElements.push_back(hButtonTestTwo);
+	ShowWindow(hButtonTestOne, SW_HIDE);
+	ShowWindow(hButtonTestTwo, SW_HIDE);
+	//fusionUiElements.push_back(hButtonTestOne);
+	//fusionUiElements.push_back(hButtonTestTwo);
 	fusionUiElements.push_back(hButtonInteractionMode);
 	fusionUiElements.push_back(hButtonResetReconstruction);
 	fusionUiElements.push_back(hButtonStart);
@@ -1508,9 +1510,7 @@ void CKinectFusionExplorer::FinishScan(int testMode)
 		//openGLWin.testMode = 0;
 		//SetStatusMessage(L"Creating mesh and entering interaction mode. Please wait...");
 		m_bSavingMesh = true;
-
-		// Pause integration while we're saving
-		bool wasPaused = m_params.m_bPauseIntegration;
+		interactionMode = true;
 		m_params.m_bPauseIntegration = true;
 		m_processor.SetParams(m_params);
 
@@ -1538,6 +1538,7 @@ void CKinectFusionExplorer::FinishScan(int testMode)
 		// Restore pause state of integration
 		m_processor.SetParams(m_params);
 
+		
 		m_bSavingMesh = false;
 	}
 	else if (testMode == 1)
@@ -1657,7 +1658,7 @@ void CKinectFusionExplorer::HandleKeyInput()
 		{
 			ShowWindow(hButtonInteractionMode, SW_SHOW);
 			ShowWindow(hButtonResetReconstruction, SW_SHOW);
-			ShowWindow(hButtonTestOne, SW_SHOW);
+			//ShowWindow(hButtonTestOne, SW_SHOW);
 			//ShowWindow(hButtonTestTwo, SW_SHOW);
 			ShowWindow(fusionDebugHandle, SW_HIDE);
 		}
@@ -1668,7 +1669,7 @@ void CKinectFusionExplorer::HandleKeyInput()
 			ShowWindow(fusionDebugHandle, SW_SHOW);
 			ShowWindow(hButtonInteractionMode, SW_HIDE);
 			ShowWindow(hButtonResetReconstruction, SW_HIDE);
-			ShowWindow(hButtonTestOne, SW_HIDE);
+			//ShowWindow(hButtonTestOne, SW_HIDE);
 			//ShowWindow(hButtonTestTwo, SW_HIDE);
 			MoveWindow(fusionDebugHandle, rRect.right - 400, 0, 400, rRect.bottom, true);
 			InitializeUIControls();
@@ -1772,7 +1773,7 @@ void CKinectFusionExplorer::SetWindowState(FusionState fState)
 		
 		ShowWindow(hButtonInteractionMode, SW_SHOW);
 		ShowWindow(hButtonResetReconstruction, SW_SHOW);
-		ShowWindow(hButtonTestOne, SW_SHOW);
+		//ShowWindow(hButtonTestOne, SW_SHOW);
 		//ShowWindow(hButtonTestTwo, SW_SHOW);
 		ShowWindow(hButtonSlider, SW_SHOW);
 		EnableWindow(hButtonSlider, false);
@@ -1795,7 +1796,7 @@ void CKinectFusionExplorer::SetWindowState(FusionState fState)
 		ShowWindow(hCountdownText, SW_SHOW);
 		ShowWindow(hButtonInteractionMode, SW_SHOW);
 		ShowWindow(hButtonResetReconstruction, SW_SHOW);
-		ShowWindow(hButtonTestOne, SW_SHOW);
+		//ShowWindow(hButtonTestOne, SW_SHOW);
 		//ShowWindow(hButtonTestTwo, SW_SHOW);
 		ShowWindow(hHelpText, SW_SHOW);
 		EnableWindow(hButtonInteractionMode, false);
@@ -1813,7 +1814,7 @@ void CKinectFusionExplorer::SetWindowState(FusionState fState)
 		ShowWindow(GetDlgItem(m_hWnd, IDC_DEPTH_VIEW), SW_SHOW);
 		ShowWindow(GetDlgItem(m_hWnd, IDC_TRACKING_RESIDUALS_VIEW), SW_SHOW);
 		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_INTERACTION_MODE), SW_SHOW);
-		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_INTERACTION), SW_SHOW);
+		//ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_INTERACTION), SW_SHOW);
 		//ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_TEST_OPENGL), SW_SHOW);
 		ShowWindow(GetDlgItem(m_hWnd, IDC_BUTTON_RESET_RECONSTRUCTION), SW_SHOW);
 
