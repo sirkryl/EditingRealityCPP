@@ -4,34 +4,25 @@
 // </copyright>
 //------------------------------------------------------------------------------
 #include "KinectFusion.h"
+//own namespace includes
+#include "Keys.h"
+#include "InteractiveFusion.h"
+
 // Fusion Library includes
 #include "stdafx.h"
 #include "FusionResources.h"
-#include "IFResources.h"
 #include "KinectFusionProcessorFrame.h"
 #include "KinectFusionHelper.h"
 
 //3rd party includes
 #include <boost/thread/thread.hpp>
 
-//own namespace includes
-#include "Keys.h"
-
-#include "InteractiveFusion.h"
-
-LRESULT CALLBACK FusionDebugRouter(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
 //OpenGLWin openGLWin;
 bool initDone = false;
 bool windowsInitialized = false;
 float fusionRatio = 480.0f / 640.0f;
-bool debugMode = true;
-bool resumed = false;
-bool interactionMode = false;
 
 bool mouseDown = false;
-
-
 
 HWND hWndApp;
 
@@ -39,6 +30,7 @@ HWND hWndApp;
 std::vector<HWND> prepareUi;
 HWND hButtonStart;
 HWND hStartTextBig, hStartTextSmall, hHelpText;
+HWND hStartMeshQuality;
 
 std::vector<HWND> countdownUi;
 HWND hCountdownText;
@@ -61,13 +53,6 @@ HWND fusionDebugHandle;
 
 //STATUS HANDLE
 HWND fusionStatusHandle;
-
-
-
-#define MIN_DEPTH_DISTANCE_MM 350   // Must be greater than 0
-#define MAX_DEPTH_DISTANCE_MM 8000
-#define MIN_INTEGRATION_WEIGHT 1    // Must be greater than 0
-#define MAX_INTEGRATION_WEIGHT 1000
 
 #define WM_FRAMEREADY           (WM_USER + 0)
 #define WM_UPDATESENSORSTATUS   (WM_USER + 1)
@@ -192,7 +177,7 @@ int KinectFusion::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, HWND &fusi
 	hButtonStart = CreateWindowEx(0, L"Button", L"START", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_PREPARE_BUTTON_START, hInstance, 0);
 	hButtonSlider = CreateWindowEx(0, L"Button", L"", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_PREPARE_SLIDER_BUTTON, hInstance, 0);
 	hSliderBackground = CreateWindowEx(0, L"Button", L"", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_PREPARE_SLIDER_BACKGROUND, hInstance, 0);
-	hSliderText = CreateWindowEx(0, L"STATIC", L"0m", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, 50, 50, 100, 50, hWndApp, (HMENU)IDC_PREPARE_SLIDER_TEXT, hInstance, 0);
+	hSliderText = CreateWindowEx(0, L"STATIC", L"0m", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTER | SS_CENTERIMAGE, 50, 50, 100, 50, hWndApp, (HMENU)IDC_PREPARE_SLIDER_TEXT, hInstance, 0);
 
 	SendMessage(hSliderText, WM_SETFONT, (WPARAM)openGLWin.smallUiFont, TRUE);
 
@@ -216,6 +201,11 @@ int KinectFusion::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, HWND &fusi
 
 	SendMessage(hHelpText, WM_SETFONT, (WPARAM)openGLWin.mediumUiFont, TRUE);
 
+	hStartMeshQuality = CreateWindowEx(0, L"STATIC", L"Mesh Quality: LOW", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWndApp, (HMENU)IDC_PREPARE_TEXT_MESHQUALITY, openGLWin.appInstance, 0);
+
+	SendMessage(hStartMeshQuality, WM_SETFONT, (WPARAM)openGLWin.smallUiFont, TRUE);
+
+
 	EnableWindow(hButtonSlider, false);
 	EnableWindow(hSliderBackground, false);
 
@@ -230,7 +220,7 @@ int KinectFusion::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, HWND &fusi
 	prepareUi.push_back(hHelpText);
 	prepareUi.push_back(hButtonScanDone);
 	prepareUi.push_back(hButtonScanReset);
-
+	prepareUi.push_back(hStartMeshQuality);
 
 	countdownUi.push_back(hCountdownText);
 	countdownUi.push_back(hHelpText);
@@ -243,7 +233,7 @@ int KinectFusion::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, HWND &fusi
 	//fusionUiElements.push_back(hButtonTestOne);
 	//fusionUiElements.push_back(hButtonTestTwo);
 	
-	SetWindowState(START);
+	SetWindowState(IF_FUSION_STATE_START);
 	//ShowWindow(GetDlgItem(m_hWnd, IDC_STATUS), SW_HIDE);
 	ShowWindow(GetDlgItem(m_hWnd, IDC_SCAN_FRAMES_PER_SECOND), SW_HIDE);
 
@@ -319,7 +309,7 @@ LRESULT CALLBACK KinectFusion::MessageRouter(
 	if (pThis)
 	{
 
-		if (pThis->GetWindowState() == SCAN)
+		if (pThis->GetWindowState() == IF_FUSION_STATE_SCAN)
 			return pThis->DlgProc(hWnd, uMsg, wParam, lParam);
 		else
 			return pThis->StartProc(hWnd, uMsg, wParam, lParam);
@@ -485,6 +475,33 @@ void KinectFusion::UpdateButtonSlider()
 		s.assign(buffer, slen);
 
 		SetDlgItemText(hWndApp, IDC_PREPARE_SLIDER_TEXT, s.c_str());
+
+		if (m_params.m_reconstructionParams.voxelsPerMeter > 192)
+		{
+			openGLWin.meshQuality = IF_QUALITY_VERYHIGH;
+			SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: Very High");
+		}
+		else if (m_params.m_reconstructionParams.voxelsPerMeter > 150)
+		{
+			openGLWin.meshQuality = IF_QUALITY_HIGH;
+			SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: High");
+		}
+		else if (m_params.m_reconstructionParams.voxelsPerMeter > 110)
+		{
+			openGLWin.meshQuality = IF_QUALITY_MEDIUM;
+			SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: Medium");
+		}
+		else if (m_params.m_reconstructionParams.voxelsPerMeter > 64)
+		{
+			openGLWin.meshQuality = IF_QUALITY_LOW;
+			SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: Low");
+		}
+		else
+		{
+			openGLWin.meshQuality = IF_QUALITY_VERYLOW;
+			SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: Very Low");
+		}
+
 	}
 }
 
@@ -797,7 +814,7 @@ void KinectFusion::HandleCompletedFrame()
 
 	m_processor.LockFrame(&pFrame);
 
-	if (!m_bSavingMesh && !interactionMode) // don't render while a mesh is being saved
+	if (!m_bSavingMesh && openGLWin.GetWindowMode() == IF_MODE_SCAN && GetWindowState() == IF_FUSION_STATE_SCAN) // don't render while a mesh is being saved
 	{
 		if (m_processor.IsVolumeInitialized())
 		{
@@ -1229,7 +1246,7 @@ int WINAPI CountdownThread()
 
 	int secondTimer = 3;
 	KinectFusion* pThis = reinterpret_cast<KinectFusion*>(::GetWindowLongPtr(hWndApp, GWLP_USERDATA));
-	pThis->SetWindowState(COUNTDOWN);
+	pThis->SetWindowState(IF_FUSION_STATE_COUNTDOWN);
 	//pThis->HideAllUIElements();
 	ShowWindow(hCountdownText, SW_SHOW);
 	//SetDlgItemText(hWndApp, IDC_FUSION_STATIC_COUNTDOWN, L"3");
@@ -1242,7 +1259,7 @@ int WINAPI CountdownThread()
 		secondTimer--;
 	}
 	//OutputDebugString(L"wel")
-	pThis->SetWindowState(SCAN);
+	pThis->SetWindowState(IF_FUSION_STATE_SCAN);
 
 	return 0;
 }
@@ -1308,7 +1325,7 @@ void KinectFusion::ProcessUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_DEBUG_BUTTON_TEST_OPENGL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		FinishScan(2);
-		interactionMode = true;
+	//	interactionMode = true;
 		m_params.m_bPauseIntegration = true;
 		/*interactionMode = true;
 		ShowWindow(hWndApp, SW_HIDE);
@@ -1480,7 +1497,7 @@ void KinectFusion::StartScan()
 {
 	openGLWin.SetWindowMode(IF_MODE_SCAN);
 	m_params.m_bPauseIntegration = false;
-	interactionMode = false;
+	//interactionMode = false;
 	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&CountdownThread, 0, 0, 0);
 }
 
@@ -1493,7 +1510,7 @@ void KinectFusion::FinishScan(int testMode)
 		//openGLWin.testMode = 0;
 		//SetStatusMessage(L"Creating mesh and entering interaction mode. Please wait...");
 		m_bSavingMesh = true;
-		interactionMode = true;
+		//interactionMode = true;
 		m_params.m_bPauseIntegration = true;
 		m_processor.SetParams(m_params);
 
@@ -1506,7 +1523,7 @@ void KinectFusion::FinishScan(int testMode)
 			std::wstring fileName = L"data\\models\\output.ply";
 			LPOLESTR fileString = W2OLE((wchar_t*)fileName.c_str());
 			hr = WriteAsciiPlyMeshFile(mesh, fileString, true, m_bColorCaptured);
-			interactionMode = true;
+			//interactionMode = true;
 			ShowWindow(hWndApp, SW_HIDE);
 			StartOpenGLThread(0);
 			hr = S_OK;
@@ -1526,14 +1543,14 @@ void KinectFusion::FinishScan(int testMode)
 	}
 	else if (testMode == 1)
 	{
-		interactionMode = true;
+		//interactionMode = true;
 		m_params.m_bPauseIntegration = true;
 		ShowWindow(hWndApp, SW_HIDE);
 		StartOpenGLThread(1);
 	}
 	else if (testMode == 2)
 	{
-		interactionMode = true;
+		//interactionMode = true;
 		m_params.m_bPauseIntegration = true;
 		ShowWindow(hWndApp, SW_HIDE);
 		StartOpenGLThread(2);
@@ -1681,7 +1698,7 @@ void KinectFusion::MoveUIOnResize()
 	MoveWindow(hButtonTestOne, rRect.right - 350, 400, 300, 50, true);
 	MoveWindow(hButtonScanReset, rRect.right - 200, rRect.bottom / 2 - 200, 150, 150, true);
 
-	if (GetWindowState() == START || GetWindowState() == COUNTDOWN)
+	if (GetWindowState() == IF_FUSION_STATE_START || GetWindowState() == IF_FUSION_STATE_COUNTDOWN)
 	{
 		MoveWindow(hStartTextBig, rRect.right / 2 - 250, rRect.bottom / 2 - 210, 500, 40, true);
 
@@ -1693,7 +1710,7 @@ void KinectFusion::MoveUIOnResize()
 
 		MoveWindow(hCountdownText, rRect.right / 2 - 250, rRect.bottom / 2 - 150, 500, 300, true);
 
-
+		MoveWindow(hStartMeshQuality, rRect.right / 2 - 70, rRect.bottom/ 2 + 50, 200, 30, true);
 	}
 	//MoveWindow(GetDlgItem(m_hWnd, IDC_FRAMES_PER_SECOND), 0, rRect.bottom - 30, 100, 30, true);
 	MoveWindow(fusionStatusHandle, 0, rRect.bottom - 30, rRect.right, 30, true);
@@ -1721,7 +1738,7 @@ void KinectFusion::MoveButtonSlider(int pos)
 
 	MoveWindow(hButtonSlider, rRect.right / 2 - 165 + pos, rRect.bottom / 2 - 30, 50, 50, true);
 	MoveWindow(hSliderBackground, rRect.right / 2 - 165, rRect.bottom / 2 - 30, 400, 50, true);
-	MoveWindow(hSliderText, rRect.right / 2 - 45, rRect.bottom / 2 + 30, 200, 25, true);
+	MoveWindow(hSliderText, rRect.right / 2 - 70, rRect.bottom / 2 + 30, 200, 25, true);
 	MoveWindow(hSliderDescription, rRect.right / 2 - 235, rRect.bottom / 2 - 25, 60, 50, true);
 }
 
@@ -1743,13 +1760,13 @@ void KinectFusion::SetWindowState(FusionState fState)
 	openGLWin.HideUI(scanUi);
 	openGLWin.HideUI(countdownUi);
 	MoveUIOnResize();
-	if (state == START)
+	if (state == IF_FUSION_STATE_START)
 	{
 		openGLWin.ShowUI(prepareUi);
 		EnableWindow(hButtonScanDone, false);
 		EnableWindow(hButtonScanReset, false);
 	}
-	else if (state == COUNTDOWN)
+	else if (state == IF_FUSION_STATE_COUNTDOWN)
 	{
 		
 		openGLWin.ShowUI(countdownUi);
@@ -1757,7 +1774,7 @@ void KinectFusion::SetWindowState(FusionState fState)
 		EnableWindow(hButtonScanDone, false);
 		EnableWindow(hButtonScanReset, false);
 	}
-	else if (state == SCAN)
+	else if (state == IF_FUSION_STATE_SCAN)
 	{
 		openGLWin.ShowUI(scanUi);
 		EnableWindow(hButtonScanDone, true);
@@ -1800,13 +1817,9 @@ Matrix4 KinectFusion::GetWorldToCameraTransform()
 void KinectFusion::ResumeScan()
 {
 	ShowWindow(hWndApp, SW_SHOW);
-	interactionMode = false;
-	resumed = true;
 }
 
 void KinectFusion::Hide()
 {
 	ShowWindow(hWndApp, SW_HIDE);
-	interactionMode = true;
-	resumed = false;
 }

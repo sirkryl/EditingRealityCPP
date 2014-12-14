@@ -19,3 +19,8 @@
 #define MAX_REMOVESEGMENTS_VALUE        10000
 #define MAX_RG_MINCLUSTER               10000
 #define TRASH_BIN_COLOR                 666
+
+#define MIN_DEPTH_DISTANCE_MM 350   // Must be greater than 0
+#define MAX_DEPTH_DISTANCE_MM 8000
+#define MIN_INTEGRATION_WEIGHT 1    // Must be greater than 0
+#define MAX_INTEGRATION_WEIGHT 1000

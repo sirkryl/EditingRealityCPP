@@ -172,11 +172,11 @@ bool PCLProcessor::PlaneSegmentation() {
 			redoingSegmentation = false;
 		}
 		openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
-		openGLWin.SetAnswer(ANSWER_NOTAVAILABLE);
-		while (openGLWin.GetAnswer() == ANSWER_NOTAVAILABLE)
+		openGLWin.SetAnswer(IF_ANSWER_NOTAVAILABLE);
+		while (openGLWin.GetAnswer() == IF_ANSWER_NOTAVAILABLE)
 		{
 			boost::this_thread::sleep(boost::posix_time::microseconds(10000));
-			if ((storedThickness != openGLWin.wallThickness || storedSmoothness != openGLWin.wallSmoothness) && openGLWin.GetAnswer() == ANSWER_NOTAVAILABLE)
+			if ((storedThickness != openGLWin.wallThickness || storedSmoothness != openGLWin.wallSmoothness) && openGLWin.GetAnswer() == IF_ANSWER_NOTAVAILABLE)
 			{
 				cDebug::DbgOut(L"NOTICED: ", openGLWin.wallSmoothness);
 				//openGLWin.SetWindowState(SEGMENTATION);
@@ -220,7 +220,7 @@ bool PCLProcessor::PlaneSegmentation() {
 		//pcl::copyPointCloud(*cloud_f, *cloudWithoutPlane);
 		planeSegmentationIndices = testIndices;
 
-		if (openGLWin.GetAnswer() == ANSWER_YES)
+		if (openGLWin.GetAnswer() == IF_ANSWER_YES)
 		{
 			pcl::PointIndices::Ptr newIndices(new pcl::PointIndices);
 			for (int i = 0; i < inlierIndices->indices.size(); i++)
@@ -762,16 +762,16 @@ bool PCLProcessor::EuclideanSegmentation() {
 	//ec.setConditionFunction(&EnforceCurvatureOrColor);
 	
 	
-	if (openGLWin.meshQuality == QUALITY_MEDIUM || openGLWin.meshQuality == QUALITY_HIGH || openGLWin.meshQuality == QUALITY_VERYHIGH)
+	if (openGLWin.meshQuality == IF_QUALITY_MEDIUM || openGLWin.meshQuality == IF_QUALITY_HIGH || openGLWin.meshQuality == IF_QUALITY_VERYHIGH)
 		ec.setClusterTolerance(0.02); // 2cm
-	if (openGLWin.meshQuality == QUALITY_LOW || openGLWin.meshQuality == QUALITY_VERYLOW)
+	if (openGLWin.meshQuality == IF_QUALITY_LOW || openGLWin.meshQuality == IF_QUALITY_VERYLOW)
 		ec.setClusterTolerance(0.04); // 2cm
 
 	ec.setClusterTolerance(openGLWin.clusterTolerance);
 
-	if (openGLWin.meshQuality == QUALITY_HIGH || openGLWin.meshQuality == QUALITY_VERYHIGH)
+	if (openGLWin.meshQuality == IF_QUALITY_HIGH || openGLWin.meshQuality == IF_QUALITY_VERYHIGH)
 		ec.setMinClusterSize(1000);
-	else if (openGLWin.meshQuality == QUALITY_MEDIUM || openGLWin.meshQuality == QUALITY_LOW)
+	else if (openGLWin.meshQuality == IF_QUALITY_MEDIUM || openGLWin.meshQuality == IF_QUALITY_LOW)
 		ec.setMinClusterSize(100);
 	else
 		ec.setMinClusterSize(50);

@@ -25,6 +25,7 @@ HWND statusPercentText;
 //HELP DIALOG
 HWND hButtonHelp;
 
+
 //INTERACTION
 std::vector<HWND> interactionUi;
 HWND hButtonExport, hButtonReset;
@@ -982,8 +983,8 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 		EnableWindow(hInteractionText, true);
 		if (openGLWin.fusionExplorer)
 		{ 
-			if (openGLWin.fusionExplorer->GetWindowState() != START)
-				openGLWin.fusionExplorer->SetWindowState(START);
+			if (openGLWin.fusionExplorer->GetWindowState() != IF_FUSION_STATE_START)
+				openGLWin.fusionExplorer->SetWindowState(IF_FUSION_STATE_START);
 		}
 		EnableWindow(hSegmentationText, true);
 	}
@@ -1207,7 +1208,7 @@ void InteractiveFusion::ProcessParentUI(WPARAM wParam, LPARAM lParam)
 	{
 		//SetFocus(hScanText);
 		//MoveModeButtonsOnResize();
-		if (openGLWin.GetWindowMode() == IF_MODE_SCAN && openGLWin.fusionExplorer->GetWindowState() == SCAN && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
+		if (openGLWin.GetWindowMode() == IF_MODE_SCAN && openGLWin.fusionExplorer->GetWindowState() == IF_FUSION_STATE_SCAN && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
 		{
 			openGLWin.fusionExplorer->FinishScan(0);
 		}
@@ -1593,7 +1594,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_PLANE_BUTTON_YES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//openGLWin.glControl.SetOffSetBottom(0);
-		openGLWin.SetAnswer(ANSWER_YES);
+		openGLWin.SetAnswer(IF_ANSWER_YES);
 		//openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
 		openGLWin.wallThickness = 0.1f;
 		openGLWin.wallSmoothness = 0.05f;
@@ -1604,7 +1605,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_PLANE_BUTTON_NO == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//openGLWin.glControl.SetOffSetBottom(0);
-		openGLWin.SetAnswer(ANSWER_NO);
+		openGLWin.SetAnswer(IF_ANSWER_NO);
 		//openGLWin.SetWindowState(SEGMENTATION_PREVIEW);
 		openGLWin.wallThickness = 0.1f;
 		openGLWin.wallSmoothness = 0.05f;
@@ -2276,15 +2277,15 @@ void InteractiveFusion::DetermineMeshQuality()
 {
 	int vpm = fusionExplorer->GetVoxelsPerMeter();
 	if (vpm > 192)
-		meshQuality = QUALITY_VERYHIGH;
+		meshQuality = IF_QUALITY_VERYHIGH;
 	else if (vpm > 150)
-		meshQuality = QUALITY_HIGH;
+		meshQuality = IF_QUALITY_HIGH;
 	else if (vpm > 110)
-		meshQuality = QUALITY_MEDIUM;
+		meshQuality = IF_QUALITY_MEDIUM;
 	else if (vpm > 64)
-		meshQuality = QUALITY_LOW;
+		meshQuality = IF_QUALITY_LOW;
 	else
-		meshQuality = QUALITY_VERYLOW;
+		meshQuality = IF_QUALITY_VERYLOW;
 }
 
 #pragma endregion FPS stuff

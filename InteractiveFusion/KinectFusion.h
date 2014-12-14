@@ -12,7 +12,7 @@
 #include "KinectFusionParams.h"
 #include "KinectFusionProcessor.h"
 
-enum FusionState { START, COUNTDOWN, SCAN };
+enum FusionState { IF_FUSION_STATE_START, IF_FUSION_STATE_COUNTDOWN, IF_FUSION_STATE_SCAN };
 
 /// <summary>
 /// KinectFusionExplorer sample.
@@ -187,3 +187,5 @@ private:
 };
 
 void StartKinectFusion(HWND parent, HINSTANCE hInstance, KinectFusion*& expl, HWND &fusionHandle);
+
+LRESULT CALLBACK FusionDebugRouter(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
