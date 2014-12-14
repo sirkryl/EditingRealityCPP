@@ -78,6 +78,12 @@
     <ClInclude Include="OpenGLButton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="KinectFusion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IFParams.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="plylib.cpp">
@@ -126,6 +132,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="OpenGLButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KinectFusion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

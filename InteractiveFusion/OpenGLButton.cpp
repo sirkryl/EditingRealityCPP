@@ -126,7 +126,7 @@ void OpenGLButton::Draw()
 		int storedHeight = openGLWin.glControl.GetViewportHeight();
 		glText.PrepareForRender();
 		float textWidth = 87.0f * (2.0f / storedWidth);
-		glText.RenderText(text, 25 / hRatio, ((x + (x + w)) / 2.0f - textWidth/2), ((y + (y + h)) / 2.0f - 0.02f), 2.0f / storedWidth, 2.0f / storedHeight);
+		glText.RenderText(text, (int)(25 / hRatio), ((x + (x + w)) / 2.0f - textWidth/2), ((y + (y + h)) / 2.0f - 0.02f), 2.0f / storedWidth, 2.0f / storedHeight);
 		//(x + text.length() * 0.008f)
 	}
 	glEnable(GL_DEPTH_TEST);

@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <unordered_map>
 #include "IFResources.h"
+#include "IFParams.h"
 #include <boost/shared_ptr.hpp>
 using namespace std;
 

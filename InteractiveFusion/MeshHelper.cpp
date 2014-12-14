@@ -224,7 +224,7 @@ void MeshHelper::CombineAndExport()
 	else if (strstr(fileNameBuffer, ".obj"))
 		vcg::tri::io::ExporterOBJ<VCGMesh>::Save(combinedMesh, fileNameBuffer, vcg::tri::io::Mask::IOM_VERTCOLOR);
 	else if (strstr(fileNameBuffer, ".stl"))
-		vcg::tri::io::ExporterSTL<VCGMesh>::Save(combinedMesh, fileNameBuffer, vcg::tri::io::Mask::IOM_VERTCOLOR);
+		vcg::tri::io::ExporterSTL<VCGMesh>::Save(combinedMesh, fileNameBuffer, true, vcg::tri::io::Mask::IOM_VERTCOLOR);
 	else if (strstr(fileNameBuffer, ".off"))
 		vcg::tri::io::ExporterOFF<VCGMesh>::Save(combinedMesh, fileNameBuffer, vcg::tri::io::Mask::IOM_VERTCOLOR);
 	else

@@ -91,8 +91,10 @@
   <ItemGroup>
     <ClInclude Include="colorCoding.h" />
     <ClInclude Include="common.h" />
+    <ClInclude Include="IFParams.h" />
     <ClInclude Include="InteractiveFusion.h" />
     <ClInclude Include="Keys.h" />
+    <ClInclude Include="KinectFusion.h" />
     <ClInclude Include="MeshHelper.h" />
     <ClInclude Include="OpenGL2DHelper.h" />
     <ClInclude Include="OpenGLButton.h" />
@@ -112,6 +114,7 @@
   <ItemGroup>
     <ClCompile Include="InteractiveFusion.cpp" />
     <ClCompile Include="Keys.cpp" />
+    <ClCompile Include="KinectFusion.cpp" />
     <ClCompile Include="MeshHelper.cpp" />
     <ClCompile Include="OpenGL2DHelper.cpp" />
     <ClCompile Include="OpenGLButton.cpp" />

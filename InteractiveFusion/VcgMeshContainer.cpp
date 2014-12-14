@@ -952,13 +952,13 @@ void VCGMeshContainer::SetAngleZ(bool positive)
 
 void VCGMeshContainer::RotateX(int angle)
 {
-	angleX = angle;
+	angleX = (float)angle;
 	xRotation = glm::rotate(glm::mat4(1.0), angleX, glm::vec3(1.0f, 0.0f, 0.0f));
 }
 
 void VCGMeshContainer::RotateY(int angle)
 {
-	angleY = angle;
+	angleY = (float)angle;
 	yRotation = glm::rotate(glm::mat4(1.0), angleY, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 

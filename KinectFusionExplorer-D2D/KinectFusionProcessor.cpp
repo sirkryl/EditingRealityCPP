@@ -17,7 +17,7 @@
 // Project includes
 #include "KinectFusionProcessor.h"
 #include "KinectFusionHelper.h"
-#include "resource.h"
+#include "FusionResources.h"
 
 #define AssertOwnThread() \
     _ASSERT_EXPR(GetCurrentThreadId() == m_threadId, __FUNCTIONW__ L" called on wrong thread!");

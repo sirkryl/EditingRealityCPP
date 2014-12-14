@@ -195,8 +195,7 @@
     <ClInclude Include="KFKeys.h" />
     <ClInclude Include="NuiSensorChooserUIResource.h" />
     <ClInclude Include="ImageRenderer.h" />
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="KinectFusionExplorer.h" />
+    <ClInclude Include="FusionResources.h" />
     <ClInclude Include="KinectFusionHelper.h" />
     <ClInclude Include="KinectFusionParams.h" />
     <ClInclude Include="KinectFusionProcessor.h" />
@@ -207,7 +206,6 @@
   <ItemGroup>
     <ClCompile Include="ImageRenderer.cpp" />
     <ClCompile Include="KFKeys.cpp" />
-    <ClCompile Include="KinectFusionExplorer.cpp" />
     <ClCompile Include="KinectFusionHelper.cpp" />
     <ClCompile Include="KinectFusionProcessor.cpp" />
     <ClCompile Include="KinectFusionProcessorFrame.cpp" />

@@ -261,8 +261,8 @@ void SelectionHelper::ProcessObjectManipulation()
 	{
 		POINT pCur;
 		GetCursorPos(&pCur);
-		int offSetX = (pCur.y - oldPosY)*0.2f;
-		int offSetY = (pCur.x - oldPosX)*0.2f;
+		int offSetX = (int)((pCur.y - oldPosY)*0.2f);
+		int offSetY = (int)((pCur.x - oldPosX)*0.2f);
 
 		if (firstClick)
 		{ 

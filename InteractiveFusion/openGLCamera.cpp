@@ -173,9 +173,6 @@ glm::mat4 OpenGLCamera::GetViewMatrix()
 {
 	if (mode == CAMERA_FREE)
 	{
-		
-		
-
 		camDirection = glm::normalize(camPosition - camLookAt);
 
 		if (openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
@@ -219,7 +216,6 @@ glm::mat4 OpenGLCamera::GetViewMatrix()
 	}
 	else if (mode == CAMERA_SENSOR)
 	{
-		
 		zoomFactor = 1.0f;
 		strafeX = 0.0f;
 		strafeY = 0.0f;
@@ -312,7 +308,7 @@ glm::mat4 OpenGLCamera::GetViewMatrix()
 		return glm::lookAt(camPosition, camLookAt, camUpDirection);
 	}
 
-
+	return glm::mat4(1.0f);
 }
 
 #pragma region

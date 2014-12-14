@@ -100,10 +100,10 @@ Result:	Initializes OpenGL rendering context
 //(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), KinectFusionProcessor* proc, LPVOID lpParam)
 //(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), LPVOID lpParam)	
 bool OpenGLControl::InitOpenGL(HINSTANCE hInstance, HWND a_hWnd, int iMajorVersion, int iMinorVersion, void(*a_ptrInitScene)(LPVOID), void
-	(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), KinectFusionProcessor* proc, LPVOID lpParam)
+	(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), KinectFusion* explo, LPVOID lpParam)
 {
 	if(!InitGLEW(hInstance))return false;
-	processor = proc;
+	fusionExplorer = explo;
 	hWnd = a_hWnd;
 	hDC = GetDC(hWnd);
 	bool bError = false;
@@ -313,7 +313,7 @@ glm::mat4 OpenGLControl::GetKinectViewMatrix()
 {
 	glm::mat4 glmLeftHandedCamTransform(1.0f);
 
-	Matrix4 leftHandedCamTransform = processor->GetWorldToCameraTransform();
+	Matrix4 leftHandedCamTransform = fusionExplorer->GetWorldToCameraTransform();
 	glmLeftHandedCamTransform[0] = glm::vec4(leftHandedCamTransform.M11, leftHandedCamTransform.M12, leftHandedCamTransform.M13, leftHandedCamTransform.M14);
 	glmLeftHandedCamTransform[1] = glm::vec4(leftHandedCamTransform.M21, leftHandedCamTransform.M22, leftHandedCamTransform.M23, leftHandedCamTransform.M24);
 	glmLeftHandedCamTransform[2] = glm::vec4(leftHandedCamTransform.M31, leftHandedCamTransform.M32, leftHandedCamTransform.M33, leftHandedCamTransform.M34);

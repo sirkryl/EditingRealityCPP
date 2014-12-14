@@ -1,7 +1,7 @@
 #pragma once
 #include "OpenGLControl.h"
 #include "common.h"
-#include <KinectFusionExplorer.h>
+#include "KinectFusion.h"
 enum WindowMode { IF_MODE_PREPARE_SCAN, IF_MODE_SCAN, IF_MODE_SEGMENTATION, IF_MODE_PROCESSING, IF_MODE_INTERACTION, IF_MODE_DEBUG };
 
 enum Answer {ANSWER_NOTAVAILABLE, ANSWER_YES, ANSWER_NO};
@@ -24,7 +24,7 @@ public:
 	HWND glWindowHandle;
 	HWND glWindowParent;
 	OpenGLControl glControl;
-	CKinectFusionExplorer* fusionExplorer;
+	KinectFusion* fusionExplorer;
 	HANDLE interactionThread;
 	
 	//background color
@@ -143,6 +143,21 @@ public:
 	DWORD GetThreadID();
 	HINSTANCE appInstance;
 	DWORD threadId;
+
+	//BRUSHES
+	HBRUSH hBackground;
+	HBRUSH buttonDefaultBrush, buttonPressedBrush, buttonActiveBrush;
+	HBRUSH buttonGreenBrush, buttonGreenPressedBrush, buttonGreenInactiveBrush, buttonRedBrush, buttonRedPressedBrush, buttonRedInactiveBrush;
+	HBRUSH buttonBlueBrush;
+
+	//PENS
+	HPEN buttonDefaultPen, buttonPressedPen, buttonInactivePen, buttonModePen;
+
+	//FONTS
+	HFONT statusFont;
+	HFONT countDownFont;
+	HFONT bigUiFont, mediumUiFont, smallUiFont;
+
 private:
 	//application variables
 	
@@ -202,4 +217,3 @@ void Render(LPVOID);
 void Release(LPVOID);
 
 void StartOpenGLThread(int testMode);
-void SetWindowMode(int wMode);

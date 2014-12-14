@@ -144,7 +144,7 @@ void ShowStatusMsg()
 	int w = openGLWin.glControl.GetViewportWidth();
 	int h = openGLWin.glControl.GetViewportHeight();
 	float xPos = 0.0f - statusMsg.length() * 0.008f;
-	wstring loadString = statusMsg + L"" + dots[floor(dotCount / 100)];
+	wstring loadString = statusMsg + L"" + dots[(int)floor(dotCount / 100)];
 	if (dotCount == 299)
 		dotCount = 0;
 	else

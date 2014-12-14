@@ -76,10 +76,6 @@ HWND hButtonRemoveComponentsPlus, hButtonRemoveComponentsMinus;
 HWND hTextRemoveComponentsLabel, hTextRemoveComponents;
 HWND hButtonProcessingDone;
 
-//FONTS
-HFONT uiFont, mediumUiFont, smallUiFont;
-HFONT statusFont;
-
 //BITMAPS
 HBITMAP trashBmp;
 HBITMAP trashBmp_mask;
@@ -87,15 +83,6 @@ HBITMAP trashBmp_mask;
 //ICONS
 std::vector<HWND> helpUi;
 HICON hDeleteIcon;
-
-//BRUSHES
-HBRUSH hBackground = CreateSolidBrush(RGB(30, 30, 30));
-HBRUSH buttonDefaultBrush, buttonPressedBrush, buttonActiveBrush;
-HBRUSH buttonGreenBrush, buttonGreenPressedBrush, buttonGreenInactiveBrush, buttonRedBrush, buttonRedPressedBrush, buttonRedInactiveBrush;
-HBRUSH buttonBlueBrush;
-
-//PENS
-HPEN buttonDefaultPen, buttonPressedPen, buttonInactivePen, buttonModePen;
 
 //EDIT CONTROLS
 WNDPROC oldEditProc;
@@ -129,23 +116,23 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	//ShowCursor(false);
 	ShowWindow(openGLWin.parent, SW_SHOW);
 
-	uiFont = CreateFont(40, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
-	mediumUiFont = CreateFont(30, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
-	smallUiFont = CreateFont(20, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
+	openGLWin.bigUiFont = CreateFont(40, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
+	openGLWin.mediumUiFont = CreateFont(30, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
+	openGLWin.smallUiFont = CreateFont(20, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
 
-	
+	openGLWin.countDownFont = CreateFont(300, 0, 0, 0, FW_LIGHT, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Open Sans");
 
-	hPrepareText = CreateWindowEx(0, L"BUTTON", L"PREPARE", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_MODE_PREPARE, NULL, 0);
-	hSegmentationText = CreateWindowEx(0, L"BUTTON", L"SEGMENTATION", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_MODE_SEGMENTATION, NULL, 0);
-	hScanText = CreateWindowEx(0, L"BUTTON", L"SCAN", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_MODE_SCAN, NULL, 0);
+	hPrepareText = CreateWindowEx(0, L"BUTTON", L"PREPARE", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_MODE_BUTTON_PREPARE, NULL, 0);
+	hSegmentationText = CreateWindowEx(0, L"BUTTON", L"SEGMENTATION", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_MODE_BUTTON_SEGMENTATION, NULL, 0);
+	hScanText = CreateWindowEx(0, L"BUTTON", L"SCAN", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_MODE_BUTTON_SCAN, NULL, 0);
 
-	hInteractionText = CreateWindowEx(0, L"BUTTON", L"INTERACTION", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_MODE_INTERACTION, NULL, 0);
+	hInteractionText = CreateWindowEx(0, L"BUTTON", L"INTERACTION", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_MODE_BUTTON_INTERACTION, NULL, 0);
 
-	statusFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
+	openGLWin.statusFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
 
-	statusHandle = GetDlgItem(openGLWin.parent, IDC_IM_STATUS);
+	statusHandle = GetDlgItem(openGLWin.parent, IDC_INTERACTION_STATUS);
 
-	SendMessage(statusHandle, WM_SETFONT, (WPARAM)statusFont, 0);
+	SendMessage(statusHandle, WM_SETFONT, (WPARAM)openGLWin.statusFont, 0);
 	ShowWindow(statusHandle, SW_SHOW);
 
 	modeUi.push_back(hPrepareText);
@@ -156,26 +143,27 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	trashBmp = LoadBitmap(openGLWin.appInstance, MAKEINTRESOURCE(IDB_MODE_ARROW));
 	trashBmp_mask = LoadBitmap(openGLWin.appInstance, MAKEINTRESOURCE(IDB_MODE_ARROW_MASK));
 
-	//hModeArrow = CreateWindowEx(0, L"STATIC", L"a", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW | WS_EX_TOPMOST, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_BUTTON_DELETE, NULL, 0);
+	//hModeArrow = CreateWindowEx(0, L"STATIC", L"a", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW | WS_EX_TOPMOST, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_INTERACTION_BUTTON_DELETE, NULL, 0);
 
-	buttonDefaultBrush = CreateSolidBrush(RGB(20, 20, 20));
-	buttonPressedBrush = CreateSolidBrush(RGB(40, 40, 40));
-	buttonDefaultPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
-	buttonInactivePen = CreatePen(PS_SOLID, 1, RGB(50, 50, 50));
-	buttonPressedPen = CreatePen(PS_SOLID, 2, RGB(160, 160, 160));
-	buttonActiveBrush = CreateSolidBrush(RGB(0, 0, 255));
-	buttonModePen = CreatePen(PS_SOLID, 2, RGB(50, 50, 50));
-	buttonGreenBrush = CreateSolidBrush(RGB(0, 170, 0));
-	buttonGreenInactiveBrush = CreateSolidBrush(RGB(0, 50, 0));
-	buttonBlueBrush = CreateSolidBrush(RGB(0, 0, 170));
-	buttonGreenPressedBrush = CreateSolidBrush(RGB(0, 100, 0));
-	buttonRedBrush = CreateSolidBrush(RGB(170, 0, 0));
-	buttonRedPressedBrush = CreateSolidBrush(RGB(100, 0, 0));
-	buttonRedInactiveBrush = CreateSolidBrush(RGB(50, 0, 0));
+	openGLWin.hBackground = CreateSolidBrush(RGB(30, 30, 30));
+	openGLWin.buttonDefaultBrush = CreateSolidBrush(RGB(20, 20, 20));
+	openGLWin.buttonPressedBrush = CreateSolidBrush(RGB(40, 40, 40));
+	openGLWin.buttonDefaultPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
+	openGLWin.buttonInactivePen = CreatePen(PS_SOLID, 1, RGB(50, 50, 50));
+	openGLWin.buttonPressedPen = CreatePen(PS_SOLID, 2, RGB(160, 160, 160));
+	openGLWin.buttonActiveBrush = CreateSolidBrush(RGB(0, 0, 255));
+	openGLWin.buttonModePen = CreatePen(PS_SOLID, 2, RGB(50, 50, 50));
+	openGLWin.buttonGreenBrush = CreateSolidBrush(RGB(0, 170, 0));
+	openGLWin.buttonGreenInactiveBrush = CreateSolidBrush(RGB(0, 50, 0));
+	openGLWin.buttonBlueBrush = CreateSolidBrush(RGB(0, 0, 170));
+	openGLWin.buttonGreenPressedBrush = CreateSolidBrush(RGB(0, 100, 0));
+	openGLWin.buttonRedBrush = CreateSolidBrush(RGB(170, 0, 0));
+	openGLWin.buttonRedPressedBrush = CreateSolidBrush(RGB(100, 0, 0));
+	openGLWin.buttonRedInactiveBrush = CreateSolidBrush(RGB(50, 0, 0));
 
 	openGLWin.SetWindowMode(IF_MODE_PREPARE_SCAN);
 	//openGLWin.SetWindowState(START);
-	StartKinectFusion(openGLWin.parent, hInstance, StartOpenGLThread, SetWindowMode, openGLWin.fusionExplorer, openGLWin.fusionHandle);
+	StartKinectFusion(openGLWin.parent, hInstance, openGLWin.fusionExplorer, openGLWin.fusionHandle);
 }
 
 #pragma region
@@ -234,7 +222,7 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		SetBkMode((HDC)wParam, TRANSPARENT);
 		SetTextColor(hdc, RGB(255, 255, 255));
 
-		return (LRESULT)hBackground;
+		return (LRESULT)openGLWin.hBackground;
 	}
 	break;
 	case  WM_HSCROLL:
@@ -336,31 +324,32 @@ LRESULT CALLBACK GLViewportProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		SetBkMode((HDC)wParam, TRANSPARENT);
 		SetTextColor(hdc, RGB(255, 255, 255));
 
-		return (LRESULT)hBackground;
+		return (LRESULT)openGLWin.hBackground;
 	}
 	break;
 	case WM_SIZE:
 		break;
 	case WM_DESTROY:
-		DeleteObject(hBackground);
-		DeleteObject(buttonDefaultBrush);
-		DeleteObject(buttonDefaultPen);
-		DeleteObject(buttonInactivePen);
-		DeleteObject(buttonModePen);
-		DeleteObject(buttonPressedBrush);
-		DeleteObject(buttonPressedPen);
-		DeleteObject(buttonActiveBrush);
-		DeleteObject(buttonGreenBrush);
-		DeleteObject(buttonGreenPressedBrush);
-		DeleteObject(buttonGreenInactiveBrush);
-		DeleteObject(buttonRedBrush);
-		DeleteObject(buttonRedPressedBrush);
-		DeleteObject(buttonRedInactiveBrush);
-		DeleteObject(buttonBlueBrush);
-		DeleteObject(statusFont);
-		DeleteObject(uiFont);
-		DeleteObject(smallUiFont);
-		DeleteObject(mediumUiFont);
+		DeleteObject(openGLWin.hBackground);
+		DeleteObject(openGLWin.buttonDefaultBrush);
+		DeleteObject(openGLWin.buttonDefaultPen);
+		DeleteObject(openGLWin.buttonInactivePen);
+		DeleteObject(openGLWin.buttonModePen);
+		DeleteObject(openGLWin.buttonPressedBrush);
+		DeleteObject(openGLWin.buttonPressedPen);
+		DeleteObject(openGLWin.buttonActiveBrush);
+		DeleteObject(openGLWin.buttonGreenBrush);
+		DeleteObject(openGLWin.buttonGreenPressedBrush);
+		DeleteObject(openGLWin.buttonGreenInactiveBrush);
+		DeleteObject(openGLWin.buttonRedBrush);
+		DeleteObject(openGLWin.buttonRedPressedBrush);
+		DeleteObject(openGLWin.buttonRedInactiveBrush);
+		DeleteObject(openGLWin.buttonBlueBrush);
+		DeleteObject(openGLWin.statusFont);
+		DeleteObject(openGLWin.bigUiFont);
+		DeleteObject(openGLWin.smallUiFont);
+		DeleteObject(openGLWin.mediumUiFont);
+		DeleteObject(openGLWin.countDownFont);
 
 		break;
 	default:
@@ -381,7 +370,7 @@ int WINAPI GLViewportThreadMain()
 
 
 	//if (!openGLWin.glControl.InitOpenGL(openGLWin.GetInstance(), &openGLWin.glWindowHandle, 3, 3, Initialize, Render, Release,  //&openGLWin.glControl))
-	if (!openGLWin.glControl.InitOpenGL(openGLWin.appInstance, openGLWin.glWindowHandle, 3, 3, Initialize, Render, Release, &openGLWin.fusionExplorer->m_processor, &openGLWin.glControl))
+	if (!openGLWin.glControl.InitOpenGL(openGLWin.appInstance, openGLWin.glWindowHandle, 3, 3, Initialize, Render, Release, openGLWin.fusionExplorer, &openGLWin.glControl))
 	{
 		MessageBox(0, L"Error with initOpenGL",
 			L"ERROR!", MB_OK);
@@ -479,7 +468,7 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	openGLWin.glWindowHandle = hWnd;
 
 
-	hButtonHelp = CreateWindowEx(0, L"Button", L"Alright", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_HELP_OK, openGLWin.appInstance, 0);
+	hButtonHelp = CreateWindowEx(0, L"Button", L"Alright", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_HELP_BUTTON_OK, openGLWin.appInstance, 0);
 
 	helpUi.push_back(hButtonHelp);
 
@@ -487,30 +476,30 @@ bool InteractiveFusion::CreateOpenGLWindow()
 
 	
 
-	statusText = CreateWindowEx(0, L"STATIC", L"Is the highlighted area (part of) a wall, floor or ceiling?", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_STATUS, openGLWin.appInstance, 0);
-	SendMessage(statusText, WM_SETFONT, (WPARAM)uiFont, TRUE);
+	statusText = CreateWindowEx(0, L"STATIC", L"Is the highlighted area (part of) a wall, floor or ceiling?", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_OPENGL_STATUS_TEXT, openGLWin.appInstance, 0);
+	SendMessage(statusText, WM_SETFONT, (WPARAM)bigUiFont, TRUE);
 
-	statusPercentText = CreateWindowEx(0, L"STATIC", L"10 %", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_STATUS_PERCENT, openGLWin.appInstance, 0);
-	SendMessage(statusPercentText, WM_SETFONT, (WPARAM)uiFont, TRUE);
+	statusPercentText = CreateWindowEx(0, L"STATIC", L"10 %", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_OPENGL_STATUS_PERCENT, openGLWin.appInstance, 0);
+	SendMessage(statusPercentText, WM_SETFONT, (WPARAM)bigUiFont, TRUE);
 
 	progressionUI.push_back(statusText);
 	progressionUI.push_back(statusPercentText);
 
-	hTextRemoveComponents = CreateWindowEx(0, L"STATIC", L"200", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_REMOVECOMPONENTS, openGLWin.appInstance, 0);
+	hTextRemoveComponents = CreateWindowEx(0, L"STATIC", L"200", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_PROCESSING_TEXT_REMOVECOMPONENTS, openGLWin.appInstance, 0);
 
 	SendMessage(hTextRemoveComponents, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
-	hTextRemoveComponentsLabel = CreateWindowEx(0, L"STATIC", L"Remove C", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_REMOVECOMPONENTS_LABEL, openGLWin.appInstance, 0);
+	hTextRemoveComponentsLabel = CreateWindowEx(0, L"STATIC", L"Remove C", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_PROCESSING_TEXT_REMOVECOMPONENTS_LABEL, openGLWin.appInstance, 0);
 
 	SendMessage(hTextRemoveComponentsLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
 
-	hButtonRemoveComponentsPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_REMOVECOMPONENTS_PLUS, openGLWin.appInstance, 0);
-	hButtonRemoveComponentsMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_REMOVECOMPONENTS_MINUS, openGLWin.appInstance, 0);
+	hButtonRemoveComponentsPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_PROCESSING_BUTTON_REMOVECOMPONENTS_PLUS, openGLWin.appInstance, 0);
+	hButtonRemoveComponentsMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_PROCESSING_BUTTON_REMOVECOMPONENTS_MINUS, openGLWin.appInstance, 0);
 
-	hButtonRemoveComponents = CreateWindowEx(0, L"Button", L"Remove Comps", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_REMOVECOMPONENTS, openGLWin.appInstance, 0);
+	hButtonRemoveComponents = CreateWindowEx(0, L"Button", L"Remove Comps", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_PROCESSING_BUTTON_REMOVECOMPONENTS, openGLWin.appInstance, 0);
 
-	hButtonFillHoles = CreateWindowEx(0, L"Button", L"Fill Holes", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_PROCESSING_FILLHOLES, openGLWin.appInstance, 0);
+	hButtonFillHoles = CreateWindowEx(0, L"Button", L"Fill Holes", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_PROCESSING_BUTTON_FILLHOLES, openGLWin.appInstance, 0);
 
-	hButtonProcessingDone = CreateWindowEx(0, L"Button", L"DONE", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_PROCESSING_DONE, openGLWin.appInstance, 0);
+	hButtonProcessingDone = CreateWindowEx(0, L"Button", L"DONE", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_PROCESSING_BUTTON_DONE, openGLWin.appInstance, 0);
 
 	processingUi.push_back(hButtonFillHoles);
 	processingUi.push_back(hButtonRemoveComponents);
@@ -523,63 +512,63 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	openGLWin.UpdateProcessingValues();
 
 	//hbitmap = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BUTTON), IMAGE_BITMAP, 84, 36, LR_DEFAULTCOLOR);
-	hButtonYes = CreateWindowEx(0, L"Button", L"Wall", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_YES, openGLWin.appInstance, 0);
-	hButtonNo = CreateWindowEx(0, L"Button", L"No Wall", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_NO, openGLWin.appInstance, 0);
+	hButtonYes = CreateWindowEx(0, L"Button", L"Wall", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_BUTTON_YES, openGLWin.appInstance, 0);
+	hButtonNo = CreateWindowEx(0, L"Button", L"No Wall", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_BUTTON_NO, openGLWin.appInstance, 0);
 
-	hButtonSegmentationFinish = CreateWindowEx(0, L"Button", L"Done", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_SEGMENTATION_FINISH, openGLWin.appInstance, 0);
+	hButtonSegmentationFinish = CreateWindowEx(0, L"Button", L"Done", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_BUTTON_DONE, openGLWin.appInstance, 0);
 
-	hButtonSegmentationBegin = CreateWindowEx(0, L"Button", L"Segment", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_SEGMENTATION_BEGIN, openGLWin.appInstance, 0);
+	hButtonSegmentationBegin = CreateWindowEx(0, L"Button", L"Segment", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_BUTTON_UPDATE, openGLWin.appInstance, 0);
 
-	hTextClusterTolerance = CreateWindowEx(0, L"STATIC", L"2cm", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_CLUSTERTOLERANCE, openGLWin.appInstance, 0);
+	hTextClusterTolerance = CreateWindowEx(0, L"STATIC", L"2cm", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE, openGLWin.appInstance, 0);
 
 	SendMessage(hTextClusterTolerance, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
-	hTextClusterToleranceLabel = CreateWindowEx(0, L"STATIC", L"Tolerance", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_CLUSTERTOLERANCE_LABEL, openGLWin.appInstance, 0);
+	hTextClusterToleranceLabel = CreateWindowEx(0, L"STATIC", L"Tolerance", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE_LABEL, openGLWin.appInstance, 0);
 
 	SendMessage(hTextClusterToleranceLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
 
-	hButtonClusterTolerancePlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_CLUSTERTOLERANCE_PLUS, openGLWin.appInstance, 0);
-	hButtonClusterToleranceMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_CLUSTERTOLERANCE_MINUS, openGLWin.appInstance, 0);
+	hButtonClusterTolerancePlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_E_BUTTON_CLUSTERTOLERANCE_PLUS, openGLWin.appInstance, 0);
+	hButtonClusterToleranceMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_E_BUTTON_CLUSTERTOLERANCE_MINUS, openGLWin.appInstance, 0);
 
-	hButtonRegionGrowthSegmentation = CreateWindowEx(0, L"Button", L"RG", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_SEGMENTATION_REGIONGROWTH, openGLWin.appInstance, 0);
-	hButtonEuclideanSegmentation = CreateWindowEx(0, L"Button", L"Euclidean", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_SEGMENTATION_EUCLIDEAN, openGLWin.appInstance, 0);
+	hButtonRegionGrowthSegmentation = CreateWindowEx(0, L"Button", L"RG", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_REGIONGROWTH, openGLWin.appInstance, 0);
+	hButtonEuclideanSegmentation = CreateWindowEx(0, L"Button", L"Euclidean", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_EUCLIDEAN, openGLWin.appInstance, 0);
 
-	hButtonRGSmoothnessPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RG_SMOOTHNESS_PLUS, openGLWin.appInstance, 0);
-	hButtonRGSmoothnessMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RG_SMOOTHNESS_MINUS, openGLWin.appInstance, 0);
+	hButtonRGSmoothnessPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_BUTTON_SMOOTHNESS_PLUS, openGLWin.appInstance, 0);
+	hButtonRGSmoothnessMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_BUTTON_SMOOTHNESS_MINUS, openGLWin.appInstance, 0);
 
-	hTextRGSmoothness = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_RG_SMOOTHNESS, openGLWin.appInstance, 0);
+	hTextRGSmoothness = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_TEXT_SMOOTHNESS, openGLWin.appInstance, 0);
 
 	SendMessage(hTextRGSmoothness, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
-	hTextRGSmoothnessLabel = CreateWindowEx(0, L"STATIC", L"Smoothness", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_RG_SMOOTHNESS_LABEL, openGLWin.appInstance, 0);
+	hTextRGSmoothnessLabel = CreateWindowEx(0, L"STATIC", L"Smoothness", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_TEXT_SMOOTHNESS_LABEL, openGLWin.appInstance, 0);
 
 	SendMessage(hTextRGSmoothnessLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
 
-	hButtonRGCurvaturePlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RG_CURVATURE_PLUS, openGLWin.appInstance, 0);
-	hButtonRGCurvatureMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RG_CURVATURE_MINUS, openGLWin.appInstance, 0);
+	hButtonRGCurvaturePlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_BUTTON_CURVATURE_PLUS, openGLWin.appInstance, 0);
+	hButtonRGCurvatureMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_BUTTON_CURVATURE_MINUS, openGLWin.appInstance, 0);
 
-	hButtonRGNeighborsPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RG_NEIGHBORS_PLUS, openGLWin.appInstance, 0);
-	hButtonRGNeighborsMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RG_NEIGHBORS_MINUS, openGLWin.appInstance, 0);
+	hButtonRGNeighborsPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_BUTTON_NEIGHBORS_PLUS, openGLWin.appInstance, 0);
+	hButtonRGNeighborsMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_BUTTON_NEIGHBORS_MINUS, openGLWin.appInstance, 0);
 
-	hButtonRGKSearchPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RG_KSEARCH_PLUS, openGLWin.appInstance, 0);
-	hButtonRGKSearchMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RG_KSEARCH_MINUS, openGLWin.appInstance, 0);
+	hButtonRGKSearchPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_BUTTON_KSEARCH_PLUS, openGLWin.appInstance, 0);
+	hButtonRGKSearchMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_BUTTON_KSEARCH_MINUS, openGLWin.appInstance, 0);
 
-	hTextRGCurvature = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_RG_CURVATURE, openGLWin.appInstance, 0);
+	hTextRGCurvature = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_TEXT_CURVATURE, openGLWin.appInstance, 0);
 
 	SendMessage(hTextRGCurvature, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
-	hTextRGCurvatureLabel = CreateWindowEx(0, L"STATIC", L"Curvature", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_RG_CURVATURE_LABEL, openGLWin.appInstance, 0);
+	hTextRGCurvatureLabel = CreateWindowEx(0, L"STATIC", L"Curvature", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_TEXT_CURVATURE_LABEL, openGLWin.appInstance, 0);
 
 	SendMessage(hTextRGCurvatureLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
 
-	hTextRGNeighbors = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_RG_NEIGHBORS, openGLWin.appInstance, 0);
+	hTextRGNeighbors = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_TEXT_NEIGHBORS, openGLWin.appInstance, 0);
 
 	SendMessage(hTextRGNeighbors, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
-	hTextRGNeighborsLabel = CreateWindowEx(0, L"STATIC", L"Neighbors", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_RG_NEIGHBORS_LABEL, openGLWin.appInstance, 0);
+	hTextRGNeighborsLabel = CreateWindowEx(0, L"STATIC", L"Neighbors", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_TEXT_NEIGHBORS_LABEL, openGLWin.appInstance, 0);
 
 	SendMessage(hTextRGNeighborsLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
 
-	hTextRGKSearch = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_RG_KSEARCH, openGLWin.appInstance, 0);
+	hTextRGKSearch = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_TEXT_KSEARCH, openGLWin.appInstance, 0);
 
 	SendMessage(hTextRGKSearch, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
-	hTextRGKSearchLabel = CreateWindowEx(0, L"STATIC", L"KSearch", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_RG_KSEARCH_LABEL, openGLWin.appInstance, 0);
+	hTextRGKSearchLabel = CreateWindowEx(0, L"STATIC", L"KSearch", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_SEGMENTATION_RG_TEXT_KSEARCH_LABEL, openGLWin.appInstance, 0);
 
 	SendMessage(hTextRGKSearchLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
 
@@ -614,39 +603,39 @@ bool InteractiveFusion::CreateOpenGLWindow()
 
 	openGLWin.UpdateSegmentationPreviewValues();
 
-	hButtonWallSizePlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_WALLSIZE_PLUS, openGLWin.appInstance, 0);
-	hButtonWallSizeMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_WALLSIZE_MINUS, openGLWin.appInstance, 0);
-	hButtonWallSmoothnessPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_WALLSMOOTHNESS_PLUS, openGLWin.appInstance, 0);
-	hButtonWallSmoothnessMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_WALLSMOOTHNESS_MINUS, openGLWin.appInstance, 0);
+	hButtonWallSizePlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_BUTTON_WALLSIZE_PLUS, openGLWin.appInstance, 0);
+	hButtonWallSizeMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_BUTTON_WALLSIZE_MINUS, openGLWin.appInstance, 0);
+	hButtonWallSmoothnessPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_BUTTON_WALLSMOOTHNESS_PLUS, openGLWin.appInstance, 0);
+	hButtonWallSmoothnessMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_BUTTON_WALLSMOOTHNESS_MINUS, openGLWin.appInstance, 0);
 
 
-	hTextWalls = CreateWindowEx(0, L"STATIC", L"Is the highlighted area (part of) a wall, floor or ceiling?", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_WALL, openGLWin.appInstance, 0);
-	SendMessage(hTextWalls, WM_SETFONT, (WPARAM)uiFont, TRUE);
+	hTextWalls = CreateWindowEx(0, L"STATIC", L"Is the highlighted area (part of) a wall, floor or ceiling?", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_TEXT_ISWALL, openGLWin.appInstance, 0);
+	SendMessage(hTextWalls, WM_SETFONT, (WPARAM)bigUiFont, TRUE);
 
 
-	hTextWallSize = CreateWindowEx(0, L"STATIC", L"2cm", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_WALLSIZE, openGLWin.appInstance, 0);
+	hTextWallSize = CreateWindowEx(0, L"STATIC", L"2cm", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_TEXT_WALLSIZE, openGLWin.appInstance, 0);
 
-	//SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_TEXT_WALLSIZE, L"Is this (part of) a floor/wall?");
+	//SetDlgItemText(openGLWin.glWindowParent, IDC_PLANE_TEXT_WALLSIZE, L"Is this (part of) a floor/wall?");
 	SendMessage(hTextWallSize, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
-	hTextWallSizeLabel = CreateWindowEx(0, L"STATIC", L"Thickness", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_WALLSIZE_LABEL, openGLWin.appInstance, 0);
-	//SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_TEXT_WALLSIZE, L"Is this (part of) a floor/wall?");
+	hTextWallSizeLabel = CreateWindowEx(0, L"STATIC", L"Thickness", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_TEXT_WALLSIZE_LABEL, openGLWin.appInstance, 0);
+	//SetDlgItemText(openGLWin.glWindowParent, IDC_PLANE_TEXT_WALLSIZE, L"Is this (part of) a floor/wall?");
 	SendMessage(hTextWallSizeLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
 
-	hTextWallSmoothness = CreateWindowEx(0, L"STATIC", L"2cm", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_WALLSMOOTHNESS, openGLWin.appInstance, 0);
-	//SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_TEXT_WALLSIZE, L"Is this (part of) a floor/wall?");
+	hTextWallSmoothness = CreateWindowEx(0, L"STATIC", L"2cm", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_TEXT_WALLSMOOTHNESS, openGLWin.appInstance, 0);
+	//SetDlgItemText(openGLWin.glWindowParent, IDC_PLANE_TEXT_WALLSIZE, L"Is this (part of) a floor/wall?");
 	SendMessage(hTextWallSmoothness, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
 
-	hTextWallSmoothnessLabel = CreateWindowEx(0, L"STATIC", L"Smoothness", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_WALLSMOOTHNESS_LABEL, openGLWin.appInstance, 0);
-	//SetDlgItemText(openGLWin.glWindowParent, IDC_STATIC_TEXT_WALLSIZE, L"Is this (part of) a floor/wall?");
+	hTextWallSmoothnessLabel = CreateWindowEx(0, L"STATIC", L"Smoothness", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_TEXT_WALLSMOOTHNESS_LABEL, openGLWin.appInstance, 0);
+	//SetDlgItemText(openGLWin.glWindowParent, IDC_PLANE_TEXT_WALLSIZE, L"Is this (part of) a floor/wall?");
 	SendMessage(hTextWallSmoothnessLabel, WM_SETFONT, (WPARAM)mediumUiFont, TRUE);
 
 	openGLWin.UpdateWallSelectionValues();
 
 
-	hHelpText1 = CreateWindowEx(0, L"STATIC", L"If the highlighted area is too thick or too thin, change the wall thickness.", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_HELP1, openGLWin.appInstance, 0);
+	hHelpText1 = CreateWindowEx(0, L"STATIC", L"If the highlighted area is too thick or too thin, change the wall thickness.", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_TEXT_WALLSIZE_HELP, openGLWin.appInstance, 0);
 	SendMessage(hHelpText1, WM_SETFONT, (WPARAM)smallUiFont, TRUE);
 
-	hHelpText2 = CreateWindowEx(0, L"STATIC", L"If the highlighted area has gaps, decrease smoothness. If it is not flat enough (contains other objects), increase it.", WS_CHILD | WS_VISIBLE | SS_CENTER | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_STATIC_TEXT_HELP2, openGLWin.appInstance, 0);
+	hHelpText2 = CreateWindowEx(0, L"STATIC", L"If the highlighted area has gaps, decrease smoothness. If it is not flat enough (contains other objects), increase it.", WS_CHILD | WS_VISIBLE | SS_CENTER | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_TEXT_WALLSMOOTHNESS_HELP, openGLWin.appInstance, 0);
 	SendMessage(hHelpText2, WM_SETFONT, (WPARAM)smallUiFont, TRUE);
 
 	wallSelectionUi.push_back(hTextWalls);
@@ -663,18 +652,18 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	wallSelectionUi.push_back(hButtonWallSmoothnessPlus);
 	wallSelectionUi.push_back(hButtonWallSmoothnessMinus);
 
-	//hTextWalls = CreateWindowEx(0, L"Text", L"Is this (part of) a floor/wall?", WS_CHILD | WS_VISIBLE | BS_BITMAP, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_NO, appInstance, 0);
-	hButtonExport = CreateWindowEx(0, L"BUTTON", L"Export", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_EXPORT, NULL, 0);
-	hButtonDuplicate = CreateWindowEx(0, L"BUTTON", L"Duplicate", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_DUPLICATE, NULL, 0);
-	hButtonReset = CreateWindowEx(0, L"BUTTON", L"Reset", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_RESET, NULL, 0);
-	hDeleteIcon = (HICON)LoadImage(openGLWin.appInstance, MAKEINTRESOURCE(IDI_TRASH), IMAGE_ICON, 100, 100, NULL);
+	//hTextWalls = CreateWindowEx(0, L"Text", L"Is this (part of) a floor/wall?", WS_CHILD | WS_VISIBLE | BS_BITMAP, 250, 50, 150, 50, hWnd, (HMENU)IDC_PLANE_BUTTON_NO, appInstance, 0);
+	hButtonExport = CreateWindowEx(0, L"BUTTON", L"Export", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_INTERACTION_BUTTON_EXPORT, NULL, 0);
+	hButtonDuplicate = CreateWindowEx(0, L"BUTTON", L"Duplicate", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_INTERACTION_BUTTON_DUPLICATE, NULL, 0);
+	hButtonReset = CreateWindowEx(0, L"BUTTON", L"Reset", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_INTERACTION_BUTTON_RESET, NULL, 0);
+	hDeleteIcon = (HICON)LoadImage(openGLWin.appInstance, MAKEINTRESOURCE(IDI_INTERACTION_TRASH), IMAGE_ICON, 100, 100, NULL);
 
-	hButtonTransformation = CreateWindowEx(0, L"BUTTON", L"Transform", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_TRANSFORMATION, NULL, 0);
-	hButtonFreeCamera = CreateWindowEx(0, L"BUTTON", L"Free Camera", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW | BS_MULTILINE, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_FREE_CAMERA, NULL, 0);
+	hButtonTransformation = CreateWindowEx(0, L"BUTTON", L"Transform", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_INTERACTION_BUTTON_TRANSFORMATION, NULL, 0);
+	hButtonFreeCamera = CreateWindowEx(0, L"BUTTON", L"Free Camera", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW | BS_MULTILINE, 250, 50, 150, 50, hWnd, (HMENU)IDC_INTERACTION_BUTTON_FREE_CAMERA, NULL, 0);
 
-	hButtonScale = CreateWindowEx(0, L"BUTTON", L"Scale", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_SCALE, NULL, 0);
-	hButtonRotateVertical = CreateWindowEx(0, L"BUTTON", L"Rotate ^v", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_ROTATE_VERTICAL, NULL, 0);
-	hButtonRotateHorizontal = CreateWindowEx(0, L"BUTTON", L"Rotate <>", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_BUTTON_ROTATE_HORIZONTAL, NULL, 0);
+	hButtonScale = CreateWindowEx(0, L"BUTTON", L"Scale", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_INTERACTION_BUTTON_SCALE, NULL, 0);
+	hButtonRotateVertical = CreateWindowEx(0, L"BUTTON", L"Rotate ^v", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_INTERACTION_BUTTON_ROTATE_VERTICAL, NULL, 0);
+	hButtonRotateHorizontal = CreateWindowEx(0, L"BUTTON", L"Rotate <>", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_INTERACTION_BUTTON_ROTATE_HORIZONTAL, NULL, 0);
 
 	if (openGLWin.GetDeviceClass() == IF_DEVICE_PC)
 	{
@@ -696,14 +685,14 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	interactionUi.push_back(hButtonDuplicate);
 	
 	interactionUi.push_back(hButtonReset);
-	//hDeleteIcon = (HICON)LoadImage(openGLWin.appInstance, MAKEINTRESOURCE(IDI_TRASH), IMAGE_ICON, 128, 128, NULL);
+	//hDeleteIcon = (HICON)LoadImage(openGLWin.appInstance, MAKEINTRESOURCE(IDI_INTERACTION_TRASH), IMAGE_ICON, 128, 128, NULL);
 	//SendMessage(hButtonDelete, STM_SETIMAGE, IMAGE_ICON, (LPARAM)hDeleteIcon);
 	HideWholeUI();
 
 
 
 	//debugHandle = CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, MAKEINTRESOURCE(IDD_DEBUG), L"Debug", WS_CHILD | WS_VISIBLE | DS_CONTROL, 50, 50, 300, 300, hWnd, 0, appInstance, 0);
-	debugHandle = CreateDialog(openGLWin.appInstance, MAKEINTRESOURCE(IDD_DEBUG), hWnd, (DLGPROC)DebugDlgProc);
+	debugHandle = CreateDialog(openGLWin.appInstance, MAKEINTRESOURCE(IDD_INTERACTION_ADVANCED_OPTIONS), hWnd, (DLGPROC)DebugDlgProc);
 	ShowWindow(debugHandle, SW_HIDE);
 
 
@@ -962,7 +951,7 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 
 	if (mode == IF_MODE_INTERACTION)
 	{
-		HideKinectFusion();
+		fusionExplorer->Hide();
 		glCamera.mode = CAMERA_SENSOR;
 		glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
 		glCamera.ResetCameraPosition();
@@ -1000,7 +989,7 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 	}
 	else if (mode == IF_MODE_SEGMENTATION)
 	{
-		HideKinectFusion();
+		fusionExplorer->Hide();
 		//ANYWAYS
 		DetermineMeshQuality();
 		ShowWindow(glWindowHandle, SW_SHOW);
@@ -1032,7 +1021,7 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 	}
 	else if (mode == IF_MODE_PROCESSING)
 	{
-		HideKinectFusion();
+		fusionExplorer->Hide();
 		glCamera.ResetCameraPosition();
 		glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
 		glCamera.mode = CAMERA_FREE;
@@ -1184,7 +1173,7 @@ HINSTANCE InteractiveFusion::GetInstance()
 
 void InteractiveFusion::ProcessParentUI(WPARAM wParam, LPARAM lParam)
 {
-	if (IDC_BUTTON_MODE_PREPARE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_MODE_BUTTON_PREPARE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() != IF_MODE_PREPARE_SCAN && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
 		{
@@ -1194,7 +1183,7 @@ void InteractiveFusion::ProcessParentUI(WPARAM wParam, LPARAM lParam)
 			openGLWin.SetWindowMode(IF_MODE_PREPARE_SCAN);
 		}
 	}
-	if (IDC_BUTTON_MODE_SCAN == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_MODE_BUTTON_SCAN == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
 		{
@@ -1205,7 +1194,7 @@ void InteractiveFusion::ProcessParentUI(WPARAM wParam, LPARAM lParam)
 		}
 
 	}
-	if (IDC_BUTTON_MODE_SEGMENTATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_MODE_BUTTON_SEGMENTATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() != IF_MODE_SEGMENTATION && openGLWin.GetWindowBusyState() != IF_BUSYSTATE_BUSY)
 		{
@@ -1214,7 +1203,7 @@ void InteractiveFusion::ProcessParentUI(WPARAM wParam, LPARAM lParam)
 			openGLWin.SetWindowMode(IF_MODE_SEGMENTATION);
 		}
 	}
-	if (IDC_BUTTON_MODE_INTERACTION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_MODE_BUTTON_INTERACTION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//SetFocus(hScanText);
 		//MoveModeButtonsOnResize();
@@ -1227,7 +1216,7 @@ void InteractiveFusion::ProcessParentUI(WPARAM wParam, LPARAM lParam)
 
 void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 {
-	if (IDC_BUTTON_TRANSFORMATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_INTERACTION_BUTTON_TRANSFORMATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (glSelector.GetManipulationMode() == MANIPULATION_NONE)
 		{
@@ -1248,7 +1237,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			glSelector.SetManipulationMode(MANIPULATION_NONE);
 		}
 	}
-	if (IDC_BUTTON_FREE_CAMERA == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_INTERACTION_BUTTON_FREE_CAMERA == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 
 		glCamera.ResetCameraPosition();
@@ -1260,7 +1249,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		else
 			glCamera.mode = CAMERA_SENSOR;
 	}
-	if (IDC_BUTTON_HELP_OK == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_HELP_BUTTON_OK == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowBusyState() == IF_BUSYSTATE_BUSY)
 		{
@@ -1268,7 +1257,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		}
 	}
 	
-	if (IDC_BUTTON_SEGMENTATION_BEGIN == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_BUTTON_UPDATE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
@@ -1277,7 +1266,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			glSegmentation.StartSegmentation();
 		}
 	}
-	if (IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_BUTTON_DONE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
@@ -1286,7 +1275,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			glSegmentation.StartSegmentation();
 		}
 	}
-	if (IDC_BUTTON_SEGMENTATION_EUCLIDEAN == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_EUCLIDEAN == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
@@ -1298,7 +1287,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			openGLWin.MoveButtonsOnResize();
 		}
 	}
-	if (IDC_BUTTON_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
@@ -1310,7 +1299,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			openGLWin.MoveButtonsOnResize();
 		}
 	}
-	if (IDC_BUTTON_RG_CURVATURE_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_RG_BUTTON_CURVATURE_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
@@ -1327,7 +1316,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			openGLWin.UpdateSegmentationPreviewValues();
 		}
 	}
-	if (IDC_BUTTON_RG_CURVATURE_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_RG_BUTTON_CURVATURE_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
@@ -1346,55 +1335,55 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			openGLWin.UpdateSegmentationPreviewValues();
 		}
 	}
-	if (IDC_BUTTON_RG_NEIGHBORS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_RG_BUTTON_NEIGHBORS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
-			float step = 1.0f;
+			int step = 1;
 
 			openGLWin.segmentValuesChanged = true;
 			openGLWin.numberOfNeighbors += step;
 			openGLWin.UpdateSegmentationPreviewValues();
 		}
 	}
-	if (IDC_BUTTON_RG_NEIGHBORS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_RG_BUTTON_NEIGHBORS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
 			if (openGLWin.numberOfNeighbors <= 1)
 				return;
-			float step = 1.0f;
+			int step = 1;
 
 			openGLWin.segmentValuesChanged = true;
 			openGLWin.numberOfNeighbors -= step;
 			openGLWin.UpdateSegmentationPreviewValues();
 		}
 	}
-	if (IDC_BUTTON_RG_KSEARCH_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_RG_BUTTON_KSEARCH_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
-			float step = 1.0f;
+			int step = 1;
 
 			openGLWin.segmentValuesChanged = true;
 			openGLWin.kSearchValue += step;
 			openGLWin.UpdateSegmentationPreviewValues();
 		}
 	}
-	if (IDC_BUTTON_RG_KSEARCH_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_RG_BUTTON_KSEARCH_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
 			if (openGLWin.kSearchValue <= 1)
 				return;
-			float step = 1.0f;
+			int step = 1;
 
 			openGLWin.segmentValuesChanged = true;
 			openGLWin.kSearchValue -= step;
 			openGLWin.UpdateSegmentationPreviewValues();
 		}
 	}
-	if (IDC_BUTTON_RG_SMOOTHNESS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_RG_BUTTON_SMOOTHNESS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
@@ -1411,7 +1400,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			openGLWin.UpdateSegmentationPreviewValues();
 		}
 	}
-	if (IDC_BUTTON_RG_SMOOTHNESS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_RG_BUTTON_SMOOTHNESS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
@@ -1430,7 +1419,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			openGLWin.UpdateSegmentationPreviewValues();
 		}
 	}
-	if (IDC_BUTTON_CLUSTERTOLERANCE_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_E_BUTTON_CLUSTERTOLERANCE_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
@@ -1448,7 +1437,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			openGLWin.UpdateSegmentationPreviewValues();
 		}
 	}
-	if (IDC_BUTTON_CLUSTERTOLERANCE_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_SEGMENTATION_E_BUTTON_CLUSTERTOLERANCE_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
 		{
@@ -1468,7 +1457,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			openGLWin.UpdateSegmentationPreviewValues();
 		}
 	}
-	if (IDC_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_PLANE_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		float step = 0.0f;
 		if (openGLWin.wallThickness >= 0.30f)
@@ -1483,7 +1472,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 
 		openGLWin.UpdateWallSelectionValues();
 	}
-	if (IDC_BUTTON_WALLSIZE_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_PLANE_BUTTON_WALLSIZE_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.wallThickness <= 0.01f)
 			return;
@@ -1501,7 +1490,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		
 		openGLWin.UpdateWallSelectionValues();
 	}
-	if (IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_PLANE_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 
 		cDebug::DbgOut(L"BEGINNING: ", openGLWin.wallSmoothness);
@@ -1521,7 +1510,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		openGLWin.UpdateWallSelectionValues();
 		cDebug::DbgOut(L"UPDATED: ", openGLWin.wallSmoothness);
 	}
-	if (IDC_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_PLANE_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.wallSmoothness <= 0.00f)
 			return;
@@ -1538,13 +1527,13 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		
 		openGLWin.UpdateWallSelectionValues();
 	}
-	if (IDC_BUTTON_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_INTERACTION_BUTTON_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//openGLWin.ResumeScanning();
 		meshHelper.ResetAll();
 		glSelector.Unselect();
 	}
-	if (IDC_BUTTON_DUPLICATE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_INTERACTION_BUTTON_DUPLICATE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.duplicationMode = !openGLWin.duplicationMode;
 
@@ -1556,7 +1545,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			RedrawManipulationButtons();
 		}
 	}
-	if (IDC_BUTTON_SCALE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_INTERACTION_BUTTON_SCALE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.RedrawManipulationButtons();
 		if (glSelector.GetManipulationMode() != MANIPULATION_SCALE)
@@ -1571,7 +1560,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			glSelector.SetManipulationMode(MANIPULATION_NONE);
 		}
 	}
-	if (IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_INTERACTION_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.RedrawManipulationButtons();
 		if (glSelector.GetManipulationMode() != MANIPULATION_ROTATE_Y)
@@ -1586,7 +1575,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			glSelector.SetManipulationMode(MANIPULATION_NONE);
 		}
 	}
-	if (IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_INTERACTION_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.RedrawManipulationButtons();
 		if (glSelector.GetManipulationMode() != MANIPULATION_ROTATE_X)
@@ -1601,7 +1590,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 			glSelector.SetManipulationMode(MANIPULATION_NONE);
 		}
 	}
-	if (IDC_BUTTON_YES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_PLANE_BUTTON_YES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.SetAnswer(ANSWER_YES);
@@ -1612,7 +1601,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		meshHelper.RemoveAllHighlights();
 		ShowWindow(hTextWalls, SW_HIDE);
 	}
-	if (IDC_BUTTON_NO == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_PLANE_BUTTON_NO == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//openGLWin.glControl.SetOffSetBottom(0);
 		openGLWin.SetAnswer(ANSWER_NO);
@@ -1624,12 +1613,12 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		ShowWindow(hTextWalls, SW_HIDE);
 		//openGLWin.glControl.ResizeOpenGLViewportFull();
 	}
-	if (IDC_BUTTON_EXPORT == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.ShowStatusBarMessage(L"Combining and exporting all meshes...");
 		meshHelper.CombineAndExport();
 	}
-	if (IDC_BUTTON_PROCESSING_FILLHOLES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_PROCESSING_BUTTON_FILLHOLES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.ShowStatusBarMessage(L"Filling holes...");
 	
@@ -1645,11 +1634,11 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 
 		openGLWin.holeSize += 1000;
 	}
-	if (IDC_BUTTON_PROCESSING_DONE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_PROCESSING_BUTTON_DONE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.SetWindowMode(IF_MODE_INTERACTION);
 	}
-	if (IDC_BUTTON_REMOVECOMPONENTS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_PROCESSING_BUTTON_REMOVECOMPONENTS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		int step = 100;
 		if (openGLWin.removeClusterSize < 100)
@@ -1660,7 +1649,7 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		openGLWin.UpdateProcessingValues();
 		//meshHelper.RemoveSmallComponents(1000);
 	}
-	if (IDC_BUTTON_REMOVECOMPONENTS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_PROCESSING_BUTTON_REMOVECOMPONENTS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.removeClusterSize <= 10)
 			return;
@@ -1672,68 +1661,68 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 		openGLWin.UpdateProcessingValues();
 		//meshHelper.RemoveSmallComponents(1000);
 	}
-	if (IDC_BUTTON_REMOVECOMPONENTS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_PROCESSING_BUTTON_REMOVECOMPONENTS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		cDebug::DbgOut(L"select Remove Segments: ");
-		//int size = GetDlgItemInt(debugHandle, IDC_EDIT_REMOVESEGMENTS, NULL, FALSE);
+		//int size = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_REMOVESEGMENTS, NULL, FALSE);
 		meshHelper.RemoveSmallComponents(openGLWin.removeClusterSize);
 	}
 }
 
 void InteractiveFusion::UpdateWallSelectionValues()
 {
-	int thicknessLabel = openGLWin.wallThickness * 100;
+	int thicknessLabel = (int)(openGLWin.wallThickness * 100);
 	wstring thicknessString = to_wstring(thicknessLabel) + L"cm";
-	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_WALLSIZE, thicknessString.c_str());
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_PLANE_TEXT_WALLSIZE, thicknessString.c_str());
 
-	int smoothnessLabel = openGLWin.wallSmoothness * 100;
+	int smoothnessLabel = (int)(openGLWin.wallSmoothness * 100);
 	wstring smoothnessString = to_wstring(smoothnessLabel) + L"%";
-	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_WALLSMOOTHNESS, smoothnessString.c_str());
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_PLANE_TEXT_WALLSMOOTHNESS, smoothnessString.c_str());
 }
 
 void InteractiveFusion::UpdateSegmentationPreviewValues()
 {
-	int clusterToleranceLabel = openGLWin.clusterTolerance * 1000;
+	int clusterToleranceLabel = (int)(openGLWin.clusterTolerance * 1000);
 	wstring clusterToleranceString = to_wstring(clusterToleranceLabel) + L"cm";
-	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_CLUSTERTOLERANCE, clusterToleranceString.c_str());
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE, clusterToleranceString.c_str());
 
-	int smoothnessLabel = openGLWin.smoothnessThreshold;
+	int smoothnessLabel = (int)openGLWin.smoothnessThreshold;
 	wstring smoothnessString = to_wstring(smoothnessLabel) + L"";
-	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_RG_SMOOTHNESS, smoothnessString.c_str());
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_SEGMENTATION_RG_TEXT_SMOOTHNESS, smoothnessString.c_str());
 
-	int curvatureLabel = openGLWin.curvatureThreshold;
+	int curvatureLabel = (int)openGLWin.curvatureThreshold;
 	wstring curvatureString = to_wstring(curvatureLabel) + L"";
-	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_RG_CURVATURE, curvatureString.c_str());
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_SEGMENTATION_RG_TEXT_CURVATURE, curvatureString.c_str());
 
-	int neighborsLabel = openGLWin.numberOfNeighbors;
+	int neighborsLabel = (int)openGLWin.numberOfNeighbors;
 	wstring neighborsString = to_wstring(neighborsLabel) + L"";
-	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_RG_NEIGHBORS, neighborsString.c_str());
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_SEGMENTATION_RG_TEXT_NEIGHBORS, neighborsString.c_str());
 
-	int kSearchLabel = openGLWin.kSearchValue;
+	int kSearchLabel = (int)openGLWin.kSearchValue;
 	wstring kSearchString = to_wstring(kSearchLabel) + L"";
-	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_RG_KSEARCH, kSearchString.c_str());
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_SEGMENTATION_RG_TEXT_KSEARCH, kSearchString.c_str());
 }
 
 void InteractiveFusion::UpdateProcessingValues()
 {
-	int componentSizeLabel = openGLWin.removeClusterSize;
+	int componentSizeLabel = (int)openGLWin.removeClusterSize;
 	wstring componentSizeString = to_wstring(componentSizeLabel) + L"";
-	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_REMOVECOMPONENTS, componentSizeString.c_str());
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_PROCESSING_TEXT_REMOVECOMPONENTS, componentSizeString.c_str());
 }
 
 bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 {
 	LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lParam;
 	if (IsHandleInUI(item->hwndItem, modeUi) ||
-		IDC_BUTTON_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) ||
-		IDC_BUTTON_SEGMENTATION_EUCLIDEAN == LOWORD(wParam) ||
-		IDC_BUTTON_HELP_OK == LOWORD(wParam))
+		IDC_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) ||
+		IDC_SEGMENTATION_EUCLIDEAN == LOWORD(wParam) ||
+		IDC_HELP_BUTTON_OK == LOWORD(wParam))
 	{
-		if (IDC_BUTTON_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) ||
-			IDC_BUTTON_SEGMENTATION_EUCLIDEAN == LOWORD(wParam))
+		if (IDC_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) ||
+			IDC_SEGMENTATION_EUCLIDEAN == LOWORD(wParam))
 			SelectObject(item->hDC, mediumUiFont);
 		else
-			SelectObject(item->hDC, uiFont);
+			SelectObject(item->hDC, bigUiFont);
 		FillRect(item->hDC, &item->rcItem, hBackground);
 		//SelectObject(item->hDC, hBackground);
 		HBRUSH bgBrush = CreateSolidBrush(RGB(10, 10, 10));
@@ -1799,7 +1788,7 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		LPSTR lpBuff = new char[len + 1];
 		GetWindowTextA(item->hwndItem, lpBuff, len + 1);
 
-		if (IDC_BUTTON_MODE_SCAN == LOWORD(wParam))
+		if (IDC_MODE_BUTTON_SCAN == LOWORD(wParam))
 			DrawTextA(item->hDC, lpBuff, len, &item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		else
 			DrawTextA(item->hDC, lpBuff, len, &item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -1808,7 +1797,7 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		DeleteObject(inactiveBrush);
 	}
 
-	if (IDC_BUTTON_DELETE == LOWORD(wParam))
+	if (IDC_INTERACTION_BUTTON_DELETE == LOWORD(wParam))
 	{
 		/*LPDRAWITEMSTRUCT item = (LPDRAWITEMSTRUCT)lParam;
 		DrawIconEx(item->hDC, 0, 0, hDeleteIcon, 100, 100, 0, NULL, DI_NORMAL);*/
@@ -1827,34 +1816,34 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 
 		return TRUE;
 	}
-	if (IDC_BUTTON_EXPORT == LOWORD(wParam)
-		|| IDC_BUTTON_YES == LOWORD(wParam)
-		|| IDC_BUTTON_NO == LOWORD(wParam)
-		|| IDC_BUTTON_DUPLICATE == LOWORD(wParam)
-		|| IDC_BUTTON_RESET == LOWORD(wParam)
-		|| IDC_BUTTON_SCALE == LOWORD(wParam)
-		|| IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam)
-		|| IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam)
-		|| IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam)
-		|| IDC_BUTTON_SEGMENTATION_BEGIN == LOWORD(wParam)
-		|| IDC_BUTTON_FREE_CAMERA == LOWORD(wParam)
-		|| IDC_BUTTON_TRANSFORMATION == LOWORD(wParam)
+	if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam)
+		|| IDC_PLANE_BUTTON_YES == LOWORD(wParam)
+		|| IDC_PLANE_BUTTON_NO == LOWORD(wParam)
+		|| IDC_INTERACTION_BUTTON_DUPLICATE == LOWORD(wParam)
+		|| IDC_INTERACTION_BUTTON_RESET == LOWORD(wParam)
+		|| IDC_INTERACTION_BUTTON_SCALE == LOWORD(wParam)
+		|| IDC_INTERACTION_BUTTON_ROTATE_VERTICAL == LOWORD(wParam)
+		|| IDC_INTERACTION_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam)
+		|| IDC_SEGMENTATION_BUTTON_DONE == LOWORD(wParam)
+		|| IDC_SEGMENTATION_BUTTON_UPDATE == LOWORD(wParam)
+		|| IDC_INTERACTION_BUTTON_FREE_CAMERA == LOWORD(wParam)
+		|| IDC_INTERACTION_BUTTON_TRANSFORMATION == LOWORD(wParam)
 		|| openGLWin.IsHandleInUI(item->hwndItem, wallSelectionUi)
 		|| openGLWin.IsHandleInUI(item->hwndItem, euclideanUi)
 		|| openGLWin.IsHandleInUI(item->hwndItem, regionGrowthUi)
 		|| openGLWin.IsHandleInUI(item->hwndItem, processingUi))
 	{
 
-		if (IDC_BUTTON_SCALE == LOWORD(wParam) || IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) || IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) || IDC_BUTTON_PROCESSING_FILLHOLES == LOWORD(wParam) || IDC_BUTTON_REMOVECOMPONENTS == LOWORD(wParam))
+		if (IDC_INTERACTION_BUTTON_SCALE == LOWORD(wParam) || IDC_INTERACTION_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) || IDC_INTERACTION_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) || IDC_PROCESSING_BUTTON_FILLHOLES == LOWORD(wParam) || IDC_PROCESSING_BUTTON_REMOVECOMPONENTS == LOWORD(wParam))
 			SelectObject(item->hDC, smallUiFont);
-		else if (IDC_BUTTON_DUPLICATE == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET
-			|| IDC_BUTTON_TRANSFORMATION == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+		else if (IDC_INTERACTION_BUTTON_DUPLICATE == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET
+			|| IDC_INTERACTION_BUTTON_TRANSFORMATION == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
 			SelectObject(item->hDC, smallUiFont);
-		else if (IDC_BUTTON_FREE_CAMERA == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET
+		else if (IDC_INTERACTION_BUTTON_FREE_CAMERA == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET
 			)
 			SelectObject(item->hDC, mediumUiFont);
 		else
-			SelectObject(item->hDC, uiFont);
+			SelectObject(item->hDC, bigUiFont);
 
 		FillRect(item->hDC, &item->rcItem, hBackground);
 		SelectObject(item->hDC, buttonDefaultBrush);
@@ -1862,12 +1851,12 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		{
 			SetTextColor(item->hDC, RGB(50, 50, 50));
 
-			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam) || IDC_BUTTON_PROCESSING_DONE == LOWORD(wParam))
+			if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam) || IDC_PLANE_BUTTON_YES == LOWORD(wParam) || IDC_SEGMENTATION_BUTTON_DONE == LOWORD(wParam) || IDC_PROCESSING_BUTTON_DONE == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonGreenInactiveBrush);
 			}
-			else if (IDC_BUTTON_RESET == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam))
+			else if (IDC_INTERACTION_BUTTON_RESET == LOWORD(wParam) || IDC_PLANE_BUTTON_NO == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonRedInactiveBrush);
@@ -1880,12 +1869,12 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		else if (item->itemState & ODS_SELECTED)
 		{
 			SetTextColor(item->hDC, RGB(245, 245, 245));
-			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam) || IDC_BUTTON_PROCESSING_DONE == LOWORD(wParam))
+			if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam) || IDC_PLANE_BUTTON_YES == LOWORD(wParam) || IDC_SEGMENTATION_BUTTON_DONE == LOWORD(wParam) || IDC_PROCESSING_BUTTON_DONE == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonGreenPressedBrush);
 			}
-			else if (IDC_BUTTON_RESET == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam))
+			else if (IDC_INTERACTION_BUTTON_RESET == LOWORD(wParam) || IDC_PLANE_BUTTON_NO == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonRedPressedBrush);
@@ -1899,12 +1888,12 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		else
 		{
 			SetTextColor(item->hDC, RGB(240, 240, 240));
-			if (IDC_BUTTON_EXPORT == LOWORD(wParam) || IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_FINISH == LOWORD(wParam) || IDC_BUTTON_PROCESSING_DONE == LOWORD(wParam))
+			if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam) || IDC_PLANE_BUTTON_YES == LOWORD(wParam) || IDC_SEGMENTATION_BUTTON_DONE == LOWORD(wParam) || IDC_PROCESSING_BUTTON_DONE == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonGreenBrush);
 			}
-			else if (IDC_BUTTON_RESET == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam))
+			else if (IDC_INTERACTION_BUTTON_RESET == LOWORD(wParam) || IDC_PLANE_BUTTON_NO == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonRedBrush);
@@ -1914,28 +1903,28 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 				SelectObject(item->hDC, buttonDefaultPen);
 			}
 		}
-		if (IDC_BUTTON_DUPLICATE == LOWORD(wParam) && openGLWin.duplicationMode)
+		if (IDC_INTERACTION_BUTTON_DUPLICATE == LOWORD(wParam) && openGLWin.duplicationMode)
 			SelectObject(item->hDC, buttonActiveBrush);
-		if (IDC_BUTTON_SCALE == LOWORD(wParam) && glSelector.GetManipulationMode() == MANIPULATION_SCALE)
+		if (IDC_INTERACTION_BUTTON_SCALE == LOWORD(wParam) && glSelector.GetManipulationMode() == MANIPULATION_SCALE)
 			SelectObject(item->hDC, buttonActiveBrush);
-		else if (IDC_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) && glSelector.GetManipulationMode() == MANIPULATION_ROTATE_Y)
+		else if (IDC_INTERACTION_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) && glSelector.GetManipulationMode() == MANIPULATION_ROTATE_Y)
 			SelectObject(item->hDC, buttonActiveBrush);
-		else if (IDC_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) && glSelector.GetManipulationMode() == MANIPULATION_ROTATE_X)
+		else if (IDC_INTERACTION_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) && glSelector.GetManipulationMode() == MANIPULATION_ROTATE_X)
 			SelectObject(item->hDC, buttonActiveBrush);
-		else if (IDC_BUTTON_TRANSFORMATION == LOWORD(wParam) && glSelector.GetManipulationMode() != MANIPULATION_NONE)
+		else if (IDC_INTERACTION_BUTTON_TRANSFORMATION == LOWORD(wParam) && glSelector.GetManipulationMode() != MANIPULATION_NONE)
 			SelectObject(item->hDC, buttonActiveBrush);
-		else if (IDC_BUTTON_FREE_CAMERA == LOWORD(wParam) && glCamera.mode == CAMERA_FREE)
+		else if (IDC_INTERACTION_BUTTON_FREE_CAMERA == LOWORD(wParam) && glCamera.mode == CAMERA_FREE)
 			SelectObject(item->hDC, buttonActiveBrush);
 
 		SetBkMode(item->hDC, TRANSPARENT);
 
-		if (IDC_BUTTON_SEGMENTATION_BEGIN == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
+		if (IDC_SEGMENTATION_BUTTON_UPDATE == LOWORD(wParam) && openGLWin.GetDeviceClass() == IF_DEVICE_TABLET)
 		{
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 50, 50);
 		}
-		else if (IDC_BUTTON_YES == LOWORD(wParam) || IDC_BUTTON_NO == LOWORD(wParam) || IDC_BUTTON_WALLSIZE_MINUS == LOWORD(wParam)
-			|| IDC_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) || IDC_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) ||
-			IDC_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) || IDC_BUTTON_PROCESSING_FILLHOLES == LOWORD(wParam) || IDC_BUTTON_REMOVECOMPONENTS == LOWORD(wParam) || IDC_BUTTON_SEGMENTATION_BEGIN == LOWORD(wParam) || IDC_BUTTON_TRANSFORMATION == LOWORD(wParam) || IDC_BUTTON_DUPLICATE == LOWORD(wParam) || IDC_BUTTON_FREE_CAMERA == LOWORD(wParam))
+		else if (IDC_PLANE_BUTTON_YES == LOWORD(wParam) || IDC_PLANE_BUTTON_NO == LOWORD(wParam) || IDC_PLANE_BUTTON_WALLSIZE_MINUS == LOWORD(wParam)
+			|| IDC_PLANE_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) || IDC_PLANE_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) ||
+			IDC_PLANE_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) || IDC_PROCESSING_BUTTON_FILLHOLES == LOWORD(wParam) || IDC_PROCESSING_BUTTON_REMOVECOMPONENTS == LOWORD(wParam) || IDC_SEGMENTATION_BUTTON_UPDATE == LOWORD(wParam) || IDC_INTERACTION_BUTTON_TRANSFORMATION == LOWORD(wParam) || IDC_INTERACTION_BUTTON_DUPLICATE == LOWORD(wParam) || IDC_INTERACTION_BUTTON_FREE_CAMERA == LOWORD(wParam))
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 20, 20);
 		else
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 500, 500);
@@ -2204,13 +2193,13 @@ void InteractiveFusion::ShowStatusBarMessage(string message)
 {
 	std::wstring ws = Util::StringToWString(message);
 	LPCWSTR statusBarMessage = ws.c_str();
-	SetDlgItemText(openGLWin.parent, IDC_IM_STATUS, statusBarMessage);
+	SetDlgItemText(openGLWin.parent, IDC_INTERACTION_STATUS, statusBarMessage);
 }
 
 void InteractiveFusion::ShowStatusBarMessage(wstring message)
 {
 	LPCWSTR statusBarMessage = message.c_str();
-	SetDlgItemText(openGLWin.parent, IDC_IM_STATUS, statusBarMessage);
+	SetDlgItemText(openGLWin.parent, IDC_INTERACTION_STATUS, statusBarMessage);
 }
 
 void InteractiveFusion::ResumeScanning()
@@ -2219,7 +2208,7 @@ void InteractiveFusion::ResumeScanning()
 	//HideAllButtons();
 	ShowWindow(openGLWin.glWindowHandle, SW_HIDE);
 	openGLWin.SetWindowMode(IF_MODE_SCAN);
-	ResumeKinectFusion();
+	fusionExplorer->ResumeScan();
 }
 
 void InteractiveFusion::UpdateSegmentationUI()
@@ -2275,12 +2264,12 @@ float InteractiveFusion::SpeedOptimizedFloat(float fVal)
 void InteractiveFusion::SetProgressionText(wstring text)
 {
 	LPCWSTR statusMessage = text.c_str();
-	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_STATUS, statusMessage);
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_OPENGL_STATUS_TEXT, statusMessage);
 }
 void InteractiveFusion::SetProgressionPercent(wstring percent)
 {
 	LPCWSTR statusMessage = percent.c_str();
-	SetDlgItemText(openGLWin.glWindowHandle, IDC_STATIC_TEXT_STATUS_PERCENT, statusMessage);
+	SetDlgItemText(openGLWin.glWindowHandle, IDC_OPENGL_STATUS_PERCENT, statusMessage);
 }
 
 void InteractiveFusion::DetermineMeshQuality()
@@ -2340,12 +2329,12 @@ LRESULT CALLBACK DebugDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 void InteractiveFusion::ProcessDebugUI(WPARAM wParam, LPARAM lParam)
 {
-	if (IDC_BUTTON_FILLHOLES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_BUTTON_FILLHOLES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.ShowStatusBarMessage(L"Filling holes...");
 		meshHelper.FillHoles(openGLWin.holeSize);
 	}
-	if (IDC_BUTTON_RG_RESETVALUES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_BUTTON_RG_RESETVALUES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.segmentValuesChanged = true;
 		openGLWin.kSearchValue = 20;
@@ -2359,77 +2348,77 @@ void InteractiveFusion::ProcessDebugUI(WPARAM wParam, LPARAM lParam)
 		openGLWin.ShowStatusBarMessage(L"Region growth values back to default.");
 	}
 
-	if (IDC_CHECK_WIREFRAME == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_CHECK_WIREFRAME == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		// Toggle our internal state for near mode
 		openGLWin.wireFrameMode = !openGLWin.wireFrameMode;
 	}
-	if (IDC_CHECK_FREECAMERA == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_CHECK_FREECAMERA == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		// Toggle our internal state for near mode
 
 		ToggleCameraMode();
 	}
-	if (IDC_CHECK_COLORSELECTION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_CHECK_COLORSELECTION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		// Toggle our internal state for near mode
 		openGLWin.colorSelection = !openGLWin.colorSelection;
 		if (!openGLWin.colorSelection)
 			RemoveSelectionColor();
 	}
-	if (IDC_CHECK_PLACING_RAYCAST == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_CHECK_PLACING_RAYCAST == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.placeWithRaycast = !openGLWin.placeWithRaycast;
 	}
-	if (IDC_CHECK_PLACING_SNAPTOVERTEX == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_CHECK_PLACING_SNAPTOVERTEX == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		// Toggle our internal state for near mode
 		openGLWin.snapToVertex = !openGLWin.snapToVertex;
 	}
-	if (IDC_CHECK_SHOWBB == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_CHECK_SHOWBB == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		// Toggle our internal state for near mode
 		openGLWin.showBB = !openGLWin.showBB;
 	}
-	if (IDC_CHECK_RG_ESTIMATENORMALS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_CHECK_RG_ESTIMATENORMALS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.segmentValuesChanged = true;
 		openGLWin.estimateNormals = !openGLWin.estimateNormals;
 	}
-	if (IDC_CHECK_HELPINGVISUALS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_CHECK_HELPINGVISUALS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.helpingVisuals = !openGLWin.helpingVisuals;
 	}
-	if (IDC_BUTTON_RG_EXTERNALPREVIEW == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_BUTTON_RG_EXTERNALPREVIEW == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//ShowPCLViewer();
 	}
-	if (IDC_BUTTON_WALL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_BUTTON_WALL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		cDebug::DbgOut(L"select wall: ");
 		SelectWallObject();
 	}
-	if (IDC_BUTTON_MLS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_BUTTON_MLS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		cDebug::DbgOut(L"select MLS: ");
 		//MLS();
 	}
-	if (IDC_BUTTON_REMOVESEGMENTS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_BUTTON_REMOVESEGMENTS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		cDebug::DbgOut(L"select Remove Segments: ");
-		int size = GetDlgItemInt(debugHandle, IDC_EDIT_REMOVESEGMENTS, NULL, FALSE);
+		int size = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_REMOVESEGMENTS, NULL, FALSE);
 		meshHelper.RemoveSmallComponents(size);
 	}
-	if (IDC_BUTTON_RESETWALL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_BUTTON_RESETWALL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		ResetWallObject();
 	}
-	if (IDC_BUTTON_SETBACKGROUND == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_BUTTON_SETBACKGROUND == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//GetDlgItemInt
-		int redValue = GetDlgItemInt(debugHandle, IDC_EDIT_BACKGROUND_RED, NULL, FALSE);
-		int greenValue = GetDlgItemInt(debugHandle, IDC_EDIT_BACKGROUND_GREEN, NULL, FALSE);
-		int blueValue = GetDlgItemInt(debugHandle, IDC_EDIT_BACKGROUND_BLUE, NULL, FALSE);
+		int redValue = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_BACKGROUND_RED, NULL, FALSE);
+		int greenValue = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_BACKGROUND_GREEN, NULL, FALSE);
+		int blueValue = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_BACKGROUND_BLUE, NULL, FALSE);
 		if (redValue >= 0 && redValue <= 255
 			&& greenValue >= 0 && greenValue <= 255
 			&& blueValue >= 0 && blueValue <= 255)
@@ -2441,7 +2430,7 @@ void InteractiveFusion::ProcessDebugUI(WPARAM wParam, LPARAM lParam)
 
 		//m_processor.ResetReconstruction();
 	}
-	if (IDC_BUTTON_REGION_GROWTH_SEGMENTATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_BUTTON_RG_SEGMENTATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//openGLWin.segmentationMode = REGION_GROWTH_SEGMENTATION;
 		glSegmentation.SetSegmentationMode(SEGMENTATION_REGIONGROWTH);
@@ -2452,7 +2441,7 @@ void InteractiveFusion::ProcessDebugUI(WPARAM wParam, LPARAM lParam)
 		//m_processor.ResetReconstruction();
 	}
 
-	if (IDC_BUTTON_CLEANMESH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_BUTTON_CLEANMESH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (openGLWin.GetWindowBusyState() == IF_BUSYSTATE_DEFAULT)
 			openGLWin.SetWindowBusyState(IF_BUSYSTATE_BUSY);
@@ -2463,7 +2452,7 @@ void InteractiveFusion::ProcessDebugUI(WPARAM wParam, LPARAM lParam)
 		meshHelper.CleanMesh();*/
 
 	}
-	if (IDC_BUTTON_RG_PREVIEW == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_BUTTON_RG_PREVIEW == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.ShowStatusBarMessage(L"Preparing region growth segmentation preview...");
 		glSegmentation.SetSegmentationMode(SEGMENTATION_REGIONGROWTH);
@@ -2471,7 +2460,7 @@ void InteractiveFusion::ProcessDebugUI(WPARAM wParam, LPARAM lParam)
 		glSegmentation.StartSegmentation();
 		//m_processor.ResetReconstruction();
 	}
-	if (IDC_BUTTON_RESETCAMERA == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	if (IDC_IDEBUG_BUTTON_RESETCAMERA == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		ResetCameraPosition();
 		openGLWin.ShowStatusBarMessage(L"Camera position reset.");
@@ -2480,51 +2469,51 @@ void InteractiveFusion::ProcessDebugUI(WPARAM wParam, LPARAM lParam)
 
 void InitializeGLUIControls()
 {
-	editKSearchHandle = GetDlgItem(debugHandle, IDC_EDIT_RG_KSEARCHVALUE);
+	editKSearchHandle = GetDlgItem(debugHandle, IDC_IDEBUG_EDIT_RG_KSEARCHVALUE);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editKSearchHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
-	editMinClustersHandle = GetDlgItem(debugHandle, IDC_EDIT_RG_MINCLUSTERSIZE);
+	editMinClustersHandle = GetDlgItem(debugHandle, IDC_IDEBUG_EDIT_RG_MINCLUSTERSIZE);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editMinClustersHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
-	editMaxClustersHandle = GetDlgItem(debugHandle, IDC_EDIT_RG_MAXCLUSTERSIZE);
+	editMaxClustersHandle = GetDlgItem(debugHandle, IDC_IDEBUG_EDIT_RG_MAXCLUSTERSIZE);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editMaxClustersHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
-	editNonHandle = GetDlgItem(debugHandle, IDC_EDIT_RG_NON);
+	editNonHandle = GetDlgItem(debugHandle, IDC_IDEBUG_EDIT_RG_NON);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editNonHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
-	editSmoothnessHandle = GetDlgItem(debugHandle, IDC_EDIT_RG_SMOOTHNESS);
+	editSmoothnessHandle = GetDlgItem(debugHandle, IDC_IDEBUG_EDIT_RG_SMOOTHNESS);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editSmoothnessHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
-	editCurvatureHandle = GetDlgItem(debugHandle, IDC_EDIT_RG_CURVATURE);
+	editCurvatureHandle = GetDlgItem(debugHandle, IDC_IDEBUG_EDIT_RG_CURVATURE);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editCurvatureHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
-	editFillHoleHandle = GetDlgItem(debugHandle, IDC_EDIT_FILLHOLES);
+	editFillHoleHandle = GetDlgItem(debugHandle, IDC_IDEBUG_EDIT_FILLHOLES);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editFillHoleHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
 
-	editRemoveComponentHandle = GetDlgItem(debugHandle, IDC_EDIT_REMOVESEGMENTS);
+	editRemoveComponentHandle = GetDlgItem(debugHandle, IDC_IDEBUG_EDIT_REMOVESEGMENTS);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editRemoveComponentHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
 
-	editCarryDistanceHandle = GetDlgItem(debugHandle, IDC_EDIT_SELECTION_DISTANCE);
+	editCarryDistanceHandle = GetDlgItem(debugHandle, IDC_IDEBUG_EDIT_SELECTION_DISTANCE);
 	oldEditProc = (WNDPROC)SetWindowLongPtr(editCarryDistanceHandle, GWLP_WNDPROC, (LONG_PTR)SubEditProc);
 
-	//HWND hCheck = GetDlgItem(openGLWin.glWindowParent, IDC_CHECK_PLACING_SNAPTOVERTEX);
+	//HWND hCheck = GetDlgItem(openGLWin.glWindowParent, IDC_IDEBUG_CHECK_PLACING_SNAPTOVERTEX);
 
 	//PostMessage(hCheck, BM_SETCHECK, BST_CHECKED, 0);
 
 	
 	ResetEditControls();
 
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_KSEARCH_VALUE, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_KSEARCH_VALUE, MAX_RG_KSEARCH_VALUE));
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_KSEARCH_VALUE, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_KSEARCH_VALUE, MAX_RG_KSEARCH_VALUE));
 
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_REMOVESEGMENTS, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_REMOVESEGMENTS_VALUE, MAX_REMOVESEGMENTS_VALUE));
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_REMOVESEGMENTS, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_REMOVESEGMENTS_VALUE, MAX_REMOVESEGMENTS_VALUE));
 
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_SELECTION_DISTANCE, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_CARRYDISTANCE, MAX_CARRYDISTANCE));
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_SELECTION_DISTANCE, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_CARRYDISTANCE, MAX_CARRYDISTANCE));
 
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_MINCLUSTERSIZE, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_MINCLUSTER, MAX_RG_MINCLUSTER));
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_MINCLUSTERSIZE, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_MINCLUSTER, MAX_RG_MINCLUSTER));
 
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_MAXCLUSTERSIZE, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_MAXCLUSTER, MAX_RG_MAXCLUSTER));
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_MAXCLUSTERSIZE, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_MAXCLUSTER, MAX_RG_MAXCLUSTER));
 
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_NON, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_NEIGHBORS, MAX_RG_NEIGHBORS));
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_NON, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_NEIGHBORS, MAX_RG_NEIGHBORS));
 
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_SMOOTHNESS, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_SMOOTHNESS, MAX_RG_SMOOTHNESS));
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_SMOOTHNESS, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_SMOOTHNESS, MAX_RG_SMOOTHNESS));
 
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_CURVATURE, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_CURVATURE, MAX_RG_CURVATURE));
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_CURVATURE, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_RG_CURVATURE, MAX_RG_CURVATURE));
 
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_FILLHOLES, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_FILLHOLES, MAX_FILLHOLES));
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_FILLHOLES, TBM_SETRANGE, TRUE, MAKELPARAM(MIN_FILLHOLES, MAX_FILLHOLES));
 
 	ResetSliders();
 }
@@ -2538,31 +2527,31 @@ void InteractiveFusion::SetBackgroundColor(int redValue, int greenValue, int blu
 
 void ResetEditControls()
 {
-	SetDlgItemInt(debugHandle, IDC_EDIT_RG_KSEARCHVALUE, openGLWin.kSearchValue, FALSE);
-	SetDlgItemInt(debugHandle, IDC_EDIT_REMOVESEGMENTS, openGLWin.maxComponentSize, FALSE);
-	SetDlgItemInt(debugHandle, IDC_EDIT_SELECTION_DISTANCE, openGLWin.carryDistance, FALSE);
-	SetDlgItemInt(debugHandle, IDC_EDIT_FILLHOLES, openGLWin.holeSize * 100, FALSE);
-	SetDlgItemInt(debugHandle, IDC_EDIT_RG_MINCLUSTERSIZE, openGLWin.minClusterSize, FALSE);
-	SetDlgItemInt(debugHandle, IDC_EDIT_RG_MAXCLUSTERSIZE, openGLWin.maxClusterSize * 1000, FALSE);
-	SetDlgItemInt(debugHandle, IDC_EDIT_RG_NON, openGLWin.numberOfNeighbors, FALSE);
-	SetDlgItemInt(debugHandle, IDC_EDIT_RG_SMOOTHNESS, (UINT)openGLWin.smoothnessThreshold, FALSE);
-	SetDlgItemInt(debugHandle, IDC_EDIT_RG_CURVATURE, (UINT)openGLWin.curvatureThreshold, FALSE);
-	SetDlgItemInt(debugHandle, IDC_EDIT_BACKGROUND_RED, 211, FALSE);
-	SetDlgItemInt(debugHandle, IDC_EDIT_BACKGROUND_GREEN, 211, FALSE);
-	SetDlgItemInt(debugHandle, IDC_EDIT_BACKGROUND_BLUE, 211, FALSE);
+	SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_KSEARCHVALUE, openGLWin.kSearchValue, FALSE);
+	SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_REMOVESEGMENTS, openGLWin.maxComponentSize, FALSE);
+	SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_SELECTION_DISTANCE, openGLWin.carryDistance, FALSE);
+	SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_FILLHOLES, openGLWin.holeSize * 100, FALSE);
+	SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_MINCLUSTERSIZE, openGLWin.minClusterSize, FALSE);
+	SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_MAXCLUSTERSIZE, openGLWin.maxClusterSize * 1000, FALSE);
+	SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_NON, openGLWin.numberOfNeighbors, FALSE);
+	SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_SMOOTHNESS, (UINT)openGLWin.smoothnessThreshold, FALSE);
+	SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_CURVATURE, (UINT)openGLWin.curvatureThreshold, FALSE);
+	SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_BACKGROUND_RED, 211, FALSE);
+	SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_BACKGROUND_GREEN, 211, FALSE);
+	SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_BACKGROUND_BLUE, 211, FALSE);
 }
 
 void ResetSliders()
 {
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_KSEARCH_VALUE, TBM_SETPOS, TRUE, (UINT)openGLWin.kSearchValue);
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_REMOVESEGMENTS, TBM_SETPOS, TRUE, (UINT)openGLWin.maxComponentSize);
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_SELECTION_DISTANCE, TBM_SETPOS, TRUE, (UINT)openGLWin.carryDistance);
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_MINCLUSTERSIZE, TBM_SETPOS, TRUE, (UINT)openGLWin.minClusterSize);
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_MAXCLUSTERSIZE, TBM_SETPOS, TRUE, (UINT)openGLWin.maxClusterSize);
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_NON, TBM_SETPOS, TRUE, (UINT)openGLWin.numberOfNeighbors);
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_SMOOTHNESS, TBM_SETPOS, TRUE, (UINT)openGLWin.smoothnessThreshold);
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_CURVATURE, TBM_SETPOS, TRUE, (UINT)openGLWin.curvatureThreshold);
-	SendDlgItemMessage(debugHandle, IDC_SLIDER_FILLHOLES, TBM_SETPOS, TRUE, (UINT)openGLWin.holeSize);
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_KSEARCH_VALUE, TBM_SETPOS, TRUE, (UINT)openGLWin.kSearchValue);
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_REMOVESEGMENTS, TBM_SETPOS, TRUE, (UINT)openGLWin.maxComponentSize);
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_SELECTION_DISTANCE, TBM_SETPOS, TRUE, (UINT)openGLWin.carryDistance);
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_MINCLUSTERSIZE, TBM_SETPOS, TRUE, (UINT)openGLWin.minClusterSize);
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_MAXCLUSTERSIZE, TBM_SETPOS, TRUE, (UINT)openGLWin.maxClusterSize);
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_NON, TBM_SETPOS, TRUE, (UINT)openGLWin.numberOfNeighbors);
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_SMOOTHNESS, TBM_SETPOS, TRUE, (UINT)openGLWin.smoothnessThreshold);
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_CURVATURE, TBM_SETPOS, TRUE, (UINT)openGLWin.curvatureThreshold);
+	SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_FILLHOLES, TBM_SETPOS, TRUE, (UINT)openGLWin.holeSize);
 }
 
 void UpdateSliderText()
@@ -2571,113 +2560,113 @@ void UpdateSliderText()
 	strs << openGLWin.kSearchValue;
 	wstring concLabel;
 	concLabel.append(strs.str());
-	SetDlgItemText(debugHandle, IDC_TEXT_RG_KSEARCH_VALUE, concLabel.c_str());
+	SetDlgItemText(debugHandle, IDC_IDEBUG_TEXT_RG_KSEARCH_VALUE, concLabel.c_str());
 
 	strs.str(L"");
 	concLabel = L"";
 	strs << openGLWin.minClusterSize;
 	concLabel.append(strs.str());
-	SetDlgItemText(debugHandle, IDC_TEXT_RG_MINCLUSTERSIZE, concLabel.c_str());
+	SetDlgItemText(debugHandle, IDC_IDEBUG_TEXT_RG_MINCLUSTERSIZE, concLabel.c_str());
 
 	strs.str(L"");
 	concLabel = L"";
 	strs << openGLWin.maxComponentSize;
 	concLabel.append(strs.str());
-	SetDlgItemText(debugHandle, IDC_TEXT_RG_MINCLUSTERSIZE, concLabel.c_str());
+	SetDlgItemText(debugHandle, IDC_IDEBUG_TEXT_RG_MINCLUSTERSIZE, concLabel.c_str());
 
 	strs.str(L"");
 	concLabel = L"";
 	strs << openGLWin.numberOfNeighbors;
 	concLabel.append(strs.str());
-	SetDlgItemText(debugHandle, IDC_TEXT_RG_NON, concLabel.c_str());
+	SetDlgItemText(debugHandle, IDC_IDEBUG_TEXT_RG_NON, concLabel.c_str());
 
 	strs.str(L"");
 	concLabel = L"";
 	strs << openGLWin.smoothnessThreshold;
 	concLabel.append(strs.str());
-	SetDlgItemText(debugHandle, IDC_TEXT_RG_SMOOTHNESS, concLabel.c_str());
+	SetDlgItemText(debugHandle, IDC_IDEBUG_TEXT_RG_SMOOTHNESS, concLabel.c_str());
 
 	strs.str(L"");
 	concLabel = L"";
 	strs << openGLWin.curvatureThreshold;
 	concLabel.append(strs.str());
-	SetDlgItemText(debugHandle, IDC_TEXT_RG_CURVATURE, concLabel.c_str());
+	SetDlgItemText(debugHandle, IDC_IDEBUG_TEXT_RG_CURVATURE, concLabel.c_str());
 }
 
 void UpdateGLHSliders()
 {
 	openGLWin.segmentValuesChanged = true;
-	int kSearchValuePos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_KSEARCH_VALUE, TBM_GETPOS, 0, 0);
+	int kSearchValuePos = (int)SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_KSEARCH_VALUE, TBM_GETPOS, 0, 0);
 
 	if (kSearchValuePos >= MIN_RG_KSEARCH_VALUE && kSearchValuePos <= MAX_RG_KSEARCH_VALUE)
 	{
 		openGLWin.kSearchValue = kSearchValuePos;
-		SetDlgItemInt(debugHandle, IDC_EDIT_RG_KSEARCHVALUE, openGLWin.kSearchValue, FALSE);
+		SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_KSEARCHVALUE, openGLWin.kSearchValue, FALSE);
 	}
 
-	int maxComponetSizePos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_REMOVESEGMENTS, TBM_GETPOS, 0, 0);
+	int maxComponetSizePos = (int)SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_REMOVESEGMENTS, TBM_GETPOS, 0, 0);
 
 	if (maxComponetSizePos >= MIN_REMOVESEGMENTS_VALUE && maxComponetSizePos <= MAX_REMOVESEGMENTS_VALUE)
 	{
 		openGLWin.maxComponentSize = maxComponetSizePos;
-		SetDlgItemInt(debugHandle, IDC_EDIT_REMOVESEGMENTS, openGLWin.maxComponentSize, FALSE);
+		SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_REMOVESEGMENTS, openGLWin.maxComponentSize, FALSE);
 	}
 
-	int carryDistancePos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_SELECTION_DISTANCE, TBM_GETPOS, 0, 0);
+	int carryDistancePos = (int)SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_SELECTION_DISTANCE, TBM_GETPOS, 0, 0);
 
 	if (carryDistancePos >= MIN_CARRYDISTANCE && carryDistancePos <= MAX_CARRYDISTANCE)
 	{
 		openGLWin.carryDistance = carryDistancePos;
-		SetDlgItemInt(debugHandle, IDC_EDIT_SELECTION_DISTANCE, openGLWin.carryDistance, FALSE);
+		SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_SELECTION_DISTANCE, openGLWin.carryDistance, FALSE);
 	}
 
 
-	int minClusterPos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_MINCLUSTERSIZE, TBM_GETPOS, 0, 0);
+	int minClusterPos = (int)SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_MINCLUSTERSIZE, TBM_GETPOS, 0, 0);
 
 	if (minClusterPos >= MIN_RG_MINCLUSTER && minClusterPos <= MAX_RG_MINCLUSTER)
 	{
 		openGLWin.minClusterSize = minClusterPos;
-		SetDlgItemInt(debugHandle, IDC_EDIT_RG_MINCLUSTERSIZE, openGLWin.minClusterSize, FALSE);
+		SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_MINCLUSTERSIZE, openGLWin.minClusterSize, FALSE);
 	}
 
-	int maxClusterPos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_MAXCLUSTERSIZE, TBM_GETPOS, 0, 0);
+	int maxClusterPos = (int)SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_MAXCLUSTERSIZE, TBM_GETPOS, 0, 0);
 
 	if (maxClusterPos >= MIN_RG_MAXCLUSTER && maxClusterPos <= MAX_RG_MAXCLUSTER)
 	{
 		openGLWin.maxClusterSize = maxClusterPos;
-		SetDlgItemInt(debugHandle, IDC_EDIT_RG_MAXCLUSTERSIZE, openGLWin.maxClusterSize * 1000, FALSE);
+		SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_MAXCLUSTERSIZE, openGLWin.maxClusterSize * 1000, FALSE);
 	}
 
-	int nonPos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_NON, TBM_GETPOS, 0, 0);
+	int nonPos = (int)SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_NON, TBM_GETPOS, 0, 0);
 
 	if (nonPos >= MIN_RG_NEIGHBORS && nonPos <= MAX_RG_NEIGHBORS)
 	{
 		openGLWin.numberOfNeighbors = nonPos;
-		SetDlgItemInt(debugHandle, IDC_EDIT_RG_NON, openGLWin.numberOfNeighbors, FALSE);
+		SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_NON, openGLWin.numberOfNeighbors, FALSE);
 	}
 
-	int smoothnessPos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_SMOOTHNESS, TBM_GETPOS, 0, 0);
+	int smoothnessPos = (int)SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_SMOOTHNESS, TBM_GETPOS, 0, 0);
 
 	if (smoothnessPos >= MIN_RG_SMOOTHNESS && smoothnessPos <= MAX_RG_SMOOTHNESS)
 	{
 		openGLWin.smoothnessThreshold = smoothnessPos;
-		SetDlgItemInt(debugHandle, IDC_EDIT_RG_SMOOTHNESS, (UINT)openGLWin.smoothnessThreshold, FALSE);
+		SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_SMOOTHNESS, (UINT)openGLWin.smoothnessThreshold, FALSE);
 	}
 
-	int curvaturePos = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_CURVATURE, TBM_GETPOS, 0, 0);
+	int curvaturePos = (int)SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_CURVATURE, TBM_GETPOS, 0, 0);
 
 	if (curvaturePos >= MIN_RG_CURVATURE && curvaturePos <= MAX_RG_CURVATURE)
 	{
 		openGLWin.curvatureThreshold = curvaturePos;
-		SetDlgItemInt(debugHandle, IDC_EDIT_RG_CURVATURE, (UINT)openGLWin.curvatureThreshold, FALSE);
+		SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_CURVATURE, (UINT)openGLWin.curvatureThreshold, FALSE);
 	}
 
-	int holeSize = (int)SendDlgItemMessage(debugHandle, IDC_SLIDER_FILLHOLES, TBM_GETPOS, 0, 0);
+	int holeSize = (int)SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_FILLHOLES, TBM_GETPOS, 0, 0);
 
 	if (holeSize >= MIN_FILLHOLES && holeSize <= MAX_FILLHOLES)
 	{
 		openGLWin.holeSize = holeSize;
-		SetDlgItemInt(debugHandle, IDC_EDIT_FILLHOLES, openGLWin.holeSize * 100, FALSE);
+		SetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_FILLHOLES, openGLWin.holeSize * 100, FALSE);
 	}
 }
 
@@ -2716,83 +2705,83 @@ LRESULT CALLBACK SubEditProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			openGLWin.segmentValuesChanged = true;
 			if (wnd == editKSearchHandle)
 			{
-				int kSearchValue = GetDlgItemInt(debugHandle, IDC_EDIT_RG_KSEARCHVALUE, NULL, FALSE);
+				int kSearchValue = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_KSEARCHVALUE, NULL, FALSE);
 				if (kSearchValue >= MIN_RG_KSEARCH_VALUE && kSearchValue <= MAX_RG_KSEARCH_VALUE)
 				{
 					openGLWin.kSearchValue = kSearchValue;
-					SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_KSEARCH_VALUE, TBM_SETPOS, TRUE, (UINT)openGLWin.kSearchValue);
+					SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_KSEARCH_VALUE, TBM_SETPOS, TRUE, (UINT)openGLWin.kSearchValue);
 				}
 			}
 			else if (wnd == editRemoveComponentHandle)
 			{
-				int maxComponentSize = GetDlgItemInt(debugHandle, IDC_EDIT_REMOVESEGMENTS, NULL, FALSE);
+				int maxComponentSize = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_REMOVESEGMENTS, NULL, FALSE);
 				if (maxComponentSize >= MIN_REMOVESEGMENTS_VALUE && maxComponentSize <= MAX_REMOVESEGMENTS_VALUE)
 				{
 					openGLWin.maxComponentSize = maxComponentSize;
-					SendDlgItemMessage(debugHandle, IDC_SLIDER_REMOVESEGMENTS, TBM_SETPOS, TRUE, (UINT)openGLWin.maxComponentSize);
+					SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_REMOVESEGMENTS, TBM_SETPOS, TRUE, (UINT)openGLWin.maxComponentSize);
 				}
 			}
 			else if (wnd == editCarryDistanceHandle)
 			{
-				int carryDistance = GetDlgItemInt(debugHandle, IDC_EDIT_SELECTION_DISTANCE, NULL, FALSE);
+				int carryDistance = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_SELECTION_DISTANCE, NULL, FALSE);
 				if (carryDistance >= MIN_CARRYDISTANCE && carryDistance <= MAX_CARRYDISTANCE)
 				{
 					openGLWin.carryDistance = carryDistance;
-					SendDlgItemMessage(debugHandle, IDC_SLIDER_SELECTION_DISTANCE, TBM_SETPOS, TRUE, (UINT)openGLWin.carryDistance);
+					SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_SELECTION_DISTANCE, TBM_SETPOS, TRUE, (UINT)openGLWin.carryDistance);
 				}
 			}
 			else if (wnd == editMinClustersHandle)
 			{
-				int minClusterSize = GetDlgItemInt(debugHandle, IDC_EDIT_RG_MINCLUSTERSIZE, NULL, FALSE);
+				int minClusterSize = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_MINCLUSTERSIZE, NULL, FALSE);
 				if (minClusterSize >= MIN_RG_MINCLUSTER && minClusterSize <= MAX_RG_MINCLUSTER)
 				{
 					openGLWin.minClusterSize = minClusterSize;
-					SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_MINCLUSTERSIZE, TBM_SETPOS, TRUE, (UINT)openGLWin.minClusterSize);
+					SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_MINCLUSTERSIZE, TBM_SETPOS, TRUE, (UINT)openGLWin.minClusterSize);
 				}
 			}
 			else if (wnd == editMaxClustersHandle)
 			{
-				int maxClusterSize = GetDlgItemInt(debugHandle, IDC_EDIT_RG_MAXCLUSTERSIZE, NULL, FALSE) / 1000;
+				int maxClusterSize = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_MAXCLUSTERSIZE, NULL, FALSE) / 1000;
 				if (maxClusterSize >= MIN_RG_MAXCLUSTER && maxClusterSize <= MAX_RG_MAXCLUSTER)
 				{
 					openGLWin.maxClusterSize = maxClusterSize;
-					SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_MAXCLUSTERSIZE, TBM_SETPOS, TRUE, (UINT)openGLWin.maxClusterSize);
+					SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_MAXCLUSTERSIZE, TBM_SETPOS, TRUE, (UINT)openGLWin.maxClusterSize);
 				}
 			}
 			else if (wnd == editNonHandle)
 			{
-				int numberOfNeighbors = GetDlgItemInt(debugHandle, IDC_EDIT_RG_NON, NULL, FALSE);
+				int numberOfNeighbors = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_NON, NULL, FALSE);
 				if (numberOfNeighbors >= MIN_RG_NEIGHBORS && numberOfNeighbors <= MAX_RG_NEIGHBORS)
 				{
 					openGLWin.numberOfNeighbors = numberOfNeighbors;
-					SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_NON, TBM_SETPOS, TRUE, (UINT)openGLWin.numberOfNeighbors);
+					SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_NON, TBM_SETPOS, TRUE, (UINT)openGLWin.numberOfNeighbors);
 				}
 			}
 			else if (wnd == editSmoothnessHandle)
 			{
-				int smoothnessThreshold = GetDlgItemInt(debugHandle, IDC_EDIT_RG_SMOOTHNESS, NULL, FALSE);
+				int smoothnessThreshold = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_SMOOTHNESS, NULL, FALSE);
 				if (smoothnessThreshold >= MIN_RG_SMOOTHNESS && smoothnessThreshold <= MAX_RG_SMOOTHNESS)
 				{
 					openGLWin.smoothnessThreshold = smoothnessThreshold;
-					SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_SMOOTHNESS, TBM_SETPOS, TRUE, (UINT)openGLWin.smoothnessThreshold);
+					SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_SMOOTHNESS, TBM_SETPOS, TRUE, (UINT)openGLWin.smoothnessThreshold);
 				}
 			}
 			else if (wnd == editCurvatureHandle)
 			{
-				int curvatureThreshold = GetDlgItemInt(debugHandle, IDC_EDIT_RG_CURVATURE, NULL, FALSE);
+				int curvatureThreshold = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_RG_CURVATURE, NULL, FALSE);
 				if (curvatureThreshold >= MIN_RG_CURVATURE && curvatureThreshold <= MAX_RG_CURVATURE)
 				{
 					openGLWin.curvatureThreshold = curvatureThreshold;
-					SendDlgItemMessage(debugHandle, IDC_SLIDER_RG_CURVATURE, TBM_SETPOS, TRUE, (UINT)openGLWin.curvatureThreshold);
+					SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_RG_CURVATURE, TBM_SETPOS, TRUE, (UINT)openGLWin.curvatureThreshold);
 				}
 			}
 			else if (wnd == editFillHoleHandle)
 			{
-				int holeSize = GetDlgItemInt(debugHandle, IDC_EDIT_FILLHOLES, NULL, FALSE) / 100;
+				int holeSize = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_FILLHOLES, NULL, FALSE) / 100;
 				if (holeSize >= MIN_FILLHOLES && holeSize <= MAX_FILLHOLES)
 				{
 					openGLWin.holeSize = holeSize;
-					SendDlgItemMessage(debugHandle, IDC_SLIDER_FILLHOLES, TBM_SETPOS, TRUE, (UINT)openGLWin.holeSize);
+					SendDlgItemMessage(debugHandle, IDC_IDEBUG_SLIDER_FILLHOLES, TBM_SETPOS, TRUE, (UINT)openGLWin.holeSize);
 				}
 			}
 			break;

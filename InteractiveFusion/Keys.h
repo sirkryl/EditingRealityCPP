@@ -1,6 +1,4 @@
-#include <ctime>
-#include <windows.h>
-#include <tchar.h>
+#include "common.h"
 
 namespace Keys
 {

@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="KinectFusionExplorer.cpp" />
     <ClCompile Include="ImageRenderer.cpp">
       <Filter>KinectFusion</Filter>
     </ClCompile>
@@ -25,9 +24,6 @@
     <ClInclude Include="ImageRenderer.h">
       <Filter>KinectFusion</Filter>
     </ClInclude>
-    <ClInclude Include="KinectFusionExplorer.h">
-      <Filter>KinectFusion</Filter>
-    </ClInclude>
     <ClInclude Include="KinectFusionHelper.h">
       <Filter>KinectFusion</Filter>
     </ClInclude>
@@ -38,9 +34,6 @@
       <Filter>KinectFusion</Filter>
     </ClInclude>
     <ClInclude Include="KinectFusionProcessorFrame.h">
-      <Filter>KinectFusion</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
       <Filter>KinectFusion</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
@@ -54,6 +47,9 @@
     </ClInclude>
     <ClInclude Include="KFKeys.h">
       <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="FusionResources.h">
+      <Filter>KinectFusion</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
