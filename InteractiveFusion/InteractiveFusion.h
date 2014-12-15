@@ -17,7 +17,7 @@ class InteractiveFusion
 {
 public:
 	
-	MeshQuality meshQuality;
+	
 	HWND parent;
 	HWND fusionHandle;
 	HWND glWindowHandle;
@@ -109,10 +109,13 @@ public:
 
 	void ShowStatusBarMessage(string message);
 	void ShowStatusBarMessage(wstring message);
-	
+	void UpdateStatusBarMessage();
 	void ToggleDebugControls();
 
 	void ResumeScanning();
+
+	void SetMeshQuality(MeshQuality qual);
+	MeshQuality GetMeshQuality();
 
 	void SetBackgroundColor(int redValue, int greenValue, int blueValue);
 	void UpdateWallSelectionValues();
@@ -158,8 +161,11 @@ public:
 	HFONT bigUiFont, mediumUiFont, smallUiFont;
 
 private:
+
+
+
 	//application variables
-	
+	MeshQuality meshQuality;
 	Reset reset = IF_NO_RESET;
 	Answer answer = IF_ANSWER_NOTAVAILABLE;
 	WindowMode mode;
@@ -168,10 +174,12 @@ private:
 	DeviceClass deviceClass = IF_DEVICE_TABLET;
 	//fps related variables
 	clock_t tLastFrame;
+
+	static const DWORD          statusTimeOutInMilliSeconds = 5000;
+	DWORD tickLastStatus;
 	float fFrameInterval;
 
 	
-	void DetermineMeshQuality();
 
 	//thread related variables
 	

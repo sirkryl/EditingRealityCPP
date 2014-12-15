@@ -644,8 +644,14 @@ bool PCLProcessor::RegionGrowingSegmentation() {
 	//openGLWin.SetProgressionText(L"Segmenting mesh...");
 
 	pcl::RegionGrowing<pcl::PointXYZRGB, pcl::Normal> reg;
-	reg.setMinClusterSize(openGLWin.minClusterSize);
+	//reg.setMinClusterSize(openGLWin.minClusterSize);
 	reg.setMaxClusterSize(openGLWin.maxClusterSize * 1000);
+	if (openGLWin.GetMeshQuality() == IF_QUALITY_HIGH || openGLWin.GetMeshQuality() == IF_QUALITY_VERYHIGH)
+		reg.setMinClusterSize(1000);
+	else if (openGLWin.GetMeshQuality() == IF_QUALITY_MEDIUM || openGLWin.GetMeshQuality() == IF_QUALITY_LOW)
+		reg.setMinClusterSize(100);
+	else
+		reg.setMinClusterSize(50);
 	reg.setSearchMethod(tree);
 	reg.setResidualTestFlag(true);
 	reg.setNumberOfNeighbours(openGLWin.numberOfNeighbors);
@@ -762,16 +768,16 @@ bool PCLProcessor::EuclideanSegmentation() {
 	//ec.setConditionFunction(&EnforceCurvatureOrColor);
 	
 	
-	if (openGLWin.meshQuality == IF_QUALITY_MEDIUM || openGLWin.meshQuality == IF_QUALITY_HIGH || openGLWin.meshQuality == IF_QUALITY_VERYHIGH)
+	if (openGLWin.GetMeshQuality() == IF_QUALITY_MEDIUM || openGLWin.GetMeshQuality() == IF_QUALITY_HIGH || openGLWin.GetMeshQuality() == IF_QUALITY_VERYHIGH)
 		ec.setClusterTolerance(0.02); // 2cm
-	if (openGLWin.meshQuality == IF_QUALITY_LOW || openGLWin.meshQuality == IF_QUALITY_VERYLOW)
-		ec.setClusterTolerance(0.04); // 2cm
+	if (openGLWin.GetMeshQuality() == IF_QUALITY_LOW || openGLWin.GetMeshQuality() == IF_QUALITY_VERYLOW)
+		ec.setClusterTolerance(0.04); // 4cm
 
 	ec.setClusterTolerance(openGLWin.clusterTolerance);
 
-	if (openGLWin.meshQuality == IF_QUALITY_HIGH || openGLWin.meshQuality == IF_QUALITY_VERYHIGH)
+	if (openGLWin.GetMeshQuality() == IF_QUALITY_HIGH || openGLWin.GetMeshQuality() == IF_QUALITY_VERYHIGH)
 		ec.setMinClusterSize(1000);
-	else if (openGLWin.meshQuality == IF_QUALITY_MEDIUM || openGLWin.meshQuality == IF_QUALITY_LOW)
+	else if (openGLWin.GetMeshQuality() == IF_QUALITY_MEDIUM || openGLWin.GetMeshQuality() == IF_QUALITY_LOW)
 		ec.setMinClusterSize(100);
 	else
 		ec.setMinClusterSize(50);

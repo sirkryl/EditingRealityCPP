@@ -92,11 +92,9 @@ public:
 	void ResumeScan();
 	void Hide();
 
-	int GetVoxelsPerMeter();
 	void StartScan();
 	void FinishScan(int testMode);
-
-	void HideAllUIElements();
+	void DetermineMeshQuality();
 	Matrix4 GetWorldToCameraTransform();
 
 private:

@@ -51,22 +51,15 @@ HWND hReconstructionView, hDepthView, hResidualsView;
 //DEBUG
 HWND fusionDebugHandle;
 
-//STATUS HANDLE
-HWND fusionStatusHandle;
 
 #define WM_FRAMEREADY           (WM_USER + 0)
 #define WM_UPDATESENSORSTATUS   (WM_USER + 1)
 
 
 /// <summary>
-/// Entry point for the application
+/// Entry point for KinectFusion
 /// </summary>
 /// <param name="hInstance">handle to the application instance</param>
-/// <param name="hPrevInstance">always 0</param>
-/// <param name="lpCmdLine">command line arguments</param>
-/// <param name="nCmdShow">whether to display minimized, maximized, or normally</param>
-/// <returns>status</returns>
-//int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 void StartKinectFusion(HWND parent, HINSTANCE hInstance, KinectFusion*& expl, HWND &fusionHandle)
 {
 	KinectFusion application;
@@ -148,12 +141,6 @@ int KinectFusion::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, HWND &fusi
 	fusionHandle = hWndApp;
 	fusionDebugHandle = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_SCAN_ADVANCED_OPTIONS), hWndApp, (DLGPROC)FusionDebugRouter);
 	ShowWindow(fusionDebugHandle, SW_HIDE);
-	// Show window
-	
-	fusionStatusHandle = GetDlgItem(hWndApp, IDC_SCAN_STATUS);
-
-	SendMessage(fusionStatusHandle, WM_SETFONT, (WPARAM)openGLWin.statusFont, 0);
-
 	
 	hButtonScanDone = CreateWindowEx(0, L"Button", L"DONE", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, hWndApp, (HMENU)IDC_SCAN_BUTTON_DONE, hInstance, 0);
 	hButtonTestOne = CreateWindowEx(0, L"Button", L"Load Test Interaction", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 250, 150, 50, hWndApp, (HMENU)IDC_DEBUG_BUTTON_TEST_INTERACTION, hInstance, 0);
@@ -176,7 +163,7 @@ int KinectFusion::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, HWND &fusi
 
 	hButtonStart = CreateWindowEx(0, L"Button", L"START", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_PREPARE_BUTTON_START, hInstance, 0);
 	hButtonSlider = CreateWindowEx(0, L"Button", L"", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_PREPARE_SLIDER_BUTTON, hInstance, 0);
-	hSliderBackground = CreateWindowEx(0, L"Button", L"", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_PREPARE_SLIDER_BACKGROUND, hInstance, 0);
+	hSliderBackground = CreateWindowEx(0, L"Button", L"", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 50, 500, 400, 50, hWndApp, (HMENU)IDC_PREPARE_SLIDER_BACKGROUND, hInstance, 0);
 	hSliderText = CreateWindowEx(0, L"STATIC", L"0m", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTER | SS_CENTERIMAGE, 50, 50, 100, 50, hWndApp, (HMENU)IDC_PREPARE_SLIDER_TEXT, hInstance, 0);
 
 	SendMessage(hSliderText, WM_SETFONT, (WPARAM)openGLWin.smallUiFont, TRUE);
@@ -228,7 +215,7 @@ int KinectFusion::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, HWND &fusi
 	countdownUi.push_back(hButtonScanReset);
 
 
-	ShowWindow(hButtonTestOne, SW_HIDE);
+	ShowWindow(hButtonTestOne, SW_SHOW);
 	ShowWindow(hButtonTestTwo, SW_HIDE);
 	//fusionUiElements.push_back(hButtonTestOne);
 	//fusionUiElements.push_back(hButtonTestTwo);
@@ -412,11 +399,12 @@ bool KinectFusion::DrawButtonSlider(LPARAM lParam)
 	DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
 	if (sliderPos == -1)
+	{ 
 		UpdateButtonSliderValue();
+	}
 
 	return TRUE;
 }
-
 
 bool KinectFusion::DrawSliderBackground(LPARAM lParam)
 {
@@ -476,48 +464,25 @@ void KinectFusion::UpdateButtonSlider()
 
 		SetDlgItemText(hWndApp, IDC_PREPARE_SLIDER_TEXT, s.c_str());
 
-		if (m_params.m_reconstructionParams.voxelsPerMeter > 192)
-		{
-			openGLWin.meshQuality = IF_QUALITY_VERYHIGH;
-			SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: Very High");
-		}
-		else if (m_params.m_reconstructionParams.voxelsPerMeter > 150)
-		{
-			openGLWin.meshQuality = IF_QUALITY_HIGH;
-			SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: High");
-		}
-		else if (m_params.m_reconstructionParams.voxelsPerMeter > 110)
-		{
-			openGLWin.meshQuality = IF_QUALITY_MEDIUM;
-			SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: Medium");
-		}
-		else if (m_params.m_reconstructionParams.voxelsPerMeter > 64)
-		{
-			openGLWin.meshQuality = IF_QUALITY_LOW;
-			SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: Low");
-		}
-		else
-		{
-			openGLWin.meshQuality = IF_QUALITY_VERYLOW;
-			SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: Very Low");
-		}
-
+		DetermineMeshQuality();
 	}
 }
 
 void KinectFusion::UpdateButtonSliderValue()
 {
-
-
-
-	RECT borderRect; GetWindowRect(hSliderBackground, &borderRect);
+	RECT borderRect; GetClientRect(hSliderBackground, &borderRect);
 	RECT sliderRect; GetClientRect(hButtonSlider, &sliderRect);
+	MapWindowPoints(hSliderBackground, m_hWnd, (POINT *)&borderRect, 2);
 
 	int value = 256 - (int)m_params.m_reconstructionParams.voxelsPerMeter;
+	cDebug::DbgOut(L"value: ", value);
 	float percent = (value - 1) / 224.0f;
+	cDebug::DbgOut(L"percent: ", percent);
 	float channelWidth = borderRect.right - (sliderRect.right / 2.0f) - borderRect.left - (sliderRect.right / 2.0f);
+	cDebug::DbgOut(L"channelWidth: ", channelWidth);
 	sliderPos = (int)(percent * channelWidth);
 	//MoveButtonSlider(sliderPos);
+	cDebug::DbgOut(L"sl value: ", sliderPos);
 
 	float volumeWidth = m_params.m_reconstructionParams.voxelCountX / m_params.m_reconstructionParams.voxelsPerMeter;
 	float volumeHeight = m_params.m_reconstructionParams.voxelCountY / m_params.m_reconstructionParams.voxelsPerMeter;
@@ -1556,6 +1521,9 @@ void KinectFusion::FinishScan(int testMode)
 		StartOpenGLThread(2);
 	}
 
+	DetermineMeshQuality();
+	openGLWin.ShowStatusBarMessage(L"Processing scanned model...");
+
 }
 
 
@@ -1613,7 +1581,8 @@ void KinectFusion::SetStatusMessage(const WCHAR * szMessage)
 
 	if (length > 0)
 	{
-		SendDlgItemMessageW(m_hWnd, IDC_SCAN_STATUS, WM_SETTEXT, 0, (LPARAM)szMessage);
+		openGLWin.ShowStatusBarMessage(szMessage);
+		//SendDlgItemMessageW(m_hWnd, IDC_SCAN_STATUS, WM_SETTEXT, 0, (LPARAM)szMessage);
 		//ptrShowStatusMsg(szMessage);
 		m_tickLastStatus = GetTickCount();
 	}
@@ -1624,7 +1593,8 @@ void KinectFusion::SetStatusMessage(const WCHAR * szMessage)
 			m_fFramesPerSecond > 0)
 		{
 			//ptrShowStatusMsg(L"");
-			SendDlgItemMessageW(m_hWnd, IDC_SCAN_STATUS, WM_SETTEXT, 0, 0);
+			openGLWin.ShowStatusBarMessage(L"");
+			//SendDlgItemMessageW(m_hWnd, IDC_SCAN_STATUS, WM_SETTEXT, 0, 0);
 			m_tickLastStatus = GetTickCount();
 		}
 	}
@@ -1695,7 +1665,7 @@ void KinectFusion::MoveUIOnResize()
 	MoveWindow(hDepthView, 30, 255, 200, 200, true);
 	MoveWindow(hButtonScanDone, rRect.right - 200, rRect.bottom / 2 + 50, 150, 150, true);
 	MoveWindow(hButtonTestTwo, rRect.right - 350, 10, 300, 50, true);
-	MoveWindow(hButtonTestOne, rRect.right - 350, 400, 300, 50, true);
+	MoveWindow(hButtonTestOne, rRect.right - 350, 10, 300, 50, true);
 	MoveWindow(hButtonScanReset, rRect.right - 200, rRect.bottom / 2 - 200, 150, 150, true);
 
 	if (GetWindowState() == IF_FUSION_STATE_START || GetWindowState() == IF_FUSION_STATE_COUNTDOWN)
@@ -1713,7 +1683,7 @@ void KinectFusion::MoveUIOnResize()
 		MoveWindow(hStartMeshQuality, rRect.right / 2 - 70, rRect.bottom/ 2 + 50, 200, 30, true);
 	}
 	//MoveWindow(GetDlgItem(m_hWnd, IDC_FRAMES_PER_SECOND), 0, rRect.bottom - 30, 100, 30, true);
-	MoveWindow(fusionStatusHandle, 0, rRect.bottom - 30, rRect.right, 30, true);
+	//MoveWindow(fusionStatusHandle, 0, rRect.bottom - 30, rRect.right, 30, true);
 	MoveWindow(fusionDebugHandle, rRect.right - 400, 0, 400, rRect.bottom, true);
 
 	if (sliderPos == -1)
@@ -1790,11 +1760,6 @@ void KinectFusion::SetWindowState(FusionState fState)
 
 }
 
-int KinectFusion::GetVoxelsPerMeter()
-{
-	return (int)m_params.m_reconstructionParams.voxelsPerMeter;
-}
-
 bool KinectFusion::IsMouseInHandle(HWND handle)
 {
 	POINT pCur;
@@ -1822,4 +1787,33 @@ void KinectFusion::ResumeScan()
 void KinectFusion::Hide()
 {
 	ShowWindow(hWndApp, SW_HIDE);
+}
+
+void KinectFusion::DetermineMeshQuality()
+{
+	if (m_params.m_reconstructionParams.voxelsPerMeter > 192)
+	{
+		openGLWin.SetMeshQuality(IF_QUALITY_VERYHIGH);
+		SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: VERY HIGH");
+	}
+	else if (m_params.m_reconstructionParams.voxelsPerMeter > 150)
+	{
+		openGLWin.SetMeshQuality(IF_QUALITY_HIGH);
+		SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: HIGH");
+	}
+	else if (m_params.m_reconstructionParams.voxelsPerMeter > 110)
+	{
+		openGLWin.SetMeshQuality(IF_QUALITY_MEDIUM);
+		SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: MEDIUM");
+	}
+	else if (m_params.m_reconstructionParams.voxelsPerMeter > 64)
+	{
+		openGLWin.SetMeshQuality(IF_QUALITY_LOW);
+		SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: LOW");
+	}
+	else
+	{
+		openGLWin.SetMeshQuality(IF_QUALITY_VERYLOW);
+		SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: VERY LOW");
+	}
 }

@@ -28,6 +28,7 @@ SegmentationHelper glSegmentation;
 OpenGL2DHelper gl2DHelper;
 int storedWidth = 0;
 int storedHeight = 0;
+WindowMode previousMode = IF_MODE_PREPARE_SCAN;
 
 //for status messages (appear 'busy' to the user)
 int dotCount = 0;
@@ -268,6 +269,12 @@ void Render(LPVOID lpParam)
 		openGLWin.glControl.SetProjection3D(45.0f, float(openGLWin.glControl.GetViewportWidth()) / float(openGLWin.glControl.GetViewportHeight()), 0.1f, 1000.0f);
 	}
 
+	if (previousMode != openGLWin.GetWindowMode())
+	{
+		previousMode = openGLWin.GetWindowMode();
+		glSelector.Unselect();
+	}
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (openGLWin.wireFrameMode)
@@ -332,8 +339,9 @@ void Render(LPVOID lpParam)
 			glCamera.ResetCameraPosition();
 			glSegmentation.ResetInitializedStatus();
 			glSegmentation.SetSegmentationState(IF_SEGSTATE_NONE);
-			openGLWin.SetWindowMode(IF_MODE_PROCESSING);
 			openGLWin.SetWindowBusyState(IF_BUSYSTATE_DEFAULT);
+			openGLWin.SetWindowMode(IF_MODE_PROCESSING);
+			
 			//return;
 		}
 	}

@@ -131,7 +131,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 	openGLWin.statusFont = CreateFont(22, 10, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Courier New"));
 
-	statusHandle = GetDlgItem(openGLWin.parent, IDC_INTERACTION_STATUS);
+	//SS_CENTERIMAGE | SS_SUNKEN | WS_CLIPSIBLINGS,WS_EX_CLIENTEDGE
+	statusHandle = CreateWindowEx(WS_EX_TOPMOST, L"STATIC", L"", WS_CHILD | WS_BORDER | WS_VISIBLE | SS_CENTERIMAGE | SS_SUNKEN, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_STATUS, NULL, 0);
+	//statusHandle = GetDlgItem(openGLWin.parent, IDC_STATUS);
 
 	SendMessage(statusHandle, WM_SETFONT, (WPARAM)openGLWin.statusFont, 0);
 	ShowWindow(statusHandle, SW_SHOW);
@@ -237,7 +239,7 @@ LRESULT CALLBACK GLDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		if (openGLWin.GetWindowMode() == IF_MODE_SCAN || openGLWin.GetWindowMode() == IF_MODE_PREPARE_SCAN)
 		{
 			openGLWin.MoveModeButtonsOnResize();
-			MoveWindow(openGLWin.fusionHandle, 0, 0, LOWORD(lParam), HIWORD(lParam), true);
+			MoveWindow(openGLWin.fusionHandle, 0, 0, LOWORD(lParam), HIWORD(lParam)-30, true);
 		}
 		else
 		{
@@ -284,11 +286,6 @@ void StartOpenGLThread(int testMode)
 		return;
 	return;
 
-}
-
-void SetWindowMode(int wMode)
-{
-	openGLWin.SetWindowMode((WindowMode)wMode);
 }
 
 DWORD InteractiveFusion::GetThreadID()
@@ -400,6 +397,8 @@ int WINAPI GLViewportThreadMain()
 			}
 		}
 
+
+		openGLWin.UpdateStatusBarMessage();
 		openGLWin.UpdateTimer();
 
 		openGLWin.glControl.Render(&openGLWin.glControl);
@@ -939,7 +938,7 @@ WindowMode InteractiveFusion::GetWindowMode()
 void InteractiveFusion::SetWindowMode(WindowMode wMode)
 {
 	mode = wMode;
-	glSelector.Unselect();
+	//glSelector.Unselect();
 	HideWholeUI();
 	openGLWin.glControl.SetOffSetBottom(0);
 	openGLWin.glControl.SetOffSetRight(0);
@@ -956,7 +955,7 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 		glCamera.mode = CAMERA_SENSOR;
 		glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
 		glCamera.ResetCameraPosition();
-		DetermineMeshQuality();
+		//DetermineMeshQuality();
 		ShowWindow(glWindowHandle, SW_SHOW);
 		EnableWindow(hPrepareText, true);
 		EnableWindow(hScanText, true);
@@ -970,7 +969,6 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 	}
 	else if (mode == IF_MODE_SCAN)
 	{
-		cDebug::DbgOut(L"activate scanning");
 		EnableWindow(hPrepareText, true);
 		EnableWindow(hScanText, false);
 		EnableWindow(hInteractionText, true);
@@ -992,7 +990,7 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 	{
 		fusionExplorer->Hide();
 		//ANYWAYS
-		DetermineMeshQuality();
+		//DetermineMeshQuality();
 		ShowWindow(glWindowHandle, SW_SHOW);
 		EnableWindow(hPrepareText, true);
 		EnableWindow(hScanText, true);
@@ -1664,7 +1662,6 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 	}
 	if (IDC_PROCESSING_BUTTON_REMOVECOMPONENTS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
-		cDebug::DbgOut(L"select Remove Segments: ");
 		//int size = GetDlgItemInt(debugHandle, IDC_IDEBUG_EDIT_REMOVESEGMENTS, NULL, FALSE);
 		meshHelper.RemoveSmallComponents(openGLWin.removeClusterSize);
 	}
@@ -1942,13 +1939,13 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 
 void InteractiveFusion::MoveModeButtonsOnResize()
 {
-	RECT rect; GetWindowRect(openGLWin.parent, &rect);
+	RECT rect; GetClientRect(openGLWin.parent, &rect);
 	//MoveWindow(hModeArrow, 113, 0, 50, 50, true);
 	MoveWindow(hPrepareText, rect.right / 2 - 390, 8, 150, 40, true);
 	MoveWindow(hScanText, rect.right/2 - 240, 8, 130, 40, true);
 	MoveWindow(hSegmentationText, rect.right / 2 - 110, 8, 250, 40, true);
 	MoveWindow(hInteractionText, rect.right/2 + 140 , 8, 250, 40, true);
-
+	MoveWindow(statusHandle, 0, rect.bottom - 30, rect.right, 30, true);
 	
 	//MoveWindow(hScanText, 15, 8, 125, 40, true);
 	//MoveWindow(hInteractionText, 140, 8, 250, 40, true);
@@ -2150,8 +2147,7 @@ void InteractiveFusion::MoveButtonsOnResize()
 	}
 	MoveModeButtonsOnResize();
 
-	RECT sRect; GetWindowRect(statusHandle, &sRect);
-	MoveWindow(statusHandle, 0, height - 30, width, 30, true);
+	//MoveWindow(statusHandle, 0, height - 30, width, 30, true);
 
 	if (IsWindowVisible(debugHandle))
 	{
@@ -2194,13 +2190,25 @@ void InteractiveFusion::ShowStatusBarMessage(string message)
 {
 	std::wstring ws = Util::StringToWString(message);
 	LPCWSTR statusBarMessage = ws.c_str();
-	SetDlgItemText(openGLWin.parent, IDC_INTERACTION_STATUS, statusBarMessage);
+	SetDlgItemText(openGLWin.parent, IDC_STATUS, statusBarMessage);
 }
 
 void InteractiveFusion::ShowStatusBarMessage(wstring message)
 {
 	LPCWSTR statusBarMessage = message.c_str();
-	SetDlgItemText(openGLWin.parent, IDC_INTERACTION_STATUS, statusBarMessage);
+	tickLastStatus = GetTickCount();
+	SetDlgItemText(openGLWin.parent, IDC_STATUS, statusBarMessage);
+}
+
+void InteractiveFusion::UpdateStatusBarMessage()
+{
+	if (GetTickCount() - tickLastStatus > statusTimeOutInMilliSeconds)
+	{
+		//ptrShowStatusMsg(L"");
+		openGLWin.ShowStatusBarMessage(L"");
+		//SendDlgItemMessageW(m_hWnd, IDC_SCAN_STATUS, WM_SETTEXT, 0, 0);
+		tickLastStatus = GetTickCount();
+	}
 }
 
 void InteractiveFusion::ResumeScanning()
@@ -2273,19 +2281,14 @@ void InteractiveFusion::SetProgressionPercent(wstring percent)
 	SetDlgItemText(openGLWin.glWindowHandle, IDC_OPENGL_STATUS_PERCENT, statusMessage);
 }
 
-void InteractiveFusion::DetermineMeshQuality()
+void InteractiveFusion::SetMeshQuality(MeshQuality qual)
 {
-	int vpm = fusionExplorer->GetVoxelsPerMeter();
-	if (vpm > 192)
-		meshQuality = IF_QUALITY_VERYHIGH;
-	else if (vpm > 150)
-		meshQuality = IF_QUALITY_HIGH;
-	else if (vpm > 110)
-		meshQuality = IF_QUALITY_MEDIUM;
-	else if (vpm > 64)
-		meshQuality = IF_QUALITY_LOW;
-	else
-		meshQuality = IF_QUALITY_VERYLOW;
+	meshQuality = qual;
+}
+
+MeshQuality InteractiveFusion::GetMeshQuality()
+{
+	return meshQuality;
 }
 
 #pragma endregion FPS stuff
