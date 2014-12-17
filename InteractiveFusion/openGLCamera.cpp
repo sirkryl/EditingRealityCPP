@@ -281,8 +281,12 @@ glm::mat4 OpenGLCamera::GetViewMatrix()
 		cDebug::DbgOut(L"cameraTransform 3 2: ", viewMatrix[3][2]);
 		cDebug::DbgOut(L"cameraTransform 3 3: ", viewMatrix[3][3]);*/
 
+		camRight = glm::vec3(viewMatrix[0][0], viewMatrix[0][1], viewMatrix[0][2]);
+		camUpDirection = glm::vec3(viewMatrix[1][0], viewMatrix[1][1], viewMatrix[1][2]);
+		camLookAt = glm::vec3(viewMatrix[2][0], viewMatrix[2][1], viewMatrix[2][2]);// +moveBy;
+		camPosition = glm::vec3(viewMatrix[3][0], viewMatrix[3][1], viewMatrix[3][2]);
 		return viewMatrix;
-		camPosition = glm::vec3(p1*-cameraTransform[3][0], p2*cameraTransform[3][1], p3*cameraTransform[3][2]);// +moveBy;
+		/*camPosition = glm::vec3(p1*-cameraTransform[3][0], p2*cameraTransform[3][1], p3*cameraTransform[3][2]);// +moveBy;
 		camLookAt = glm::vec3(l1*-cameraTransform[2][0], l2*cameraTransform[2][1], l3*-cameraTransform[2][2]);// +moveBy;
 		camUpDirection = glm::vec3(u1*cameraTransform[1][0], u2*cameraTransform[1][1], u3*-cameraTransform[1][2]);
 		//camPosition = glm::vec3(-cameraTransform[3][0], cameraTransform[3][1], cameraTransform[3][2]);// +moveBy;
@@ -305,7 +309,7 @@ glm::mat4 OpenGLCamera::GetViewMatrix()
 		cDebug::DbgOut(L"cameraTransform 3 2: ", cameraTransform[3][2]);
 		cDebug::DbgOut(L"cameraTransform 3 3: ", cameraTransform[3][3]);
 		camDirection = glm::normalize(camPosition - camLookAt);
-		return glm::lookAt(camPosition, camLookAt, camUpDirection);
+		return glm::lookAt(camPosition, camLookAt, camUpDirection);*/
 	}
 
 	return glm::mat4(1.0f);
@@ -401,6 +405,11 @@ void OpenGLCamera::ResetMouse()
 glm::vec3 OpenGLCamera::GetUpDirection()
 {
 	return camUpDirection;
+}
+
+glm::vec3 OpenGLCamera::GetCamRight()
+{
+	return camRight;
 }
 
 glm::vec3 OpenGLCamera::GetPosition()

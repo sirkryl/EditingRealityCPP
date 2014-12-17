@@ -1,7 +1,7 @@
 #include "common.h"
 #include "OpenGLCamera.h"
 #include "SegmentationHelper.h"
-#include "openGLShaders.h"
+#include "OpenGLShaders.h"
 #include "SelectionHelper.h"
 #include "VisualizationHelper.h"
 #include "OpenGLText.h"
@@ -16,6 +16,8 @@
 wstring statusMsg = L"";
 wstring percentMsg = L"";
 wstring helpMsg = L"";
+
+int currFPS = -1;
 //mesh storage
 std::vector<shared_ptr<VCGMeshContainer>> meshData;
 shared_ptr<VCGMeshContainer> originalMesh(new VCGMeshContainer);
@@ -241,7 +243,7 @@ void Initialize(LPVOID lpParam)
 	glDepthFunc(GL_LESS);
 	glDepthRange(-1.0f, 1000.0f);
 
-	glText.Initialize("OpenSans-Regular.ttf");
+	glText.Initialize("data\\fonts\\OpenSans-Regular.ttf");
 
 	glCamera = OpenGLCamera(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f, 0.1f);
 
@@ -439,7 +441,7 @@ void Render(LPVOID lpParam)
 		gl2DHelper.DrawTrash();
 		//render info text on screen
 		glText.PrepareForRender();
-		glText.RenderText(L"FPS: ", openGLWin.glControl.GetFPS(), 20, -0.98f, 0.85f, 2.0f / storedWidth, 2.0f / storedHeight);
+		//glText.RenderText(L"FPS: ", openGLWin.glControl.GetFPS(), 20, -0.98f, 0.85f, 2.0f / storedWidth, 2.0f / storedHeight);
 		glText.RenderText(L"Meshs: ", meshData.size(), 15, -0.98f, 0.75f, 2.0f / storedWidth, 2.0f / storedHeight);
 		glText.RenderText(L"Verts: ", meshHelper.GetNumberOfVertices(), 15, -0.98f, 0.70f, 2.0f / storedWidth, 2.0f / storedHeight);
 		glText.RenderText(L"Faces: ", meshHelper.GetNumberOfFaces(), 15, -0.98f, 0.65f, 2.0f / storedWidth, 2.0f / storedHeight);
@@ -472,6 +474,12 @@ void Render(LPVOID lpParam)
 	glEnable(GL_DEPTH_TEST);
 	//swap buffers to actually display the changes
 	openGLWin.glControl.SwapBuffers();
+	if (currFPS != openGLWin.glControl.GetFPS())
+	{
+		currFPS = openGLWin.glControl.GetFPS();
+		openGLWin.SetFramesPerSecond((float)currFPS);
+	}
+	
 }
 
 void Release(LPVOID lpParam)

@@ -133,6 +133,7 @@ public:
 
 	void SetProgressionText(wstring text);
 	void SetProgressionPercent(wstring percent);
+	void SetFramesPerSecond(float fps);
 
 	void ProcessOpenGLUI(WPARAM wParam, LPARAM lParam);
 	void ProcessDebugUI(WPARAM wParam, LPARAM lParam);

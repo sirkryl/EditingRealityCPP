@@ -21,6 +21,7 @@ HWND statusHandle;
 std::vector<HWND> progressionUI;
 HWND statusText;
 HWND statusPercentText;
+HWND fpsText, fpsCount;
 
 //HELP DIALOG
 HWND hButtonHelp;
@@ -137,6 +138,15 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 	SendMessage(statusHandle, WM_SETFONT, (WPARAM)openGLWin.statusFont, 0);
 	ShowWindow(statusHandle, SW_SHOW);
+
+	fpsText = CreateWindowEx(0, L"STATIC", L"FPS:", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_FRAMES_PER_SECOND_TEXT, NULL, 0);
+	fpsCount = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, openGLWin.parent, (HMENU)IDC_FRAMES_PER_SECOND, NULL, 0);
+
+	SendMessage(fpsText, WM_SETFONT, (WPARAM)openGLWin.mediumUiFont, 0);
+	SendMessage(fpsCount, WM_SETFONT, (WPARAM)openGLWin.mediumUiFont, 0);
+
+	ShowWindow(fpsText, SW_SHOW);
+	ShowWindow(fpsCount, SW_SHOW);
 
 	modeUi.push_back(hPrepareText);
 	modeUi.push_back(hSegmentationText);
@@ -1946,6 +1956,8 @@ void InteractiveFusion::MoveModeButtonsOnResize()
 	MoveWindow(hSegmentationText, rect.right / 2 - 110, 8, 250, 40, true);
 	MoveWindow(hInteractionText, rect.right/2 + 140 , 8, 250, 40, true);
 	MoveWindow(statusHandle, 0, rect.bottom - 30, rect.right, 30, true);
+	MoveWindow(fpsText, 10, 10, 50, 50, true);
+	MoveWindow(fpsCount, 65, 10, 100, 50, true);
 	
 	//MoveWindow(hScanText, 15, 8, 125, 40, true);
 	//MoveWindow(hInteractionText, 140, 8, 250, 40, true);
@@ -2279,6 +2291,14 @@ void InteractiveFusion::SetProgressionPercent(wstring percent)
 {
 	LPCWSTR statusMessage = percent.c_str();
 	SetDlgItemText(openGLWin.glWindowHandle, IDC_OPENGL_STATUS_PERCENT, statusMessage);
+}
+
+void InteractiveFusion::SetFramesPerSecond(float fps)
+{
+	WCHAR str[256] = { 0 };
+	swprintf_s(str, sizeof(str), L"%5.2f FPS", fps);
+
+	SetDlgItemText(openGLWin.parent, IDC_FRAMES_PER_SECOND, str);
 }
 
 void InteractiveFusion::SetMeshQuality(MeshQuality qual)

@@ -65,8 +65,9 @@ public:
 	void SetAngleZ(bool positive);
 
 	void RotateX(int degree);
+	void RotateX(int degree, glm::vec3 axis);
 	void RotateY(int degree);
-
+	void RotateY(int degree, glm::vec3 axis);
 	void SetScale(bool positive);
 	void ResetSelectedTransformation();
 

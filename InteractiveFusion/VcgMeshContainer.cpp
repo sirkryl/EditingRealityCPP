@@ -932,6 +932,7 @@ void VCGMeshContainer::SetAngleX(bool positive)
 
 void VCGMeshContainer::SetAngleY(bool positive)
 {
+	cDebug::DbgOut(L"yes?");
 	if (positive)
 		angleY += rotateBy;
 	else
@@ -956,10 +957,22 @@ void VCGMeshContainer::RotateX(int angle)
 	xRotation = glm::rotate(glm::mat4(1.0), angleX, glm::vec3(1.0f, 0.0f, 0.0f));
 }
 
+void VCGMeshContainer::RotateX(int angle, glm::vec3 axis)
+{
+	angleX = (float)angle;
+	xRotation = glm::rotate(glm::mat4(1.0), angleX, axis);
+}
+
 void VCGMeshContainer::RotateY(int angle)
 {
 	angleY = (float)angle;
 	yRotation = glm::rotate(glm::mat4(1.0), angleY, glm::vec3(0.0f, 1.0f, 0.0f));
+}
+
+void VCGMeshContainer::RotateY(int angle, glm::vec3 axis)
+{
+	angleY = (float)angle;
+	yRotation = glm::rotate(glm::mat4(1.0), angleY, axis);
 }
 
 void VCGMeshContainer::SetColorCode(int value)

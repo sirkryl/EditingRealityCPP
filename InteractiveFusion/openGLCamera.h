@@ -19,6 +19,7 @@ public:
 	void RotateWithMouse();
 	void GetRotation(glm::mat4 &rotation);
 	glm::vec3 GetDirection();
+	glm::vec3 GetCamRight();
 	void Update();
 	void ResetCameraPosition();
 	glm::mat4 GetViewMatrix();

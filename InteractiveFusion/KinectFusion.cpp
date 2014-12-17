@@ -160,7 +160,7 @@ int KinectFusion::Run(HWND parent, HINSTANCE hInstance, int nCmdShow, HWND &fusi
 	scanUi.push_back(hDepthView);
 	scanUi.push_back(hResidualsView);
 
-
+	//m_params.m_reconstructionParams.voxelsPerMeter = 1024;
 	hButtonStart = CreateWindowEx(0, L"Button", L"START", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_PREPARE_BUTTON_START, hInstance, 0);
 	hButtonSlider = CreateWindowEx(0, L"Button", L"", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 50, 500, 150, 50, hWndApp, (HMENU)IDC_PREPARE_SLIDER_BUTTON, hInstance, 0);
 	hSliderBackground = CreateWindowEx(0, L"Button", L"", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 50, 500, 400, 50, hWndApp, (HMENU)IDC_PREPARE_SLIDER_BACKGROUND, hInstance, 0);
@@ -303,198 +303,6 @@ LRESULT CALLBACK KinectFusion::MessageRouter(
 	}
 
 	return 0;
-}
-
-bool KinectFusion::DrawButton(LPARAM lParam)
-{
-	LPDRAWITEMSTRUCT Item;
-	Item = (LPDRAWITEMSTRUCT)lParam;
-	SelectObject(Item->hDC, openGLWin.bigUiFont);
-	FillRect(Item->hDC, &Item->rcItem, openGLWin.hBackground);
-	SelectObject(Item->hDC, openGLWin.buttonDefaultBrush);
-	if (!IsWindowEnabled(Item->hwndItem))
-	{
-		SetTextColor(Item->hDC, RGB(50, 50, 50));
-		if (Item->hwndItem == hButtonScanDone)
-		{
-			SelectObject(Item->hDC, openGLWin.buttonGreenInactiveBrush);
-			SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
-		}
-		else if (Item->hwndItem == hButtonScanReset)
-		{
-			SelectObject(Item->hDC, openGLWin.buttonRedInactiveBrush);
-			SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
-		}
-		else
-		{
-			SelectObject(Item->hDC, openGLWin.buttonInactivePen);
-		}
-	}
-	else if (Item->itemState & ODS_SELECTED)
-	{
-		SetTextColor(Item->hDC, RGB(245, 245, 245));
-		if (Item->hwndItem == hButtonScanDone)
-		{
-			SelectObject(Item->hDC, openGLWin.buttonGreenPressedBrush);
-			SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
-		}
-		else if (Item->hwndItem == hButtonScanReset)
-		{
-			SelectObject(Item->hDC, openGLWin.buttonRedPressedBrush);
-			SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
-		}
-		else
-		{
-			SelectObject(Item->hDC, openGLWin.buttonPressedBrush);
-			SelectObject(Item->hDC, openGLWin.buttonPressedPen);
-		}
-	}
-	else
-	{
-		if (Item->hwndItem == hButtonScanDone)
-		{
-			SelectObject(Item->hDC, openGLWin.buttonGreenBrush);
-		}
-		else if (Item->hwndItem == hButtonScanReset)
-		{
-			SelectObject(Item->hDC, openGLWin.buttonRedBrush);
-		}
-		SetTextColor(Item->hDC, RGB(240, 240, 240));
-		SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
-	}
-	SetBkMode(Item->hDC, TRANSPARENT);
-	if (Item->hwndItem == hButtonScanDone || Item->hwndItem == hButtonScanReset)
-		RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 500, 500);
-	else
-		RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
-	int len;
-	len = GetWindowTextLength(Item->hwndItem);
-	LPSTR lpBuff;
-	lpBuff = new char[len + 1];
-	GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
-
-	DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-	return TRUE;
-}
-
-bool KinectFusion::DrawButtonSlider(LPARAM lParam)
-{
-	LPDRAWITEMSTRUCT Item;
-	Item = (LPDRAWITEMSTRUCT)lParam;
-	SelectObject(Item->hDC, openGLWin.smallUiFont);
-	FillRect(Item->hDC, &Item->rcItem, openGLWin.hBackground);
-	SelectObject(Item->hDC, openGLWin.buttonPressedBrush);
-	SetTextColor(Item->hDC, RGB(240, 240, 240));
-	SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
-	SetBkMode(Item->hDC, TRANSPARENT);
-
-	RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
-	int len;
-	len = GetWindowTextLength(Item->hwndItem);
-	LPSTR lpBuff;
-	lpBuff = new char[len + 1];
-	GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
-
-	DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-	if (sliderPos == -1)
-	{ 
-		UpdateButtonSliderValue();
-	}
-
-	return TRUE;
-}
-
-bool KinectFusion::DrawSliderBackground(LPARAM lParam)
-{
-	LPDRAWITEMSTRUCT Item;
-	Item = (LPDRAWITEMSTRUCT)lParam;
-	SelectObject(Item->hDC, openGLWin.bigUiFont);
-	FillRect(Item->hDC, &Item->rcItem, openGLWin.hBackground);
-	SelectObject(Item->hDC, openGLWin.buttonDefaultBrush);
-	SetTextColor(Item->hDC, RGB(240, 240, 240));
-	SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
-
-	SetBkMode(Item->hDC, TRANSPARENT);
-
-	RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
-	int len;
-	len = GetWindowTextLength(Item->hwndItem);
-	LPSTR lpBuff;
-	lpBuff = new char[len + 1];
-	GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
-
-	DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-	return TRUE;
-}
-void KinectFusion::UpdateButtonSlider()
-{
-	POINT p;
-	GetCursorPos(&p);
-	RECT borderRect; GetClientRect(hSliderBackground, &borderRect);
-	RECT sliderRect; GetClientRect(hButtonSlider, &sliderRect);
-	MapWindowPoints(hSliderBackground, m_hWnd, (POINT *)&borderRect, 2);
-
-	ScreenToClient(m_hWnd, &p);
-	if (p.x != sliderAnchor.x && p.x > borderRect.left + (sliderRect.right / 2) && p.x < borderRect.right - (sliderRect.right / 2))
-	{
-		sliderAnchor.x = p.x;
-		RECT rect; GetClientRect(m_hWnd, &rect);
-
-		sliderPos = p.x - (int)(sliderRect.right / 2.0f) - borderRect.left;
-		MoveButtonSlider(sliderPos);
-		//MoveWindow(hButtonSlider, p.x-50, rect.bottom / 2 + 300, 100, 100, true);
-		//RECT sliderRect; GetWindowRect(hButtonSlider, &sliderRect);
-		//32 <--> 256
-		float channelWidth = borderRect.right - (sliderRect.right / 2.0f) - borderRect.left - (sliderRect.right / 2.0f);
-		float percent = sliderPos / channelWidth;
-		int value = (int)(percent * 224.0f) - 1;
-		m_params.m_reconstructionParams.voxelsPerMeter = (float)(256 - value);
-
-		float volumeWidth = m_params.m_reconstructionParams.voxelCountX / m_params.m_reconstructionParams.voxelsPerMeter;
-		float volumeHeight = m_params.m_reconstructionParams.voxelCountY / m_params.m_reconstructionParams.voxelsPerMeter;
-		float volumeDepth = m_params.m_reconstructionParams.voxelCountZ / m_params.m_reconstructionParams.voxelsPerMeter;
-
-		wchar_t buffer[256];
-		std::wstring s;
-		int slen = swprintf(buffer, 255, L"%4.1fm x %4.1fm x %4.1fm", volumeWidth, volumeHeight, volumeDepth);
-		s.assign(buffer, slen);
-
-		SetDlgItemText(hWndApp, IDC_PREPARE_SLIDER_TEXT, s.c_str());
-
-		DetermineMeshQuality();
-	}
-}
-
-void KinectFusion::UpdateButtonSliderValue()
-{
-	RECT borderRect; GetClientRect(hSliderBackground, &borderRect);
-	RECT sliderRect; GetClientRect(hButtonSlider, &sliderRect);
-	MapWindowPoints(hSliderBackground, m_hWnd, (POINT *)&borderRect, 2);
-
-	int value = 256 - (int)m_params.m_reconstructionParams.voxelsPerMeter;
-	cDebug::DbgOut(L"value: ", value);
-	float percent = (value - 1) / 224.0f;
-	cDebug::DbgOut(L"percent: ", percent);
-	float channelWidth = borderRect.right - (sliderRect.right / 2.0f) - borderRect.left - (sliderRect.right / 2.0f);
-	cDebug::DbgOut(L"channelWidth: ", channelWidth);
-	sliderPos = (int)(percent * channelWidth);
-	//MoveButtonSlider(sliderPos);
-	cDebug::DbgOut(L"sl value: ", sliderPos);
-
-	float volumeWidth = m_params.m_reconstructionParams.voxelCountX / m_params.m_reconstructionParams.voxelsPerMeter;
-	float volumeHeight = m_params.m_reconstructionParams.voxelCountY / m_params.m_reconstructionParams.voxelsPerMeter;
-	float volumeDepth = m_params.m_reconstructionParams.voxelCountZ / m_params.m_reconstructionParams.voxelsPerMeter;
-
-	wchar_t buffer[256];
-	std::wstring s;
-	int slen = swprintf(buffer, 255, L"%4.1fm x %4.1fm x %4.1fm", volumeWidth, volumeHeight, volumeDepth);
-	s.assign(buffer, slen);
-
-	SetDlgItemText(hWndApp, IDC_PREPARE_SLIDER_TEXT, s.c_str());
-	MoveButtonSlider(sliderPos);
 }
 
 LRESULT CALLBACK KinectFusion::StartProc(
@@ -808,7 +616,7 @@ void KinectFusion::HandleCompletedFrame()
 	if (!m_bUIUpdated && m_processor.IsVolumeInitialized())
 	{
 		const int Mebi = 1024 * 1024;
-
+		cDebug::DbgOut(L"DEVICE MEMORY:", (int)(pFrame->m_deviceMemory / 1024));
 		// We now create both a color and depth volume, doubling the required memory, so we restrict
 		// which resolution settings the user can choose when the graphics card is limited in memory.
 		if (pFrame->m_deviceMemory <= 1 * Mebi)  // 1GB
@@ -1107,7 +915,7 @@ void KinectFusion::InitializeUIControls()
 		CheckDlgButton(fusionDebugHandle, IDC_SDEBUG_CHECK_VPM_128, BST_CHECKED);
 		break;
 	default:
-		m_params.m_reconstructionParams.voxelsPerMeter = 256.0f;	// set to medium default
+		//m_params.m_reconstructionParams.voxelsPerMeter = 256.0f;	// set to medium default
 		CheckDlgButton(fusionDebugHandle, IDC_SDEBUG_CHECK_VPM_256, BST_CHECKED);
 		break;
 	}
@@ -1130,7 +938,7 @@ void KinectFusion::InitializeUIControls()
 		CheckDlgButton(fusionDebugHandle, IDC_SDEBUG_CHECK_VOXELS_X_128, BST_CHECKED);
 		break;
 	default:
-		m_params.m_reconstructionParams.voxelCountX = 384;	// set to medium default
+		//m_params.m_reconstructionParams.voxelCountX = 384;	// set to medium default
 		CheckDlgButton(fusionDebugHandle, IDC_SDEBUG_CHECK_VOXELS_X_384, BST_CHECKED);
 		break;
 	}
@@ -1153,7 +961,7 @@ void KinectFusion::InitializeUIControls()
 		CheckDlgButton(fusionDebugHandle, IDC_SDEBUG_CHECK_VOXELS_Y_128, BST_CHECKED);
 		break;
 	default:
-		m_params.m_reconstructionParams.voxelCountX = 384;	// set to medium default
+		//m_params.m_reconstructionParams.voxelCountX = 384;	// set to medium default
 		CheckDlgButton(fusionDebugHandle, IDC_SDEBUG_CHECK_VOXELS_Y_384, BST_CHECKED);
 		break;
 	}
@@ -1176,7 +984,7 @@ void KinectFusion::InitializeUIControls()
 		CheckDlgButton(fusionDebugHandle, IDC_SDEBUG_CHECK_VOXELS_Z_128, BST_CHECKED);
 		break;
 	default:
-		m_params.m_reconstructionParams.voxelCountX = 384;	// set to medium default
+		//m_params.m_reconstructionParams.voxelCountX = 384;	// set to medium default
 		CheckDlgButton(fusionDebugHandle, IDC_SDEBUG_CHECK_VOXELS_Z_384, BST_CHECKED);
 		break;
 	}
@@ -1616,6 +1424,7 @@ void KinectFusion::SetFramesPerSecond(float fFramesPerSecond)
 		}
 
 		SendDlgItemMessageW(m_hWnd, IDC_SCAN_FRAMES_PER_SECOND, WM_SETTEXT, 0, (LPARAM)str);
+		openGLWin.SetFramesPerSecond(fFramesPerSecond);
 	}
 }
 
@@ -1644,8 +1453,294 @@ void KinectFusion::HandleKeyInput()
 			MoveWindow(fusionDebugHandle, rRect.right - 400, 0, 400, rRect.bottom, true);
 			InitializeUIControls();
 		}
-
 	}
+	if (Keys::GetKeyState('1'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_cColorIntegrationInterval += 1;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_cColorIntegrationInterval -= 1;
+		else
+			return;
+		cDebug::DbgOut(L"cColorIntegrationInterval: ", (int)m_params.m_cColorIntegrationInterval);
+	}
+	if (Keys::GetKeyState('2'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_fMinDepthThreshold += 0.10f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_fMinDepthThreshold -= 0.10f;
+		else
+			return;
+		cDebug::DbgOut(L"m_fMinDepthThreshold: ", (float)m_params.m_fMinDepthThreshold);
+	}
+	if (Keys::GetKeyState('3'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_fMaxDepthThreshold += 0.5f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_fMaxDepthThreshold -= 0.5f;
+		else
+			return;
+		cDebug::DbgOut(L"m_fMaxDepthThreshold: ", (float)m_params.m_fMaxDepthThreshold);
+	}
+	if (Keys::GetKeyState('4'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_cMaxIntegrationWeight += 50;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_cMaxIntegrationWeight -= 50;
+		else
+			return;
+		cDebug::DbgOut(L"m_cMaxIntegrationWeight: ", (int)m_params.m_cMaxIntegrationWeight);
+	}
+	if (Keys::GetKeyState('5'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_bTranslateResetPoseByMinDepthThreshold = true;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_bTranslateResetPoseByMinDepthThreshold = false;
+		else
+			return;
+		cDebug::DbgOut(L"m_bTranslateResetPoseByMinDepthThreshold: ", (int)m_params.m_bTranslateResetPoseByMinDepthThreshold);
+	}
+	if (Keys::GetKeyState('6'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_cDeltaFromReferenceFrameCalculationInterval += 1;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_cDeltaFromReferenceFrameCalculationInterval -= 1;
+		else
+			return;
+		cDebug::DbgOut(L"m_cDeltaFromReferenceFrameCalculationInterval: ", (int)m_params.m_cDeltaFromReferenceFrameCalculationInterval);
+	}
+	if (Keys::GetKeyState('7'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_cMinSuccessfulTrackingFramesForCameraPoseFinder += 5;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_cMinSuccessfulTrackingFramesForCameraPoseFinder -= 5;
+		else
+			return;
+		cDebug::DbgOut(L"m_cMinSuccessfulTrackingFramesForCameraPoseFinder: ", (int)m_params.m_cMinSuccessfulTrackingFramesForCameraPoseFinder);
+	}
+	if (Keys::GetKeyState('8'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_cMinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure += 5;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_cMinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure -= 5;
+		else
+			return;
+		cDebug::DbgOut(L"m_cMinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure: ", (int)m_params.m_cMinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure);
+	}
+	if (Keys::GetKeyState('9'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_cMaxCameraPoseFinderPoseHistory += 1000;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_cMaxCameraPoseFinderPoseHistory -= 1000;
+		else
+			return;
+		cDebug::DbgOut(L"m_cMaxCameraPoseFinderPoseHistory: ", (int)m_params.m_cMaxCameraPoseFinderPoseHistory);
+	}
+/*	if (Keys::GetKeyState('0'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_glCameraPoseFinderFeatureSampleLocationsPerFrame += 50;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_glCameraPoseFinderFeatureSampleLocationsPerFrame -= 50;
+		else
+			return;
+		cDebug::DbgOut(L"m_glCameraPoseFinderFeatureSampleLocationsPerFrame: ", (int)m_params.m_glCameraPoseFinderFeatureSampleLocationsPerFrame);
+	}*/
+	if (Keys::GetKeyState('Q'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_fMaxCameraPoseFinderDepthThreshold += 1.0f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_fMaxCameraPoseFinderDepthThreshold -= 1.0f;
+		else
+			return;
+		cDebug::DbgOut(L"m_fMaxCameraPoseFinderDepthThreshold: ", (float)m_params.m_fMaxCameraPoseFinderDepthThreshold);
+	}
+	if (Keys::GetKeyState('W'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_fCameraPoseFinderDistanceThresholdReject += 0.5f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_fCameraPoseFinderDistanceThresholdReject -= 0.5f;
+		else
+			return;
+		cDebug::DbgOut(L"m_fCameraPoseFinderDistanceThresholdReject: ", (float)m_params.m_fCameraPoseFinderDistanceThresholdReject);
+	}
+	if (Keys::GetKeyState('E'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_fCameraPoseFinderDistanceThresholdAccept += 0.1f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_fCameraPoseFinderDistanceThresholdAccept -= 0.1f;
+		else
+			return;
+		cDebug::DbgOut(L"m_fCameraPoseFinderDistanceThresholdAccept: ", (float)m_params.m_fCameraPoseFinderDistanceThresholdAccept);
+	}
+	if (Keys::GetKeyState('R'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_cMaxCameraPoseFinderPoseTests += 1;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_cMaxCameraPoseFinderPoseTests -= 1;
+		else
+			return;
+		cDebug::DbgOut(L"m_cMaxCameraPoseFinderPoseTests: ", (int)m_params.m_cMaxCameraPoseFinderPoseTests);
+	}
+	if (Keys::GetKeyState('T'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_cCameraPoseFinderProcessFrameCalculationInterval += 1;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_cCameraPoseFinderProcessFrameCalculationInterval -= 1;
+		else
+			return;
+		cDebug::DbgOut(L"m_glCameraPoseFinderProcessFrameCalculationInterval: ", (int)m_params.m_cCameraPoseFinderProcessFrameCalculationInterval);
+	}
+	if (Keys::GetKeyState('Z'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_fMaxAlignToReconstructionEnergyForSuccess += 0.01f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_fMaxAlignToReconstructionEnergyForSuccess -= 0.01f;
+		else
+			return;
+		cDebug::DbgOut(L"m_fMaxAlignToReconstructionEnergyForSuccess: ", (float)m_params.m_fMaxAlignToReconstructionEnergyForSuccess);
+	}
+	if (Keys::GetKeyState('U'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_fMinAlignToReconstructionEnergyForSuccess += 0.001f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_fMinAlignToReconstructionEnergyForSuccess -= 0.001f;
+		else
+			return;
+		cDebug::DbgOut(L"m_fMinAlignToReconstructionEnergyForSuccess: ", (float)m_params.m_fMinAlignToReconstructionEnergyForSuccess);
+	}
+	if (Keys::GetKeyState('I'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_fMaxAlignPointCloudsEnergyForSuccess += 0.001f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_fMaxAlignPointCloudsEnergyForSuccess -= 0.001f;
+		else
+			return;
+		cDebug::DbgOut(L"m_fMaxAlignPointCloudsEnergyForSuccess: ", (float)m_params.m_fMaxAlignPointCloudsEnergyForSuccess);
+	}
+	if (Keys::GetKeyState('O'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_fMinAlignPointCloudsEnergyForSuccess += 0.001f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_fMinAlignPointCloudsEnergyForSuccess -= 0.001f;
+		else
+			return;
+		cDebug::DbgOut(L"m_fMinAlignPointCloudsEnergyForSuccess: ", (float)m_params.m_fMinAlignPointCloudsEnergyForSuccess);
+	}
+	if (Keys::GetKeyState('P'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_cSmoothingKernelWidth += 1;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_cSmoothingKernelWidth -= 1;
+		else
+			return;
+		cDebug::DbgOut(L"m_cSmoothingKernelWidth: ", (int)m_params.m_cSmoothingKernelWidth);
+	}
+	if (Keys::GetKeyState('A'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_fSmoothingDistanceThreshold += 0.01f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_fSmoothingDistanceThreshold -= 0.01f;
+		else
+			return;
+		cDebug::DbgOut(L"m_fSmoothingDistanceThreshold: ", (float)m_params.m_fSmoothingDistanceThreshold);
+	}
+	if (Keys::GetKeyState('S'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_cAlignPointCloudsImageDownsampleFactor += 1;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_cAlignPointCloudsImageDownsampleFactor -= 1;
+		else
+			return;
+		cDebug::DbgOut(L"m_cAlignPointCloudsImageDownsampleFactor: ", (int)m_params.m_cAlignPointCloudsImageDownsampleFactor);
+	}
+	if (Keys::GetKeyState('D'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_fMaxTranslationDelta += 0.01f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_fMaxTranslationDelta -= 0.01f;
+		else
+			return;
+		cDebug::DbgOut(L"m_fMaxTranslationDelta: ", (float)m_params.m_fMaxTranslationDelta);
+	}
+	if (Keys::GetKeyState('F'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_fMaxRotationDelta += 1.0f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_fMaxRotationDelta -= 1.0f;
+		else
+			return;
+		cDebug::DbgOut(L"m_fMaxRotationDelta: ", (float)m_params.m_fMaxRotationDelta);
+	}
+	if (Keys::GetKeyState('X'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_reconstructionParams.voxelCountX += 32;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_reconstructionParams.voxelCountX -= 32;
+		else
+			return;
+		cDebug::DbgOut(L"voxelCountX: ", (int)m_params.m_reconstructionParams.voxelCountX);
+	}
+	if (Keys::GetKeyState('Y'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_reconstructionParams.voxelCountY += 32;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_reconstructionParams.voxelCountY -= 32;
+		else
+			return;
+		cDebug::DbgOut(L"voxelCountY: ", (int)m_params.m_reconstructionParams.voxelCountY);
+	}
+	if (Keys::GetKeyState('C'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_reconstructionParams.voxelCountZ += 32;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_reconstructionParams.voxelCountZ -= 32;
+		else
+			return;
+		cDebug::DbgOut(L"voxelCountZ: ", (int)m_params.m_reconstructionParams.voxelCountZ);
+	}
+	if (Keys::GetKeyState('V'))
+	{
+		if (Keys::GetKeyStateOnce(VK_ADD))
+			m_params.m_reconstructionParams.voxelsPerMeter += 16.0f;
+		else if (Keys::GetKeyStateOnce(VK_SUBTRACT))
+			m_params.m_reconstructionParams.voxelsPerMeter -= 16.0f;
+		else
+			return;
+		cDebug::DbgOut(L"voxelsPerMeter: ", (float)m_params.m_reconstructionParams.voxelsPerMeter);
+	}
+	if (Keys::GetKeyStateOnce('K'))
+	{
+		//m_params.m_FindCameraPoseAlignPointClouds = !m_params.m_FindCameraPoseAlignPointClouds;
+		//cDebug::DbgOut(L"m_FindCameraPoseAlignPointClouds: ", (int)m_params.m_FindCameraPoseAlignPointClouds);
+	}
+		
+
 }
 
 void KinectFusion::MoveUIOnResize()
@@ -1696,6 +1791,202 @@ void KinectFusion::MoveUIOnResize()
 		MoveButtonSlider(sliderPos);
 	}
 
+}
+
+bool KinectFusion::DrawButton(LPARAM lParam)
+{
+	LPDRAWITEMSTRUCT Item;
+	Item = (LPDRAWITEMSTRUCT)lParam;
+	SelectObject(Item->hDC, openGLWin.bigUiFont);
+	FillRect(Item->hDC, &Item->rcItem, openGLWin.hBackground);
+	SelectObject(Item->hDC, openGLWin.buttonDefaultBrush);
+	if (!IsWindowEnabled(Item->hwndItem))
+	{
+		SetTextColor(Item->hDC, RGB(50, 50, 50));
+		if (Item->hwndItem == hButtonScanDone)
+		{
+			SelectObject(Item->hDC, openGLWin.buttonGreenInactiveBrush);
+			SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
+		}
+		else if (Item->hwndItem == hButtonScanReset)
+		{
+			SelectObject(Item->hDC, openGLWin.buttonRedInactiveBrush);
+			SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
+		}
+		else
+		{
+			SelectObject(Item->hDC, openGLWin.buttonInactivePen);
+		}
+	}
+	else if (Item->itemState & ODS_SELECTED)
+	{
+		SetTextColor(Item->hDC, RGB(245, 245, 245));
+		if (Item->hwndItem == hButtonScanDone)
+		{
+			SelectObject(Item->hDC, openGLWin.buttonGreenPressedBrush);
+			SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
+		}
+		else if (Item->hwndItem == hButtonScanReset)
+		{
+			SelectObject(Item->hDC, openGLWin.buttonRedPressedBrush);
+			SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
+		}
+		else
+		{
+			SelectObject(Item->hDC, openGLWin.buttonPressedBrush);
+			SelectObject(Item->hDC, openGLWin.buttonPressedPen);
+		}
+	}
+	else
+	{
+		if (Item->hwndItem == hButtonScanDone)
+		{
+			SelectObject(Item->hDC, openGLWin.buttonGreenBrush);
+		}
+		else if (Item->hwndItem == hButtonScanReset)
+		{
+			SelectObject(Item->hDC, openGLWin.buttonRedBrush);
+		}
+		SetTextColor(Item->hDC, RGB(240, 240, 240));
+		SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
+	}
+	SetBkMode(Item->hDC, TRANSPARENT);
+	if (Item->hwndItem == hButtonScanDone || Item->hwndItem == hButtonScanReset)
+		RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 500, 500);
+	else
+		RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
+	int len;
+	len = GetWindowTextLength(Item->hwndItem);
+	LPSTR lpBuff;
+	lpBuff = new char[len + 1];
+	GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
+
+	DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+	return TRUE;
+}
+
+bool KinectFusion::DrawButtonSlider(LPARAM lParam)
+{
+	LPDRAWITEMSTRUCT Item;
+	Item = (LPDRAWITEMSTRUCT)lParam;
+	SelectObject(Item->hDC, openGLWin.smallUiFont);
+	FillRect(Item->hDC, &Item->rcItem, openGLWin.hBackground);
+	SelectObject(Item->hDC, openGLWin.buttonPressedBrush);
+	SetTextColor(Item->hDC, RGB(240, 240, 240));
+	SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
+	SetBkMode(Item->hDC, TRANSPARENT);
+
+	RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
+	int len;
+	len = GetWindowTextLength(Item->hwndItem);
+	LPSTR lpBuff;
+	lpBuff = new char[len + 1];
+	GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
+
+	DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+	if (sliderPos == -1)
+	{
+		UpdateButtonSliderValue();
+	}
+
+	return TRUE;
+}
+
+bool KinectFusion::DrawSliderBackground(LPARAM lParam)
+{
+	LPDRAWITEMSTRUCT Item;
+	Item = (LPDRAWITEMSTRUCT)lParam;
+	SelectObject(Item->hDC, openGLWin.bigUiFont);
+	FillRect(Item->hDC, &Item->rcItem, openGLWin.hBackground);
+	SelectObject(Item->hDC, openGLWin.buttonDefaultBrush);
+	SetTextColor(Item->hDC, RGB(240, 240, 240));
+	SelectObject(Item->hDC, openGLWin.buttonDefaultPen);
+
+	SetBkMode(Item->hDC, TRANSPARENT);
+
+	RoundRect(Item->hDC, Item->rcItem.left, Item->rcItem.top, Item->rcItem.right, Item->rcItem.bottom, 20, 20);
+	int len;
+	len = GetWindowTextLength(Item->hwndItem);
+	LPSTR lpBuff;
+	lpBuff = new char[len + 1];
+	GetWindowTextA(Item->hwndItem, lpBuff, len + 1);
+
+	DrawTextA(Item->hDC, lpBuff, len, &Item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+	return TRUE;
+}
+void KinectFusion::UpdateButtonSlider()
+{
+	POINT p;
+	GetCursorPos(&p);
+	RECT borderRect; GetClientRect(hSliderBackground, &borderRect);
+	RECT sliderRect; GetClientRect(hButtonSlider, &sliderRect);
+	MapWindowPoints(hSliderBackground, m_hWnd, (POINT *)&borderRect, 2);
+
+	ScreenToClient(m_hWnd, &p);
+	if (p.x != sliderAnchor.x && p.x > borderRect.left + (sliderRect.right / 2) && p.x < borderRect.right - (sliderRect.right / 2))
+	{
+		sliderAnchor.x = p.x;
+		RECT rect; GetClientRect(m_hWnd, &rect);
+
+		sliderPos = p.x - (int)(sliderRect.right / 2.0f) - borderRect.left;
+		MoveButtonSlider(sliderPos);
+		//MoveWindow(hButtonSlider, p.x-50, rect.bottom / 2 + 300, 100, 100, true);
+		//RECT sliderRect; GetWindowRect(hButtonSlider, &sliderRect);
+		//32 <--> 256
+		float channelWidth = borderRect.right - (sliderRect.right / 2.0f) - borderRect.left - (sliderRect.right / 2.0f);
+		float percent = sliderPos / channelWidth;
+		int value = (int)(percent * 224.0f) - 1;
+		m_params.m_reconstructionParams.voxelsPerMeter = (float)(384 - value);
+
+		float volumeWidth = m_params.m_reconstructionParams.voxelCountX / m_params.m_reconstructionParams.voxelsPerMeter;
+		float volumeHeight = m_params.m_reconstructionParams.voxelCountY / m_params.m_reconstructionParams.voxelsPerMeter;
+		float volumeDepth = m_params.m_reconstructionParams.voxelCountZ / m_params.m_reconstructionParams.voxelsPerMeter;
+
+		cDebug::DbgOut(L"voxelCount x: ", (int)m_params.m_reconstructionParams.voxelCountX);
+		cDebug::DbgOut(L"voxelCount y: ", (int)m_params.m_reconstructionParams.voxelCountY);
+		cDebug::DbgOut(L"voxelCount z: ", (int)m_params.m_reconstructionParams.voxelCountZ);
+		cDebug::DbgOut(L"vpm: ", (int)m_params.m_reconstructionParams.voxelsPerMeter);
+		wchar_t buffer[256];
+		std::wstring s;
+		int slen = swprintf(buffer, 255, L"%4.1fm x %4.1fm x %4.1fm", volumeWidth, volumeHeight, volumeDepth);
+		s.assign(buffer, slen);
+
+		SetDlgItemText(hWndApp, IDC_PREPARE_SLIDER_TEXT, s.c_str());
+
+		DetermineMeshQuality();
+	}
+}
+
+void KinectFusion::UpdateButtonSliderValue()
+{
+	RECT borderRect; GetClientRect(hSliderBackground, &borderRect);
+	RECT sliderRect; GetClientRect(hButtonSlider, &sliderRect);
+	MapWindowPoints(hSliderBackground, m_hWnd, (POINT *)&borderRect, 2);
+
+	int value = 256 - (int)m_params.m_reconstructionParams.voxelsPerMeter;
+	cDebug::DbgOut(L"value: ", value);
+	float percent = (value - 1) / 224.0f;
+	cDebug::DbgOut(L"percent: ", percent);
+	float channelWidth = borderRect.right - (sliderRect.right / 2.0f) - borderRect.left - (sliderRect.right / 2.0f);
+	cDebug::DbgOut(L"channelWidth: ", channelWidth);
+	sliderPos = (int)(percent * channelWidth);
+	//MoveButtonSlider(sliderPos);
+	cDebug::DbgOut(L"sl value: ", sliderPos);
+
+	float volumeWidth = m_params.m_reconstructionParams.voxelCountX / m_params.m_reconstructionParams.voxelsPerMeter;
+	float volumeHeight = m_params.m_reconstructionParams.voxelCountY / m_params.m_reconstructionParams.voxelsPerMeter;
+	float volumeDepth = m_params.m_reconstructionParams.voxelCountZ / m_params.m_reconstructionParams.voxelsPerMeter;
+
+	wchar_t buffer[256];
+	std::wstring s;
+	int slen = swprintf(buffer, 255, L"%4.1fm x %4.1fm x %4.1fm", volumeWidth, volumeHeight, volumeDepth);
+	s.assign(buffer, slen);
+
+	SetDlgItemText(hWndApp, IDC_PREPARE_SLIDER_TEXT, s.c_str());
+	MoveButtonSlider(sliderPos);
 }
 
 void KinectFusion::MoveButtonSlider(int pos)

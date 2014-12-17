@@ -43,24 +43,24 @@ struct KinectFusionParams
         m_bCaptureColor(true),
         m_cColorIntegrationInterval(3),
         m_bTranslateResetPoseByMinDepthThreshold(true),
-		m_saveMeshType(Ply),
+        m_saveMeshType(Stl),
         m_cDeltaFromReferenceFrameCalculationInterval(2),
         m_cMinSuccessfulTrackingFramesForCameraPoseFinder(45), // only update the camera pose finder initially after 45 successful frames (1.5s)
-        m_cMinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure(100), // resume integration following 200 successful frames after tracking failure (~7s)
+        m_cMinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure(200), // resume integration following 200 successful frames after tracking failure (~7s)
         m_cMaxCameraPoseFinderPoseHistory(NUI_FUSION_CAMERA_POSE_FINDER_DEFAULT_POSE_HISTORY_COUNT),
-        m_glCameraPoseFinderFeatureSampleLocationsPerFrame(NUI_FUSION_CAMERA_POSE_FINDER_DEFAULT_FEATURE_LOCATIONS_PER_FRAME_COUNT),
+        m_cCameraPoseFinderFeatureSampleLocationsPerFrame(NUI_FUSION_CAMERA_POSE_FINDER_DEFAULT_FEATURE_LOCATIONS_PER_FRAME_COUNT),
         m_fMaxCameraPoseFinderDepthThreshold(NUI_FUSION_CAMERA_POSE_FINDER_DEFAULT_MAX_DEPTH_THRESHOLD),
         m_fCameraPoseFinderDistanceThresholdReject(1.0f), // a value of 1.0 means no rejection
         m_fCameraPoseFinderDistanceThresholdAccept(0.1f),
         m_cMaxCameraPoseFinderPoseTests(5),
-        m_glCameraPoseFinderProcessFrameCalculationInterval(5),
+        m_cCameraPoseFinderProcessFrameCalculationInterval(5),
         m_fMaxAlignToReconstructionEnergyForSuccess(0.27f),
         m_fMinAlignToReconstructionEnergyForSuccess(0.005f),
         m_fMaxAlignPointCloudsEnergyForSuccess(0.006f),
         m_fMinAlignPointCloudsEnergyForSuccess(0.0f),
         m_cSmoothingKernelWidth(1),                 // 0=just copy, 1=3x3, 2=5x5, 3=7x7, here we create a 3x3 kernel
         m_fSmoothingDistanceThreshold(0.04f),       // 4cm, could use up to around 0.1f
-        m_cAlignPointCloudsImageDownsampleFactor(1),// 1 = no down sample (process at m_depthImageResolution), 2=x/2,y/2, 4=x/4,y/4
+        m_cAlignPointCloudsImageDownsampleFactor(2),// 1 = no down sample (process at m_depthImageResolution), 2=x/2,y/2, 4=x/4,y/4
         m_fMaxTranslationDelta(0.3f),               // 0.15 - 0.3m per frame typical
         m_fMaxRotationDelta(20.0f)                  // 10-20 degrees per frame typical
     {
@@ -80,11 +80,10 @@ struct KinectFusionParams
 
         // Define a cubic Kinect Fusion reconstruction volume, with the sensor at the center of the
         // front face and the volume directly in front of sensor.
-        //m_reconstructionParams.voxelsPerMeter = 256;    // 1000mm / 256vpm = ~3.9mm/voxel
-		m_reconstructionParams.voxelsPerMeter = 128;
-        m_reconstructionParams.voxelCountX = 512;       // 512 / 256vpm = 2m wide reconstruction
-        m_reconstructionParams.voxelCountY = 384;       // Memory = 512*384*512 * 4bytes per voxel
-        m_reconstructionParams.voxelCountZ = 512;       // This will require a GPU with at least 512MB
+        m_reconstructionParams.voxelsPerMeter = 256;    // 1000mm / 256vpm = ~3.9mm/voxel
+        m_reconstructionParams.voxelCountX = 800;       // 512 / 256vpm = 2m wide reconstruction
+        m_reconstructionParams.voxelCountY = 512;       // Memory = 512*384*512 * 4bytes per voxel
+        m_reconstructionParams.voxelCountZ = 800;       // This will require a GPU with at least 512MB
 
         // This parameter sets whether GPU or CPU processing is used. Note that the CPU will likely be 
         // too slow for real-time processing.
@@ -227,9 +226,9 @@ struct KinectFusionParams
     /// the pose finder database must be greater than or equal to this value for a new pose to be 
     /// stored in the database, which regulates how close together poses are stored in the database.
     /// </summary>
-    unsigned int                m_glCameraPoseFinderProcessFrameCalculationInterval;
+    unsigned int                m_cCameraPoseFinderProcessFrameCalculationInterval;
     unsigned int                m_cMaxCameraPoseFinderPoseHistory;
-    unsigned int                m_glCameraPoseFinderFeatureSampleLocationsPerFrame;
+    unsigned int                m_cCameraPoseFinderFeatureSampleLocationsPerFrame;
     float                       m_fMaxCameraPoseFinderDepthThreshold;
     float                       m_fCameraPoseFinderDistanceThresholdReject;
     float                       m_fCameraPoseFinderDistanceThresholdAccept;

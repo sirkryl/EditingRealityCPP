@@ -13,6 +13,7 @@
 int oldPosX;
 int oldPosY;
 bool firstClick = false;
+glm::vec3 rotationAxis;
 int SelectionHelper::GetColorUnderCursor()
 {
 	POINT cursorPos;
@@ -266,8 +267,18 @@ void SelectionHelper::ProcessObjectManipulation()
 
 		if (firstClick)
 		{ 
-			meshData[selectedIndex]->RotateX(offSetX);
-			meshData[selectedIndex]->RotateY(offSetY);
+			glm::mat4 cameraMatrix = openGLWin.glControl.GetKinectViewMatrix();
+			glm::vec3 horizontalRotation = glm::vec3(cameraMatrix[0][0], cameraMatrix[0][1], cameraMatrix[0][2]);
+			glm::vec3 verticalRotation = glm::vec3(cameraMatrix[1][0], cameraMatrix[1][1], cameraMatrix[1][2]);
+
+			meshData[selectedIndex]->RotateX(offSetX, horizontalRotation);
+			meshData[selectedIndex]->RotateY(offSetY, verticalRotation);
+		}
+		else
+		{
+		//	glm::vec3 v1, v2;
+		//	RayCast(&v1, &v2);
+		//	rotationAxis = glm::cross(v2 - v1);
 		}
 		oldPosX = pCur.x;
 		oldPosY = pCur.y;
@@ -280,7 +291,6 @@ void SelectionHelper::ProcessObjectManipulation()
 	{
 		meshHelper.DeleteMesh(selectedIndex);
 		selectedIndex = -1;
-		cDebug::DbgOut(L"pressed ENTF alright");
 	}
 	if (openGLWin.wheelDelta < 0)
 	{
