@@ -442,7 +442,7 @@ void Render(LPVOID lpParam)
 		//render info text on screen
 		glText.PrepareForRender();
 		//glText.RenderText(L"FPS: ", openGLWin.glControl.GetFPS(), 20, -0.98f, 0.85f, 2.0f / storedWidth, 2.0f / storedHeight);
-		glText.RenderText(L"Meshs: ", meshData.size(), 15, -0.98f, 0.75f, 2.0f / storedWidth, 2.0f / storedHeight);
+		glText.RenderText(L"Meshs: ", meshHelper.GetVisibleMeshCount(), 15, -0.98f, 0.75f, 2.0f / storedWidth, 2.0f / storedHeight);
 		glText.RenderText(L"Verts: ", meshHelper.GetNumberOfVertices(), 15, -0.98f, 0.70f, 2.0f / storedWidth, 2.0f / storedHeight);
 		glText.RenderText(L"Faces: ", meshHelper.GetNumberOfFaces(), 15, -0.98f, 0.65f, 2.0f / storedWidth, 2.0f / storedHeight);
 		glText.RenderText(L"Sel: ", glSelector.selectedIndex, 15, -0.98f, 0.6f, 2.0f / storedWidth, 2.0f / storedHeight);
@@ -479,7 +479,6 @@ void Render(LPVOID lpParam)
 		currFPS = openGLWin.glControl.GetFPS();
 		openGLWin.SetFramesPerSecond((float)currFPS);
 	}
-	
 }
 
 void Release(LPVOID lpParam)

@@ -73,9 +73,9 @@ public:
 
 	void SetWall(bool flag);
 	void Set2D(bool flag);
-	void SetDuplicate(bool flag);
 	void SetPlaneParameters(float x, float y, float z, float d);
-
+	void SetDeleted(bool flag);
+	void SetDuplicate(bool flag);
 	
 	std::vector<Vertex> GetVertices();
 	std::vector<Triangle> GetIndices();
@@ -86,6 +86,7 @@ public:
 	std::vector<int> GetOrientation();
 	bool IsWall();
 	bool IsDuplicate();
+	bool IsDeleted();
 	void ToggleSelectedColor(bool flag);
 	void TogglePreviewSelection(bool flag);
 	void IsOverTrash(bool flag);
@@ -99,7 +100,7 @@ private:
 	glm::vec3 snapPoint;
 	glm::vec3 basePoint;
 	bool is2D = false;
-	bool isDuplicate = false;
+	
 	bool isOverTrash = false;
 
 	int rotateBy = 20;
@@ -141,6 +142,8 @@ private:
 	bool isSelected = false;
 	bool colorSelection = false;
 	bool isWall = false;
+	bool isDeleted = false;
+	bool isDuplicate = false;
 	//just temporary to create multiple visible meshs from the same file
 	glm::vec3 translation;
 

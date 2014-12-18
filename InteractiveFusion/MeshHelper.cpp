@@ -81,15 +81,23 @@ void MeshHelper::ResetAll()
 			cnt++;
 			continue;
 		}
+		if ((*mI)->IsDeleted())
+		{
+			(*mI)->SetDeleted(false);
+			//(*mI)->ResetSelectedTransformation();
+		}
 		(*mI)->ParseData();
 		(*mI)->UpdateBuffers();
+		
 		cnt++;
 	}
 
 	cnt = 0;
 	for (int i = 0; i < removeIndices.size(); i++)
 	{
-		DeleteMesh(removeIndices[i]-cnt);
+		meshData[removeIndices[i] - cnt]->ClearMesh();
+		meshData.erase(meshData.begin() + removeIndices[i] - cnt);
+		//DeleteMesh(removeIndices[i]-cnt);
 		cnt++;
 	}
 
@@ -97,9 +105,10 @@ void MeshHelper::ResetAll()
 
 void MeshHelper::DeleteMesh(int index)
 {
-	meshData[index]->ClearMesh();
-	//delete meshData[index];
-	meshData.erase(meshData.begin() + index);// std::remove(meshData.begin(), meshData.end(), meshData[index]), meshData.end());
+	meshData[index]->SetSelected(false);
+	meshData[index]->SetDeleted(true);
+	//meshData[index]->ClearMesh();
+	//meshData.erase(meshData.begin() + index);
 }
 
 int MeshHelper::DuplicateMesh(int index)
@@ -116,6 +125,17 @@ int MeshHelper::DuplicateMesh(int index)
 	return meshData.size()-1;
 }
 
+int MeshHelper::GetVisibleMeshCount()
+{
+	int count = 0;
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		if (!(*mI)->IsDeleted())
+			count++;
+	}
+	return count;
+}
+
 void MeshHelper::CleanMesh()
 {
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
@@ -128,7 +148,6 @@ void MeshHelper::CleanMesh()
 
 void MeshHelper::CombineAndExport()
 {
-
 	OPENFILENAME ofn;
 
 	char szFileName[MAX_PATH] = "";
@@ -160,18 +179,21 @@ void MeshHelper::CombineAndExport()
 	int meshCnt = 0;
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
-		std::vector<Vertex> vertices = (*mI)->GetVertices();
-
-		int vertCount = 0;
-		for (int i = 0; i < vertices.size(); i += 1)
+		if (!(*mI)->IsDeleted())
 		{
-			combinedMesh.vert[vertOffset[meshCnt] + vertCount].P() = vcg::Point3f(vertices[i].x, vertices[i].y, vertices[i].z);
-			combinedMesh.vert[vertOffset[meshCnt] + vertCount].C() = vcg::Color4b((int)(vertices[i].r * 255.0f), (int)(vertices[i].g * 255.0f), (int)(vertices[i].b * 255.0f), 255);
-			combinedMesh.vert[vertOffset[meshCnt] + vertCount].N() = vcg::Point3f(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z);
-			vertCount++;
+			std::vector<Vertex> vertices = (*mI)->GetVertices();
+
+			int vertCount = 0;
+			for (int i = 0; i < vertices.size(); i += 1)
+			{
+				combinedMesh.vert[vertOffset[meshCnt] + vertCount].P() = vcg::Point3f(vertices[i].x, vertices[i].y, vertices[i].z);
+				combinedMesh.vert[vertOffset[meshCnt] + vertCount].C() = vcg::Color4b((int)(vertices[i].r * 255.0f), (int)(vertices[i].g * 255.0f), (int)(vertices[i].b * 255.0f), 255);
+				combinedMesh.vert[vertOffset[meshCnt] + vertCount].N() = vcg::Point3f(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z);
+				vertCount++;
+			}
+			vertOffset.push_back(vertOffset[meshCnt] + vertCount);
+			meshCnt++;
 		}
-		vertOffset.push_back(vertOffset[meshCnt] + vertCount);
-		meshCnt++;
 	}
 
 	std::vector<int> faceOffset;
@@ -180,16 +202,19 @@ void MeshHelper::CombineAndExport()
 	vcg::tri::Allocator<VCGMesh>::AddFaces(combinedMesh, GetNumberOfFaces());
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
-		std::vector<Triangle> indices = (*mI)->GetIndices();
-		int faceCount = 0;
-		for (int i = 0; i < indices.size(); i += 1){
-			combinedMesh.face[faceOffset[meshCnt] + faceCount].V(0) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i].v1];
-			combinedMesh.face[faceOffset[meshCnt] + faceCount].V(1) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i].v2];
-			combinedMesh.face[faceOffset[meshCnt] + faceCount].V(2) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i].v3];
-			faceCount++;
+		if (!(*mI)->IsDeleted())
+		{
+			std::vector<Triangle> indices = (*mI)->GetIndices();
+			int faceCount = 0;
+			for (int i = 0; i < indices.size(); i += 1){
+				combinedMesh.face[faceOffset[meshCnt] + faceCount].V(0) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i].v1];
+				combinedMesh.face[faceOffset[meshCnt] + faceCount].V(1) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i].v2];
+				combinedMesh.face[faceOffset[meshCnt] + faceCount].V(2) = &combinedMesh.vert[vertOffset[meshCnt] + indices[i].v3];
+				faceCount++;
+			}
+			faceOffset.push_back(faceOffset[meshCnt] + faceCount);
+			meshCnt++;
 		}
-		faceOffset.push_back(faceOffset[meshCnt] + faceCount);
-		meshCnt++;
 	}
 	
 	//without save file dialog
@@ -262,7 +287,8 @@ int MeshHelper::GetNumberOfVertices()
 	int noV = 0;
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
-		noV += (*mI)->GetNumberOfVertices();
+		if (!(*mI)->IsDeleted())
+			noV += (*mI)->GetNumberOfVertices();
 	}
 	return noV;
 }
@@ -272,7 +298,8 @@ int MeshHelper::GetNumberOfFaces()
 	int noF = 0;
 	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
 	{
-		noF += (*mI)->GetNumberOfTriangles();
+		if (!(*mI)->IsDeleted())
+			noF += (*mI)->GetNumberOfTriangles();
 	}
 	return noF;
 }

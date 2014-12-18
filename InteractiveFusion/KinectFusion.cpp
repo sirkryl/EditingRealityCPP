@@ -1118,7 +1118,7 @@ void KinectFusion::ProcessUI(WPARAM wParam, LPARAM lParam)
 		m_processor.SetParams(m_params);
 
 		INuiFusionColorMesh *mesh = nullptr;
-		HRESULT hr = m_processor.CalculateMesh(&mesh, 3);
+		HRESULT hr = m_processor.CalculateMesh(&mesh, 1);
 		if (SUCCEEDED(hr))
 		{
 			// Save mesh

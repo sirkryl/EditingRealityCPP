@@ -126,7 +126,7 @@ int WINAPI SegThreadMain()
 			mesh->SetColorCode(i + 1);
 			mesh->SetWall(true);
 			mesh->ConvertToVCG(clusterVertices, clusterIndices);
-			float threshold = 0.005f;
+			float threshold = 0.0001f;
 			int total = mesh->MergeCloseVertices(threshold);
 			cDebug::DbgOut(_T("Merged close vertices: "), total);
 

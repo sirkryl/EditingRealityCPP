@@ -1539,8 +1539,8 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_INTERACTION_BUTTON_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		//openGLWin.ResumeScanning();
-		meshHelper.ResetAll();
 		glSelector.Unselect();
+		meshHelper.ResetAll();		
 	}
 	if (IDC_INTERACTION_BUTTON_DUPLICATE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{

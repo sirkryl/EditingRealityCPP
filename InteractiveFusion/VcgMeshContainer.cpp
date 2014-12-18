@@ -65,10 +65,10 @@ void VCGMeshContainer::LoadMesh(const char* filename)
 	QueryPerformanceCounter(&t1);
 	QueryPerformanceCounter(&t2);
 
-	float threshold = 0.005f;
+	float threshold = 0.0001f;
 	int total = MergeCloseVertices(threshold);
 
-	cDebug::DbgOut(_T("Merged close vertices: "), total);
+	//cDebug::DbgOut(_T("Merged close vertices: "), total);
 	QueryPerformanceCounter(&t2);
 	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
 	cDebug::DbgOut(L"Merged close vertices in ", elapsedTime);
@@ -78,7 +78,7 @@ void VCGMeshContainer::LoadMesh(const char* filename)
 	//vcg::tri::Smooth<VCGMesh>::VertexCoordLaplacian(currentMesh, stepSmoothNum, cnt>0);
 	statusMsg = L"Smoothing mesh";
 	LaplacianSmooth(3);
-	UnsharpColor(0.3f);
+	//UnsharpColor(0.3f);
 	statusMsg = L"Cleaning mesh";
 	CleanMesh();
 	statusMsg = L"Removing small components";
@@ -484,105 +484,111 @@ void VCGMeshContainer::ToggleSelectedColor(bool flag)
 
 void VCGMeshContainer::Draw()
 {
-	shaderColor.UseProgram();
-	shaderColor.SetUniform("colorPicking", false);
-	shaderColor.SetUniform("alpha", 1.0f);
-	glm::mat4 modelMatrix;
-	if (is2D)
-	{
-		shaderColor.SetUniform("matrices.projectionMatrix", glm::mat4(1.0f));
-		shaderColor.SetUniform("matrices.viewMatrix", glm::mat4(1.0f));
-		float hRatio = (float)openGLWin.glControl.GetViewportHeight() / (float)openGLWin.glControl.GetViewportWidth();
-		glm::mat4 twoDScaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(hRatio, 1.0f, 1.0f));
+	if (!isDeleted)
+	{ 
+		shaderColor.UseProgram();
+		shaderColor.SetUniform("colorPicking", false);
+		shaderColor.SetUniform("alpha", 1.0f);
+		glm::mat4 modelMatrix;
+		if (is2D)
+		{
+			shaderColor.SetUniform("matrices.projectionMatrix", glm::mat4(1.0f));
+			shaderColor.SetUniform("matrices.viewMatrix", glm::mat4(1.0f));
+			float hRatio = (float)openGLWin.glControl.GetViewportHeight() / (float)openGLWin.glControl.GetViewportWidth();
+			glm::mat4 twoDScaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(hRatio, 1.0f, 1.0f));
 
-		modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.95f - hRatio*0.15f, -0.65f, 0.0f)) * twoDScaleMatrix;
-	}
-	else
-	{
-		shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
-		shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
+			modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.95f - hRatio*0.15f, -0.65f, 0.0f)) * twoDScaleMatrix;
+		}
+		else
+		{
+			shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
+			shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
 	
-		/*if (colorSelection && glSelector.GetManipulationMode() != MANIPULATION_NONE)
-		{
-			modelMatrix = glm::translate(glm::mat4(1.0), centerPoint) * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
-		}*/
-		if (!isSelected || previewSelection)
-		{
-			//if (previewSelection)
-			//modelMatrix = snapTransform * glm::translate(glm::mat4(1.0), translation);
-			//else
-			modelMatrix = glm::translate(glm::mat4(1.0), translation);
+			/*if (colorSelection && glSelector.GetManipulationMode() != MANIPULATION_NONE)
+			{
+				modelMatrix = glm::translate(glm::mat4(1.0), centerPoint) * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+			}*/
+			if (!isSelected || previewSelection)
+			{
+				//if (previewSelection)
+				//modelMatrix = snapTransform * glm::translate(glm::mat4(1.0), translation);
+				//else
+				modelMatrix = glm::translate(glm::mat4(1.0), translation);
+			}
+			else if (!colorSelection)
+			{
+				//if (isOverTrash)
+				//	modelMatrix = cursorTranslation * trashScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+				//else
+					modelMatrix = cursorTranslation * selectScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+			}
 		}
-		else if (!colorSelection)
-		{
-			//if (isOverTrash)
-			//	modelMatrix = cursorTranslation * trashScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
-			//else
-				modelMatrix = cursorTranslation * selectScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
-		}
-	}
-	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
+		shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
 
-	//if (isOverTrash)
-		//glDisable(GL_DEPTH_TEST);
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glDrawElements(GL_TRIANGLES, indices.size()*3, GL_UNSIGNED_INT, (GLvoid*)0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-	glUseProgram(0);
-	//if (isOverTrash)
-		//glEnable(GL_DEPTH_TEST);
+		//if (isOverTrash)
+			//glDisable(GL_DEPTH_TEST);
+		glBindVertexArray(vao);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+		glDrawElements(GL_TRIANGLES, indices.size()*3, GL_UNSIGNED_INT, (GLvoid*)0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+		glUseProgram(0);
+		//if (isOverTrash)
+			//glEnable(GL_DEPTH_TEST);
+	}
 }
 
 void VCGMeshContainer::DrawBB()
 {
-	shaderColor.UseProgram();
-	shaderColor.SetUniform("colorPicking", true);
-	shaderColor.SetUniform("alpha", 1.0f);
-	shaderColor.SetUniform("pickColor", colorCoding::IntToColor(colorCode));
-	glm::mat4 modelMatrix;
-	if (is2D)
+	if (!isDeleted)
 	{
-		shaderColor.SetUniform("matrices.projectionMatrix", glm::mat4(1.0f));
-		shaderColor.SetUniform("matrices.viewMatrix", glm::mat4(1.0f));
-		float hRatio = (float)openGLWin.glControl.GetViewportHeight() / (float)openGLWin.glControl.GetViewportWidth();
-		glm::mat4 twoDScaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(hRatio, 1.0f, 1.0f));
-
-		modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.95f - hRatio*0.15f, -0.65f, 0.0f)) * twoDScaleMatrix;
-	}
-	else
-	{
-		shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
-		shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
-
-		/*if (colorSelection && glSelector.GetManipulationMode() != MANIPULATION_NONE)
+		shaderColor.UseProgram();
+		shaderColor.SetUniform("colorPicking", true);
+		shaderColor.SetUniform("alpha", 1.0f);
+		shaderColor.SetUniform("pickColor", colorCoding::IntToColor(colorCode));
+		glm::mat4 modelMatrix;
+		if (is2D)
 		{
+			shaderColor.SetUniform("matrices.projectionMatrix", glm::mat4(1.0f));
+			shaderColor.SetUniform("matrices.viewMatrix", glm::mat4(1.0f));
+			float hRatio = (float)openGLWin.glControl.GetViewportHeight() / (float)openGLWin.glControl.GetViewportWidth();
+			glm::mat4 twoDScaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(hRatio, 1.0f, 1.0f));
+
+			modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.95f - hRatio*0.15f, -0.65f, 0.0f)) * twoDScaleMatrix;
+		}
+		else
+		{
+			shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
+			shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
+
+			/*if (colorSelection && glSelector.GetManipulationMode() != MANIPULATION_NONE)
+			{
 			modelMatrix = glm::translate(glm::mat4(1.0), centerPoint) * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
-		} else */
-		if (!isSelected || previewSelection)
-		{
-			//if (previewSelection)
-			//modelMatrix = snapTransform * glm::translate(glm::mat4(1.0), translation);
-			//else
-			modelMatrix = glm::translate(glm::mat4(1.0), translation);
-		}
-		else if (!colorSelection)
-		{
-			//if (isOverTrash)
-			//	modelMatrix = cursorTranslation * trashScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
-			//else
+			} else */
+			if (!isSelected || previewSelection)
+			{
+				//if (previewSelection)
+				//modelMatrix = snapTransform * glm::translate(glm::mat4(1.0), translation);
+				//else
+				modelMatrix = glm::translate(glm::mat4(1.0), translation);
+			}
+			else if (!colorSelection)
+			{
+				//if (isOverTrash)
+				//	modelMatrix = cursorTranslation * trashScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+				//else
 				modelMatrix = cursorTranslation * selectScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+			}
 		}
-	}
-	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
+		shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
 
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glDrawElements(GL_TRIANGLES, indices.size() * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-	glUseProgram(0);
+		glBindVertexArray(vao);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+		glDrawElements(GL_TRIANGLES, indices.size() * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+		glUseProgram(0);
+	}
 }
 
 void VCGMeshContainer::AttachToCursor(glm::vec3 nearPoint, glm::vec3 farPoint, int distance)
@@ -1074,6 +1080,8 @@ void VCGMeshContainer::ResetSelectedTransformation()
 	yRotation = glm::mat4(1.0f);
 	zRotation = glm::mat4(1.0f);
 	scaleMatrix = glm::mat4(1.0f);
+	selectTranslation = glm::vec3(0.0f, 0.0f, 0.0f);
+	translation = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
 void VCGMeshContainer::SetPlaneParameters(float x, float y, float z, float d)
@@ -1131,6 +1139,11 @@ bool VCGMeshContainer::IsDuplicate()
 	return isDuplicate;
 }
 
+bool VCGMeshContainer::IsDeleted()
+{
+	return isDeleted;
+}
+
 void VCGMeshContainer::Set2D(bool flag)
 {
 	is2D = flag;
@@ -1140,6 +1153,12 @@ void VCGMeshContainer::SetWall(bool flag)
 {
 	isWall = flag;
 }
+
+void VCGMeshContainer::SetDeleted(bool flag)
+{
+	isDeleted = flag;
+}
+
 
 bool VCGMeshContainer::IsWall()
 {
