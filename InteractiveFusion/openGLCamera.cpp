@@ -1,6 +1,7 @@
 #include "common.h"
 #include "InteractiveFusion.h"
 #include "OpenGLCamera.h"
+#include "VisualizationHelper.h"
 #include <glm/ext.hpp>
 #include "Keys.h"
 float angleX = 5.0f;
@@ -181,7 +182,7 @@ glm::mat4 OpenGLCamera::GetViewMatrix()
 			//UpdateStrafe();
 
 			if (Keys::GetKeyState(VK_LBUTTON) &&
-				openGLWin.IsMouseInOpenGLWindow())
+				openGLWin.IsMouseInOpenGLWindow() && glHelper.GetVisualizationMode() == IF_VISUALIZATION_NONE)
 			{
 				GetCursorPos(&pCur);
 				if (lMouseFirst)

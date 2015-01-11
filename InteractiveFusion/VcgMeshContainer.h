@@ -36,6 +36,8 @@ public:
 	bool AreBuffersInitialized();
 
 	void HighlightObjects(std::vector<int> objTriangles, ColorIF color, bool additive);
+	void SetVerticesInPlane(glm::vec3 planeCenter);
+	void ShowVerticesInPlane(bool flag);
 	void ResetHighlights();
 	void CleanMesh();
 	int MergeCloseVertices(float threshold);
@@ -53,8 +55,10 @@ public:
 	void AttachToCursor(glm::vec3 nearPoint, glm::vec3 farPoint, int distance);
 	bool GetHitPoint(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output, glm::vec3 &outputNormal, bool snapToVertex);
 	bool CheckCollision(glm::vec3 nearPoint, glm::vec3 farPoint, glm::vec3 &output);
+	void ApplyRotation(float degree, glm::vec3 axis);
 	void TranslateVerticesToPoint(glm::vec3 point, std::vector<int> orien);
-	
+
+
 	bool IsLoaded();
 
 	void SetSelected(bool val);
@@ -72,11 +76,15 @@ public:
 	void ResetSelectedTransformation();
 
 	void SetWall(bool flag);
+	void SetGround(bool flag);
 	void Set2D(bool flag);
 	void SetPlaneParameters(float x, float y, float z, float d);
 	void SetDeleted(bool flag);
 	void SetDuplicate(bool flag);
 	
+	glm::vec3 GetUpperBounds();
+	glm::vec3 GetLowerBounds();
+
 	std::vector<Vertex> GetVertices();
 	std::vector<Triangle> GetIndices();
 	int GetNumberOfVertices();
@@ -85,6 +93,7 @@ public:
 	glm::vec3 GetCenterPoint();
 	std::vector<int> GetOrientation();
 	bool IsWall();
+	bool IsGround();
 	bool IsDuplicate();
 	bool IsDeleted();
 	void ToggleSelectedColor(bool flag);
@@ -99,6 +108,8 @@ private:
 	glm::vec3 offSet;
 	glm::vec3 snapPoint;
 	glm::vec3 basePoint;
+
+	std::vector<glm::vec3> highlightedPoints;
 	bool is2D = false;
 	
 	bool isOverTrash = false;
@@ -109,15 +120,18 @@ private:
 	std::vector<Vertex> vertices;
 	std::vector<Vertex> verticesWithHighlights;
 	std::vector<Triangle> indices;
+	std::vector<GLuint> indicesOnPlane;
 	std::vector<float> storedColors;
 
 	float planeParameters[4];
 	std::vector<int> orientation;
 	// -1 = no plane, 0 = x, 1 = y, 2 = z
 	glm::mat4 storedTranslation;
+
 	//int vertNum;
 
 	GLuint vbo{ 0 }, vao{ 0 }, ibo{ 0 };
+	GLuint planeIBO{ 0 };
 	GLuint bbVBO{ 0 }, bbVAO{ 0 }, bbIBO{ 0 };
 
 	std::vector<int> snapOrientation;
@@ -142,17 +156,16 @@ private:
 	bool isSelected = false;
 	bool colorSelection = false;
 	bool isWall = false;
+	bool isGround = false;
 	bool isDeleted = false;
 	bool isDuplicate = false;
+	bool showPlaneVertices = false;
 	//just temporary to create multiple visible meshs from the same file
 	glm::vec3 translation;
 
 	glm::vec3 centerPoint;
 	glm::vec3 upperBounds;
 	glm::vec3 lowerBounds;
-
-	glm::vec3 originalUpperBounds;
-	glm::vec3 originalLowerBounds;
 
 	int colorCode;
 };

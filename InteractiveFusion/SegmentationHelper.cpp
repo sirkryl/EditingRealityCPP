@@ -6,6 +6,7 @@
 #include "OpenGLCamera.h"
 #include "OpenGLText.h"
 #include "MeshHelper.h"
+#include "SelectionHelper.h"
 #include <random>
 bool isPreviewInitialized = false;
 int currentPlaneIndex = -1;
@@ -126,7 +127,7 @@ int WINAPI SegThreadMain()
 			mesh->SetColorCode(i + 1);
 			mesh->SetWall(true);
 			mesh->ConvertToVCG(clusterVertices, clusterIndices);
-			float threshold = 0.0001f;
+			float threshold = 0.005f;
 			int total = mesh->MergeCloseVertices(threshold);
 			cDebug::DbgOut(_T("Merged close vertices: "), total);
 
@@ -147,6 +148,20 @@ int WINAPI SegThreadMain()
 				pclProcessor.planeCoefficients[i]->values[2], pclProcessor.planeCoefficients[i]->values[3]);
 			planeC = glm::vec4(pclProcessor.planeCoefficients[i]->values[0], pclProcessor.planeCoefficients[i]->values[1], pclProcessor.planeCoefficients[i]->values[2], pclProcessor.planeCoefficients[i]->values[3]);
 
+			if (i == 0)
+			{
+				glm::vec3 normalVector = glm::normalize(glm::vec3(pclProcessor.planeCoefficients[i]->values[0], pclProcessor.planeCoefficients[i]->values[1], pclProcessor.planeCoefficients[i]->values[2]));
+				glm::vec3 yAxis = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f));
+
+				glm::vec3 rotationAxis = glm::cross(normalVector, yAxis);
+
+				//float xRotation = glm::acos(glm::dot(normalVector, glm::vec3(1.0f, 0.0f, 0.0f)));
+				float rotY = glm::acos(glm::dot(normalVector, yAxis));
+				rotY = rotY * 180.0f / M_PI;
+				//float zRotation = glm::acos(glm::dot(normalVector, glm::vec3(0.0f, 0.0f, 1.0f)));
+
+				meshHelper.SetGroundAlignmentRotation(glm::rotate(glm::mat4(1.0), rotY, rotationAxis));
+			}
 			meshData_segTmp.push_back(mesh);
 		}
 		//pclProcessor.PrepareForObjectSegmentation();
@@ -306,6 +321,37 @@ bool SegmentationHelper::InitializePreview()
 	return true;
 }
 
+bool SegmentationHelper::InitializeMinCutPreview()
+{
+	if (openGLWin.GetWindowMode() == IF_MODE_MINCUT && pclProcessor.MinCutChanged())
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<> dis(0.3f, 0.7f);
+		meshHelper.RemoveAllHighlights();
+		//meshHelper.GenerateBuffers();
+		for (int i = 0; i < pclProcessor.GetRegionClusterCount(); i++)
+		{
+			ColorIF color = { dis(gen), dis(gen), dis(gen) };
+			meshHelper.HighlightObjects(glSelector.selectedIndex, pclProcessor.GetColoredCloudIndices(i), color, false);
+		}
+		isPreviewInitialized = true;
+		pclProcessor.SetMinCutChanged(false);
+
+		cDebug::DbgOut(L"Initializing MinCut Preview");
+		return true;
+	}
+	return false;
+}
+
+void SegmentationHelper::DetermineMinCutRadius(glm::vec3 upperPoint, glm::vec3 centerPoint)
+{
+	openGLWin.minCutRadius = abs(glm::distance(centerPoint, upperPoint));
+	openGLWin.ShowStatusBarMessage(L"Determined radius as " + std::to_wstring(openGLWin.minCutRadius));
+
+	cDebug::DbgOut(L"Determined radius as ", openGLWin.minCutRadius);
+}
+
 bool SegmentationHelper::InitializePreview(std::vector<Vertex> vertices, std::vector<Triangle> triangles)
 {
 	previewVertices.clear();
@@ -338,6 +384,26 @@ void SegmentationHelper::RenderPreview()
 	glText.RenderText(L"Clusters: ", pclProcessor.GetClusterCount(), 20, -0.98f, 0.85f, 2.0f / w, 2.0f / h);
 	glEnable(GL_DEPTH_TEST);
 	return;
+}
+
+void SegmentationHelper::AddMinCutForegroundPoint(glm::vec3 fPoint)
+{
+	pclProcessor.AddMinCutForegroundPoint(fPoint);
+}
+
+void SegmentationHelper::AddMinCutBackgroundPoint(glm::vec3 bPoint)
+{
+	pclProcessor.AddMinCutBackgroundPoint(bPoint);
+}
+
+void SegmentationHelper::ResetMinCutValues()
+{
+	pclProcessor.ResetMinCutValues();
+}
+
+void SegmentationHelper::SetSegmentationMesh(int index)
+{
+	pclProcessor.ConvertToCloud(meshData[index]->GetVertices(), meshData[index]->GetIndices());
 }
 
 glm::vec3 SegmentationHelper::GetPreviewCenterPoint()

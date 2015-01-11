@@ -65,7 +65,7 @@ void VCGMeshContainer::LoadMesh(const char* filename)
 	QueryPerformanceCounter(&t1);
 	QueryPerformanceCounter(&t2);
 
-	float threshold = 0.0001f;
+	float threshold = 0.0005f;
 	int total = MergeCloseVertices(threshold);
 
 	//cDebug::DbgOut(_T("Merged close vertices: "), total);
@@ -160,6 +160,29 @@ void VCGMeshContainer::ResetHighlights()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void VCGMeshContainer::SetVerticesInPlane(glm::vec3 planeCenter)
+{
+	indicesOnPlane.clear();
+
+	for (int i = 0; i < vertices.size(); i++)
+	{
+		if (abs(vertices[i].x - planeCenter.x) <= 0.0050f)
+			indicesOnPlane.push_back(i);
+		//verticesWithHighlights[objTriangles[i]].r = min(verticesWithHighlights[objTriangles[i]].r + color.r, 1.0f);
+		//verticesWithHighlights[objTriangles[i]].g = min(verticesWithHighlights[objTriangles[i]].g + color.g, 1.0f);
+		//verticesWithHighlights[objTriangles[i]].b = min(verticesWithHighlights[objTriangles[i]].b + color.b, 1.0f);
+	}
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, planeIBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesOnPlane.size() * sizeof(GLuint), &indicesOnPlane[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void VCGMeshContainer::ShowVerticesInPlane(bool flag)
+{
+	showPlaneVertices = flag;
 }
 
 void VCGMeshContainer::LoadMesh(std::vector<Vertex> inputVertices, std::vector<Triangle> inputIndices)
@@ -338,14 +361,6 @@ void VCGMeshContainer::ParseData()
 
 	//bbox
 
-
-	originalLowerBounds.x = lowerBounds.x;
-	originalLowerBounds.y = lowerBounds.y;
-	originalLowerBounds.z = lowerBounds.z;
-	originalUpperBounds.x = upperBounds.x;
-	originalUpperBounds.y = upperBounds.y;
-	originalUpperBounds.z = upperBounds.z;
-
 	centerPoint.x = (lowerBounds.x + upperBounds.x) / 2.0f;
 	centerPoint.y = (lowerBounds.y + upperBounds.y) / 2.0f;
 	centerPoint.z = (lowerBounds.z + upperBounds.z) / 2.0f;
@@ -433,6 +448,8 @@ void VCGMeshContainer::GenerateBOs()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Triangle), &indices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	glGenBuffers(1, &planeIBO);
 }
 
 void VCGMeshContainer::GenerateVAO()
@@ -527,9 +544,20 @@ void VCGMeshContainer::Draw()
 
 		//if (isOverTrash)
 			//glDisable(GL_DEPTH_TEST);
+
+		
 		glBindVertexArray(vao);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-		glDrawElements(GL_TRIANGLES, indices.size()*3, GL_UNSIGNED_INT, (GLvoid*)0);
+		
+		if (showPlaneVertices)
+		{ 
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, planeIBO);
+			glDrawElements(GL_POINTS, indicesOnPlane.size(), GL_UNSIGNED_INT, (GLvoid*)0);
+		}
+		else
+		{
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+			glDrawElements(GL_TRIANGLES, indices.size() * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+		}
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 		glUseProgram(0);
@@ -599,6 +627,16 @@ void VCGMeshContainer::AttachToCursor(glm::vec3 nearPoint, glm::vec3 farPoint, i
 	selectTranslation.z = nearPoint.z + (carryDistance / 10.0f) * (farPoint.z - nearPoint.z);//(0.50f / 10.0f) * (farPoint.z - nearPoint.z);
 
 	cursorTranslation = glm::translate(glm::mat4(1.0), selectTranslation);
+}
+
+glm::vec3 VCGMeshContainer::GetLowerBounds()
+{
+	return lowerBounds;
+}
+
+glm::vec3 VCGMeshContainer::GetUpperBounds()
+{
+	return upperBounds;
 }
 
 void VCGMeshContainer::SetSnapTransform(std::vector<int> orien)
@@ -705,6 +743,38 @@ void VCGMeshContainer::TranslateVerticesToPoint(glm::vec3 point, std::vector<int
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+
+
+void VCGMeshContainer::ApplyRotation(float degree, glm::vec3 axis)
+{
+	glm::mat4 pointRotation = glm::rotate(glm::mat4(1.0), degree, axis);
+
+	for (int i = 0; i < vertices.size(); i += 1)
+	{
+		glm::vec4 tmp = glm::vec4(vertices[i].x, vertices[i].y, vertices[i].z, 1.0f);
+		glm::vec4 tmpNormal = glm::vec4(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z, 0.0f);
+
+		//tmp = (newTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform) * tmp;
+		//if (orien == -1)
+
+		tmpNormal = pointRotation * tmpNormal;
+		tmpNormal = glm::normalize(tmpNormal);
+
+		tmp = pointRotation * tmp;
+
+		//if (doSnap)
+		//tmp = snapTransform * snapReverse * tmp;
+		//tmp = snapTransform * tmp;
+
+		vertices[i].x = tmp.x;
+		vertices[i].y = tmp.y;// abs(centerPoint.y - snapPoint.y);
+		vertices[i].z = tmp.z;// +abs(snapPoint.z - lowestZ);
+		vertices[i].normal_x = tmpNormal.x;
+		vertices[i].normal_y = tmpNormal.y;
+		vertices[i].normal_z = tmpNormal.z;
+	}
 }
 
 glm::vec3 VCGMeshContainer::GetCenterPoint()
@@ -1048,10 +1118,13 @@ int VCGMeshContainer::FillHoles(int holeSize)
 	vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
 
 	//cDebug::DbgOut(L"Closed holes2: ", 1);
-	int holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingIntersectionFill<vcg::tri::SelfIntersectionEar<VCGMesh> >(currentMesh, holeSize, false);
-
+	//int holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingIntersectionFill<vcg::tri::SelfIntersectionEar<VCGMesh> >(currentMesh, holeSize, false);
+	int holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingFillAllButLargest<vcg::tri::MinimumWeightEar<VCGMesh> >(currentMesh, holeSize, false);
+	//int holeCnt = vcg::tri::Hole<VCGMesh>::FillHoleEar<vcg::tri::TrivialEar<VCGMesh> >(currentMesh, holeSize, false);
+	//FillHoleEar< TrivialEar >(mesh, *this, local_facePointer)
+	
+	//int holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingFill<vcg::tri::MinimumWeightEar< VCGMesh> >(currentMesh, 10000322, false);
 	cDebug::DbgOut(L"Closed holes: ", holeCnt);
-	//holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingFill<vcg::tri::MinimumWeightEar< VCGMesh> >(currentMesh, 10000, false);
 	//cDebug::DbgOut(L"Closed holes: ", holeCnt);
 	//vcg::tri::Hole<VCGMesh>::EarCuttingFill<vcg::tri::TrivialEar<VCGMesh> >(currentMesh, holeSize, false);
 	//if (currentMesh.vn > 1000)
@@ -1108,6 +1181,36 @@ void VCGMeshContainer::SetPlaneParameters(float x, float y, float z, float d)
 	//orientation = pos;
 	if (pos <= 2)
 		orientation[pos] = 1;
+
+	/*glm::vec3 normalVector = glm::normalize(glm::vec3(x, y, z));
+	glm::vec3 yAxis = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f));
+
+	glm::vec3 rotationAxis = glm::cross(normalVector, yAxis);
+
+	//float xRotation = glm::acos(glm::dot(normalVector, glm::vec3(1.0f, 0.0f, 0.0f)));
+	float rotY = glm::acos(glm::dot(normalVector, yAxis));
+	rotY = rotY * 180.0f / 3.14159265359f;
+	//float zRotation = glm::acos(glm::dot(normalVector, glm::vec3(0.0f, 0.0f, 1.0f)));
+
+	groundAlignmentRotation = glm::rotate(glm::mat4(1.0), rotY, rotationAxis);
+
+	cDebug::DbgOut(L"rotationAxis x: ", rotationAxis.x);
+	cDebug::DbgOut(L"rotationAxis y: ", rotationAxis.y);
+	cDebug::DbgOut(L"rotationAxis z: ", rotationAxis.z);
+	cDebug::DbgOut(L"rotY: ", rotY);
+
+	cDebug::DbgOut(L"normalVector x: ", normalVector.x);
+	cDebug::DbgOut(L"normalVector y: ", normalVector.y);
+	cDebug::DbgOut(L"normalVector z: ", normalVector.z);
+	glm::vec3 newVector = glm::rotate(normalVector, rotY, rotationAxis);
+	//glm::vec4 tmpVector = glm::vec4(normalVector.x, normalVector.y, normalVector.z, 1.0f);
+	//tmpVector = rotation * tmpVector;
+	cDebug::DbgOut(L"result x: ", newVector.x);
+	cDebug::DbgOut(L"result y: ", newVector.y);
+	cDebug::DbgOut(L"result z: ", newVector.z);
+
+	//float otherAngle = glm::rot(normalVector, yAxis, yAxis);*/
+
 }
 
 std::vector<int> VCGMeshContainer::GetOrientation()
@@ -1154,6 +1257,11 @@ void VCGMeshContainer::SetWall(bool flag)
 	isWall = flag;
 }
 
+void VCGMeshContainer::SetGround(bool flag)
+{
+	isGround = flag;
+}
+
 void VCGMeshContainer::SetDeleted(bool flag)
 {
 	isDeleted = flag;
@@ -1163,6 +1271,12 @@ void VCGMeshContainer::SetDeleted(bool flag)
 bool VCGMeshContainer::IsWall()
 {
 	return isWall;
+}
+
+
+bool VCGMeshContainer::IsGround()
+{
+	return isGround;
 }
 
 int VCGMeshContainer::GetColorCode()

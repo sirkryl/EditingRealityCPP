@@ -12,6 +12,7 @@ public:
 	void StartSegmentation();
 
 	bool InitializePreview();
+	bool InitializeMinCutPreview();
 	bool InitializePreview(std::vector<Vertex> vertices, std::vector<Triangle> triangles);
 	void RenderPreview();
 	void ResetInitializedStatus();
@@ -21,6 +22,13 @@ public:
 
 	bool IsWallReady();
 	bool IsCloudReady();
+
+
+	void SetSegmentationMesh(int index);
+	void AddMinCutForegroundPoint(glm::vec3 fPoint);
+	void AddMinCutBackgroundPoint(glm::vec3 bPoint);
+	void DetermineMinCutRadius(glm::vec3 upperPoint, glm::vec3 centerPoint);
+	void ResetMinCutValues();
 
 	SegmentationState GetSegmentationState();
 	void SetSegmentationState(SegmentationState state);

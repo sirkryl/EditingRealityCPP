@@ -22,6 +22,8 @@ public:
 	void SetManipulationMode(ManipulationMode mode);
 	ManipulationMode GetManipulationMode();
 
+	glm::vec3 GetCursorRayCastHitPoint();
+	glm::vec3 GetCursorRayCastHitPoint(int selIndex, bool &success);
 	void ProcessButtonClicks();
 	void UnselectButtons();
 

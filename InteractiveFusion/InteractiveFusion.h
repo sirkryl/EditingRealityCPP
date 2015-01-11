@@ -2,7 +2,7 @@
 #include "OpenGLControl.h"
 #include "common.h"
 #include "KinectFusion.h"
-enum WindowMode { IF_MODE_PREPARE_SCAN, IF_MODE_SCAN, IF_MODE_SEGMENTATION, IF_MODE_PROCESSING, IF_MODE_INTERACTION, IF_MODE_DEBUG };
+enum WindowMode { IF_MODE_PREPARE_SCAN, IF_MODE_SCAN, IF_MODE_SEGMENTATION, IF_MODE_MINCUT, IF_MODE_PROCESSING, IF_MODE_INTERACTION, IF_MODE_DEBUG };
 
 enum Answer {IF_ANSWER_NOTAVAILABLE, IF_ANSWER_YES, IF_ANSWER_NO};
 
@@ -57,7 +57,7 @@ public:
 	
 
 	//hole filling values
-	int holeSize = 1000;
+	int holeSize = 1000000;
 
 	//checkbox values
 	bool helpingVisuals = false;
@@ -66,6 +66,12 @@ public:
 	bool colorSelection = false;
 	bool snapToVertex = false;
 	bool placeWithRaycast = false;
+
+	float minCutRadius = 0.1f;
+	float minCutSigma = 0.0005f;
+	int minCutNeighbors = 14;
+	float minCutWeight = 0.8f;
+
 	//resolution
 	//int height = 768;
 	//int width = 1024;

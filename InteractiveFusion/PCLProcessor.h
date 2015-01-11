@@ -11,6 +11,7 @@ public:
 	bool PlaneSegmentation();
 	bool EuclideanSegmentation();
 	bool RegionGrowingSegmentation();
+	bool MinCutSegmentation();
 	//bool DifferenceOfNormalsSegmentation();
 	pcl::PointCloud <pcl::PointXYZRGB>::ConstPtr coloredSegmentedCloud;
 	pcl::PointCloud <pcl::PointXYZRGB>::Ptr wallSegmentCloud;
@@ -34,6 +35,14 @@ public:
 	int GetRegionClusterCount();
 	int GetPlaneClusterCount();
 	int GetCloudSize();
+	void AddMinCutForegroundPoint(glm::vec3 fPoint);
+	void AddMinCutBackgroundPoint(glm::vec3 bPoint);
+	void ResetMinCutValues();
+	bool ReadyForMinCut();
+	
+	bool MinCutChanged();
+
+	void SetMinCutChanged(bool flag);
 	std::vector<pcl::ModelCoefficients::Ptr> planeCoefficients;
 
 	void ClearAll();
@@ -45,6 +54,7 @@ private:
 	int procIndexCount = 0;
 	bool closeViewer = false;
 	bool isWall = false;
+	bool minCutChanged = false;
 	std::vector<pcl::PointIndices> segmentedClusterIndices;
 	std::vector<pcl::PointIndices::Ptr> planeCloudIndices;
 	//bool EnforceCurvatureOrColor(const pcl::PointXYZRGB& point_a, const pcl::PointXYZRGB& point_b, float squared_distance);

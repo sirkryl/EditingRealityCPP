@@ -4,7 +4,7 @@
 #include "OpenGLCamera.h"
 #include "Keys.h"
 #include "SegmentationHelper.h"
-
+#include "VisualizationHelper.h"
 #pragma region
 
 #define SECOND_TIMER 1000
@@ -70,6 +70,11 @@ HWND hButtonRGNeighborsPlus, hButtonRGNeighborsMinus;
 HWND hTextRGNeighborsLabel, hTextRGNeighbors;
 HWND hButtonRGKSearchPlus, hButtonRGKSearchMinus;
 HWND hTextRGKSearchLabel, hTextRGKSearch;
+
+//MINCUT UI
+std::vector<HWND> minCutUi;
+HWND hButtonCreatePlane, hButtonMinCutSegment;
+HWND hButtonMinCutDone;
 
 //PROCESSING UI
 std::vector<HWND> processingUi;
@@ -695,8 +700,18 @@ bool InteractiveFusion::CreateOpenGLWindow()
 	interactionUi.push_back(hButtonDuplicate);
 	
 	interactionUi.push_back(hButtonReset);
-	//hDeleteIcon = (HICON)LoadImage(openGLWin.appInstance, MAKEINTRESOURCE(IDI_INTERACTION_TRASH), IMAGE_ICON, 128, 128, NULL);
-	//SendMessage(hButtonDelete, STM_SETIMAGE, IMAGE_ICON, (LPARAM)hDeleteIcon);
+
+
+	hButtonMinCutDone = CreateWindowEx(0, L"BUTTON", L"Done", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, hWnd, (HMENU)IDC_MINCUT_BUTTON_DONE, NULL, 0);
+
+	hButtonCreatePlane = CreateWindowEx(0, L"BUTTON", L"Plane", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW | BS_MULTILINE, 250, 50, 150, 50, hWnd, (HMENU)IDC_MINCUT_BUTTON_PLANE, NULL, 0);
+
+//	hButtonMinCutSegment = CreateWindowEx(0, L"BUTTON", L"MinCut", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW | BS_MULTILINE, 250, 50, 150, 50, hWnd, (HMENU)IDC_MINCUT_BUTTON_MINCUT, NULL, 0);
+
+	minCutUi.push_back(hButtonMinCutDone);
+	minCutUi.push_back(hButtonCreatePlane);
+	//minCutUi.push_back(hButtonMinCutSegment);
+	
 	HideWholeUI();
 
 
@@ -794,6 +809,10 @@ void InteractiveFusion::HideWholeUI()
 	{
 		ShowWindow(processingUi[i], SW_HIDE);
 	}
+	for (int i = 0; i < minCutUi.size(); i++)
+	{
+		ShowWindow(minCutUi[i], SW_HIDE);
+	}
 }
 
 void InteractiveFusion::DeactivateWholeUI()
@@ -826,6 +845,10 @@ void InteractiveFusion::DeactivateWholeUI()
 	{
 		EnableWindow(processingUi[i], false);
 	}
+	for (int i = 0; i < minCutUi.size(); i++)
+	{
+		EnableWindow(minCutUi[i], false);
+	}
 }
 
 void InteractiveFusion::ActivateWholeUI()
@@ -857,6 +880,10 @@ void InteractiveFusion::ActivateWholeUI()
 	for (int i = 0; i < processingUi.size(); i++)
 	{
 		EnableWindow(processingUi[i], true);
+	}
+	for (int i = 0; i < minCutUi.size(); i++)
+	{
+		EnableWindow(minCutUi[i], true);
 	}
 }
 
@@ -959,88 +986,95 @@ void InteractiveFusion::SetWindowMode(WindowMode wMode)
 	ShowWindow(statusHandle, SW_SHOW);
 	openGLWin.colorSelection = false;
 
-	if (mode == IF_MODE_INTERACTION)
+	switch (mode)
 	{
-		fusionExplorer->Hide();
-		glCamera.mode = CAMERA_SENSOR;
-		glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
-		glCamera.ResetCameraPosition();
-		//DetermineMeshQuality();
-		ShowWindow(glWindowHandle, SW_SHOW);
-		EnableWindow(hPrepareText, true);
-		EnableWindow(hScanText, true);
-		EnableWindow(hInteractionText, false);
-		EnableWindow(hSegmentationText, true);
-		
-		openGLWin.glControl.SetOffSetBottom(0);
-		openGLWin.glControl.SetOffSetRight(250);
+		case IF_MODE_INTERACTION:
+			fusionExplorer->Hide();
+			glCamera.mode = CAMERA_SENSOR;
+			glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
+			glCamera.ResetCameraPosition();
+			//DetermineMeshQuality();
+			ShowWindow(glWindowHandle, SW_SHOW);
+			EnableWindow(hPrepareText, true);
+			EnableWindow(hScanText, true);
+			EnableWindow(hInteractionText, false);
+			EnableWindow(hSegmentationText, true);
 
-		ShowUI(interactionUi);
-	}
-	else if (mode == IF_MODE_SCAN)
-	{
-		EnableWindow(hPrepareText, true);
-		EnableWindow(hScanText, false);
-		EnableWindow(hInteractionText, true);
-		EnableWindow(hSegmentationText, true);
-	}
-	else if (mode == IF_MODE_PREPARE_SCAN)
-	{
-		EnableWindow(hPrepareText, false);
-		EnableWindow(hScanText, true);
-		EnableWindow(hInteractionText, true);
-		if (openGLWin.fusionExplorer)
-		{ 
-			if (openGLWin.fusionExplorer->GetWindowState() != IF_FUSION_STATE_START)
-				openGLWin.fusionExplorer->SetWindowState(IF_FUSION_STATE_START);
-		}
-		EnableWindow(hSegmentationText, true);
-	}
-	else if (mode == IF_MODE_SEGMENTATION)
-	{
-		fusionExplorer->Hide();
-		//ANYWAYS
-		//DetermineMeshQuality();
-		ShowWindow(glWindowHandle, SW_SHOW);
-		EnableWindow(hPrepareText, true);
-		EnableWindow(hScanText, true);
-		EnableWindow(hInteractionText, true);
-		EnableWindow(hSegmentationText, false);
-
-		
-		glCamera.ResetCameraPosition();
-		glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
-		glCamera.mode = CAMERA_FREE;
-
-		if (glSegmentation.GetSegmentationState() == IF_SEGSTATE_PLANE_SEGMENTATION)
-		{ 
-			openGLWin.glControl.SetOffSetBottom(250);
-			ShowUI(wallSelectionUi);
-		}
-		else if (glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
-		{ 
+			openGLWin.glControl.SetOffSetBottom(0);
 			openGLWin.glControl.SetOffSetRight(250);
+
+			ShowUI(interactionUi);
+			break;
+		case IF_MODE_SCAN:
+			EnableWindow(hPrepareText, true);
+			EnableWindow(hScanText, false);
+			EnableWindow(hInteractionText, true);
+			EnableWindow(hSegmentationText, true);
+			break;
+		case IF_MODE_PREPARE_SCAN:
+			EnableWindow(hPrepareText, false);
+			EnableWindow(hScanText, true);
+			EnableWindow(hInteractionText, true);
+			if (openGLWin.fusionExplorer)
+			{
+				if (openGLWin.fusionExplorer->GetWindowState() != IF_FUSION_STATE_START)
+					openGLWin.fusionExplorer->SetWindowState(IF_FUSION_STATE_START);
+			}
+			EnableWindow(hSegmentationText, true);
+			break;
+		case IF_MODE_SEGMENTATION:
+			fusionExplorer->Hide();
+			//ANYWAYS
+			//DetermineMeshQuality();
+			ShowWindow(glWindowHandle, SW_SHOW);
+			EnableWindow(hPrepareText, true);
+			EnableWindow(hScanText, true);
+			EnableWindow(hInteractionText, true);
+			EnableWindow(hSegmentationText, false);
+
+
+			glCamera.ResetCameraPosition();
+			glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
+			glCamera.mode = CAMERA_FREE;
+
+			if (glSegmentation.GetSegmentationState() == IF_SEGSTATE_PLANE_SEGMENTATION)
+			{
+				openGLWin.glControl.SetOffSetBottom(250);
+				ShowUI(wallSelectionUi);
+			}
+			else if (glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
+			{
+				openGLWin.glControl.SetOffSetRight(250);
 				ShowUI(segmentationPreviewUi);
-			if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
-				ShowUI(regionGrowthUi);
-			else if (glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN)
-				ShowUI(euclideanUi);
-		}
-		
-	}
-	else if (mode == IF_MODE_PROCESSING)
-	{
-		fusionExplorer->Hide();
-		glCamera.ResetCameraPosition();
-		glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
-		glCamera.mode = CAMERA_FREE;
+				if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
+					ShowUI(regionGrowthUi);
+				else if (glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN)
+					ShowUI(euclideanUi);
+			}
+			break;
+		case IF_MODE_PROCESSING:
+			fusionExplorer->Hide();
+			glCamera.ResetCameraPosition();
+			glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
+			glCamera.mode = CAMERA_FREE;
 
-		openGLWin.glControl.SetOffSetBottom(0);
-		openGLWin.glControl.SetOffSetRight(250);
-		ShowUI(processingUi);
-		openGLWin.colorSelection = true;
-	}
+			openGLWin.glControl.SetOffSetBottom(0);
+			openGLWin.glControl.SetOffSetRight(250);
+			ShowUI(processingUi);
+			openGLWin.colorSelection = true;
+			break;
+		case IF_MODE_MINCUT:
+			fusionExplorer->Hide();
+			glCamera.ResetCameraPosition();
+			glCamera.SetRotationPoint(meshHelper.GetCombinedCenterPoint());
+			glCamera.mode = CAMERA_FREE;
 
+			openGLWin.glControl.SetOffSetBottom(0);
+			openGLWin.glControl.SetOffSetRight(250);
+			ShowUI(minCutUi);
+			openGLWin.colorSelection = true;
+			break;
+	}
 	if (mode != IF_MODE_SCAN && mode != IF_MODE_PREPARE_SCAN)
 	{ 
 		RECT rRect; GetClientRect(GetParent(openGLWin.glWindowHandle), &rRect);
@@ -1060,34 +1094,33 @@ void InteractiveFusion::SetWindowBusyState(WindowBusyState bState)
 
 	if (busyState == IF_BUSYSTATE_BUSY)
 	{ 
-		
-		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION)
+		switch (openGLWin.GetWindowMode())
 		{
-			if (glSegmentation.GetSegmentationState() == IF_SEGSTATE_PLANE_SEGMENTATION)
-				DeactivateUI(wallSelectionUi);
-			else
-			{ 
-				DeactivateUI(segmentationPreviewUi);
-				DeactivateUI(euclideanUi);
-				DeactivateUI(regionGrowthUi);
-			}
-		}
-		else if (openGLWin.GetWindowMode() == IF_MODE_INTERACTION)
-		{
-			DeactivateUI(interactionUi);
-		}
-		else if (openGLWin.GetWindowMode() == IF_MODE_PROCESSING)
-		{
-			DeactivateUI(processingUi);
+			case IF_MODE_SEGMENTATION:
+				if (glSegmentation.GetSegmentationState() == IF_SEGSTATE_PLANE_SEGMENTATION)
+					DeactivateUI(wallSelectionUi);
+				else
+				{
+					DeactivateUI(segmentationPreviewUi);
+					DeactivateUI(euclideanUi);
+					DeactivateUI(regionGrowthUi);
+				}
+				break;
+			case IF_MODE_INTERACTION:
+				DeactivateUI(interactionUi);
+				break;
+			case IF_MODE_PROCESSING:
+				DeactivateUI(processingUi);
+				break;
 		}
 		DeactivateUI(modeUi);
 		//DeactivateUI(modeUi);
 	}
 	else if (busyState == IF_BUSYSTATE_DEFAULT)
 	{ 
-		//HideUI(helpUi);
-		if (openGLWin.GetWindowMode() == IF_MODE_SEGMENTATION)
+		switch (openGLWin.GetWindowMode())
 		{
+		case IF_MODE_SEGMENTATION:
 			if (glSegmentation.GetSegmentationState() == IF_SEGSTATE_PLANE_SEGMENTATION)
 				ActivateUI(wallSelectionUi);
 			else
@@ -1096,14 +1129,13 @@ void InteractiveFusion::SetWindowBusyState(WindowBusyState bState)
 				ActivateUI(euclideanUi);
 				ActivateUI(regionGrowthUi);
 			}
-		}
-		else if (openGLWin.GetWindowMode() == IF_MODE_INTERACTION)
-		{
+			break;
+		case IF_MODE_INTERACTION:
 			ActivateUI(interactionUi);
-		}
-		else if (openGLWin.GetWindowMode() == IF_MODE_PROCESSING)
-		{
+			break;
+		case IF_MODE_PROCESSING:
 			ActivateUI(processingUi);
+			break;
 		}
 		ActivateUI(modeUi);
 	}
@@ -1225,6 +1257,28 @@ void InteractiveFusion::ProcessParentUI(WPARAM wParam, LPARAM lParam)
 
 void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 {
+	if (IDC_MINCUT_BUTTON_DONE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+			statusMsg = L"Finishing MinCut";
+			openGLWin.SetWindowMode(IF_MODE_PROCESSING);
+			//openGLWin.previewMode = false;
+			//glSegmentation.StartSegmentation();
+			
+	}
+	if (IDC_MINCUT_BUTTON_PLANE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+	{
+		statusMsg = L"MinCut Plane";
+		if (glHelper.GetVisualizationMode() == IF_VISUALIZATION_NONE)
+		{ 
+			glHelper.SetVisualizationMode(IF_VISUALIZATION_PLANE);
+			glSegmentation.ResetMinCutValues();
+		}
+		else
+			glHelper.SetVisualizationMode(IF_VISUALIZATION_NONE);
+		//openGLWin.previewMode = false;
+		//glSegmentation.StartSegmentation();
+
+	}
 	if (IDC_INTERACTION_BUTTON_TRANSFORMATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		if (glSelector.GetManipulationMode() == MANIPULATION_NONE)
@@ -1625,7 +1679,13 @@ void InteractiveFusion::ProcessOpenGLUI(WPARAM wParam, LPARAM lParam)
 	if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
 		openGLWin.ShowStatusBarMessage(L"Combining and exporting all meshes...");
-		meshHelper.CombineAndExport();
+
+		if (glSelector.selectedIndex != -1)
+			meshHelper.Export(glSelector.selectedIndex);
+		else
+			meshHelper.ExportForUnity();
+			//meshHelper.CombineAndExport();
+			
 	}
 	if (IDC_PROCESSING_BUTTON_FILLHOLES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 	{
@@ -1839,7 +1899,8 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		|| openGLWin.IsHandleInUI(item->hwndItem, wallSelectionUi)
 		|| openGLWin.IsHandleInUI(item->hwndItem, euclideanUi)
 		|| openGLWin.IsHandleInUI(item->hwndItem, regionGrowthUi)
-		|| openGLWin.IsHandleInUI(item->hwndItem, processingUi))
+		|| openGLWin.IsHandleInUI(item->hwndItem, processingUi)
+		|| openGLWin.IsHandleInUI(item->hwndItem, minCutUi))
 	{
 
 		if (IDC_INTERACTION_BUTTON_SCALE == LOWORD(wParam) || IDC_INTERACTION_BUTTON_ROTATE_VERTICAL == LOWORD(wParam) || IDC_INTERACTION_BUTTON_ROTATE_HORIZONTAL == LOWORD(wParam) || IDC_PROCESSING_BUTTON_FILLHOLES == LOWORD(wParam) || IDC_PROCESSING_BUTTON_REMOVECOMPONENTS == LOWORD(wParam))
@@ -1859,7 +1920,8 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		{
 			SetTextColor(item->hDC, RGB(50, 50, 50));
 
-			if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam) || IDC_PLANE_BUTTON_YES == LOWORD(wParam) || IDC_SEGMENTATION_BUTTON_DONE == LOWORD(wParam) || IDC_PROCESSING_BUTTON_DONE == LOWORD(wParam))
+			if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam) || IDC_PLANE_BUTTON_YES == LOWORD(wParam) || IDC_SEGMENTATION_BUTTON_DONE == LOWORD(wParam) || IDC_PROCESSING_BUTTON_DONE == LOWORD(wParam) ||
+				IDC_MINCUT_BUTTON_DONE == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonGreenInactiveBrush);
@@ -1877,7 +1939,8 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		else if (item->itemState & ODS_SELECTED)
 		{
 			SetTextColor(item->hDC, RGB(245, 245, 245));
-			if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam) || IDC_PLANE_BUTTON_YES == LOWORD(wParam) || IDC_SEGMENTATION_BUTTON_DONE == LOWORD(wParam) || IDC_PROCESSING_BUTTON_DONE == LOWORD(wParam))
+			if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam) || IDC_PLANE_BUTTON_YES == LOWORD(wParam) || IDC_SEGMENTATION_BUTTON_DONE == LOWORD(wParam) || IDC_PROCESSING_BUTTON_DONE == LOWORD(wParam) ||
+				IDC_MINCUT_BUTTON_DONE == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonGreenPressedBrush);
@@ -1896,7 +1959,8 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		else
 		{
 			SetTextColor(item->hDC, RGB(240, 240, 240));
-			if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam) || IDC_PLANE_BUTTON_YES == LOWORD(wParam) || IDC_SEGMENTATION_BUTTON_DONE == LOWORD(wParam) || IDC_PROCESSING_BUTTON_DONE == LOWORD(wParam))
+			if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam) || IDC_PLANE_BUTTON_YES == LOWORD(wParam) || IDC_SEGMENTATION_BUTTON_DONE == LOWORD(wParam) || IDC_PROCESSING_BUTTON_DONE == LOWORD(wParam) ||
+				IDC_MINCUT_BUTTON_DONE == LOWORD(wParam))
 			{
 				SelectObject(item->hDC, buttonDefaultPen);
 				SelectObject(item->hDC, buttonGreenBrush);
@@ -1923,6 +1987,8 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 			SelectObject(item->hDC, buttonActiveBrush);
 		else if (IDC_INTERACTION_BUTTON_FREE_CAMERA == LOWORD(wParam) && glCamera.mode == CAMERA_FREE)
 			SelectObject(item->hDC, buttonActiveBrush);
+		else if (IDC_MINCUT_BUTTON_PLANE == LOWORD(wParam) && glHelper.GetVisualizationMode() == IF_VISUALIZATION_PLANE)
+			SelectObject(item->hDC, buttonActiveBrush);
 
 		SetBkMode(item->hDC, TRANSPARENT);
 
@@ -1932,7 +1998,7 @@ bool InteractiveFusion::DrawButton(WPARAM wParam, LPARAM lParam)
 		}
 		else if (IDC_PLANE_BUTTON_YES == LOWORD(wParam) || IDC_PLANE_BUTTON_NO == LOWORD(wParam) || IDC_PLANE_BUTTON_WALLSIZE_MINUS == LOWORD(wParam)
 			|| IDC_PLANE_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) || IDC_PLANE_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) ||
-			IDC_PLANE_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) || IDC_PROCESSING_BUTTON_FILLHOLES == LOWORD(wParam) || IDC_PROCESSING_BUTTON_REMOVECOMPONENTS == LOWORD(wParam) || IDC_SEGMENTATION_BUTTON_UPDATE == LOWORD(wParam) || IDC_INTERACTION_BUTTON_TRANSFORMATION == LOWORD(wParam) || IDC_INTERACTION_BUTTON_DUPLICATE == LOWORD(wParam) || IDC_INTERACTION_BUTTON_FREE_CAMERA == LOWORD(wParam))
+			IDC_PLANE_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) || IDC_PROCESSING_BUTTON_FILLHOLES == LOWORD(wParam) || IDC_PROCESSING_BUTTON_REMOVECOMPONENTS == LOWORD(wParam) || IDC_SEGMENTATION_BUTTON_UPDATE == LOWORD(wParam) || IDC_INTERACTION_BUTTON_TRANSFORMATION == LOWORD(wParam) || IDC_INTERACTION_BUTTON_DUPLICATE == LOWORD(wParam) || IDC_INTERACTION_BUTTON_FREE_CAMERA == LOWORD(wParam) || IDC_MINCUT_BUTTON_PLANE == LOWORD(wParam))
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 20, 20);
 		else
 			RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 500, 500);
@@ -2157,6 +2223,11 @@ void InteractiveFusion::MoveButtonsOnResize()
 			MoveWindow(hButtonHelp, openGLWin.glControl.GetViewportWidth() / 2 - 75, (openGLWin.glControl.GetViewportHeight() / 2), 150, 50, true);
 		}
 	}
+	if (openGLWin.GetWindowMode() == IF_MODE_MINCUT)
+	{
+		MoveWindow(hButtonCreatePlane, width - 225, height - 425, 200, 100, true);
+		MoveWindow(hButtonMinCutDone, width - 187, height - 175, 125, 125, true);
+	}
 	MoveModeButtonsOnResize();
 
 	//MoveWindow(statusHandle, 0, height - 30, width, 30, true);
@@ -2296,7 +2367,7 @@ void InteractiveFusion::SetProgressionPercent(wstring percent)
 void InteractiveFusion::SetFramesPerSecond(float fps)
 {
 	WCHAR str[256] = { 0 };
-	swprintf_s(str, sizeof(str), L"%5.2f FPS", fps);
+	swprintf_s(str, sizeof(str), L"%5.2f", fps);
 
 	SetDlgItemText(openGLWin.parent, IDC_FRAMES_PER_SECOND, str);
 }

@@ -1938,8 +1938,8 @@ void KinectFusion::UpdateButtonSlider()
 		//32 <--> 256
 		float channelWidth = borderRect.right - (sliderRect.right / 2.0f) - borderRect.left - (sliderRect.right / 2.0f);
 		float percent = sliderPos / channelWidth;
-		int value = (int)(percent * 224.0f) - 1;
-		m_params.m_reconstructionParams.voxelsPerMeter = (float)(384 - value);
+		int value = (int)(percent * 352.0f) - 1;
+		m_params.m_reconstructionParams.voxelsPerMeter = (float)(416 - value);
 
 		float volumeWidth = m_params.m_reconstructionParams.voxelCountX / m_params.m_reconstructionParams.voxelsPerMeter;
 		float volumeHeight = m_params.m_reconstructionParams.voxelCountY / m_params.m_reconstructionParams.voxelsPerMeter;
@@ -1966,9 +1966,9 @@ void KinectFusion::UpdateButtonSliderValue()
 	RECT sliderRect; GetClientRect(hButtonSlider, &sliderRect);
 	MapWindowPoints(hSliderBackground, m_hWnd, (POINT *)&borderRect, 2);
 
-	int value = 256 - (int)m_params.m_reconstructionParams.voxelsPerMeter;
+	int value = 416 - (int)m_params.m_reconstructionParams.voxelsPerMeter;
 	cDebug::DbgOut(L"value: ", value);
-	float percent = (value - 1) / 224.0f;
+	float percent = (value - 1) / 352.0f;
 	cDebug::DbgOut(L"percent: ", percent);
 	float channelWidth = borderRect.right - (sliderRect.right / 2.0f) - borderRect.left - (sliderRect.right / 2.0f);
 	cDebug::DbgOut(L"channelWidth: ", channelWidth);
@@ -2082,22 +2082,22 @@ void KinectFusion::Hide()
 
 void KinectFusion::DetermineMeshQuality()
 {
-	if (m_params.m_reconstructionParams.voxelsPerMeter > 192)
+	if (m_params.m_reconstructionParams.voxelsPerMeter > 356)
 	{
 		openGLWin.SetMeshQuality(IF_QUALITY_VERYHIGH);
 		SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: VERY HIGH");
 	}
-	else if (m_params.m_reconstructionParams.voxelsPerMeter > 150)
+	else if (m_params.m_reconstructionParams.voxelsPerMeter > 288)
 	{
 		openGLWin.SetMeshQuality(IF_QUALITY_HIGH);
 		SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: HIGH");
 	}
-	else if (m_params.m_reconstructionParams.voxelsPerMeter > 110)
+	else if (m_params.m_reconstructionParams.voxelsPerMeter > 192)
 	{
 		openGLWin.SetMeshQuality(IF_QUALITY_MEDIUM);
 		SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: MEDIUM");
 	}
-	else if (m_params.m_reconstructionParams.voxelsPerMeter > 64)
+	else if (m_params.m_reconstructionParams.voxelsPerMeter > 96)
 	{
 		openGLWin.SetMeshQuality(IF_QUALITY_LOW);
 		SetDlgItemText(hWndApp, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: LOW");

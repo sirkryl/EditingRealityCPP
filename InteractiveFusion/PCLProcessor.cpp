@@ -15,6 +15,7 @@
 #include <pcl/segmentation/region_growing.h>
 #include <pcl/segmentation/conditional_euclidean_clustering.h>
 #include <pcl/features/normal_3d.h>
+#include <pcl/segmentation/min_cut_segmentation.h>
 
 //#include <pcl/filters/voxel_grid.h>
 //#include "resource.h"
@@ -50,6 +51,9 @@ pcl::PointIndices::Ptr planeInlierIndices(new pcl::PointIndices);
 glm::vec3 minPlane(999.0f, 999.0f, 999.0f);
 glm::vec3 maxPlane(-999.0f, -999.0f, -999.0f);
 
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr foregroundPoints(new pcl::PointCloud<pcl::PointXYZRGB>);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr backgroundPoints(new pcl::PointCloud<pcl::PointXYZRGB>);
+
 std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr> clusteredClouds;
 std::vector<std::vector<int>> clusteredIndices;
 
@@ -68,7 +72,7 @@ bool PCLProcessor::PlaneSegmentation() {
 	pcl::PointIndices::Ptr allWallSegmentIndices (new pcl::PointIndices);
 	pcl::PointIndices::Ptr confirmedWallSegmentIndices(new pcl::PointIndices);
 	pcl::PointIndices::Ptr planeSegmentationIndices(new pcl::PointIndices);
-	Eigen::Vector3f segAxis(1, 0, 0);
+	Eigen::Vector3f segAxis(0, 1, 0);
 	
 	bool redoingSegmentation = false;
 	int axisCnt = 0;
@@ -95,7 +99,10 @@ bool PCLProcessor::PlaneSegmentation() {
 		segmentation.setNormalDistanceWeight(openGLWin.wallSmoothness);
 		segmentation.setEpsAngle(10.0f * (M_PI / 180.0f));
 		// Configure the object to look for a plane.
-		segmentation.setModelType(pcl::SACMODEL_NORMAL_PLANE);// SACMODEL_NORMAL_PLANE);
+		if (axisCnt <= 2)
+			segmentation.setModelType(pcl::SACMODEL_NORMAL_PARALLEL_PLANE);
+		else
+			segmentation.setModelType(pcl::SACMODEL_NORMAL_PLANE);// SACMODEL_NORMAL_PLANE);
 		// Use RANSAC method.
 	
 		segmentation.setMethodType(pcl::SAC_RANSAC);
@@ -108,11 +115,11 @@ bool PCLProcessor::PlaneSegmentation() {
 		segmentation.segment(*inlierIndices, *coefficients);
 		
 		
-		if (inlierIndices->indices.size() <= mainCloud->points.size()/20 && !redoingSegmentation)
+		if (inlierIndices->indices.size() <= mainCloud->points.size()/15 && !redoingSegmentation)
 		{
 			if (axisCnt == 0)
 			{
-				segAxis = Eigen::Vector3f(0, 1, 0);
+				segAxis = Eigen::Vector3f(1, 0, 0);
 				axisCnt++;
 				continue;
 			}
@@ -125,6 +132,12 @@ bool PCLProcessor::PlaneSegmentation() {
 			else if (axisCnt == 2)
 			{
 			
+				
+				axisCnt++;
+				continue;
+			}
+			else if (axisCnt == 3)
+			{
 				cDebug::DbgOut(L"break", 1);
 				break;
 			}
@@ -201,6 +214,27 @@ bool PCLProcessor::PlaneSegmentation() {
 		wallSegmentCloud->clear();
 		if (redoingSegmentation)
 			continue;
+		if (openGLWin.GetAnswer() == IF_ANSWER_NO && axisCnt <= 2)
+		{
+			if (axisCnt == 0)
+			{
+				segAxis = Eigen::Vector3f(0, 1, 0);
+				axisCnt++;
+				continue;
+			}
+			else if (axisCnt == 1)
+			{
+				segAxis = Eigen::Vector3f(0, 0, 1);
+				axisCnt++;
+				continue;
+			}
+			else if (axisCnt == 2)
+			{
+				axisCnt++;
+				continue;
+			}
+			continue;
+		}
 		//closeViewer = false;
 
 		for (int i = 0; i < inlierIndices->indices.size(); i++)
@@ -700,6 +734,98 @@ bool PCLProcessor::RegionGrowingSegmentation() {
 	//ShowViewer();
 	return true;
 
+}
+
+void PCLProcessor::AddMinCutForegroundPoint(glm::vec3 fPoint)
+{
+	pcl::PointXYZRGB point;
+	point.x = fPoint.x;
+	point.y = fPoint.y;
+	point.z = fPoint.z;
+	foregroundPoints->points.push_back(point);
+
+	if (ReadyForMinCut())
+		MinCutSegmentation();
+}
+
+void PCLProcessor::AddMinCutBackgroundPoint(glm::vec3 bPoint)
+{
+	pcl::PointXYZRGB point;
+	point.x = bPoint.x;
+	point.y = bPoint.y;
+	point.z = bPoint.z;
+	backgroundPoints->points.push_back(point);
+
+	if (ReadyForMinCut())
+		MinCutSegmentation();
+}
+
+void PCLProcessor::ResetMinCutValues()
+{
+	foregroundPoints->clear();
+	backgroundPoints->clear();
+}
+
+bool PCLProcessor::ReadyForMinCut()
+{
+	return (foregroundPoints->points.size() != 0 && backgroundPoints->points.size() != 0);
+}
+
+bool PCLProcessor::MinCutSegmentation()
+{
+	segmentedClusterIndices.clear();
+	pcl::search::Search<pcl::PointXYZRGB>::Ptr tree = boost::shared_ptr<pcl::search::Search<pcl::PointXYZRGB> >(new pcl::search::KdTree<pcl::PointXYZRGB>);
+
+	LARGE_INTEGER frequency;        // ticks per second
+	LARGE_INTEGER t1, t2;           // ticks
+	double elapsedTime;
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&t1);
+	QueryPerformanceCounter(&t2);
+	//std::vector<pcl::PointIndices> cluster_indices;
+	segmentedClusterIndices.clear();
+
+	//SetViewportStatusMessage(L"Segmenting mesh");
+	SetViewportPercentMsg(L"");
+	//openGLWin.SetProgressionText(L"Segmenting mesh");
+	//openGLWin.SetProgressionPercent(L"");
+	openGLWin.ShowStatusBarMessage(L"Processing segmentation...");
+
+	//pcl::ConditionalEuclideanClustering<pcl::PointXYZRGBNormal> ec;
+	pcl::MinCutSegmentation<pcl::PointXYZRGB> mc;
+	//ec.setConditionFunction(&EnforceCurvatureOrColor);
+
+
+
+	
+	//ec.setSearchMethod(tree);
+	mc.setInputCloud(mainCloud);
+
+	mc.setForegroundPoints(foregroundPoints);
+	mc.setBackgroundPoints(backgroundPoints);
+	mc.setSigma(openGLWin.minCutSigma);
+	mc.setRadius(openGLWin.minCutRadius);
+	mc.setNumberOfNeighbours(openGLWin.minCutNeighbors);
+	mc.setSourceWeight(openGLWin.minCutWeight);
+	mc.extract(segmentedClusterIndices);
+
+	clusterCount = segmentedClusterIndices.size();
+	QueryPerformanceCounter(&t2);
+	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
+	cDebug::DbgOut(L"MinCut clustering in ", elapsedTime);
+
+	minCutChanged = true;
+	return true;
+}
+
+bool PCLProcessor::MinCutChanged()
+{
+	return minCutChanged;
+}
+
+void PCLProcessor::SetMinCutChanged(bool flag)
+{
+	minCutChanged = flag;
 }
 
 bool

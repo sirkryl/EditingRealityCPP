@@ -113,10 +113,97 @@ void VisualizationHelper::InitializeRayVisual()
 
 }
 
+void VisualizationHelper::InitializePlane(glm::vec3 lowerBounds, glm::vec3 upperBounds)
+{
+	if (planeVBO == 0)
+	{
+		Vertex v1 = { 0.0f, upperBounds.y, lowerBounds.z,
+			0.8f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f };
+		Vertex v2 = { 0.0f, upperBounds.y, upperBounds.z,
+			0.8f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f };
+		Vertex v3 = { 0.0f, lowerBounds.y, lowerBounds.z,
+			0.8f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f };
+		Vertex v4 = { 0.0f, lowerBounds.y, upperBounds.z,
+			0.8f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f };
+
+		planeTranslation = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f));
+
+		planeVertices.push_back(v1);
+		planeVertices.push_back(v3);
+		planeVertices.push_back(v4);
+		planeVertices.push_back(v2);
+		planeVertices.push_back(v1);
+		planeVertices.push_back(v4);
+
+		glGenBuffers(1, &planeVBO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+		glBufferData(GL_ARRAY_BUFFER, planeVertices.size() * sizeof(Vertex), &planeVertices[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glGenVertexArrays(1, &planeVAO);
+		glBindVertexArray(planeVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float) * 3));
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float) * 6));
+	}
+}
+
+
+VisualizationMode VisualizationHelper::GetVisualizationMode()
+{
+	return visMode;
+}
+void VisualizationHelper::SetVisualizationMode(VisualizationMode _visMode)
+{
+	visMode = _visMode;
+}
+
+bool VisualizationHelper::IsPlaneInitialized()
+{
+	return planeVBO != 0;
+}
+
+void VisualizationHelper::DrawPlane()
+{
+	shaderColor.UseProgram();
+	shaderColor.SetUniform("colorPicking", false);
+	shaderColor.SetUniform("alpha", 0.3f);
+	glm::mat4 modelMatrix;
+	shaderColor.SetUniform("matrices.projectionMatrix", openGLWin.glControl.GetProjectionMatrix());
+	shaderColor.SetUniform("matrices.viewMatrix", glCamera.GetViewMatrix());
+	modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0.0f));
+	modelMatrix = planeTranslation * modelMatrix;
+	shaderColor.SetUniform("matrices.modelMatrix", modelMatrix);
+
+	//if (isOverTrash)
+	//glDisable(GL_DEPTH_TEST);
+	glBindVertexArray(planeVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);
+	glUseProgram(0);
+}
+
+void VisualizationHelper::SetPlaneTranslation(glm::vec3 point)
+{
+	planeTranslation = glm::translate(glm::mat4(1.0f), glm::vec3(point.x, 0.0f, 0.0f));
+}
+
 void VisualizationHelper::CleanUp()
 {
 	glDeleteBuffers(1, &rayVBO);
 	glDeleteBuffers(1, &pointVBO);
 	glDeleteVertexArrays(1, &rayVAO);
 	glDeleteVertexArrays(1, &pointVAO);
+	glDeleteBuffers(1, &planeVBO);
+	glDeleteVertexArrays(1, &rayVAO);
 }

@@ -10,6 +10,7 @@
 #include "IFResources.h"
 #include "IFParams.h"
 #include <boost/shared_ptr.hpp>
+#include <boost/filesystem.hpp>
 using namespace std;
 
 #include <gl/glew.h>
@@ -97,6 +98,10 @@ namespace Util
 		std::wstring r(buf);
 		delete[] buf;
 		return r;
+	}
+	static float Round(float f, float prec)
+	{
+		return (float)(floor(f*(1.0f / prec) + 0.5) / (1.0f / prec));
 	}
 }
 extern wstring statusMsg;

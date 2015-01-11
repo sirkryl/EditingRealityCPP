@@ -257,6 +257,159 @@ void MeshHelper::CombineAndExport()
 
 }
 
+void MeshHelper::ExportForUnity()
+{
+	namespace fs = boost::filesystem;
+	fs::path path_to_remove("data\\output\\");
+	for (fs::directory_iterator end_dir_it, it(path_to_remove); it != end_dir_it; ++it) {
+		remove_all(it->path());
+	}
+
+	int index = 0;
+	int objIndex = 0;
+	int planeIndex = 0;
+	for (vector <shared_ptr<VCGMeshContainer>>::iterator mI = meshData.begin(); mI != meshData.end(); ++mI)
+	{
+		if (!(*mI)->IsDeleted())
+		{
+			if (!(*mI)->IsWall())
+			{
+				Export(index, "object_" + std::to_string(objIndex), false, true);
+				objIndex++;
+			}
+			else
+			{
+				Export(index, "plane_" + std::to_string(planeIndex), false, true);
+				planeIndex++;
+			}
+		}
+		index++;
+	}
+}
+
+void MeshHelper::Export(int index, string _fileName, bool saveDialog, bool align)
+{
+	char fileNameBuffer[500];
+	const char* finalName;
+	if (saveDialog)
+	{ 
+		OPENFILENAME ofn;
+
+		char szFileName[MAX_PATH] = "";
+
+		ZeroMemory(&ofn, sizeof(ofn));
+
+		ofn.lStructSize = sizeof(ofn);
+		ofn.hwndOwner = NULL;
+		ofn.lpstrFilter = (LPCWSTR)L"PLY (*.ply)\0*.ply;\0STL (*.stl)\0*.stl\0OBJ (*.obj)\0*.obj\0OFF (*.off)\0*.off\0All Files (*.*)\0*.*\0";
+		ofn.lpstrFile = (LPWSTR)szFileName;
+		ofn.nMaxFile = MAX_PATH;
+		ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+		ofn.lpstrDefExt = (LPCWSTR)L"ply";
+
+		if (!GetSaveFileName(&ofn))
+			return;
+
+		// First arg is the pointer to destination char, second arg is
+		// the pointer to source wchar_t, last arg is the size of char buffer
+		wcstombs(fileNameBuffer, ofn.lpstrFile, 500);
+
+		finalName = fileNameBuffer;
+	}
+	VCGMesh exportedMesh;
+	vcg::tri::Allocator<VCGMesh>::AddVertices(exportedMesh, meshData[index]->GetNumberOfVertices());
+
+	std::vector<Vertex> vertices = meshData[index]->GetVertices();
+
+
+	//glm::mat4 pointRotation = glm::rotate(glm::mat4(1.0), 9.90554f, glm::vec3(-0.17082f,0.0f,-0.0203198f));
+
+	for (int i = 0; i < vertices.size(); i += 1)
+	{
+		if (align)
+		{ 
+			glm::vec4 tmp = glm::vec4(vertices[i].x, vertices[i].y, vertices[i].z, 1.0f);
+			glm::vec4 tmpNormal = glm::vec4(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z, 0.0f);
+
+			tmpNormal = groundAlignmentRotation * tmpNormal;
+			tmpNormal = glm::normalize(tmpNormal);
+
+			tmp = groundAlignmentRotation * tmp;
+
+
+			vertices[i].x = tmp.x;
+			vertices[i].y = tmp.y;
+			vertices[i].z = tmp.z;
+			vertices[i].normal_x = tmpNormal.x;
+			vertices[i].normal_y = tmpNormal.y;
+			vertices[i].normal_z = tmpNormal.z;
+		}
+		exportedMesh.vert[i].P() = vcg::Point3f(vertices[i].x, vertices[i].y, vertices[i].z);
+		exportedMesh.vert[i].C() = vcg::Color4b((int)(vertices[i].r * 255.0f), (int)(vertices[i].g * 255.0f), (int)(vertices[i].b * 255.0f), 255);
+		exportedMesh.vert[i].N() = vcg::Point3f(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z);
+	}
+
+
+	vcg::tri::Allocator<VCGMesh>::AddFaces(exportedMesh, meshData[index]->GetNumberOfTriangles());
+	std::vector<Triangle> indices = meshData[index]->GetIndices();
+	for (int i = 0; i < indices.size(); i += 1){
+		exportedMesh.face[i].V(0) = &exportedMesh.vert[indices[i].v1];
+		exportedMesh.face[i].V(1) = &exportedMesh.vert[indices[i].v2];
+		exportedMesh.face[i].V(2) = &exportedMesh.vert[indices[i].v3];
+	}
+
+	//without save file dialog
+	if (!saveDialog)
+	{
+		//string fileName = "data\\output\\" + _fileName + ".ply";
+		//finalName = fileName.c_str();
+		string path = "data\\output\\";
+		string fileName = _fileName;
+		string ext = ".ply";
+		struct stat buffer;
+		string filePath = path;
+		filePath.append(fileName);
+		filePath.append(ext);
+		int cnt = 1;
+		while (stat(filePath.c_str(), &buffer) != -1)
+		{
+			ostringstream convert;
+			convert << cnt;
+			fileName = _fileName + "_" + convert.str();
+			filePath = path;
+			filePath.append(fileName);
+			filePath.append(ext);
+			cnt++;
+		}
+		vcg::tri::io::ExporterPLY<VCGMesh>::Save(exportedMesh, filePath.c_str(), vcg::tri::io::Mask::IOM_VERTCOLOR);
+		return;
+	}
+
+	//cDebug::DbgOut(L"the path is : %s\n", ofn.lpstrFile);
+	//getchar();
+	//TCHAR iFileName;
+	//wcsncpy(iFileName, ofn.lpstrFile, MAX__LENGTH);
+
+	
+
+	if (strstr(finalName, ".ply"))
+		vcg::tri::io::ExporterPLY<VCGMesh>::Save(exportedMesh, finalName, vcg::tri::io::Mask::IOM_VERTCOLOR);
+	else if (strstr(finalName, ".obj"))
+		vcg::tri::io::ExporterOBJ<VCGMesh>::Save(exportedMesh, finalName, vcg::tri::io::Mask::IOM_VERTCOLOR);
+	else if (strstr(finalName, ".stl"))
+		vcg::tri::io::ExporterSTL<VCGMesh>::Save(exportedMesh, finalName, true, vcg::tri::io::Mask::IOM_VERTCOLOR);
+	else if (strstr(finalName, ".off"))
+		vcg::tri::io::ExporterOFF<VCGMesh>::Save(exportedMesh, finalName, vcg::tri::io::Mask::IOM_VERTCOLOR);
+	else
+		vcg::tri::io::ExporterPLY<VCGMesh>::Save(exportedMesh, finalName, vcg::tri::io::Mask::IOM_VERTCOLOR);
+}
+
+void MeshHelper::Export(int index)
+{
+	Export(index, "mesh"+index, true);
+
+}
+
 void MeshHelper::GenerateOriginalBuffers()
 {
 	if (!originalMesh->AreBuffersInitialized())
@@ -328,9 +481,20 @@ void MeshHelper::RemoveAllHighlights()
 	originalMesh->ResetHighlights();
 }
 
+void MeshHelper::SetVerticesInPlane(int index, glm::vec3 planeCenter)
+{
+		meshData[index]->SetVerticesInPlane(planeCenter);
+		meshData[index]->ShowVerticesInPlane(true);
+}
+
 void MeshHelper::DrawOriginalMesh()
 {
 	originalMesh->Draw();
+}
+
+void MeshHelper::Draw(int index)
+{
+	meshData[index]->Draw();
 }
 
 void MeshHelper::DrawAll()
@@ -432,4 +596,10 @@ void MeshHelper::CleanAndParse(const char* fileName, std::vector<Vertex> &starti
 
 	cDebug::DbgOut(L"Parse duration: ", duration);
 
+}
+
+
+void MeshHelper::SetGroundAlignmentRotation(glm::mat4 alignmentRotation)
+{
+	groundAlignmentRotation = alignmentRotation;
 }

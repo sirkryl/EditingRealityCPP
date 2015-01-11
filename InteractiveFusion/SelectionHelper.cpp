@@ -523,6 +523,31 @@ void SelectionHelper::ResetWallObject()
 	}
 }
 
+glm::vec3 SelectionHelper::GetCursorRayCastHitPoint()
+{
+	glm::vec3 v1, v2;
+	RayCast(&v1, &v2);
+	glm::vec3 tmpPoint;
+	glm::vec3 tmpNormal;
+	originalMesh->GetHitPoint(v1, v2, tmpPoint, tmpNormal, openGLWin.snapToVertex);
+	return tmpPoint;
+}
+
+glm::vec3 SelectionHelper::GetCursorRayCastHitPoint(int selIndex, bool &success)
+{
+	glm::vec3 v1, v2;
+	RayCast(&v1, &v2);
+	glm::vec3 tmpPoint;
+	glm::vec3 tmpNormal;
+	if (meshData[selIndex]->GetHitPoint(v1, v2, tmpPoint, tmpNormal, openGLWin.snapToVertex))
+		success = true;
+	else
+		success = false;
+	return tmpPoint;
+}
+
+
+
 void SelectionHelper::SetManipulationMode(ManipulationMode mode)
 {
 	manipMode = mode;
