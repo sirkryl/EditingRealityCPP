@@ -151,13 +151,16 @@ int WINAPI SegThreadMain()
 			if (i == 0)
 			{
 				glm::vec3 normalVector = glm::normalize(glm::vec3(pclProcessor.planeCoefficients[i]->values[0], pclProcessor.planeCoefficients[i]->values[1], pclProcessor.planeCoefficients[i]->values[2]));
+
 				glm::vec3 yAxis = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f));
+
+				if (normalVector.y < 0)
+					yAxis.y = -1.0f;
 
 				glm::vec3 rotationAxis = glm::cross(normalVector, yAxis);
 
 				//float xRotation = glm::acos(glm::dot(normalVector, glm::vec3(1.0f, 0.0f, 0.0f)));
-				float rotY = glm::acos(glm::dot(normalVector, yAxis));
-				rotY = rotY * 180.0f / M_PI;
+				float rotY = glm::acos(glm::dot(normalVector, yAxis)) * 180.0f / M_PI;
 				//float zRotation = glm::acos(glm::dot(normalVector, glm::vec3(0.0f, 0.0f, 1.0f)));
 
 				meshHelper.SetGroundAlignmentRotation(glm::rotate(glm::mat4(1.0), rotY, rotationAxis));

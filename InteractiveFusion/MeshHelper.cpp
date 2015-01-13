@@ -323,7 +323,7 @@ void MeshHelper::Export(int index, string _fileName, bool saveDialog, bool align
 
 
 	//glm::mat4 pointRotation = glm::rotate(glm::mat4(1.0), 9.90554f, glm::vec3(-0.17082f,0.0f,-0.0203198f));
-
+	glm::mat4 originTranslation = glm::translate(glm::mat4(1.0), -GetCombinedCenterPoint());
 	for (int i = 0; i < vertices.size(); i += 1)
 	{
 		if (align)
@@ -331,11 +331,10 @@ void MeshHelper::Export(int index, string _fileName, bool saveDialog, bool align
 			glm::vec4 tmp = glm::vec4(vertices[i].x, vertices[i].y, vertices[i].z, 1.0f);
 			glm::vec4 tmpNormal = glm::vec4(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z, 0.0f);
 
-			tmpNormal = groundAlignmentRotation * tmpNormal;
+			tmpNormal = groundAlignmentRotation * originTranslation * tmpNormal;
 			tmpNormal = glm::normalize(tmpNormal);
 
-			tmp = groundAlignmentRotation * tmp;
-
+			tmp = groundAlignmentRotation * originTranslation * tmp;
 
 			vertices[i].x = tmp.x;
 			vertices[i].y = tmp.y;
@@ -365,7 +364,7 @@ void MeshHelper::Export(int index, string _fileName, bool saveDialog, bool align
 		//finalName = fileName.c_str();
 		string path = "data\\output\\";
 		string fileName = _fileName;
-		string ext = ".ply";
+		string ext = ".obj";
 		struct stat buffer;
 		string filePath = path;
 		filePath.append(fileName);
@@ -381,7 +380,7 @@ void MeshHelper::Export(int index, string _fileName, bool saveDialog, bool align
 			filePath.append(ext);
 			cnt++;
 		}
-		vcg::tri::io::ExporterPLY<VCGMesh>::Save(exportedMesh, filePath.c_str(), vcg::tri::io::Mask::IOM_VERTCOLOR);
+		vcg::tri::io::ExporterOBJ<VCGMesh>::Save(exportedMesh, filePath.c_str(), vcg::tri::io::Mask::IOM_VERTCOLOR);
 		return;
 	}
 
