@@ -1,522 +1,978 @@
-#pragma comment(lib, "opengl32.lib")
-#pragma comment(lib, "glu32.lib")
-#pragma comment(lib, "glew32.lib")
-
 #include "OpenGLControl.h"
+
+#include "IFResources.h"
+
+#include "DebugUtility.h"
+#include "KeyState.h"
+#include "StyleSheet.h"
+#include "StopWatch.h"
+
+#include <queue>
+#include <unordered_map>
+
 #include <gl/glew.h>
 #include <gl/wglew.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/rotate_vector.hpp>
-bool OpenGLControl::bClassRegistered = false, OpenGLControl::bGlewInitialized = false;
 
-OpenGLControl::OpenGLControl()
-{
-	iFPSCount = 0;
-	iCurrentFPS = 0;
-}
+#include "ModelData.h"
+#include "IconData.h"
 
-/*-----------------------------------------------
+#include "OpenGLCamera.h"
+#include "OpenGLWindow.h"
 
-Name:	InitGLEW
+#include "InteractionRenderer.h"
+#include "PlaneSelectionRenderer.h"
+#include "ProcessingRenderer.h"
+#include "SegmentationRenderer.h"
+#include "PlaneCutRenderer.h"
 
-Params:	none
+#include "SimplePlaneRenderable3D.h"
 
-Result:	Creates fake window and OpenGL rendering
-		context, within which GLEW is initialized.
+#include "EuclideanSegmenter.h"
+#include "PlaneSegmenter.h"
+#include "RegionGrowthSegmenter.h"
+#include "PlaneCutSegmenter.h"
+#include "ColorSelector.h"
+#include "DuplicateSelector.h"
+#include "ManipulationSelector.h"
+#include "PlaneSelector.h"
+#include "TransformSelector.h"
 
-/*---------------------------------------------*/
+#include "DialogExporter.h"
+#include "ScenarioExporter.h"
+#include "OpenGLShaderProgram.h"
 
-bool OpenGLControl::InitGLEW(HINSTANCE hInstance)
-{
-	if(bGlewInitialized)return true;
+#include "OpenGLContext.h"
 
-	RegisterSimpleOpenGLClass(hInstance);
+using namespace std;
 
-	HWND hWndFake = CreateWindow(_T("OPENGL"), _T("FAKE"), WS_OVERLAPPEDWINDOW | WS_MAXIMIZE | WS_CLIPCHILDREN,
-		0, 0, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
-		NULL, hInstance, NULL);
+namespace InteractiveFusion {
 
-	hDC = GetDC(hWndFake);
+#pragma region
 
-	// First, choose false pixel format
 	
-	PIXELFORMATDESCRIPTOR pfd;
-	memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
-	pfd.nSize		= sizeof(PIXELFORMATDESCRIPTOR);
-	pfd.nVersion   = 1;
-	pfd.dwFlags    = PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
-	pfd.iPixelType = PFD_TYPE_RGBA;
-	pfd.cColorBits = 32;
-	pfd.cDepthBits = 32;
-	pfd.iLayerType = PFD_MAIN_PLANE;
- 
-	int iPixelFormat = ChoosePixelFormat(hDC, &pfd);
-	if (iPixelFormat == 0)return false;
 
-	if(!SetPixelFormat(hDC, iPixelFormat, &pfd))return false;
+	WindowState currentApplicationState;
 
-	// Create the false, old style context (OpenGL 2.1 and before)
+	std::unordered_map<WindowState, unique_ptr<OpenGLRenderer>> rendererMap;
+	std::unordered_map<WindowState, unique_ptr<ModelData>> sceneMap;
+	std::unordered_map<WindowState, unique_ptr<IconData>> iconMap;
 
-	HGLRC hRCFake = wglCreateContext(hDC);
-	wglMakeCurrent(hDC, hRCFake);
+	ModelData temporarySceneData;
+	InteractionMode interactionMode = None;
+	OpenGLCameraMode currentCameraMode = Free;
+	ObjectSegmentationType currentSegmentationType;
 
-	bool bResult = true;
+	std::unordered_map<ObjectSegmentationType, unique_ptr<ObjectSegmenter>> segmenterMap;
 
-	if(!bGlewInitialized)
+	PlaneSegmenter planeSegmenter;
+
+	std::shared_ptr<SimplePlaneRenderable3D> cutPlane;
+
+	std::unordered_map<InteractionMode, unique_ptr<Selector>> selectorMap;
+	ColorSelector colorSelector;
+	unique_ptr<PlaneSelector> planeSelector;
+
+	OpenGLContext glContext;
+
+
+	std::unordered_map<OpenGLShaderProgramType, OpenGLShaderProgram> shaderMap;
+	//OpenGLShaderProgram defaultMaterial;
+	//OpenGLShaderProgram orthoMaterial;
+
+	queue<OpenGLControlEvent> eventQueue;
+
+	OpenGLCamera glCamera;
+	OpenGLWindow openGLWindow;
+
+	bool quitMessageLoop = false;
+	bool requestStateChange = false;
+	bool showPlane = false;
+
+	int parentWindowHeight;
+	int parentWindowWidth;
+
+#pragma endregion variables
+
+#pragma region
+	OpenGLControl::OpenGLControl()
 	{
-		if(glewInit() != GLEW_OK)
+		fpsCount = 0;
+		currentFps = 0;
+	}
+#pragma endregion Constructors
+
+	void OpenGLControl::Initialize(HWND _parentWindow, HINSTANCE _hInstance)
+	{
+		parentWindow = _parentWindow;
+		hInstance = _hInstance;		
+
+		RECT parentRect;
+		GetClientRect(parentWindow, &parentRect);
+		parentWindowWidth = parentRect.right;
+		parentWindowHeight = parentRect.bottom;
+	}
+
+	void OpenGLControl::UpdateApplicationState(WindowState _state)
+	{
+		DebugUtility::DbgOut(L"OpenGLControl::UpdateApplicationState : ", _state);
+		std::unordered_map<WindowState, unique_ptr<OpenGLRenderer>>::iterator activeRenderer = rendererMap.find(_state);
+		if (activeRenderer != rendererMap.end())
 		{
-			MessageBox(hWnd, _T("Couldn't initialize GLEW!"), _T("Fatal Error"), MB_ICONERROR);
-			bResult = false;
+			currentApplicationState = _state;
+			if (currentApplicationState == PlaneSelection)
+				openGLWindow.SetMargins(0.07f, 0.042f, 0, 0);
+			else
+				openGLWindow.SetMargins(0.07f, 0.042f, 0.2f, 0);
+
+			if (!temporarySceneData.IsEmpty())
+			{
+				eventQueue.push(CopyTemporaryInNextStateModelData);
+				if (currentApplicationState == Segmentation)
+					eventQueue.push(UpdateSegmentation);
+				//else 
+				//if (currentApplicationState == Processing)
+				//	eventQueue.push(UpdateHoleFilling);
+			}
+			if (currentApplicationState == PlaneCut)
+				eventQueue.push(UpdateCutPlane);
+			SetCameraMode(rendererMap[currentApplicationState]->GetCameraMode());
+			
+			DebugUtility::DbgOut(L"current Camera mode: ", currentCameraMode);
+			//sceneMap[currentApplicationState]->UnselectMesh();
+			
+			openGLWindow.Show();
+			DebugUtility::DbgOut(L"after show: ", currentCameraMode);
 		}
-		bGlewInitialized = true;
-	}
-
-	wglMakeCurrent(NULL, NULL);
-	wglDeleteContext(hRCFake);
-	DestroyWindow(hWndFake);
-
-	return bResult;
-}
-
-/*-----------------------------------------------
-
-Name:	InitOpenGL
-
-Params:	hInstance - application instance
-		a_hWnd - window to init OpenGL into
-		a_iMajorVersion - Major version of OpenGL
-		a_iMinorVersion - Minor version of OpenGL
-		a_initScene - pointer to init function
-		a_openGLRendering - pointer to render function
-		a_releaseScene - optional parameter of release
-						function
-
-Result:	Initializes OpenGL rendering context
-		of specified version. If succeeds,
-		returns true.
-
-/*---------------------------------------------*/
-//(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), KinectFusionProcessor* proc, LPVOID lpParam)
-//(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), LPVOID lpParam)	
-bool OpenGLControl::InitOpenGL(HINSTANCE hInstance, HWND a_hWnd, int iMajorVersion, int iMinorVersion, void(*a_ptrInitScene)(LPVOID), void
-	(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), KinectFusion* explo, LPVOID lpParam)
-{
-	if(!InitGLEW(hInstance))return false;
-	fusionExplorer = explo;
-	hWnd = a_hWnd;
-	hDC = GetDC(hWnd);
-	bool bError = false;
-	PIXELFORMATDESCRIPTOR pfd;
-
-	if(iMajorVersion <= 2)
-	{
-		memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
-		pfd.nSize		= sizeof(PIXELFORMATDESCRIPTOR);
-		pfd.nVersion   = 1;
-		pfd.dwFlags    = PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
-		pfd.iPixelType = PFD_TYPE_RGBA;
-		pfd.cColorBits = 32;
-		pfd.cDepthBits = 32;
-		pfd.iLayerType = PFD_MAIN_PLANE;
- 
-		int iPixelFormat = ChoosePixelFormat(hDC, &pfd);
-		if (iPixelFormat == 0)return false;
-
-		if(!SetPixelFormat(hDC, iPixelFormat, &pfd))return false;
-
-		// Create the old style context (OpenGL 2.1 and before)
-		hRC = wglCreateContext(hDC);
-		if(hRC)wglMakeCurrent(hDC, hRC);
-		else bError = true;
-	}
-	else if(WGLEW_ARB_create_context && WGLEW_ARB_pixel_format)
-	{
-		const int iPixelFormatAttribList[] =
+		else
 		{
-			WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-			WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-			WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-			WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
-			WGL_COLOR_BITS_ARB, 32,
-			WGL_DEPTH_BITS_ARB, 24,
-			WGL_STENCIL_BITS_ARB, 8,
-			0 // End of attributes list
-		};
-		int iContextAttribs[] =
+			openGLWindow.Hide();
+			currentApplicationState = _state;
+		}
+	}
+
+	bool OpenGLControl::RequestsStateChange()
+	{
+		if (requestStateChange)
 		{
-			WGL_CONTEXT_MAJOR_VERSION_ARB, iMajorVersion,
-			WGL_CONTEXT_MINOR_VERSION_ARB, iMinorVersion,
-			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
-			0 // End of attributes list
+			bool request = requestStateChange;
+			requestStateChange = false;
+			return request;
+		}
+		return requestStateChange;
+	}
+
+
+#pragma region
+
+	void OpenGLControl::RunOpenGLThread()
+	{
+		openGLThread = boost::thread(&OpenGLControl::OpenGLThreadMessageLoop, this);
+	}
+
+	int OpenGLControl::OpenGLThreadMessageLoop()
+	{
+		if (SetupOpenGL() == -1)
+		{
+			DebugUtility::DbgOut(L"OpenGLControl::OpenGLThreadMessageLoop::ERROR::Could not setup OpenGL.");
+			PostQuitMessage(0);
+			return -1;
+		}
+
+		if (!SetupShaders())
+		{
+			DebugUtility::DbgOut(L"OpenGLControl::OpenGLThreadMessageLoop::ERROR::Could not create shaders.");
+			PostQuitMessage(0);
+			return -1;
+		}
+		SetupIconData();
+		SetupRenderer();
+		SetupSceneData();
+		SetupSegmenter();
+		SetupSelectors();
+		DebugUtility::DbgOut(L"OpenGLControl::OpenGLThreadMessageLoop::After SETUP");
+		MSG       msg = { 0 };
+		while (WM_QUIT != msg.message && !quitMessageLoop)
+		{
+			while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) > 0)
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+			if (openGLWindow.IsVisible())
+			{
+				UpdateFrame();
+				HandleInput();
+				HandleEvents();
+			}
+			CountFPS();
+		}
+		if (quitMessageLoop)
+		{
+			openGLWindow.CleanUp();
+			CleanUpRenderer();
+			CleanUpModels();
+			CleanUpSegmenter();
+			CleanUpIconData();
+			CleanUpShaders();
+			glContext.CleanUp();
+		}
+		return 0;
+	}
+
+	void OpenGLControl::UpdateFrame()
+	{
+		if (openGLWindow.IsVisible())
+		{
+			RECT rRect;
+			GetClientRect(parentWindow, &rRect);
+
+			//ResizeOpenGLWindow(rRect.right, rRect.bottom);
+
+			UpdateCamera();
+
+			rendererMap[currentApplicationState]->Render(this, sceneMap[currentApplicationState].get(), iconMap[currentApplicationState].get());
+		}
+	}
+
+	void OpenGLControl::HandleEvents()
+	{
+		openGLWindow.HandleEvents(this);
+
+		while (!eventQueue.empty())
+		{
+			OpenGLControlEvent event = eventQueue.front();
+
+			switch (event)
+			{
+			case ResizeOpenGLViewport:
+				RECT parentRect;
+				GetClientRect(parentWindow, &parentRect);
+				ResizeOpenGLWindow(parentRect.right, parentRect.bottom);
+				break;
+			case ModelDataUpdated:
+				sceneMap[currentApplicationState]->GenerateBuffers();
+				break;
+			case ModelHighlightsUpdated:
+				sceneMap[currentApplicationState]->SwapToHighlightBuffers();
+				break;
+			case RemoveModelHighlights:
+				sceneMap[currentApplicationState]->GenerateBuffers();
+				break;
+			case RemoveModelData:
+				sceneMap[currentApplicationState]->CleanUp();
+				break;
+			case CopyTemporaryInNextStateModelData:
+				SetBusy(true);
+
+				sceneMap[currentApplicationState]->CleanUp();
+				sceneMap[currentApplicationState]->CopyFrom(temporarySceneData);
+				temporarySceneData.CleanUp();
+				sceneMap[currentApplicationState]->GenerateBuffers();
+
+				SetBusy(false);
+				break;
+			case ResetModelData:
+				sceneMap[currentApplicationState]->ResetToInitialState();
+				sceneMap[currentApplicationState]->GenerateBuffers();
+				break;
+			case UpdateSegmentation:
+				boost::thread(&OpenGLControl::UpdateObjectSegmentation, this, new EuclideanSegmentationParams());
+				break;
+			case UpdateHoleFilling:
+				boost::thread(&OpenGLControl::FillHoles, this, 100000);
+				break;
+			case UpdateCutPlane:
+				SetupCutPlane();
+				break;
+			case SetupCutPlaneMode:
+				SetupCutPlane();
+				planeSelector->ApplyModeChange();
+				break;
+			}
+			eventQueue.pop();
+		}
+	}
+
+	void OpenGLControl::HandleInput()
+	{
+		if (KeyState::GetKeyStateOnce('C'))
+		{
+			if (currentCameraMode == Sensor)
+				SetCameraMode(Free);
+			else
+				SetCameraMode(Sensor);
+		}
+		if (openGLWindow.IsCursorInWindow() )
+		{
+			if (currentApplicationState == Interaction && currentCameraMode == Sensor)
+				selectorMap[interactionMode]->HandleSelection(this, sceneMap[currentApplicationState].get(), iconMap[currentApplicationState].get());
+			else if (currentApplicationState == Processing)
+				colorSelector.HandleSelection(this, sceneMap[currentApplicationState].get(), iconMap[currentApplicationState].get());
+			else if (currentApplicationState == PlaneCut && showPlane)
+				planeSelector->HandleSelection(this, sceneMap[currentApplicationState].get(), iconMap[currentApplicationState].get());
+		}
+	}
+
+	void OpenGLControl::SetupRenderer()
+	{
+		cutPlane = std::shared_ptr<SimplePlaneRenderable3D>(new SimplePlaneRenderable3D());
+		
+		RECT parentRect;
+		GetClientRect(parentWindow, &parentRect);
+		ResizeOpenGLWindow(parentRect.right, parentRect.bottom);
+
+		rendererMap[PlaneSelection] = unique_ptr<PlaneSelectionRenderer>(new PlaneSelectionRenderer(Free));
+		rendererMap[PlaneSelection]->Initialize(this);
+		rendererMap[Segmentation] = unique_ptr<SegmentationRenderer>(new SegmentationRenderer(Free));
+		rendererMap[Segmentation]->Initialize(this);
+		rendererMap[PlaneCut] = unique_ptr<PlaneCutRenderer>(new PlaneCutRenderer(Free, cutPlane));
+		rendererMap[PlaneCut]->Initialize(this);
+		rendererMap[Processing] = unique_ptr<ProcessingRenderer>(new ProcessingRenderer(Free));
+		rendererMap[Processing]->Initialize(this);
+		rendererMap[Interaction] = unique_ptr<InteractionRenderer>(new InteractionRenderer(Sensor));
+		rendererMap[Interaction]->Initialize(this);
+
+
+	}
+
+	void OpenGLControl::SetupSceneData()
+	{
+		sceneMap[PlaneSelection] = unique_ptr<ModelData>(new ModelData());
+		sceneMap[PlaneSelection]->SetDefaultShaderProgram(shaderMap[Default]);
+		sceneMap[Segmentation] = unique_ptr<ModelData>(new ModelData());
+		sceneMap[Segmentation]->SetDefaultShaderProgram(shaderMap[Default]);
+		sceneMap[PlaneCut] = unique_ptr<ModelData>(new ModelData());
+		sceneMap[PlaneCut]->SetDefaultShaderProgram(shaderMap[Default]);
+		sceneMap[Processing] = unique_ptr<ModelData>(new ModelData());
+		sceneMap[Processing]->SetDefaultShaderProgram(shaderMap[Default]);
+		sceneMap[Interaction] = unique_ptr<ModelData>(new ModelData());
+		sceneMap[Interaction]->SetDefaultShaderProgram(shaderMap[Default]);
+
+		
+	}
+
+	bool OpenGLControl::SetupShaders()
+	{
+		OpenGLShader colorVertexShader;
+		colorVertexShader.LoadShader("data\\shaders\\color.vert", GL_VERTEX_SHADER);
+		OpenGLShader colorFragmentShader;
+		colorFragmentShader.LoadShader("data\\shaders\\color.frag", GL_FRAGMENT_SHADER);
+
+		shaderMap[Default].CreateProgram();
+		shaderMap[Default].AddShaderToProgram(colorVertexShader);
+		shaderMap[Default].AddShaderToProgram(colorFragmentShader);
+		if (!shaderMap[Default].LinkProgram())
+			return false;
+
+		OpenGLShader vertexShader2d;
+		vertexShader2d.LoadShader("data\\shaders\\shader2d.vert", GL_VERTEX_SHADER);
+		OpenGLShader fragmentShader2d;
+		fragmentShader2d.LoadShader("data\\shaders\\shader2d.frag", GL_FRAGMENT_SHADER);
+
+		shaderMap[Orthographic].CreateProgram();
+		shaderMap[Orthographic].AddShaderToProgram(vertexShader2d);
+		shaderMap[Orthographic].AddShaderToProgram(fragmentShader2d);
+		if (!shaderMap[Orthographic].LinkProgram())
+			return false;
+
+		return true;
+	}
+
+	void OpenGLControl::SetupSegmenter()
+	{
+		segmenterMap[Euclidean] = unique_ptr<EuclideanSegmenter>(new EuclideanSegmenter());
+		segmenterMap[RegionGrowth] = unique_ptr<RegionGrowthSegmenter>(new RegionGrowthSegmenter());
+		//planeSegmenter = new PlaneSegmenter();
+	}
+
+	void OpenGLControl::SetupSelectors()
+	{
+		selectorMap[Transformation] = unique_ptr<TransformSelector>(new TransformSelector());
+		selectorMap[Duplication] = unique_ptr<DuplicateSelector>(new DuplicateSelector());
+		selectorMap[None] = unique_ptr<ManipulationSelector>(new ManipulationSelector());
+		planeSelector = unique_ptr<PlaneSelector>(new PlaneSelector(cutPlane));
+	}
+
+	void OpenGLControl::SetupIconData()
+	{
+		iconMap[PlaneSelection] = unique_ptr<IconData>(new IconData());
+		iconMap[PlaneSelection]->SetDefaultShaderProgram(shaderMap[Orthographic]);
+		iconMap[Segmentation] = unique_ptr<IconData>(new IconData());
+		iconMap[Segmentation]->SetDefaultShaderProgram(shaderMap[Orthographic]);
+		iconMap[PlaneCut] = unique_ptr<IconData>(new IconData());
+		iconMap[PlaneCut]->SetDefaultShaderProgram(shaderMap[Orthographic]);
+		iconMap[Processing] = unique_ptr<IconData>(new IconData());
+		iconMap[Processing]->SetDefaultShaderProgram(shaderMap[Orthographic]);
+		iconMap[Interaction] = unique_ptr<IconData>(new IconData());
+		iconMap[Interaction]->SetDefaultShaderProgram(shaderMap[Orthographic]);
+		iconMap[Interaction]->LoadFromFile("data\\models\\trash.ply", "data\\models\\trash_open.ply", TRASH_BIN);
+		iconMap[Interaction]->GenerateBuffers();
+	}
+
+	void OpenGLControl::SetupCutPlane()
+	{
+
+		glm::vec3 upperBounds = sceneMap[currentApplicationState]->GetUpperBounds();
+		glm::vec3 lowerBounds = sceneMap[currentApplicationState]->GetLowerBounds();
+
+
+		Vertex vertex1
+		{
+			upperBounds.x, 0.0f, lowerBounds.z,
+			0.8f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f
+		};
+		Vertex vertex2
+		{
+			upperBounds.x, 0.0f, upperBounds.z,
+			0.8f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f
+		};
+		Vertex vertex3
+		{
+			lowerBounds.x, 0.0f, lowerBounds.z,
+			0.8f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f
+		};
+		Vertex vertex4
+		{
+			lowerBounds.x, 0.0f, upperBounds.z,
+			0.8f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f
 		};
 
-		int iPixelFormat, iNumFormats;
-		wglChoosePixelFormatARB(hDC, iPixelFormatAttribList, NULL, 1, &iPixelFormat, (UINT*)&iNumFormats);
+		std::vector<Vertex> planeVertices;
+		planeVertices.push_back(vertex1);
+		planeVertices.push_back(vertex3);
+		planeVertices.push_back(vertex4);
+		planeVertices.push_back(vertex2);
+		planeVertices.push_back(vertex1);
+		planeVertices.push_back(vertex4);
 
-		// PFD seems to be only redundant parameter now
-		if(!SetPixelFormat(hDC, iPixelFormat, &pfd))return false;
+		cutPlane->SetVertices(planeVertices);
+		cutPlane->SetShaderProgram(shaderMap[Default]);
 
-		hRC = wglCreateContextAttribsARB(hDC, 0, iContextAttribs);
-		// If everything went OK
-		if(hRC) wglMakeCurrent(hDC, hRC);
-		else bError = true;
+		cutPlane->UpdateEssentials();
+		cutPlane->ApplyTransformation(sceneMap[currentApplicationState]->GetNegativeGroundAlignmentRotation(), glm::mat4(1.0f));
+		//cutPlane->ApplyTransformation(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -cutPlane->GetCenterPoint().y, 0.0f)), glm::mat4(1.0f));
+		//_glControl->SetPlaneCutParameters(plane->GetPlaneParameters());
+		cutPlane->GenerateBuffers();
 
 	}
-	else bError = true;
+
+#pragma endregion Main OpenGL Message Loop
+
+#pragma region
+
+	void OpenGLControl::ShowOpenGLWindow()
+	{
+		openGLWindow.Show();
+	}
+
+	void OpenGLControl::ResizeOpenGLWindow(int _parentWidth, int _parentHeight)
+	{
+		openGLWindow.Resize(_parentWidth, _parentHeight);
+		float ratio = (float)openGLWindow.GetWidth() / (float)openGLWindow.GetHeight();
+		SetProjection3D(45.0f, ratio, 0.1f, 1000.0f);
+		SetOrtho2D(openGLWindow.GetWidth(), openGLWindow.GetHeight());
+	}
+
+	void OpenGLControl::ShowPlaneRenderer(bool _flag)
+	{
+		showPlane = _flag;
+	}
+
+	bool OpenGLControl::IsPlaneRendererVisible()
+	{
+		return showPlane;
+	}
+	void OpenGLControl::PrepareViewportResize()
+	{
+		eventQueue.push(ResizeOpenGLViewport);
+	}
+
+	HWND OpenGLControl::GetOpenGLWindowHandle()
+	{
+		return openGLWindow.GetHandle();
+	}
+
+	int OpenGLControl::GetViewportWidth()
+	{
+		return openGLWindow.GetWidth();
+	}
+
+	int OpenGLControl::GetViewportHeight()
+	{
+		return openGLWindow.GetHeight();
+	}
+
+	void OpenGLControl::PushEvent(OpenGLControlEvent _event)
+	{
+		eventQueue.push(_event);
+	}
+
+#pragma endregion OpenGL Window
+
+	void OpenGLControl::SwapBuffers()
+	{
+		glContext.SwapBuffers();
+	}
+
+	void OpenGLControl::CountFPS()
+	{
+		clock_t tCurrent = clock();
+		if ((tCurrent - tLastSecond) >= CLOCKS_PER_SEC)
+		{
+			tLastSecond += CLOCKS_PER_SEC;
+			fpsCount = currentFps;
+			currentFps = 0;
+		}
+		currentFps++;
+	}
+
+	bool OpenGLControl::IsBusy()
+	{
+		return isBusy;
+	}
+
+	float OpenGLControl::GetFramesPerSecond()
+	{
+		return (float)fpsCount;
+	}
+
+	int OpenGLControl::GetMouseWheelDelta()
+	{
+		return mouseWheelDelta;
+	}
+
+	void OpenGLControl::SetMouseWheelDelta(int _mouseWheelDelta)
+	{
+		mouseWheelDelta = _mouseWheelDelta;
+	}
+
+	void OpenGLControl::ResetCamera()
+	{
+		glCamera.ResetCameraPosition();
+	}
+
+	void OpenGLControl::SetBusy(bool _isBusy)
+	{
+		isBusy = _isBusy;
+	}
+
+	void OpenGLControl::SetStatusMessage(wstring _message)
+	{
+		statusMessage = _message;
+	}
+
+	void OpenGLControl::ExecutePlaneCut()
+	{
+		//DebugUtility::DbgOut(L"OpenGLControl::ExecutePlaneCut");
+
+		if (sceneMap[currentApplicationState]->GetCurrentlySelectedMeshIndex() != -1)
+		{
+			SetStatusMessage(L"Cutting object in two");
+			SetBusy(true);
+
+			PlaneCutSegmentationParams planeCutSegmentationParameters;
+			planeCutSegmentationParameters.planeParameters = cutPlane->GetPlaneParameters();
+
+			PlaneCutSegmenter planeCutSegmenter;
+			planeCutSegmenter.SetSegmentationParameters(&planeCutSegmentationParameters);
+
+			planeCutSegmenter.UpdateSegmentation(this, sceneMap[currentApplicationState].get());
+
+			planeCutSegmenter.FinishSegmentation(sceneMap[currentApplicationState].get(), sceneMap[currentApplicationState].get());
+
+			planeCutSegmenter.CleanUp();
+
+			eventQueue.push(ModelDataUpdated);
+			SetBusy(false);
+		}
+	}
+
+	void OpenGLControl::PlaneCutPreview()
+	{
+		//DebugUtility::DbgOut(L"OpenGLControl::PlaneCutPreview");
+		if (sceneMap[currentApplicationState]->GetCurrentlySelectedMeshIndex() != -1)
+		{
+			sceneMap[currentApplicationState]->PlaneCutPreview(sceneMap[currentApplicationState]->GetCurrentlySelectedMeshIndex(), cutPlane->GetPlaneParameters());
+			eventQueue.push(ModelHighlightsUpdated);
+		}
+	}
+
+	wstring OpenGLControl::GetStatusMessage()
+	{
+		return statusMessage;
+	}
+
+	void OpenGLControl::UpdateCamera()
+	{
+		glCamera.Update(openGLWindow.IsCursorInWindow() && (currentApplicationState != PlaneCut || !showPlane), mouseWheelDelta);
+		mouseWheelDelta = 0;
+	}
+
+#pragma region 
+
+	void OpenGLControl::SetProjection3D(float fFOV, float fAspectRatio, float fNear, float fFar)
+	{
+		mProjection = glm::perspective(fFOV, fAspectRatio, fNear, fFar);
+	}
+
+	void OpenGLControl::SetOrtho2D(int width, int height)
+	{
+		mOrtho = glm::ortho(0.0f, float(width), 0.0f, float(height), 0.1f, 1000.0f);
+	}
+
+	glm::mat4* OpenGLControl::GetProjectionMatrix()
+	{
+		return &mProjection;
+	}
+
+	glm::mat4 OpenGLControl::GetOrthoMatrix()
+	{
+		return mOrtho;
+	}
+
+	void OpenGLControl::SetCameraMatrix(glm::mat4 viewMatrix)
+	{
+		mView = viewMatrix;
+
+	}
+
+	glm::mat4* OpenGLControl::GetViewMatrix()
+	{
+		if (currentCameraMode == Sensor)
+			return &mView;
+		else
+			return &glCamera.GetViewMatrix();
+	}
+
+
+#pragma endregion Get/Set Matrices
+
+	OpenGLShaderProgram OpenGLControl::GetShader(OpenGLShaderProgramType _type)
+	{
+		return shaderMap[_type];
+	}
+
+#pragma region
+
+	void OpenGLControl::ChangeInteractionMode(InteractionMode _interactionMode)
+	{
+		interactionMode = _interactionMode;
+		sceneMap[currentApplicationState]->RemoveTemporaryMeshColor();
+		sceneMap[currentApplicationState]->UnselectMesh();
+	}
+
+	void OpenGLControl::ChangePlaneCutMode(PlaneCutMode _mode)
+	{
+		planeSelector->ChangeMode(_mode);
+		eventQueue.push(SetupCutPlaneMode);
+	}
+
+	void OpenGLControl::SetCameraMode(OpenGLCameraMode _cameraMode)
+	{
+		currentCameraMode = _cameraMode;
+		rendererMap[currentApplicationState]->SetCameraMode(currentCameraMode);
+
+		if (currentCameraMode == Free)
+			openGLWindow.ShowButtons();
+		else
+			openGLWindow.HideButtons();
+	}
+
+	bool OpenGLControl::IsRendering()
+	{
+		return openGLWindow.IsVisible();
+	}
+
+	void OpenGLControl::ResetModel()
+	{
+		eventQueue.push(ResetModelData);
+	}
+
+	int OpenGLControl::FillHoles(int _holeSize)
+	{
+		SetStatusMessage(L"Filling holes");
+		SetBusy(true);
+
+		int closedHoles = sceneMap[currentApplicationState]->FillHoles(_holeSize);
+		eventQueue.push(ModelDataUpdated);
+
+
+		SetBusy(false);
+		return closedHoles;
+
+	}
+
+	int OpenGLControl::RemoveConnectedComponents(int _maxComponentSize)
+	{
+		SetStatusMessage(L"Removing components");
+		SetBusy(true);
+
+		int removedComponents = sceneMap[currentApplicationState]->RemoveConnectedComponents(_maxComponentSize);
+		eventQueue.push(ModelDataUpdated);
+
+		SetBusy(false);
+		return removedComponents;
+	}
+
+
+
+	void OpenGLControl::ExportModel()
+	{
+		SetStatusMessage(L"Exporting");
+		SetBusy(true);
+
+		if (currentCameraMode == Free)
+		{
+			DebugUtility::DbgOut(L"OpenGLControl::ExportModel::Scenario Exporter");
+			ScenarioExporter exporter;
+			exporter.Export(sceneMap[currentApplicationState].get());
+		}
+		else
+		{
+			DebugUtility::DbgOut(L"OpenGLControl::ExportModel::Dialog Exporter");
+			DialogExporter exporter;
+			if (sceneMap[currentApplicationState]->GetCurrentlySelectedMeshIndex() != -1)
+			{
+				DebugUtility::DbgOut(L"OpenGLControl::ExportModel::Selected Mesh");
+				exporter.Export(sceneMap[currentApplicationState].get(), sceneMap[currentApplicationState]->GetCurrentlySelectedMeshIndex());
+			}
+			else
+			{
+				DebugUtility::DbgOut(L"OpenGLControl::ExportModel::Whole Mesh");
+				exporter.Export(sceneMap[currentApplicationState].get());
+			}
+		}
+
+		SetBusy(false);
+	}
+
+	void OpenGLControl::FinishProcessing()
+	{
+		SetStatusMessage(L"Finishing processing");
+		SetBusy(true);
+
+		temporarySceneData.CopyFrom(*sceneMap[currentApplicationState].get());
+
+		SetBusy(false);
+	}
+
+
+	int OpenGLControl::GetNumberOfVertices()
+	{
+		std::unordered_map<WindowState, unique_ptr<ModelData>>::iterator it = sceneMap.find(currentApplicationState);
+		if (it != sceneMap.end())
+		{
+			return sceneMap[currentApplicationState]->GetNumberOfVertices();
+		}
+		return 0;
+		
+	}
+
+	int OpenGLControl::GetNumberOfTriangles()
+	{
+		std::unordered_map<WindowState, unique_ptr<ModelData>>::iterator it = sceneMap.find(currentApplicationState);
+		if (it != sceneMap.end())
+		{
+			return sceneMap[currentApplicationState]->GetNumberOfTriangles();
+		}
+		return 0;
+	}
+
+	int OpenGLControl::GetNumberOfVisibleModels()
+	{
+		std::unordered_map<WindowState, unique_ptr<ModelData>>::iterator it = sceneMap.find(currentApplicationState);
+		if (it != sceneMap.end())
+		{
+			return sceneMap[currentApplicationState]->GetVisibleMeshCount();
+		}
+		return 0;
+	}
+
+#pragma endregion Processing
+
+#pragma region
+
+	int OpenGLControl::LoadAndSegmentModelDataFromScan(MeshContainer* _scannedMesh)
+	{
+		DebugUtility::DbgOut(L"OpenGLControl::LoadAndSegmentModelDataFromScan::Starting with Reconstruction");
+		SetStatusMessage(L"Reconstructing model");
+		SetBusy(true);
+
+		//DebugUtility::DbgOut(L"OpenGLControl::LoadStuff:: ", _scannedMesh->GetNumberOfVertices());
+		
+		StopWatch stopWatch;
+		stopWatch.Start();
+
+		sceneMap[PlaneSelection]->LoadFromFile("data\\models\\testScene.ply");
+		//sceneMap[PlaneSelection]->LoadFromData(_scannedMesh);
+
+		DebugUtility::DbgOut(L"Initialized scene in  ", stopWatch.Stop());
+
+
+
+		glCamera.SetRotationPoint(sceneMap[PlaneSelection]->GetCenterPoint());
+		currentCameraMode = Free;
+		eventQueue.push(ModelDataUpdated);
+
+		DebugUtility::DbgOut(L"OpenGLControl::LoadAndSegmentModelDataFromScan::Starting with segmentation");
+
+		SetStatusMessage(L"Segmenting model");
+
+		for (auto &segmenter : segmenterMap)
+			segmenter.second->CleanUp();
+		planeSegmenter.CleanUp();
+		planeSegmenter.SetSegmentationParameters(new PlaneSegmentationParams());
+		planeSegmenter.UpdateSegmentation(this, sceneMap[currentApplicationState].get());
+
+		DebugUtility::DbgOut(L"End of Loading Mesh");
+		SetBusy(false);
+
+		return 0;
+	}
+
+#pragma endregion Scene Initializing
+
+#pragma region
 	
-	if(bError)
+	void OpenGLControl::UpdateObjectSegmentation(ObjectSegmentationParams* _params)
 	{
-		// Generate error messages
-		TCHAR sErrorMessage[255], sErrorTitle[255];
-		wsprintf(sErrorMessage, _T("OpenGL %d.%d is not supported! Please download latest GPU drivers!"), iMajorVersion, iMinorVersion);
-		wsprintf(sErrorTitle, _T("OpenGL %d.%d Not Supported"), iMajorVersion, iMinorVersion);
-		MessageBox(hWnd, sErrorMessage, sErrorTitle, MB_ICONINFORMATION);
-		return false;
+		SetStatusMessage(L"Updating segmentation");
+		SetBusy(true);
+		currentSegmentationType = _params->GetType();
+		segmenterMap[currentSegmentationType]->UpdateSegmentation(this, sceneMap[currentApplicationState].get());
+		SetBusy(false);
+		
 	}
-	ptrRenderScene = a_ptrRenderScene;
-	ptrInitScene = a_ptrInitScene;
-	ptrReleaseScene = a_ptrReleaseScene;
 
-	if(ptrInitScene != NULL)ptrInitScene(lpParam);
-	return true;
-}
-
-
-/*-----------------------------------------------
-
-Name:	ResizeOpenGLViewportFull
-
-Params:	none
-
-Result:	Resizes viewport to full window.
-
-/*---------------------------------------------*/
-
-void OpenGLControl::ResizeOpenGLViewportFull(int width, int height)
-{
-	if(hWnd == NULL)return;
-	//RECT rRect; GetClientRect(*hWnd, &rRect);
-	SetWindowPos(hWnd, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-
-	glViewport(0, offSetBottom, width - offSetRight, height - offSetBottom);
-	//glViewport(0, 0, width-offSetWidth, height);
-	
-	//SetProjection3D(45.0f, float(width) / float(height), 0.1f, 1000.0f);
-	//SetOrtho2D(width, height);
-	//glViewport(0, 0, width, height);
-	//iViewportWidth = width;
-	//iViewportHeight = height;
-	iViewportWidth = width - offSetRight;
-	iViewportHeight = height - offSetBottom;
-}
-
-int OpenGLControl::GetOffSetRight()
-{
-	return offSetRight;
-}
-
-int OpenGLControl::GetOffSetBottom()
-{
-	return offSetBottom;
-}
-
-void OpenGLControl::ResizeOpenGLViewportFull()
-{
-	if (hWnd == NULL)return;
-	//RECT rRect; GetClientRect(*hWnd, &rRect);
-	SetWindowPos(hWnd, 0, 0, 0, iViewportWidth + offSetRight, iViewportHeight + offSetBottom, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-
-	glViewport(0, offSetBottom, iViewportWidth, iViewportHeight);
-}
-
-/*-----------------------------------------------
-
-Name:	SetProjection3D
-
-Params:	fFOV - field of view angle
-		fAspectRatio - aspect ration of width/height
-		fNear, fFar - distance of near and far clipping plane
-
-Result:	Calculates projection matrix and stores it.
-
-/*---------------------------------------------*/
-
-void OpenGLControl::SetProjection3D(float fFOV, float fAspectRatio, float fNear, float fFar)
-{
-	mProjection = glm::perspective(fFOV, fAspectRatio, fNear, fFar);
-}
-
-void OpenGLControl::SetOffSetRight(int offset)
-{
-	offSetRight = offset;
-}
-
-void OpenGLControl::SetOffSetBottom(int offset)
-{
-	offSetBottom = offset;
-}
-
-/*-----------------------------------------------
-
-Name:	SetOrtho2D
-
-Params:	width - width of window
-				height - height of window
-
-Result:	Calculates ortho 2D projection matrix and stores it.
-
-/*---------------------------------------------*/
-
-void OpenGLControl::SetOrtho2D(int width, int height)
-{
-	mOrtho = glm::ortho(0.0f, float(width), 0.0f, float(height), 0.1f, 1000.0f);
-}
-
-/*-----------------------------------------------
-
-Name:	GetProjectionMatrix()
-
-Params:	none
-
-Result:	Retrieves pointer to projection matrix.
-
-/*---------------------------------------------*/
-
-glm::mat4 OpenGLControl::GetProjectionMatrix()
-{
-	return mProjection;
-}
-
-/*-----------------------------------------------
-
-Name:	GetOrthoMatrix()
-
-Params:	none
-
-Result:	Retrieves pointer to ortho matrix.
-
-/*---------------------------------------------*/
-
-glm::mat4 OpenGLControl::GetOrthoMatrix()
-{
-	return mOrtho;
-}
-
-void OpenGLControl::SetCameraMatrix(glm::mat4 viewMatrix)
-{
-	mView = viewMatrix;
-	
-}
-
-glm::mat4 OpenGLControl::GetKinectViewMatrix()
-{
-	glm::mat4 glmLeftHandedCamTransform(1.0f);
-
-	Matrix4 leftHandedCamTransform = fusionExplorer->GetWorldToCameraTransform();
-	glmLeftHandedCamTransform[0] = glm::vec4(leftHandedCamTransform.M11, leftHandedCamTransform.M12, leftHandedCamTransform.M13, leftHandedCamTransform.M14);
-	glmLeftHandedCamTransform[1] = glm::vec4(leftHandedCamTransform.M21, leftHandedCamTransform.M22, leftHandedCamTransform.M23, leftHandedCamTransform.M24);
-	glmLeftHandedCamTransform[2] = glm::vec4(leftHandedCamTransform.M31, leftHandedCamTransform.M32, leftHandedCamTransform.M33, leftHandedCamTransform.M34);
-	glmLeftHandedCamTransform[3] = glm::vec4(leftHandedCamTransform.M41, leftHandedCamTransform.M42, leftHandedCamTransform.M43, leftHandedCamTransform.M44);
-
-	mView = glmLeftHandedCamTransform;
-	return mView;
-}
-
-/*-----------------------------------------------
-
-Name:	RegisterSimpleOpenGLClass
-
-Params:	hInstance - application instance
-
-Result:	Registers simple OpenGL window class.
-
-/*---------------------------------------------*/
-void OpenGLControl::RegisterSimpleOpenGLClass(HINSTANCE hInstance)
-{
-	if(bClassRegistered)return;
-	WNDCLASSEX wc;
-
-	wc.cbSize = sizeof(WNDCLASSEX);
-	wc.style =  CS_HREDRAW | CS_VREDRAW | CS_OWNDC | CS_DBLCLKS;
-	wc.lpfnWndProc = (WNDPROC) msgHandlerSimpleOpenGLClass;
-	wc.cbClsExtra = 0; wc.cbWndExtra = 0;
-	wc.hInstance = hInstance;
-	wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APPLICATION));
-	wc.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APPLICATION));
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)(COLOR_MENUBAR+1);
-	wc.lpszMenuName = NULL;
-	wc.lpszClassName = _T("OPENGL");
-
-	RegisterClassEx(&wc);
-
-	bClassRegistered = true;
-}
-
-/*-----------------------------------------------
-
-Name:	UnregisterSimpleOpenGLClass
-
-Params:	hInstance - application instance
-
-Result:	Unregisters simple OpenGL window class.
-
-/*---------------------------------------------*/
-void OpenGLControl::UnregisterSimpleOpenGLClass(HINSTANCE hInstance)
-{
-	if(bClassRegistered)
+	void OpenGLControl::UpdatePlaneSegmentation(PlaneSegmentationParams* _params)
 	{
-		UnregisterClass(_T("OPENGL"), hInstance);
-		bClassRegistered = false;
+		SetStatusMessage(L"Updating segmentation");
+		SetBusy(true);
+
+		planeSegmenter.RemoveLastSegmentForNewSegmentation();
+		planeSegmenter.SetSegmentationParameters(_params);
+		planeSegmenter.UpdateSegmentation(this, sceneMap[currentApplicationState].get());
+
+		SetBusy(false);
 	}
-}
 
-/*-----------------------------------------------
-
-Name:	msgHandlerSimpleOpenGLClass
-
-Params:	whatever
-
-Result:	Handles messages from windows that use
-		simple OpenGL class.
-
-/*---------------------------------------------*/
-
-LRESULT CALLBACK msgHandlerSimpleOpenGLClass(HWND wnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-{
-	PAINTSTRUCT ps;
-	switch(uiMsg)
+	void OpenGLControl::ConfirmSegmentedPlane(PlaneSegmentationParams* _params)
 	{
-		case WM_PAINT:									
-			BeginPaint(wnd, &ps);
-			EndPaint(wnd, &ps);
-			break;
+		SetStatusMessage(L"Updating plane segmentation");
+		SetBusy(true);
+		planeSegmenter.ConfirmLastSegment();
 
-		default:
-			return DefWindowProc(wnd, uiMsg, wParam, lParam); // Default window procedure
+		boost::thread(&OpenGLControl::PlaneSelectionThread, this, _params);
+
 	}
-	return 0;
-}
 
-/*-----------------------------------------------
-
-Name:	SwapBuffers
-
-Params:	none
-
-Result:	Swaps back and front buffer.
-
-/*---------------------------------------------*/
-
-void OpenGLControl::SwapBuffers()
-{
-	::SwapBuffers(hDC);
-}
-
-/*-----------------------------------------------
-
-Name:	MakeCurrent
-
-Params:	none
-
-Result:	Makes current device and OpenGL rendering
-		context to those associated with OpenGL
-		control.
-
-/*---------------------------------------------*/
-
-void OpenGLControl::MakeCurrent()
-{
-	wglMakeCurrent(hDC, hRC);
-}
-
-/*-----------------------------------------------
-
-Name:	Render
-
-Params:	lpParam - pointer to whatever you want
-
-Result:	Calls previously set render function.
-
-/*---------------------------------------------*/
-
-void OpenGLControl::Render(LPVOID lpParam)
-{
-	clock_t tCurrent = clock();
-	if( (tCurrent-tLastSecond) >= CLOCKS_PER_SEC)
+	void OpenGLControl::RejectSegmentedPlane(PlaneSegmentationParams* _params)
 	{
-		tLastSecond += CLOCKS_PER_SEC;
-		iFPSCount = iCurrentFPS;
-		iCurrentFPS = 0;
+		SetStatusMessage(L"Updating plane segmentation");
+		SetBusy(true);
+		planeSegmenter.RejectLastSegment();
+		boost::thread(&OpenGLControl::PlaneSelectionThread, this, _params);
 	}
-	if(ptrRenderScene)ptrRenderScene(lpParam);
-	iCurrentFPS++;
-}
 
+	int OpenGLControl::PlaneSelectionThread(PlaneSegmentationParams* _params)
+	{
+		SetBusy(true);
 
-/*-----------------------------------------------
+		if (!planeSegmenter.UpdateSegmentation(this, sceneMap[currentApplicationState].get()))
+		{
+			planeSegmenter.FinishSegmentation(sceneMap[currentApplicationState].get(), &temporarySceneData);
+			requestStateChange = true;
+		}
 
-Name:	ReleaseOpenGLControl
+		SetBusy(false);
+		return 0;
+	}
 
-Params:	lpParam - pointer to whatever you want
+	void OpenGLControl::FinishObjectSegmentation()
+	{
+		SetStatusMessage(L"Finishing object segmentation");
+		SetBusy(true);
 
-Result:	Calls previously set release function
-		and deletes rendering context.
+		segmenterMap[currentSegmentationType]->FinishSegmentation(sceneMap[currentApplicationState].get(), &temporarySceneData);
 
-/*---------------------------------------------*/
+		SetBusy(false);
 
-void OpenGLControl::ReleaseOpenGLControl(LPVOID lpParam)
-{
-	cDebug::DbgOut(L"Releasing");
-	if(ptrReleaseScene)ptrReleaseScene(lpParam);
+	}
 
-	wglMakeCurrent(NULL, NULL);
-	wglDeleteContext(hRC);
-	ReleaseDC(hWnd, hDC);
-}
+#pragma endregion Segmentation
 
-/*-----------------------------------------------
+#pragma region
 
-Name:	SetVerticalSynchronization
+	int OpenGLControl::SetupOpenGL()
+	{
+		openGLWindow.Initialize(parentWindow, hInstance, 0, 0, 0, 0, L"OpenGL", StyleSheet::GetInstance()->GetInnerBackgroundColor());
 
-Params: bEnabled - whether to enable V-Sync
+		if (!glContext.InitOpenGL(hInstance, openGLWindow.GetHandle(), 3, 3))
+		{
+			MessageBox(0, L"Error with initOpenGL",
+				L"ERROR!", MB_OK);
+			return -1;
+		}
+		return 0;
+	}
 
-Result:	Guess what it does :)
+#pragma endregion OpenGL Initializing
 
-/*---------------------------------------------*/
+#pragma region
 
-bool OpenGLControl::SetVerticalSynchronization(bool bEnabled)
-{
-	if(!wglSwapIntervalEXT)return false;
+	void OpenGLControl::CleanUp()
+	{
+		DebugUtility::DbgOut(L"OpenGLControl::CleanUp");
+		quitMessageLoop = true;
 
-	if(bEnabled)wglSwapIntervalEXT(1);
-	else wglSwapIntervalEXT(0);
+		openGLThread.join();
+	}
 
-	return true;
-}
+	void OpenGLControl::CleanUpShaders()
+	{
+		for (auto &shader : shaderMap)
+			shader.second.DeleteProgram();
+		shaderMap.clear();
+	}
 
-/*-----------------------------------------------
+	void OpenGLControl::CleanUpRenderer()
+	{
+		DebugUtility::DbgOut(L"OpenGLControl::CleanUpRenderer");
+		for (auto &renderer : rendererMap)
+			renderer.second->CleanUp();
+		rendererMap.clear();
+	}
 
-Name:	Getters
+	void OpenGLControl::CleanUpModels()
+	{
+		DebugUtility::DbgOut(L"OpenGLControl::CleanUpModels");
+		for (auto &model : sceneMap)
+			model.second->CleanUp();
+		sceneMap.clear();
+		temporarySceneData.CleanUp();
+		cutPlane->CleanUp();
+	}
 
-Params:	none
+	void OpenGLControl::CleanUpSegmenter()
+	{
+		DebugUtility::DbgOut(L"OpenGLControl::CleanUpSegmenter");
+		for (auto &segmenter : segmenterMap)
+			segmenter.second->CleanUp();
+		segmenterMap.clear();
+		planeSegmenter.CleanUp();
+	}
 
-Result:	... They get something :D
-
-/*---------------------------------------------*/
-
-int OpenGLControl::GetFPS()
-{
-	return iFPSCount;
-}
-
-int OpenGLControl::GetViewportWidth()
-{
-	return iViewportWidth;
-}
-
-int OpenGLControl::GetViewportHeight()
-{
-	return iViewportHeight;
+	void OpenGLControl::CleanUpIconData()
+	{
+		DebugUtility::DbgOut(L"OpenGLControl::CleanUpIconData");
+		for (auto &icon : iconMap)
+			icon.second->CleanUp();
+		iconMap.clear();
+	}
+#pragma endregion CleanUp
 }

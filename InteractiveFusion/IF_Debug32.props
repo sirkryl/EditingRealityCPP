@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <ExecutablePath>$(VC_ExecutablePath_x86);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(SystemRoot)\SysWow64;$(FxCopDir);$(PATH)</ExecutablePath>
+    <LibraryPath>$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;W:\dev\freetype-2.5.5\objs\vc2010\Win32;W:\dev\glew\lib\Release\Win32;$(SolutionDir)$(Platform)\$(Configuration)\;$(PCL_ROOT)\lib;$(BOOST_ROOT)\lib;$(FLANN_ROOT)\lib;$(QHULL_ROOT)l\lib;$(VTK_DIR)\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <IncludePath>..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;..\KinectFusionExplorer-D2D;W:\dev\freetype-2.5.5\include;W:\dev\glew\include;W:\dev\glsdk_0_5_2\glm;W:\dev\vcglib;$(FLANN_ROOT)\include\;$(VTK_DIR)\include\vtk-6.1;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies>UxTheme.lib;Kinect10.lib;NuiSensorChooser.lib;KinectFusion180_32.lib;opengl32.lib;glew32.lib;freetype255d.lib;pcl_common_debug.lib;pcl_filters_debug.lib;pcl_search_debug.lib;pcl_segmentation_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

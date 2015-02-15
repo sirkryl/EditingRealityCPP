@@ -4,10 +4,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KinectFusionExplorer-D2D", "..\KinectFusionExplorer-D2D\KinectFusionExplorer-D2D.vcxproj", "{9F1ABEBE-8226-4B92-AC8E-0B39C6AA2047}"
+	ProjectSection(ProjectDependencies) = postProject
+		{67A64301-C979-4FDE-BF65-4B0BFD05700D} = {67A64301-C979-4FDE-BF65-4B0BFD05700D}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NuiSensorChooser", "..\NuiSensorChooser\NuiSensorChooser.vcxproj", "{67A64301-C979-4FDE-BF65-4B0BFD05700D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InteractiveFusion", "InteractiveFusion.vcxproj", "{6F52F862-00C7-46EE-85F5-433555306D9F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9F1ABEBE-8226-4B92-AC8E-0B39C6AA2047} = {9F1ABEBE-8226-4B92-AC8E-0B39C6AA2047}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +41,12 @@ Global
 		{67A64301-C979-4FDE-BF65-4B0BFD05700D}.Release|x64.Build.0 = Release|x64
 		{6F52F862-00C7-46EE-85F5-433555306D9F}.Debug|Win32.ActiveCfg = Debug|Win32
 		{6F52F862-00C7-46EE-85F5-433555306D9F}.Debug|Win32.Build.0 = Debug|Win32
-		{6F52F862-00C7-46EE-85F5-433555306D9F}.Debug|x64.ActiveCfg = Debug|Win32
+		{6F52F862-00C7-46EE-85F5-433555306D9F}.Debug|x64.ActiveCfg = Debug|x64
+		{6F52F862-00C7-46EE-85F5-433555306D9F}.Debug|x64.Build.0 = Debug|x64
 		{6F52F862-00C7-46EE-85F5-433555306D9F}.Release|Win32.ActiveCfg = Release|Win32
 		{6F52F862-00C7-46EE-85F5-433555306D9F}.Release|Win32.Build.0 = Release|Win32
-		{6F52F862-00C7-46EE-85F5-433555306D9F}.Release|x64.ActiveCfg = Release|Win32
+		{6F52F862-00C7-46EE-85F5-433555306D9F}.Release|x64.ActiveCfg = Release|x64
+		{6F52F862-00C7-46EE-85F5-433555306D9F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

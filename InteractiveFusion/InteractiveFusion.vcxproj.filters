@@ -19,123 +19,477 @@
     <Filter Include="VCG">
       <UniqueIdentifier>{eee0c76b-d180-4db5-97e0-2b2fcf588f0c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\OpenGL">
+      <UniqueIdentifier>{3894bfd7-e06f-4d51-8aee-e9422179ebe8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OpenGL">
+      <UniqueIdentifier>{16ea4852-c1a5-484c-b7f1-ac720f70ea0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UI">
+      <UniqueIdentifier>{afa01ea6-8629-4291-af46-f6f56b52d565}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UI\Debug">
+      <UniqueIdentifier>{72a559f3-410c-4401-a67f-5fbfa822f51e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UI\SubWindows">
+      <UniqueIdentifier>{91a9e85c-917b-471a-bf06-d2ed2b1caf19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OpenGL\Renderer">
+      <UniqueIdentifier>{019f0fdc-4108-48ac-8a8a-dd5c815eaa07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\OpenGL\Renderer">
+      <UniqueIdentifier>{922d5a63-8304-415d-92f6-011a10072448}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Segmentation">
+      <UniqueIdentifier>{4870eed9-b410-421f-9be4-0f11997c52d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Segmentation">
+      <UniqueIdentifier>{840eeed6-b676-43ac-aab0-7879d281f65c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\KinectFusion">
+      <UniqueIdentifier>{a40fb3f3-5eee-43c8-aa6c-b7fdb53133e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\KinectFusion">
+      <UniqueIdentifier>{e5c66730-fb89-48a7-9c15-1192fdefa8a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Renderables">
+      <UniqueIdentifier>{d79e1ba0-fa47-413e-b0cb-f11514be34a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\SceneData">
+      <UniqueIdentifier>{a689f204-c5ca-4cc8-aa2c-4652448bca8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Selection">
+      <UniqueIdentifier>{68580a46-feb9-42a0-8b8b-66ce1d4e2493}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UI">
+      <UniqueIdentifier>{1258cfa5-8647-4809-a13a-0b97df929f19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UI\Debug">
+      <UniqueIdentifier>{bc79aa65-dcf0-472f-b5cc-fa3ee910a9cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UI\SubWindows">
+      <UniqueIdentifier>{4a453cae-fb06-4d0d-896d-4e30d524599e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UI\Layout">
+      <UniqueIdentifier>{1ba9bc8e-af05-4804-a400-81a1cbbf40c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\General">
+      <UniqueIdentifier>{1f39ae76-ede7-43fb-b4d9-f25cb888091b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderables">
+      <UniqueIdentifier>{85eb5fa7-9757-4c9e-9ef3-d4a0426b316e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SceneData">
+      <UniqueIdentifier>{bb540749-89ce-400b-bcfc-10f6a9fe77f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Selection">
+      <UniqueIdentifier>{2fbcf486-2f6d-468a-af87-d018d59d236d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\OpenGL\Shader">
+      <UniqueIdentifier>{7896222c-31d2-43cc-adb1-d1b25380d3de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OpenGL\Shader">
+      <UniqueIdentifier>{1ab253c5-3e2f-4a3e-9f01-397eee4e7818}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UI\Layout">
+      <UniqueIdentifier>{dbda4d1d-179f-471f-94d7-0f5891574b59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\General">
+      <UniqueIdentifier>{ddfa0bd7-9577-4808-a1fd-958ea069b2e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Export">
+      <UniqueIdentifier>{0789c708-a79f-4d11-bec4-46b7cff4e2d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Export">
+      <UniqueIdentifier>{211a5497-0e09-470b-928c-591041adc5b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="colorCoding.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="plylib.h">
       <Filter>VCG</Filter>
     </ClInclude>
     <ClInclude Include="plystuff.h">
       <Filter>VCG</Filter>
     </ClInclude>
-    <ClInclude Include="MeshHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VcgMeshContainer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="InteractiveFusion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="OpenGLCamera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="OpenGLControl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VisualizationHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SegmentationHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SelectionHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="OpenGLShaders.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="OpenGLText.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PCLProcessor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="IFResources.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="Keys.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="IFValues.h">
+      <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="OpenGL2DHelper.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="OpenGLCamera.h">
+      <Filter>Header Files\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="OpenGLButton.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="OpenGLControl.h">
+      <Filter>Header Files\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLText.h">
+      <Filter>Header Files\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshHelper.h">
+      <Filter>Header Files\SceneData</Filter>
+    </ClInclude>
+    <ClInclude Include="SegmentationHelper.h">
+      <Filter>Header Files\SceneData</Filter>
+    </ClInclude>
+    <ClInclude Include="VisualizationHelper.h">
+      <Filter>Header Files\SceneData</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshContainer.h">
+      <Filter>Header Files\Renderables</Filter>
+    </ClInclude>
+    <ClInclude Include="MainWindow.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="FusionDebugDialog.h">
+      <Filter>Header Files\UI\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="InteractionDebugDialog.h">
+      <Filter>Header Files\UI\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="SubWindow.h">
+      <Filter>Header Files\UI\SubWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="PrepareWindow.h">
+      <Filter>Header Files\UI\SubWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="ScanWindow.h">
+      <Filter>Header Files\UI\SubWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="SegmentationWindow.h">
+      <Filter>Header Files\UI\SubWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessingWindow.h">
+      <Filter>Header Files\UI\SubWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="InteractionRenderer.h">
+      <Filter>Header Files\OpenGL\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessingRenderer.h">
+      <Filter>Header Files\OpenGL\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="SegmentationRenderer.h">
+      <Filter>Header Files\OpenGL\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelData.h">
+      <Filter>Header Files\SceneData</Filter>
+    </ClInclude>
+    <ClInclude Include="RegionGrowthSegmenter.h">
+      <Filter>Header Files\Segmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="EuclideanSegmenter.h">
+      <Filter>Header Files\Segmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneSegmenter.h">
+      <Filter>Header Files\Segmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="Segmenter.h">
+      <Filter>Header Files\Segmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="VcgTypes.h">
+      <Filter>Header Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshContainer2D.h">
+      <Filter>Header Files\Renderables</Filter>
+    </ClInclude>
+    <ClInclude Include="SegmentationParams.h">
+      <Filter>Header Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="EnumDeclarations.h">
+      <Filter>Header Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="Selector.h">
+      <Filter>Header Files\Selection</Filter>
+    </ClInclude>
+    <ClInclude Include="DuplicateSelector.h">
+      <Filter>Header Files\Selection</Filter>
+    </ClInclude>
+    <ClInclude Include="TransformSelector.h">
+      <Filter>Header Files\Selection</Filter>
+    </ClInclude>
+    <ClInclude Include="ManipulationSelector.h">
+      <Filter>Header Files\Selection</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorSelector.h">
+      <Filter>Header Files\Selection</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectSegmenter.h">
+      <Filter>Header Files\Segmentation</Filter>
     </ClInclude>
     <ClInclude Include="KinectFusion.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\KinectFusion</Filter>
     </ClInclude>
-    <ClInclude Include="IFParams.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="OpenGLRenderer.h">
+      <Filter>Header Files\OpenGL\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneSelectionWindow.h">
+      <Filter>Header Files\UI\SubWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneSelectionRenderer.h">
+      <Filter>Header Files\OpenGL\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="IconData.h">
+      <Filter>Header Files\SceneData</Filter>
+    </ClInclude>
+    <ClInclude Include="HelpWindow.h">
+      <Filter>Header Files\UI\SubWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonStructs.h">
+      <Filter>Header Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneSelector.h">
+      <Filter>Header Files\Selection</Filter>
+    </ClInclude>
+    <ClInclude Include="StopWatch.h">
+      <Filter>Header Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="StringConverter.h">
+      <Filter>Header Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorCoder.h">
+      <Filter>Header Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugUtility.h">
+      <Filter>Header Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyState.h">
+      <Filter>Header Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="InteractionWindow.h">
+      <Filter>Header Files\UI\SubWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLShaderProgram.h">
+      <Filter>Header Files\OpenGL\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLShader.h">
+      <Filter>Header Files\OpenGL\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="ButtonLayout.h">
+      <Filter>Header Files\UI\Layout</Filter>
+    </ClInclude>
+    <ClInclude Include="StyleSheet.h">
+      <Filter>Header Files\UI\Layout</Filter>
+    </ClInclude>
+    <ClInclude Include="GUIContainer.h">
+      <Filter>Header Files\UI\Layout</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLWindow.h">
+      <Filter>Header Files\UI\SubWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLContext.h">
+      <Filter>Header Files\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="DialogExporter.h">
+      <Filter>Header Files\Export</Filter>
+    </ClInclude>
+    <ClInclude Include="ScenarioExporter.h">
+      <Filter>Header Files\Export</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelExporter.h">
+      <Filter>Header Files\Export</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneCutWindow.h">
+      <Filter>Header Files\UI\SubWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneCutRenderer.h">
+      <Filter>Header Files\OpenGL\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneCutSegmenter.h">
+      <Filter>Header Files\Segmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderable.h">
+      <Filter>Header Files\Renderables</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderable3D.h">
+      <Filter>Header Files\Renderables</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderable2D.h">
+      <Filter>Header Files\Renderables</Filter>
+    </ClInclude>
+    <ClInclude Include="SimplePlaneRenderable3D.h">
+      <Filter>Header Files\Renderables</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="plylib.cpp">
       <Filter>VCG</Filter>
     </ClCompile>
-    <ClCompile Include="MeshHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VcgMeshContainer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="InteractiveFusion.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="OpenGLCamera.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="OpenGLControl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VisualizationHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenGLRendering.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SegmentationHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SelectionHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenGLShaders.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="OpenGLText.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="PCLProcessor.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="SegmentationHelper.cpp">
+      <Filter>Source Files\SceneData</Filter>
     </ClCompile>
-    <ClCompile Include="Keys.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="VisualizationHelper.cpp">
+      <Filter>Source Files\SceneData</Filter>
     </ClCompile>
-    <ClCompile Include="OpenGL2DHelper.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MeshHelper.cpp">
+      <Filter>Source Files\SceneData</Filter>
     </ClCompile>
-    <ClCompile Include="OpenGLButton.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MeshContainer.cpp">
+      <Filter>Source Files\Renderables</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWindow.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="FusionDebugDialog.cpp">
+      <Filter>Source Files\UI\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="InteractionDebugDialog.cpp">
+      <Filter>Source Files\UI\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="SubWindow.cpp">
+      <Filter>Source Files\UI\SubWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="PrepareWindow.cpp">
+      <Filter>Source Files\UI\SubWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="ScanWindow.cpp">
+      <Filter>Source Files\UI\SubWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="SegmentationWindow.cpp">
+      <Filter>Source Files\UI\SubWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessingWindow.cpp">
+      <Filter>Source Files\UI\SubWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="SegmentationRenderer.cpp">
+      <Filter>Source Files\OpenGL\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessingRenderer.cpp">
+      <Filter>Source Files\OpenGL\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="InteractionRenderer.cpp">
+      <Filter>Source Files\OpenGL\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelData.cpp">
+      <Filter>Source Files\SceneData</Filter>
+    </ClCompile>
+    <ClCompile Include="RegionGrowthSegmenter.cpp">
+      <Filter>Source Files\Segmentation</Filter>
+    </ClCompile>
+    <ClCompile Include="PlaneSegmenter.cpp">
+      <Filter>Source Files\Segmentation</Filter>
+    </ClCompile>
+    <ClCompile Include="EuclideanSegmenter.cpp">
+      <Filter>Source Files\Segmentation</Filter>
+    </ClCompile>
+    <ClCompile Include="Segmenter.cpp">
+      <Filter>Source Files\Segmentation</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshContainer2D.cpp">
+      <Filter>Source Files\Renderables</Filter>
+    </ClCompile>
+    <ClCompile Include="Selector.cpp">
+      <Filter>Source Files\Selection</Filter>
+    </ClCompile>
+    <ClCompile Include="TransformSelector.cpp">
+      <Filter>Source Files\Selection</Filter>
+    </ClCompile>
+    <ClCompile Include="DuplicateSelector.cpp">
+      <Filter>Source Files\Selection</Filter>
+    </ClCompile>
+    <ClCompile Include="ManipulationSelector.cpp">
+      <Filter>Source Files\Selection</Filter>
+    </ClCompile>
+    <ClCompile Include="ColorSelector.cpp">
+      <Filter>Source Files\Selection</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectSegmenter.cpp">
+      <Filter>Source Files\Segmentation</Filter>
     </ClCompile>
     <ClCompile Include="KinectFusion.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\KinectFusion</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGLRenderer.cpp">
+      <Filter>Source Files\OpenGL\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="PlaneSelectionWindow.cpp">
+      <Filter>Source Files\UI\SubWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="PlaneSelectionRenderer.cpp">
+      <Filter>Source Files\OpenGL\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="IconData.cpp">
+      <Filter>Source Files\SceneData</Filter>
+    </ClCompile>
+    <ClCompile Include="HelpWindow.cpp">
+      <Filter>Source Files\UI\SubWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="PlaneSelector.cpp">
+      <Filter>Source Files\Selection</Filter>
+    </ClCompile>
+    <ClCompile Include="StopWatch.cpp">
+      <Filter>Source Files\General</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyState.cpp">
+      <Filter>Source Files\General</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugUtility.cpp">
+      <Filter>Source Files\General</Filter>
+    </ClCompile>
+    <ClCompile Include="InteractionWindow.cpp">
+      <Filter>Source Files\UI\SubWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGLShader.cpp">
+      <Filter>Source Files\OpenGL\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGLShaderProgram.cpp">
+      <Filter>Source Files\OpenGL\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="ButtonLayout.cpp">
+      <Filter>Source Files\UI\Layout</Filter>
+    </ClCompile>
+    <ClCompile Include="GUIContainer.cpp">
+      <Filter>Source Files\UI\Layout</Filter>
+    </ClCompile>
+    <ClCompile Include="StyleSheet.cpp">
+      <Filter>Source Files\UI\Layout</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGLWindow.cpp">
+      <Filter>Source Files\UI\SubWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGLContext.cpp">
+      <Filter>Source Files\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelExporter.cpp">
+      <Filter>Source Files\Export</Filter>
+    </ClCompile>
+    <ClCompile Include="DialogExporter.cpp">
+      <Filter>Source Files\Export</Filter>
+    </ClCompile>
+    <ClCompile Include="ScenarioExporter.cpp">
+      <Filter>Source Files\Export</Filter>
+    </ClCompile>
+    <ClCompile Include="PlaneCutWindow.cpp">
+      <Filter>Source Files\UI\SubWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="PlaneCutRenderer.cpp">
+      <Filter>Source Files\OpenGL\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="PlaneCutSegmenter.cpp">
+      <Filter>Source Files\Segmentation</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderable.cpp">
+      <Filter>Source Files\Renderables</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderable3D.cpp">
+      <Filter>Source Files\Renderables</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderable2D.cpp">
+      <Filter>Source Files\Renderables</Filter>
+    </ClCompile>
+    <ClCompile Include="SimplePlaneRenderable3D.cpp">
+      <Filter>Source Files\Renderables</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -151,42 +505,11 @@
     <None Include="data\shaders\font.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="data\shaders\2dimage.frag">
+    <None Include="data\shaders\shader2d.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="data\shaders\2dimage.vert">
+    <None Include="data\shaders\shader2d.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="data\shaders\button.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="data\shaders\button.vert">
-      <Filter>Shaders</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="InteractiveFusion.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="arrow.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="arrow.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\..\..\..\Downloads\garbage.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="garbage.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="garbage_mask.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="arrow_mask.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
   </ItemGroup>
 </Project>

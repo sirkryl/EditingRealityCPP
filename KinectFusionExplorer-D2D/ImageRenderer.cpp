@@ -80,6 +80,7 @@ HRESULT ImageRenderer::EnsureResources()
 /// </summary>
 void ImageRenderer::DiscardResources()
 {
+	OutputDebugString((L"ImageRenderer::DiscardResources()"));
     SafeRelease(m_pRenderTarget);
     SafeRelease(m_pBitmap);
 }
@@ -131,13 +132,13 @@ HRESULT ImageRenderer::Draw(BYTE* pImage, unsigned long cbImage)
     }
 
 
-	for (int i = 0; i < cbImage; i += 4)
+	for (size_t i = 0; i < cbImage; i += 4)
 	{
 		if (pImage[i] == 0 && pImage[i + 1] == 0 && pImage[i + 2] == 0)
 		{
-			pImage[i] = 45;
-			pImage[i + 1] = 45;
-			pImage[i + 2] = 45;
+			pImage[i] = 33;
+			pImage[i + 1] = 33;
+			pImage[i + 2] = 33;
 		}
 	}
 
@@ -174,4 +175,9 @@ HRESULT ImageRenderer::Draw(BYTE* pImage, unsigned long cbImage)
     }
 
     return hr;
+}
+
+void ImageRenderer::CleanUp()
+{
+	DiscardResources();
 }

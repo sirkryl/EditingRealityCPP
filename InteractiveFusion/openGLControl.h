@@ -1,73 +1,146 @@
 #pragma once
-#include "common.h"
-#include "KinectFusion.h"
+#include "EnumDeclarations.h"
+#include "SegmentationParams.h"
+#include "OpenGLShaderProgram.h"
+#include "CommonStructs.h"
+#include <glm/glm.hpp>
+#include <boost/thread.hpp>
+#include <Windows.h>
+#include <string>
+namespace InteractiveFusion {
 
-class OpenGLControl
-{
-public:
-	bool InitOpenGL(HINSTANCE hInstance, HWND a_hWnd, int iMajorVersion, int iMinorVersion, void(*a_ptrInitScene)(LPVOID), void
-		(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), KinectFusion* explo, LPVOID lpParam);
-	//(*a_ptrRenderScene)(LPVOID), void(*a_ptrReleaseScene)(LPVOID), LPVOID lpParam);
+	class MeshContainer;
+	class OpenGLControl
+	{
+	public:
+		void Initialize(HWND _parentWindow, HINSTANCE _hInstance);
 
-	void ResizeOpenGLViewportFull(int width, int height);
-	void ResizeOpenGLViewportFull();
-	void SetProjection3D(float fFOV, float fAspectRatio, float fNear, float fFar);
-	void SetOrtho2D(int width, int height);
+		void RunOpenGLThread();
 
-	glm::mat4 GetProjectionMatrix();
-	glm::mat4 GetOrthoMatrix();
-	glm::mat4 GetKinectViewMatrix();
-	void SetCameraMatrix(glm::mat4 viewMatrix);
+		void UpdateApplicationState(WindowState _state);
 
-	void Render(LPVOID lpParam);
-	void ReleaseOpenGLControl(LPVOID lpParam);
+		bool RequestsStateChange();
 
-	static void RegisterSimpleOpenGLClass(HINSTANCE hInstance);
-	static void UnregisterSimpleOpenGLClass(HINSTANCE hInstance);
+		glm::mat4* GetProjectionMatrix();
+		glm::mat4 GetOrthoMatrix();
+		glm::mat4* GetViewMatrix();
+		void SetCameraMatrix(glm::mat4 viewMatrix);
 
-	int GetOffSetRight();
-	int GetOffSetBottom();
 
-	void SetOffSetRight(int offset);
-	void SetOffSetBottom(int offset);
+		void ShowOpenGLWindow();
+		void ResizeOpenGLWindow(int _parentWidth, int _parentHeight);
+		void SetProjection3D(float fFOV, float fAspectRatio, float fNear, float fFar);
+		void SetOrtho2D(int width, int height);
 
-	void MakeCurrent();
-	void SwapBuffers();
+		OpenGLShaderProgram GetShader(OpenGLShaderProgramType _type);
 
-	bool SetVerticalSynchronization(bool bEnabled);
+		void CountFPS();
 
-	int GetFPS();
+		void CleanUp();
 
-	int GetViewportWidth();
-	int GetViewportHeight();
+		void SwapBuffers();
 
-	OpenGLControl();
+		float GetFramesPerSecond();
 
-private:
-	bool InitGLEW(HINSTANCE hInstance);
+		HWND GetOpenGLWindowHandle();
+		int GetViewportWidth();
+		int GetViewportHeight();
 
-	int segmentationMode = -1;
-	HDC hDC;
-	HWND hWnd;
-	HGLRC hRC;
-	KinectFusion* fusionExplorer;
-	static bool bClassRegistered;
-	static bool bGlewInitialized;
-	int iMajorVersion, iMinorVersion;
-	int offSetRight, offSetBottom = 0;
-	// Used for FPS calculation
-	int iFPSCount, iCurrentFPS;
-	clock_t tLastSecond;
+		int GetMouseWheelDelta();
+		void SetMouseWheelDelta(int _mouseWheelDelta);
 
-	// Matrix for perspective projection
-	glm::mat4 mProjection;
-	// Matrix for orthographic 2D projection
-	glm::mat4 mOrtho;
-	glm::mat4 mView;
-	// Viewport parameters
-	int iViewportWidth, iViewportHeight;
 
-	void(*ptrInitScene)(LPVOID lpParam), (*ptrRenderScene)(LPVOID lpParam), (*ptrReleaseScene)(LPVOID lpParam), (*ptrSegmentation)();
-};
+		void ResetCamera();
 
-LRESULT CALLBACK msgHandlerSimpleOpenGLClass(HWND, UINT, WPARAM, LPARAM);
+		OpenGLControl();
+
+		bool IsRendering();
+
+		void ChangeInteractionMode(InteractionMode _interactionMode);
+		void ChangePlaneCutMode(PlaneCutMode _mode);
+		void SetCameraMode(OpenGLCameraMode _cameraMode);
+		void ResetModel();
+		int FillHoles(int _holeSize);
+		int RemoveConnectedComponents(int _maxComponentSize);
+		
+		void ExportModel();
+
+		void UpdatePlaneSegmentation(PlaneSegmentationParams* _params);
+		void UpdateObjectSegmentation(ObjectSegmentationParams* _params);
+
+		
+
+		void ConfirmSegmentedPlane(PlaneSegmentationParams* _params);
+
+		void RejectSegmentedPlane(PlaneSegmentationParams* _params);
+
+		void FinishObjectSegmentation();
+
+		void FinishProcessing();
+
+		int LoadAndSegmentModelDataFromScan(MeshContainer* _scannedMesh);
+
+		void PushEvent(OpenGLControlEvent _event);
+
+		bool IsBusy();
+		
+		void ExecutePlaneCut();
+		void PlaneCutPreview();
+		std::wstring GetStatusMessage();
+		int GetNumberOfVertices();
+		int GetNumberOfTriangles();
+		int GetNumberOfVisibleModels();
+
+		void ShowPlaneRenderer(bool _flag);
+		bool IsPlaneRendererVisible();
+		void PrepareViewportResize();
+
+	private:
+		HWND hWnd;
+		HWND parentWindow;
+
+		HINSTANCE hInstance;
+
+		boost::thread openGLThread;
+		
+		int mouseWheelDelta = 0;
+
+		bool isBusy = false;
+
+		int fpsCount, currentFps;
+		clock_t tLastSecond;
+
+		std::wstring statusMessage;
+
+		glm::mat4 mProjection;
+		glm::mat4 mOrtho;
+		glm::mat4 mView;
+
+		void SetBusy(bool _isBusy);
+		void SetStatusMessage(std::wstring _message);
+
+		int OpenGLThreadMessageLoop();
+
+		int PlaneSelectionThread(PlaneSegmentationParams* _params);
+		
+		int SetupOpenGL();
+		void SetupRenderer();
+		void SetupSegmenter();
+		void SetupSceneData();
+		bool SetupShaders();
+		void SetupSelectors();
+		void SetupIconData();
+		void SetupCutPlane();
+		void UpdateCamera();
+		void UpdateFrame();
+		void HandleEvents();
+		void HandleInput();
+		
+
+		void CleanUpShaders();
+		void CleanUpRenderer();
+		void CleanUpModels();
+		void CleanUpSegmenter();
+		void CleanUpIconData();
+	};
+}

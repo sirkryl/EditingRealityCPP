@@ -43,6 +43,8 @@ public:
     /// <returns>indicates success or failure</returns>
     HRESULT Draw(BYTE* pImage, unsigned long cbImage);
 
+	void CleanUp();
+
 private:
     HWND                     m_hWnd;
 

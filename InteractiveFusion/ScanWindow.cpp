@@ -1,0 +1,214 @@
+#define NOMINMAX
+#include "ScanWindow.h"
+#include "GUIContainer.h"
+#include "MainWindow.h"
+#include "StyleSheet.h"
+#include "MeshContainer.h"
+#include "DebugUtility.h"
+#include "IFResources.h"
+#include "KinectFusion.h"
+
+#include <boost/thread.hpp>
+
+namespace InteractiveFusion {
+
+	#define WM_FRAMEREADY           (WM_USER + 0)
+	#define WM_UPDATESENSORSTATUS   (WM_USER + 1)
+
+	boost::thread kinectFusionThread;
+
+	GUIContainer scanUi;
+	HWND buttonScanDone, buttonScanReset;
+	HWND reconstructionView, depthView, residualsView;
+
+	KinectFusion kinectFusionScanner;
+
+	glm::mat4 cameraMatrix;
+
+	int voxelsPerMeter;
+
+	DWORD scanTickLastFpsUpdate;
+
+	ScanWindow::ScanWindow()
+	{
+	}
+
+
+	ScanWindow::~ScanWindow()
+	{
+	}
+
+	void ScanWindow::Initialize(HWND _parentHandle, HINSTANCE _hInstance, float _marginTop, float _marginBottom, float _marginRight, float _marginLeft, std::wstring _className, ColorInt _backgroundColor)
+	{
+		SubWindow::Initialize(_parentHandle, _hInstance, _marginTop, _marginBottom, _marginRight, _marginLeft, _className, _backgroundColor);
+
+		buttonScanDone = CreateWindowEx(0, L"Button", L"DONE", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, windowHandle, (HMENU)IDC_SCAN_BUTTON_DONE, hInstance, 0);
+
+		buttonLayoutMap.emplace(buttonScanDone, ButtonLayout());
+		buttonLayoutMap[buttonScanDone].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Green));
+		buttonScanReset = CreateWindowEx(0, L"Button", L"RESET", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 500, 150, 50, windowHandle, (HMENU)IDC_SCAN_BUTTON_RESET, hInstance, 0);
+
+		buttonLayoutMap.emplace(buttonScanReset, ButtonLayout());
+		buttonLayoutMap[buttonScanReset].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Red));
+
+		scanUi.Add(buttonScanDone);
+		scanUi.Add(buttonScanReset);
+
+		reconstructionView = CreateWindowEx(0, L"Static", 0, WS_CHILD | WS_VISIBLE | SS_BLACKFRAME | WS_CLIPSIBLINGS, 0, 0, 758, 532, windowHandle, (HMENU)IDC_SCAN_RECONSTRUCTION_VIEW, hInstance, 0);
+
+		//depthView = CreateWindowEx(0, L"Static", 0, WS_THICKFRAME | WS_CHILD | WS_VISIBLE | SS_BLACKFRAME, 7, 7, 320, 215, windowHandle, (HMENU)IDC_SCAN_DEPTH_VIEW, hInstance, 0);
+		//SetWindowPos(depthView, HWND_TOP, 0, 0, 0, 0, 0);
+		//residualsView = CreateWindowEx(0, L"Static", 0, WS_BORDER | WS_CHILD | WS_VISIBLE | SS_BLACKFRAME | WS_CLIPSIBLINGS, 7, 222, 320, 215, windowHandle, (HMENU)IDC_SCAN_TRACKING_RESIDUALS_VIEW, hInstance, 0);
+		//SetWindowPos(residualsView, HWND_TOP, 0, 0, 0, 0, 0);
+		//SetWindowPos(depthView, HWND_TOP, 0, 0.11*parentWidth, 0.11*parentWidth, 0.11*parentWidth, 0);
+		scanUi.Add(reconstructionView);
+		scanUi.Add(depthView);
+		scanUi.Add(residualsView);
+		kinectFusionScanner.Initialize(windowHandle, depthView, reconstructionView, residualsView);
+		kinectFusionScanner.PauseRendering();
+	}
+
+	LRESULT CALLBACK ScanWindow::SubWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+	{
+		
+		PAINTSTRUCT ps;
+		switch (message)
+		{
+		case WM_MOUSEMOVE:
+			return SubWindow::SubWindowProc(hWnd, message, wParam, lParam);
+			break;
+		case WM_NOTIFY:
+			kinectFusionScanner.ResolvePotentialSensorConflict(lParam);
+			break;
+		case WM_FRAMEREADY:
+			//DebugUtility::DbgOut(L"WM_FRAMEREADY");
+			kinectFusionScanner.HandleCompletedFrame();
+			cameraMatrix = kinectFusionScanner.GetTransformedCameraMatrix();
+			break;
+		case WM_UPDATESENSORSTATUS:
+			kinectFusionScanner.UpdateSensorStatus(wParam);
+			break;
+		}
+		return SubWindow::SubWindowProc(hWnd, message, wParam, lParam);
+	}
+
+	void ScanWindow::HandleEvents(MainWindow* _parentWindow)
+	{
+		int newVolumeSize = _parentWindow->GetScanVolumeSize();
+		if (HasVolumeSizeChanged(newVolumeSize))
+		{
+			voxelsPerMeter = newVolumeSize;
+			kinectFusionScanner.ChangeVolumeSize(newVolumeSize);
+		}
+
+		if (GetTickCount() - scanTickLastFpsUpdate > _parentWindow->updateFpsCounterInMilliSeconds)
+		{
+			_parentWindow->SetFramesPerSecond(kinectFusionScanner.GetFramesPerSecond());
+			scanTickLastFpsUpdate = GetTickCount();
+		}
+		_parentWindow->SetStatusBarMessage(kinectFusionScanner.GetAndResetStatus());
+		if (kinectFusionScanner.GetGpuMemory() > 0 && kinectFusionScanner.GetGpuMemory() != _parentWindow->GetGpuMemory())
+		{
+			_parentWindow->SetGpuMemory(kinectFusionScanner.GetGpuMemory());
+		}
+		while (!eventQueue.empty())
+		{
+			int event = eventQueue.front();
+
+			switch (event)
+			{
+			case ScanWindowEvent::StateChange:
+				_parentWindow->ChangeState(PlaneSelection);
+				kinectFusionScanner.PrepareMeshSave();
+				boost::thread(&ScanWindow::FinishFusionScan, this, _parentWindow);
+				//_parentWindow->InitializeOpenGLScene(kinectFusionScanner.FinishScan());
+				break;
+			case ScanWindowEvent::Reset:
+				//do stuff
+				break;
+			}
+
+			eventQueue.pop();
+		}
+	}
+
+	void ScanWindow::FinishFusionScan(MainWindow* _parentWindow)
+	{
+		_parentWindow->InitializeOpenGLScene(kinectFusionScanner.GetScannedMesh());
+		kinectFusionScanner.FinishMeshSave();
+	}
+
+	void ScanWindow::ProcessUI(WPARAM wParam, LPARAM lParam)
+	{
+		DebugUtility::DbgOut(L"ScanWindow::ProcessUI");
+		// If it was the reset button clicked, clear the volume
+		if (IDC_SCAN_BUTTON_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			DebugUtility::DbgOut(L"RESET");
+			kinectFusionScanner.ResetScan();
+			//m_processor->ResetReconstruction();
+		}
+
+
+		if (IDC_SCAN_BUTTON_DONE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			DebugUtility::DbgOut(L"DONE");
+			eventQueue.push(ScanWindowEvent::StateChange);
+			//parentWindow->ChangeState(PlaneSelection);
+			//FinishScan(0);
+		}
+	}
+
+	void ScanWindow::Resize(int parentWidth, int parentHeight)
+	{
+		SubWindow::Resize(parentWidth, parentHeight);
+		MoveWindow(buttonScanDone, (int)(parentWidth - 0.135*parentWidth), (int)(height / 2 - (int)(0.12*parentWidth) / 2) - 28, (int)(0.12*parentWidth), (int)(0.12*parentWidth), true);
+		
+		MoveWindow(reconstructionView, (int)(0.15f*parentWidth), 0, (int)(0.7f*parentWidth), parentHeight - 70, true);
+		MoveWindow(buttonScanReset, (int)(0.015f*parentWidth), (int)(height / 2 - (int)(0.12*parentWidth) / 2) - 28, (int)(0.12*parentWidth), (int)(0.12*parentWidth), true);
+		//MoveWindow(residualsView, 0, 0, 0.11*parentWidth, 0.11*parentWidth, true);
+		//MoveWindow(depthView, 0, 0.11*parentWidth, 0.11*parentWidth, 0.11*parentWidth, true);
+		
+	/*	MoveWindow(buttonScanDone, width - 200, height / 2 + 50, 150, 150, true);
+		//MoveWindow(hButtonTestTwo, rRect.right - 350, 10, 300, 50, true);
+		//MoveWindow(hButtonTestOne, rRect.right - 350, 10, 300, 50, true);
+		MoveWindow(buttonScanReset, width - 200, height / 2 - 200, 150, 150, true);
+		MoveWindow(reconstructionView, 250, 55, parentWidth-450, parentHeight-80, true);
+		MoveWindow(residualsView, 30, 55, 200, 200, true);
+		MoveWindow(depthView, 30, 255, 200, 200, true);*/
+	}
+
+	glm::mat4 ScanWindow::GetCameraMatrix()
+	{
+		return cameraMatrix;
+	}
+
+	void ScanWindow::Show()
+	{
+		kinectFusionScanner.ResumeRendering();
+		SubWindow::Show();
+		DebugUtility::DbgOut(L"Showing ScanWindow");
+	}
+
+	void ScanWindow::Hide()
+	{
+		kinectFusionScanner.PauseRendering();
+		SubWindow::Hide();
+		DebugUtility::DbgOut(L"Hiding ScanWindow");
+	}
+
+	bool ScanWindow::HasVolumeSizeChanged(int _voxelsPerMeter)
+	{
+		return voxelsPerMeter != _voxelsPerMeter;
+	}
+
+	void ScanWindow::CleanUp()
+	{
+		DebugUtility::DbgOut(L"ScanWindow::CleanUp()");
+
+		scanUi.CleanUp();
+		kinectFusionScanner.CleanUp();
+		SubWindow::CleanUp();
+	}
+
+}

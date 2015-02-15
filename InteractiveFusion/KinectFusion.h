@@ -1,189 +1,73 @@
-//------------------------------------------------------------------------------
-// <copyright file="KinectFusionExplorer.h" company="Microsoft">
-//     Copyright (c) Microsoft Corporation.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
-
 #pragma once
-
-#include "common.h"
 #include "ImageRenderer.h"
 #include <NuiSensorChooserUI.h>
 #include "KinectFusionParams.h"
 #include "KinectFusionProcessor.h"
+#include <string>
+#include <Windows.h>
+#include <glm/glm.hpp>
+namespace InteractiveFusion {
+	class MeshContainer;
+	class KinectFusion
+	{
+	public:
+		KinectFusion();
+		~KinectFusion();
 
-enum FusionState { IF_FUSION_STATE_START, IF_FUSION_STATE_COUNTDOWN, IF_FUSION_STATE_SCAN };
+		void Initialize(HWND _parentHandle, HWND _depthView, HWND _reconstructionView, HWND _trackingResidualsView);
 
-/// <summary>
-/// KinectFusionExplorer sample.
-/// </summary>
-class KinectFusion
-{
-	static const DWORD          cStatusTimeoutInMilliseconds = 5000;
+		void HandleCompletedFrame();
 
-public:
-	/// <summary>
-	/// Constructor
-	/// </summary>
-	KinectFusion();
+		
 
-	/// <summary>
-	/// Destructor
-	/// </summary>
-	~KinectFusion();
+		void UpdateSensorStatus(WPARAM _wParam);
 
+		void ResolvePotentialSensorConflict(LPARAM _lParam);
 
+		void ChangeVolumeSize(int _voxelsPerMeter);
 
-	//int WINAPI CKinectFusionExplorer::ThreadMain(HWND parent);
-	//static LRESULT CALLBACK CKinectFusionExplorer::RenderWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+		float GetFramesPerSecond();
+		int GetGpuMemory();
 
-	//LRESULT CALLBACK FusionDebugRouter(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-	/// <summary>
-	/// Handles window messages, passes most to the class instance to handle
-	/// </summary>
-	/// <param name="hWnd">window message is for</param>
-	/// <param name="uMsg">message</param>
-	/// <param name="wParam">message data</param>
-	/// <param name="lParam">additional message data</param>
-	/// <returns>result of message processing</returns>
-	static LRESULT CALLBACK     MessageRouter(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+		glm::mat4 GetTransformedCameraMatrix();
 
-	/// <summary>
-	/// Handle windows messages for a class instance
-	/// </summary>
-	/// <param name="hWnd">window message is for</param>
-	/// <param name="uMsg">message</param>
-	/// <param name="wParam">message data</param>
-	/// <param name="lParam">additional message data</param>
-	/// <returns>result of message processing</returns>
+		std::wstring GetAndResetStatus();
 
-	LRESULT CALLBACK            StartProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+		void PrepareMeshSave();
+		MeshContainer* GetScannedMesh();
+		void FinishMeshSave();
 
-	LRESULT CALLBACK            DlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+		void ResetScan();
 
-	/// <summary>
-	/// Creates the main window and begins processing
-	/// </summary>
-	/// <param name="hInstance"></param>
-	/// <param name="nCmdShow"></param>
-	int                         Run(HWND parent, HINSTANCE hInstance, int nCmdShow, HWND &fusionHandle);
+		void PauseRendering();
 
-	FusionState GetWindowState();
+		void ResumeRendering();
 
-	void SetWindowState(FusionState fState);
+		void CleanUp();
 
-	void MoveUIOnResize();
+	private:
 
-	/// <summary>
-	/// Initialize the UI controls
-	/// </summary>
-	void                        InitializeUIControls();
-	
-	/// <summary>
-	/// Handle new UI interaction
-	/// </summary>
-	void                        ProcessUI(WPARAM wParam, LPARAM lParam);
+		NuiSensorChooserUI*         m_pSensorChooserUI;
 
-	/// <summary>
-	/// Update the internal variable values from the UI Horizontal sliders.
-	/// </summary>
-	void                        UpdateHSliders();
+		ImageRenderer              m_pDrawReconstruction;
+		ImageRenderer              m_pDrawTrackingResiduals;
+		ImageRenderer              m_pDrawDepth;
 
-	void ResumeScan();
-	void Hide();
+		ID2D1Factory*               m_pD2DFactory;
 
-	void StartScan();
-	void FinishScan(int testMode);
-	void DetermineMeshQuality();
-	Matrix4 GetWorldToCameraTransform();
+		KinectFusionParams      m_params;
+		KinectFusionProcessor       m_processor;
 
-private:
-	HWND                        m_hWnd;
-	NuiSensorChooserUI*         m_pSensorChooserUI;
+		KinectFusionMeshTypes       m_saveMeshFormat;
 
-	FusionState state;
-	/// <summary>
-	/// Direct2D
-	/// </summary>
-	ImageRenderer*              m_pDrawReconstruction;
-	ImageRenderer*              m_pDrawTrackingResiduals;
-	ImageRenderer*              m_pDrawDepth;
-	ID2D1Factory*               m_pD2DFactory;
+		bool                        m_bInitializeError = false;
+		bool                        m_bSavingMesh = false;
+		bool                        m_bUIUpdated = false;
+		bool                        m_bColorCaptured = false;
+		bool                        pauseRendering = false;
 
-	/// <summary>
-	/// Main processing function
-	/// </summary>
-	void                        Update();
+		
+		void SetStatus(std::wstring _status);
+	};
 
-	void InitializeFusionUI();
-
-	void HandleKeyInput();
-
-	bool DrawButton(LPARAM lParam);
-
-	bool DrawButtonSlider(LPARAM lParam);
-
-	bool DrawSliderBackground(LPARAM lParam);
-	void UpdateButtonSlider();
-	void UpdateButtonSliderValue();
-	void MoveButtonSlider(int pos);
-	bool IsMouseInHandle(HWND handle);
-	/// <summary>
-	/// Save a mesh
-	/// </summary>
-	/// <returns>S_OK on success, otherwise failure code</returns>
-	HRESULT                     SaveMeshFile(INuiFusionColorMesh *mesh, KinectFusionMeshTypes saveMeshType);
-
-	/// <summary>
-	/// Handle a completed frame from the Kinect Fusion processor.
-	/// </summary>
-	void                        HandleCompletedFrame();
-
-	/// <summary>
-	/// Set the status bar message
-	/// </summary>
-	/// <param name="szMessage">message to display</param>
-	void                        SetStatusMessage(const WCHAR* szMessage);
-
-	/// <summary>
-	/// Set the frames-per-second message
-	/// </summary>
-	/// <param name="fFramesPerSecond">current frame rate</param>
-	void                        SetFramesPerSecond(float fFramesPerSecond);
-
-	/// <summary>
-	/// Set the index of the GPU processor device initialized, or -1 for CPU
-	/// </summary>
-	/// <param name="gpuIndex">The index of the initialized GPU processor device, or -1 fo CPU.</param>
-	void                        SetDeviceIndexInitialized(int deviceIndex);
-
-	/// <summary>
-	/// The reconstruction parameters passed to the processor
-	/// </summary>
-	KinectFusionParams          m_params;
-	KinectFusionProcessor       m_processor;
-	/// <summary>
-	/// The reconstruction processor
-	/// </summary>
-
-	bool                        m_bUIUpdated;
-
-	bool                        m_bInitializeError;
-	bool                        m_bSavingMesh;
-	KinectFusionMeshTypes       m_saveMeshFormat;
-	bool                        m_bColorCaptured;
-
-	/// <summary>
-	/// Most recently reported frame rate
-	/// </summary>
-	float                       m_fFramesPerSecond;
-
-	/// <summary>
-	/// Time since last status message update
-	/// </summary>
-	DWORD                       m_tickLastStatus;
-};
-
-void StartKinectFusion(HWND parent, HINSTANCE hInstance, KinectFusion*& expl, HWND &fusionHandle);
-
-LRESULT CALLBACK FusionDebugRouter(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+}

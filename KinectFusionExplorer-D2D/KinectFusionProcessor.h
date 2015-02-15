@@ -40,6 +40,8 @@ public:
     /// </summary>
     ~KinectFusionProcessor();
 
+
+
     /// <summary>
     /// Sets the UI window handle.
     /// </summary>

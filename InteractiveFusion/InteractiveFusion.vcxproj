@@ -5,9 +5,17 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -23,6 +31,12 @@
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -30,26 +44,52 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="IF_Debug32.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="IF_Debug64.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="PropertySheet.props" />
+    <Import Project="IF_Release32.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="IF_Release64.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;$(FLANN_ROOT)\include\;$(QHULL_ROOT)\include;$(VTK_DIR)\include\vtk-6.1;W:\dev\freeglut\include;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;..\KinectFusionExplorer-D2D;W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\include;W:\dev\glew\include;W:\dev\glsdk_0_5_2\glm;W:\dev\vcglib;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;$(FLANN_ROOT)\include\;$(QHULL_ROOT)\include;$(VTK_DIR)\include\vtk-6.1;W:\dev\freeglut\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\objs\win32\vc2010;W:\dev\glew\lib\Release\Win32;$(SolutionDir)$(Configuration);$(PCL_ROOT)\lib;$(BOOST_ROOT)\lib;$(FLANN_ROOT)\lib;$(QHULL_ROOT)l\lib;$(VTK_DIR)\lib;W:\dev\freeglut\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <ExecutablePath>$(VC_ExecutablePath_x86);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(SystemRoot)\SysWow64;$(FxCopDir);$(PATH);</ExecutablePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;$(FLANN_ROOT)\include\;$(QHULL_ROOT)\include;$(VTK_DIR)\include\vtk-6.1;W:\dev\freeglut\include;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;..\KinectFusionExplorer-D2D;W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\include;W:\dev\glew\include;W:\dev\glsdk_0_5_2\glm;W:\dev\vcglib;..\NuiSensorChooser;$(KINECTSDK10_DIR)\inc;$(KINECT_TOOLKIT_DIR)inc;$(PCL_ROOT)\include\pcl-1.8;$(BOOST_ROOT)\include\boost-1_56;$(EIGEN_ROOT)\include\eigen3;$(FLANN_ROOT)\include\;$(QHULL_ROOT)\include;$(VTK_DIR)\include\vtk-6.1;W:\dev\freeglut\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(KINECTSDK10_DIR)\lib\x86;$(KINECT_TOOLKIT_DIR)\lib\x86;W:\dev\FreeImage\Dist;W:\dev\freetype-2.5.3\objs\win32\vc2010;W:\dev\glew\lib\Release\Win32;$(SolutionDir)$(Configuration);$(PCL_ROOT)\lib;$(BOOST_ROOT)\lib;$(FLANN_ROOT)\lib;$(QHULL_ROOT)l\lib;$(VTK_DIR)\lib;W:\dev\freeglut\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <CodeAnalysisRuleSet>CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
     <CodeAnalysisRuleSet>CodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -63,7 +103,22 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Gdi32.lib;Msimg32.lib;Comdlg32.lib;NuiSensorChooser.lib;Kinect10.lib;freetype253_D.lib;KinectFusion180_32.lib;vtksys-6.1.lib;freeglut.lib;opengl32.lib;pcl_common_debug.lib;pcl_io_debug.lib;pcl_kdtree_debug.lib;pcl_segmentation_debug.lib;pcl_search_debug.lib;pcl_filters_debug.lib;pcl_features_debug.lib;pcl_surface_debug.lib;pcl_visualization_debug.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level2</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
     </Link>
@@ -83,61 +138,217 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Gdi32.lib;Msimg32.lib;Comdlg32.lib;NuiSensorChooser.lib;Kinect10.lib;freetype253_D.lib;KinectFusion180_32.lib;vtksys-6.1.lib;freeglut.lib;opengl32.lib;pcl_common_release.lib;pcl_io_release.lib;pcl_kdtree_release.lib;pcl_segmentation_release.lib;pcl_search_release.lib;pcl_filters_release.lib;pcl_features_release.lib;pcl_surface_release.lib;pcl_visualization_release.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level2</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <Profile>true</Profile>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="colorCoding.h" />
-    <ClInclude Include="common.h" />
-    <ClInclude Include="IFParams.h" />
-    <ClInclude Include="InteractiveFusion.h" />
-    <ClInclude Include="Keys.h" />
+    <ClInclude Include="ButtonLayout.h" />
+    <ClInclude Include="ColorCoder.h" />
+    <ClInclude Include="ColorSelector.h" />
+    <ClInclude Include="CommonStructs.h" />
+    <ClInclude Include="DebugUtility.h" />
+    <ClInclude Include="DialogExporter.h" />
+    <ClInclude Include="DuplicateSelector.h" />
+    <ClInclude Include="EnumDeclarations.h" />
+    <ClInclude Include="EuclideanSegmenter.h" />
+    <ClInclude Include="FusionDebugDialog.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="GUIContainer.h" />
+    <ClInclude Include="HelpWindow.h" />
+    <ClInclude Include="InteractionDebugDialog.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="InteractionRenderer.h" />
+    <ClInclude Include="InteractionWindow.h" />
     <ClInclude Include="KinectFusion.h" />
-    <ClInclude Include="MeshHelper.h" />
-    <ClInclude Include="OpenGL2DHelper.h" />
-    <ClInclude Include="OpenGLButton.h" />
+    <ClInclude Include="ManipulationSelector.h" />
+    <ClInclude Include="MeshContainer2D.h" />
+    <ClInclude Include="ModelData.h" />
+    <ClInclude Include="IconData.h" />
+    <ClInclude Include="ModelExporter.h" />
+    <ClInclude Include="ObjectSegmenter.h" />
+    <ClInclude Include="OpenGLContext.h" />
+    <ClInclude Include="OpenGLRenderer.h" />
+    <ClInclude Include="OpenGLShaderProgram.h" />
+    <ClInclude Include="OpenGLWindow.h" />
+    <ClInclude Include="PlaneCutRenderer.h" />
+    <ClInclude Include="PlaneCutSegmenter.h" />
+    <ClInclude Include="PlaneCutWindow.h" />
+    <ClInclude Include="PlaneSegmenter.h" />
+    <ClInclude Include="PlaneSelector.h" />
+    <ClInclude Include="PrepareWindow.h" />
+    <ClInclude Include="ProcessingRenderer.h" />
+    <ClInclude Include="ProcessingWindow.h" />
+    <ClInclude Include="RegionGrowthSegmenter.h" />
+    <ClInclude Include="Renderable.h" />
+    <ClInclude Include="Renderable2D.h" />
+    <ClInclude Include="Renderable3D.h" />
+    <ClInclude Include="ScanWindow.h" />
+    <ClInclude Include="ScenarioExporter.h" />
+    <ClInclude Include="SegmentationParams.h" />
+    <ClInclude Include="SegmentationRenderer.h" />
+    <ClInclude Include="SegmentationWindow.h" />
+    <ClInclude Include="Segmenter.h" />
+    <ClInclude Include="Selector.h" />
+    <ClInclude Include="IFValues.h" />
+    <ClInclude Include="MainWindow.h" />
+    <ClInclude Include="KeyState.h" />
+    <ClInclude Include="MeshHelper.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="OpenGLCamera.h" />
     <ClInclude Include="OpenGLControl.h" />
-    <ClInclude Include="VisualizationHelper.h" />
+    <ClInclude Include="SimplePlaneRenderable3D.h" />
+    <ClInclude Include="StringConverter.h" />
+    <ClInclude Include="StyleSheet.h" />
+    <ClInclude Include="SubWindow.h" />
+    <ClInclude Include="StopWatch.h" />
+    <ClInclude Include="TransformSelector.h" />
+    <ClInclude Include="VcgTypes.h" />
+    <ClInclude Include="VisualizationHelper.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="IFResources.h" />
-    <ClInclude Include="SegmentationHelper.h" />
-    <ClInclude Include="SelectionHelper.h" />
-    <ClInclude Include="OpenGLShaders.h" />
+    <ClInclude Include="SegmentationHelper.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="OpenGLShader.h" />
     <ClInclude Include="OpenGLText.h" />
-    <ClInclude Include="PCLProcessor.h" />
     <ClInclude Include="plylib.h" />
     <ClInclude Include="plystuff.h" />
-    <ClInclude Include="VcgMeshContainer.h" />
+    <ClInclude Include="MeshContainer.h" />
+    <ClInclude Include="PlaneSelectionRenderer.h" />
+    <ClInclude Include="PlaneSelectionWindow.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="InteractiveFusion.cpp" />
-    <ClCompile Include="Keys.cpp" />
+    <ClCompile Include="ButtonLayout.cpp" />
+    <ClCompile Include="ColorSelector.cpp" />
+    <ClCompile Include="DebugUtility.cpp" />
+    <ClCompile Include="DialogExporter.cpp" />
+    <ClCompile Include="DuplicateSelector.cpp" />
+    <ClCompile Include="EuclideanSegmenter.cpp" />
+    <ClCompile Include="FusionDebugDialog.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="GUIContainer.cpp" />
+    <ClCompile Include="HelpWindow.cpp" />
+    <ClCompile Include="InteractionDebugDialog.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="InteractionRenderer.cpp" />
+    <ClCompile Include="InteractionWindow.cpp" />
     <ClCompile Include="KinectFusion.cpp" />
-    <ClCompile Include="MeshHelper.cpp" />
-    <ClCompile Include="OpenGL2DHelper.cpp" />
-    <ClCompile Include="OpenGLButton.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ManipulationSelector.cpp" />
+    <ClCompile Include="MeshContainer2D.cpp" />
+    <ClCompile Include="ModelData.cpp" />
+    <ClCompile Include="IconData.cpp" />
+    <ClCompile Include="ModelExporter.cpp" />
+    <ClCompile Include="ObjectSegmenter.cpp" />
+    <ClCompile Include="OpenGLContext.cpp" />
+    <ClCompile Include="OpenGLRenderer.cpp" />
+    <ClCompile Include="OpenGLShaderProgram.cpp" />
+    <ClCompile Include="OpenGLWindow.cpp" />
+    <ClCompile Include="PlaneCutRenderer.cpp" />
+    <ClCompile Include="PlaneCutSegmenter.cpp" />
+    <ClCompile Include="PlaneCutWindow.cpp" />
+    <ClCompile Include="PlaneSegmenter.cpp" />
+    <ClCompile Include="PlaneSelector.cpp" />
+    <ClCompile Include="PrepareWindow.cpp" />
+    <ClCompile Include="ProcessingRenderer.cpp" />
+    <ClCompile Include="ProcessingWindow.cpp" />
+    <ClCompile Include="RegionGrowthSegmenter.cpp" />
+    <ClCompile Include="Renderable.cpp" />
+    <ClCompile Include="Renderable2D.cpp" />
+    <ClCompile Include="Renderable3D.cpp" />
+    <ClCompile Include="ScanWindow.cpp" />
+    <ClCompile Include="ScenarioExporter.cpp" />
+    <ClCompile Include="SegmentationRenderer.cpp" />
+    <ClCompile Include="SegmentationWindow.cpp" />
+    <ClCompile Include="Segmenter.cpp" />
+    <ClCompile Include="Selector.cpp" />
+    <ClCompile Include="MainWindow.cpp" />
+    <ClCompile Include="KeyState.cpp" />
+    <ClCompile Include="MeshHelper.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="OpenGLCamera.cpp" />
     <ClCompile Include="OpenGLControl.cpp" />
-    <ClCompile Include="VisualizationHelper.cpp" />
-    <ClCompile Include="OpenGLRendering.cpp" />
-    <ClCompile Include="SegmentationHelper.cpp" />
-    <ClCompile Include="SelectionHelper.cpp" />
-    <ClCompile Include="OpenGLShaders.cpp" />
+    <ClCompile Include="SimplePlaneRenderable3D.cpp" />
+    <ClCompile Include="StopWatch.cpp" />
+    <ClCompile Include="StyleSheet.cpp" />
+    <ClCompile Include="SubWindow.cpp" />
+    <ClCompile Include="TransformSelector.cpp" />
+    <ClCompile Include="VisualizationHelper.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="SegmentationHelper.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="OpenGLShader.cpp" />
     <ClCompile Include="OpenGLText.cpp" />
-    <ClCompile Include="PCLProcessor.cpp" />
     <ClCompile Include="plylib.cpp" />
-    <ClCompile Include="VcgMeshContainer.cpp" />
+    <ClCompile Include="MeshContainer.cpp" />
+    <ClCompile Include="PlaneSelectionRenderer.cpp" />
+    <ClCompile Include="PlaneSelectionWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="InteractiveFusion.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="data\shaders\2dimage.frag" />
-    <None Include="data\shaders\2dimage.vert" />
-    <None Include="data\shaders\button.frag" />
-    <None Include="data\shaders\button.vert" />
+    <None Include="data\shaders\shader2d.frag" />
+    <None Include="data\shaders\shader2d.vert" />
     <None Include="data\shaders\color.frag" />
     <None Include="data\shaders\color.vert" />
     <None Include="data\shaders\font.frag" />
@@ -146,17 +357,13 @@
   <ItemGroup>
     <ProjectReference Include="..\KinectFusionExplorer-D2D\KinectFusionExplorer-D2D.vcxproj">
       <Project>{9f1abebe-8226-4b92-ac8e-0b39c6aa2047}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\..\..\..\Downloads\garbage.ico" />
-    <Image Include="arrow.bmp" />
-    <Image Include="arrow.png" />
-    <Image Include="arrow_mask.bmp" />
-    <Image Include="garbage.bmp" />
-    <Image Include="garbage_mask.bmp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>
