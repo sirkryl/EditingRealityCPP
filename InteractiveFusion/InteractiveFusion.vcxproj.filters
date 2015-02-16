@@ -309,6 +309,9 @@
     <ClInclude Include="SimplePlaneRenderable3D.h">
       <Filter>Header Files\Renderables</Filter>
     </ClInclude>
+    <ClInclude Include="ButtonSlider.h">
+      <Filter>Header Files\UI\Layout</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="plylib.cpp">
@@ -490,6 +493,9 @@
     </ClCompile>
     <ClCompile Include="SimplePlaneRenderable3D.cpp">
       <Filter>Source Files\Renderables</Filter>
+    </ClCompile>
+    <ClCompile Include="ButtonSlider.cpp">
+      <Filter>Source Files\UI\Layout</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

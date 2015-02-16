@@ -38,10 +38,7 @@ namespace InteractiveFusion {
 
 	//	bool IsMouseInHandle(HWND handle);
 
-		void UpdateButtonSlider();
-		void UpdateButtonSliderValue();
-		void MoveButtonSlider(int pos);
-		void RedrawButtonSlider();
+		void UpdateScanVolumeSize();
 
 		int CountdownThread();
 

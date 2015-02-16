@@ -99,6 +99,10 @@ namespace InteractiveFusion {
 			{ 50, 50, 50 },
 			{ 40, 40, 40 } };
 
+		Gradient innerInactiveGradient{
+			{ 15, 15, 15 },
+			{ 5, 5, 5 } };
+
 		ColorInt innerPenColor = globalBackgroundColor;
 
 		//active mode button
@@ -207,7 +211,7 @@ namespace InteractiveFusion {
 		styleSheetMap[InnerDefault].fontSize = bigTextSize;
 		styleSheetMap[InnerDefault].backgroundColor = innerElementBackgroundColor;
 		styleSheetMap[InnerDefault].activeGradient = innerGradient;
-		styleSheetMap[InnerDefault].inactiveGradient = innerGradient;
+		styleSheetMap[InnerDefault].inactiveGradient = innerInactiveGradient;
 		styleSheetMap[InnerDefault].pressedGradient = innerPressedGradient;
 		styleSheetMap[InnerDefault].activeTextColor = defaultTextColor;
 		styleSheetMap[InnerDefault].inactiveTextColor = inactiveTextColor;

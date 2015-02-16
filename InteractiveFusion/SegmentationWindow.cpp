@@ -5,11 +5,12 @@
 #include "IFResources.h"
 #include "GUIContainer.h"
 #include "SegmentationParams.h"
-
+#include "ButtonSlider.h"
 using namespace std;
 
 namespace InteractiveFusion {
 
+	ButtonSlider clusterToleranceSlider;
 
 	//SEGMENTATION PREVIEW
 	GUIContainer generalSegmentationUi;
@@ -154,6 +155,11 @@ namespace InteractiveFusion {
 
 		SendMessage(textRGKSearchLabel, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
 
+		clusterToleranceSlider.Initialize(windowHandle, _hInstance);
+		clusterToleranceSlider.SetLimits(1, 100);
+		clusterToleranceSlider.SetValue(50);
+		clusterToleranceSlider.SetStep(1);
+		clusterToleranceSlider.SetLayout(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault), StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
 
 		generalSegmentationUi.Add(buttonSegmentationFinish);
 		generalSegmentationUi.Add(buttonSegmentationBegin);
@@ -234,6 +240,25 @@ namespace InteractiveFusion {
 
 	LRESULT CALLBACK SegmentationWindow::SubWindowProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 	{
+		switch (message)
+		{
+		case WM_LBUTTONDOWN:
+			clusterToleranceSlider.HandleLeftMouseButtonDown();
+			break;
+		case WM_LBUTTONUP:
+			clusterToleranceSlider.HandleLeftMouseButtonUp();
+			break;
+		case WM_MOUSEMOVE:
+			if (clusterToleranceSlider.HandleMouseMove())
+				DebugUtility::DbgOut(L"yea");
+			break;
+		case WM_DRAWITEM:
+		{
+			if (clusterToleranceSlider.HasHandle(((LPDRAWITEMSTRUCT)lParam)->hwndItem))
+				return clusterToleranceSlider.Draw(((LPDRAWITEMSTRUCT)lParam)->hwndItem, lParam);
+		}
+		break;
+		}
 		return SubWindow::SubWindowProc(windowHandle, message, wParam, lParam);
 	}
 
@@ -473,6 +498,9 @@ namespace InteractiveFusion {
 		MoveWindow(buttonClusterToleranceMinus, leftSegmentationXPosition, (int)(0.15f*height), 50, 50, true);
 		MoveWindow(textClusterTolerance, textXPosition, (int)(0.15f*height) + 25, textWidth, 25, true);
 			MoveWindow(buttonClusterTolerancePlus, rightSegmentationRightXPosition - 50, (int)(0.15f*height), 50, 50, true);
+
+
+			clusterToleranceSlider.Resize(leftSegmentationXPosition, (int)(0.15f*height) + 70, rightSegmentationRightXPosition-leftSegmentationXPosition, 50);
 		//}
 		//else if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
 		//{
@@ -511,6 +539,7 @@ namespace InteractiveFusion {
 		generalSegmentationUi.CleanUp();
 		euclideanSegmentationUi.CleanUp();
 		regionSegmentationUi.CleanUp();
+		clusterToleranceSlider.CleanUp();
 		SubWindow::CleanUp();
 	}
 }
