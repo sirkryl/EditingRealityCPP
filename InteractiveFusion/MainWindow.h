@@ -4,8 +4,7 @@
 
 #include <Windows.h>
 #include <string>
-
-
+#include <memory>
 namespace InteractiveFusion {
 	class MeshContainer;
 	class MainWindow
@@ -26,7 +25,7 @@ namespace InteractiveFusion {
 		
 		void ChangeScanVolumeSize(int _voxelsPerMeter);
 
-		void InitializeOpenGLScene(MeshContainer* _scannedMesh);
+		void InitializeOpenGLScene(std::shared_ptr<MeshContainer> _scannedMesh);
 
 		void SetPlaneRenderer(bool _flag);
 		void ExecutePlaneCut();

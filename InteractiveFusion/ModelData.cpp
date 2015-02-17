@@ -32,16 +32,16 @@ namespace InteractiveFusion {
 		CleanUp();
 
 		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer));
-		currentMeshData[0]->SetColorCode(GetNextColorCode());
+		currentMeshData[currentMeshData.size() - 1]->SetColorCode(GetNextColorCode());
 		
-		currentMeshData[0]->LoadFromFile(fileName);
+		currentMeshData[currentMeshData.size() - 1]->LoadFromFile(fileName);
 		currentMeshData[currentMeshData.size() - 1]->RemoveNonManifoldFaces();
 		currentMeshData[currentMeshData.size() - 1]->CopyInternalToVisibleData();
 		currentMeshData[currentMeshData.size() - 1]->UpdateEssentials();
 		currentMeshData[currentMeshData.size() - 1]->SetShaderProgram(defaultShaderProgram);
 	}
 
-	void ModelData::LoadFromData(MeshContainer* _meshContainer)
+	void ModelData::LoadFromData(std::shared_ptr<MeshContainer> _meshContainer)
 	{
 		CleanUp();
 
@@ -825,10 +825,29 @@ namespace InteractiveFusion {
 
 	}
 
-	void ModelData::SetGroundAlignmentRotation(float _angle, glm::vec3 _axis)
+	void ModelData::SetGroundPlane(int _index)
 	{
-		groundAlignmentRotation = glm::rotate(glm::mat4(1.0), _angle, _axis);
-		negativeGroundAlignmentRotation = glm::rotate(glm::mat4(1.0), -_angle, _axis);
+		if (!IsValidMeshDataIndex(_index))
+			return;
+		PlaneParameters planeParameters = currentMeshData[_index]->GetPlaneParameters();
+		glm::vec3 normalVector = glm::normalize(glm::vec3(planeParameters.x, planeParameters.y, planeParameters.z));
+
+		glm::vec3 yAxis = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f));
+
+		if (normalVector.y < 0)
+			yAxis.y = -1.0f;
+		DebugUtility::DbgOut(L"ModelData::SetGroundPlane::", _index);
+		DebugUtility::DbgOut(L"PlaneParameters::X", planeParameters.x);
+		DebugUtility::DbgOut(L"PlaneParameters::Y", planeParameters.y);
+		DebugUtility::DbgOut(L"PlaneParameters::Z", planeParameters.z);
+		DebugUtility::DbgOut(L"PlaneParameters::D", planeParameters.d);
+
+		glm::vec3 rotationAxis = glm::cross(normalVector, yAxis);
+
+		float rotY = glm::acos(glm::dot(normalVector, yAxis)) * 180.0f / M_PI;
+
+		groundAlignmentRotation = glm::rotate(glm::mat4(1.0), rotY, rotationAxis);
+		negativeGroundAlignmentRotation = glm::rotate(glm::mat4(1.0), -rotY, rotationAxis);
 	}
 
 	glm::mat4 ModelData::GetNegativeGroundAlignmentRotation()

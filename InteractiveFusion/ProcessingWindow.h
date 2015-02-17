@@ -1,6 +1,6 @@
 #pragma once
 #include "SubWindow.h"
-
+#include "ButtonSlider.h"
 namespace InteractiveFusion {
 
 	class ProcessingWindowEvent : public SubWindowEvent{
@@ -32,7 +32,9 @@ namespace InteractiveFusion {
 		virtual void ProcessUI(WPARAM wParam, LPARAM lParam);
 		void UpdateProcessingValues();
 
-		int maxHoleSizeToBeClosed = 100000;
+		enum SliderType { HoleSize, ComponentSize};
+		std::unordered_map<SliderType, ButtonSlider> sliderMap;
+		int maxHoleSizeToBeClosed = 50000;
 		int maxComponentSizeToBeRemoved = 1000;
 	};
 }

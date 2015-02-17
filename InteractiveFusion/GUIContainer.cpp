@@ -39,6 +39,12 @@ namespace InteractiveFusion {
 		elements.push_back(_element);
 	}
 
+	void GUIContainer::Add(ButtonSlider _element)
+	{
+		std::vector<HWND> sliderHandles = _element.GetHandles();
+		elements.insert(elements.end(), sliderHandles.begin(), sliderHandles.end());
+	}
+
 	void GUIContainer::CleanUp()
 	{
 		elements.clear();

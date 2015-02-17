@@ -5,12 +5,14 @@
 #include "IFResources.h"
 #include "GUIContainer.h"
 #include "SegmentationParams.h"
-#include "ButtonSlider.h"
+
+#include <sstream>
+#include <iomanip>
 using namespace std;
 
 namespace InteractiveFusion {
 
-	ButtonSlider clusterToleranceSlider;
+	
 
 	//SEGMENTATION PREVIEW
 	GUIContainer generalSegmentationUi;
@@ -19,19 +21,14 @@ namespace InteractiveFusion {
 
 	//EUCLIDEAN UI
 	GUIContainer euclideanSegmentationUi;
-	HWND buttonClusterTolerancePlus, buttonClusterToleranceMinus;
 	HWND textClusterToleranceLabel, textClusterTolerance;
 
 	//REGION GROWTH UI
 	GUIContainer  regionSegmentationUi;
-	HWND buttonRegionGrowthSegmentation, buttonEuclideanSegmentation;
-	HWND buttonRGSmoothnessPlus, buttonRGSmoothnessMinus;
+	HWND buttonEuclideanSegmentation, buttonRegionGrowthSegmentation;
 	HWND textRGSmoothnessLabel, textRGSmoothness;
-	HWND buttonRGCurvaturePlus, buttonRGCurvatureMinus;
 	HWND textRGCurvatureLabel, textRGCurvature;
-	HWND buttonRGNeighborsPlus, buttonRGNeighborsMinus;
 	HWND textRGNeighborsLabel, textRGNeighbors;
-	HWND buttonRGKSearchPlus, buttonRGKSearchMinus;
 	HWND textRGKSearchLabel, textRGKSearch;
 
 	EuclideanSegmentationParams euclideanParams;
@@ -69,22 +66,13 @@ namespace InteractiveFusion {
 		buttonLayoutMap.emplace(buttonSegmentationBegin, ButtonLayout());
 		buttonLayoutMap[buttonSegmentationBegin].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
 		buttonLayoutMap[buttonSegmentationBegin].SetFontSize(30);
-		textClusterTolerance = CreateWindowEx(0, L"STATIC", L"2cm", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE, hInstance, 0);
+		textClusterTolerance = CreateWindowEx(0, L"STATIC", std::to_wstring((int)(euclideanParams.clusterTolerance*1000.0f)).c_str(), WS_CHILD | WS_VISIBLE | SS_RIGHT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE, hInstance, 0);
 
 		SendMessage(textClusterTolerance, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
-		textClusterToleranceLabel = CreateWindowEx(0, L"STATIC", L"TOLERANCE", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE_LABEL, hInstance, 0);
+		textClusterToleranceLabel = CreateWindowEx(0, L"STATIC", L"TOLERANCE", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE_LABEL, hInstance, 0);
 
 		SendMessage(textClusterToleranceLabel, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
 
-		buttonClusterTolerancePlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_E_BUTTON_CLUSTERTOLERANCE_PLUS, hInstance, 0);
-
-		buttonLayoutMap.emplace(buttonClusterTolerancePlus, ButtonLayout());
-		buttonLayoutMap[buttonClusterTolerancePlus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-
-		buttonClusterToleranceMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_E_BUTTON_CLUSTERTOLERANCE_MINUS, hInstance, 0);
-
-		buttonLayoutMap.emplace(buttonClusterToleranceMinus, ButtonLayout());
-		buttonLayoutMap[buttonClusterToleranceMinus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
 		buttonRegionGrowthSegmentation = CreateWindowEx(0, L"Button", L"RG", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_REGIONGROWTH, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonRegionGrowthSegmentation, ButtonLayout());
@@ -94,89 +82,73 @@ namespace InteractiveFusion {
 
 		buttonLayoutMap.emplace(buttonEuclideanSegmentation, ButtonLayout());
 		buttonLayoutMap[buttonEuclideanSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
-		//buttonLayoutMap[buttonEuclideanSegmentation].SetFontSize(30);
-		buttonRGSmoothnessPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_BUTTON_SMOOTHNESS_PLUS, hInstance, 0);
 
-		buttonLayoutMap.emplace(buttonRGSmoothnessPlus, ButtonLayout());
-		buttonLayoutMap[buttonRGSmoothnessPlus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-		buttonRGSmoothnessMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_BUTTON_SMOOTHNESS_MINUS, hInstance, 0);
-
-		buttonLayoutMap.emplace(buttonRGSmoothnessMinus, ButtonLayout());
-		buttonLayoutMap[buttonRGSmoothnessMinus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-		textRGSmoothness = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_SMOOTHNESS, hInstance, 0);
+		textRGSmoothness = CreateWindowEx(0, L"STATIC", std::to_wstring((int)regionGrowthParams.smoothnessThreshold).c_str(), WS_CHILD | WS_VISIBLE | SS_RIGHT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_SMOOTHNESS, hInstance, 0);
 
 		SendMessage(textRGSmoothness, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
-		textRGSmoothnessLabel = CreateWindowEx(0, L"STATIC", L"SMOOTHNESS", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_SMOOTHNESS_LABEL, hInstance, 0);
+		textRGSmoothnessLabel = CreateWindowEx(0, L"STATIC", L"SMOOTHNESS", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_SMOOTHNESS_LABEL, hInstance, 0);
 
 		SendMessage(textRGSmoothnessLabel, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
 
-		buttonRGCurvaturePlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_BUTTON_CURVATURE_PLUS, hInstance, 0);
-
-		buttonLayoutMap.emplace(buttonRGCurvaturePlus, ButtonLayout());
-		buttonLayoutMap[buttonRGCurvaturePlus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-		buttonRGCurvatureMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_BUTTON_CURVATURE_MINUS, hInstance, 0);
-
-		buttonLayoutMap.emplace(buttonRGCurvatureMinus, ButtonLayout());
-		buttonLayoutMap[buttonRGCurvatureMinus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-		buttonRGNeighborsPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_BUTTON_NEIGHBORS_PLUS, hInstance, 0);
-
-		buttonLayoutMap.emplace(buttonRGNeighborsPlus, ButtonLayout());
-		buttonLayoutMap[buttonRGNeighborsPlus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-		buttonRGNeighborsMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_BUTTON_NEIGHBORS_MINUS, hInstance, 0);
-
-		buttonLayoutMap.emplace(buttonRGNeighborsMinus, ButtonLayout());
-		buttonLayoutMap[buttonRGNeighborsMinus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-		buttonRGKSearchPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_BUTTON_KSEARCH_PLUS, hInstance, 0);
-
-		buttonLayoutMap.emplace(buttonRGKSearchPlus, ButtonLayout());
-		buttonLayoutMap[buttonRGKSearchPlus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-		buttonRGKSearchMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_BUTTON_KSEARCH_MINUS, hInstance, 0);
-
-		buttonLayoutMap.emplace(buttonRGKSearchMinus, ButtonLayout());
-		buttonLayoutMap[buttonRGKSearchMinus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-		textRGCurvature = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_CURVATURE, hInstance, 0);
-
+		textRGCurvature = CreateWindowEx(0, L"STATIC", std::to_wstring((int)(regionGrowthParams.curvatureThreshold*10.0f)).c_str(), WS_CHILD | WS_VISIBLE | SS_RIGHT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_CURVATURE, hInstance, 0);
 		SendMessage(textRGCurvature, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
-		textRGCurvatureLabel = CreateWindowEx(0, L"STATIC", L"CURVATURE", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_CURVATURE_LABEL, hInstance, 0);
+		textRGCurvatureLabel = CreateWindowEx(0, L"STATIC", L"CURVATURE", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_CURVATURE_LABEL, hInstance, 0);
 
 		SendMessage(textRGCurvatureLabel, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
 
-		textRGNeighbors = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_NEIGHBORS, hInstance, 0);
+		textRGNeighbors = CreateWindowEx(0, L"STATIC", std::to_wstring(regionGrowthParams.numberOfNeighbors).c_str(), WS_CHILD | WS_VISIBLE | SS_RIGHT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_NEIGHBORS, hInstance, 0);
 
 		SendMessage(textRGNeighbors, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
-		textRGNeighborsLabel = CreateWindowEx(0, L"STATIC", L"NEIGHBORS", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_NEIGHBORS_LABEL, hInstance, 0);
+		textRGNeighborsLabel = CreateWindowEx(0, L"STATIC", L"NEIGHBORS", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_NEIGHBORS_LABEL, hInstance, 0);
 
 		SendMessage(textRGNeighborsLabel, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
 
-		textRGKSearch = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_KSEARCH, hInstance, 0);
+		textRGKSearch = CreateWindowEx(0, L"STATIC", std::to_wstring(regionGrowthParams.minComponentSize).c_str(), WS_CHILD | WS_VISIBLE | SS_RIGHT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_SIZE, hInstance, 0);
 
 		SendMessage(textRGKSearch, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
-		textRGKSearchLabel = CreateWindowEx(0, L"STATIC", L"KSEARCH", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_KSEARCH_LABEL, hInstance, 0);
+		textRGKSearchLabel = CreateWindowEx(0, L"STATIC", L"MIN SIZE", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_KSEARCH_LABEL, hInstance, 0);
 
 		SendMessage(textRGKSearchLabel, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
 
-		clusterToleranceSlider.Initialize(windowHandle, _hInstance);
-		clusterToleranceSlider.SetLimits(1, 100);
-		clusterToleranceSlider.SetValue(50);
-		clusterToleranceSlider.SetStep(1);
-		clusterToleranceSlider.SetLayout(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault), StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+		sliderMap.emplace(Tolerance, ButtonSlider());
+		sliderMap.emplace(Smoothness, ButtonSlider());
+		sliderMap.emplace(Curvature, ButtonSlider());
+		sliderMap.emplace(Neighbors, ButtonSlider());
+		sliderMap.emplace(MinSize, ButtonSlider());
+
+		for (auto& slider : sliderMap)
+		{
+			slider.second.Initialize(windowHandle, _hInstance);
+			slider.second.SetLayout(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault), StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+			slider.second.SetLimits(1, 100);
+			slider.second.SetStep(1);
+		}
+		
+		sliderMap[Smoothness].SetLimits(1, 200);
+		sliderMap[Curvature].SetLimits(1, 200);
+		sliderMap[MinSize].SetLimits(100, 10000);
+
+		sliderMap[Tolerance].SetValue((int)(euclideanParams.clusterTolerance*1000.0f));
+		sliderMap[Smoothness].SetValue((int)regionGrowthParams.smoothnessThreshold);
+		sliderMap[Curvature].SetValue((int)(regionGrowthParams.curvatureThreshold*10.0f));
+		sliderMap[Neighbors].SetValue(regionGrowthParams.numberOfNeighbors);
+		sliderMap[MinSize].SetValue(regionGrowthParams.minComponentSize);
+		
 
 		generalSegmentationUi.Add(buttonSegmentationFinish);
 		generalSegmentationUi.Add(buttonSegmentationBegin);
 		generalSegmentationUi.Add(buttonRegionGrowthSegmentation);
 		generalSegmentationUi.Add(buttonEuclideanSegmentation);
 
-		regionSegmentationUi.Add(buttonRGSmoothnessPlus);
-		regionSegmentationUi.Add(buttonRGSmoothnessMinus);
+
+		regionSegmentationUi.Add(sliderMap[Smoothness]);
+		regionSegmentationUi.Add(sliderMap[Curvature]);
+		regionSegmentationUi.Add(sliderMap[Neighbors]);
+		regionSegmentationUi.Add(sliderMap[MinSize]);
+
 		regionSegmentationUi.Add(textRGSmoothness);
 		regionSegmentationUi.Add(textRGSmoothnessLabel);
 
-		regionSegmentationUi.Add(buttonRGCurvaturePlus);
-		regionSegmentationUi.Add(buttonRGCurvatureMinus);
-		regionSegmentationUi.Add(buttonRGNeighborsPlus);
-		regionSegmentationUi.Add(buttonRGNeighborsMinus);
-		regionSegmentationUi.Add(buttonRGKSearchPlus);
-		regionSegmentationUi.Add(buttonRGKSearchMinus);
 		regionSegmentationUi.Add(textRGCurvature);
 		regionSegmentationUi.Add(textRGCurvatureLabel);
 		regionSegmentationUi.Add(textRGNeighbors);
@@ -184,11 +156,11 @@ namespace InteractiveFusion {
 		regionSegmentationUi.Add(textRGKSearch);
 		regionSegmentationUi.Add(textRGKSearchLabel);
 
+		euclideanSegmentationUi.Add(sliderMap[Tolerance]);
 		euclideanSegmentationUi.Add(textClusterTolerance);
 		euclideanSegmentationUi.Add(textClusterToleranceLabel);
-		euclideanSegmentationUi.Add(buttonClusterTolerancePlus);
-		euclideanSegmentationUi.Add(buttonClusterToleranceMinus);
-	
+
+		selectedSegmentationType = Euclidean;
 		UpdateSegmentationPreviewValues();
 		UpdateSegmentationUI();
 	}
@@ -216,49 +188,94 @@ namespace InteractiveFusion {
 
 	void SegmentationWindow::UpdateSegmentationPreviewValues()
 	{
-		int clusterToleranceLabel = (int)(euclideanParams.clusterTolerance * 1000);
-		wstring clusterToleranceString = to_wstring(clusterToleranceLabel) + L"cm";
-		SetDlgItemText(windowHandle, IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE, clusterToleranceString.c_str());
+		if (euclideanParams.clusterTolerance != (float)sliderMap[Tolerance].GetValue() / 1000.0f)
+		{
+			euclideanParams.clusterTolerance = (float)sliderMap[Tolerance].GetValue() / 1000.0f;
+			wstring clusterToleranceString = to_wstring(sliderMap[Tolerance].GetValue()) + L"cm";
+			SetDlgItemText(windowHandle, IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE, clusterToleranceString.c_str());
+			DebugUtility::DbgOut(L"euclideanParams.clusterTolerance = ", euclideanParams.clusterTolerance);
+		}
 
-		int smoothnessLabel = (int)regionGrowthParams.smoothnessThreshold;
-		wstring smoothnessString = to_wstring(smoothnessLabel) + L"";
-		SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_SMOOTHNESS, smoothnessString.c_str());
+		if (regionGrowthParams.smoothnessThreshold != sliderMap[Smoothness].GetValue())
+		{
+			regionGrowthParams.smoothnessThreshold = sliderMap[Smoothness].GetValue();
+			wstring smoothnessString = to_wstring((int)regionGrowthParams.smoothnessThreshold) + L"";
+			SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_SMOOTHNESS, smoothnessString.c_str());
+			DebugUtility::DbgOut(L"regionGrowthParams.smoothnessThreshold = ", regionGrowthParams.smoothnessThreshold);
+		}
 
-		int curvatureLabel = (int)regionGrowthParams.curvatureThreshold;
-		wstring curvatureString = to_wstring(curvatureLabel) + L"";
-		SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_CURVATURE, curvatureString.c_str());
+		if (regionGrowthParams.curvatureThreshold != (float)sliderMap[Curvature].GetValue() / 10.0f)
+		{
+			regionGrowthParams.curvatureThreshold = (float)sliderMap[Curvature].GetValue() / 10.0f;
 
-		int neighborsLabel = (int)regionGrowthParams.numberOfNeighbors;
-		wstring neighborsString = to_wstring(neighborsLabel) + L"";
-		SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_NEIGHBORS, neighborsString.c_str());
+			std::wstringstream curvatureString;
+			curvatureString << std::setprecision(2) << (float)sliderMap[Curvature].GetValue() / 10.0f;
+			//wstring curvatureString = to_wstring(regionGrowthParams.curvatureThreshold) + L"";
+			SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_CURVATURE, curvatureString.str().c_str());
+			DebugUtility::DbgOut(L"regionGrowthParams.curvatureThreshold = ", regionGrowthParams.curvatureThreshold);
+		}
 
-		int kSearchLabel = (int)regionGrowthParams.kSearchValue;
-		wstring kSearchString = to_wstring(kSearchLabel) + L"";
-		SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_KSEARCH, kSearchString.c_str());
+		if (regionGrowthParams.numberOfNeighbors != sliderMap[Neighbors].GetValue())
+		{
+			regionGrowthParams.numberOfNeighbors = sliderMap[Neighbors].GetValue();
+			wstring neighborsString = to_wstring(regionGrowthParams.numberOfNeighbors) + L"";
+			SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_NEIGHBORS, neighborsString.c_str());
+			DebugUtility::DbgOut(L"regionGrowthParams.numberOfNeighbors = ", regionGrowthParams.numberOfNeighbors);
+		}
+
+		if (regionGrowthParams.minComponentSize != sliderMap[MinSize].GetValue())
+		{
+			regionGrowthParams.minComponentSize = sliderMap[MinSize].GetValue();
+			wstring minComponentsString = to_wstring(regionGrowthParams.minComponentSize) + L"";
+			SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_SIZE, minComponentsString.c_str());
+			DebugUtility::DbgOut(L"regionGrowthParams.minComponentSize = ", regionGrowthParams.minComponentSize);
+		}
 	}
 
 
 	LRESULT CALLBACK SegmentationWindow::SubWindowProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 	{
+		bool valueChanged = false;
 		switch (message)
 		{
-		case WM_LBUTTONDOWN:
-			clusterToleranceSlider.HandleLeftMouseButtonDown();
+			case WM_LBUTTONDOWN:
+			{
+				for (auto& slider : sliderMap)
+				{
+					if (slider.second.HandleLeftMouseButtonDown())
+						valueChanged = true;
+				}
+			}
+				break;
+			case WM_LBUTTONUP:
+				for (auto& slider : sliderMap)
+					slider.second.HandleLeftMouseButtonUp();
+				break;
+			case WM_MOUSEMOVE:
+			{
+				for (auto& slider : sliderMap)
+				{
+					if (slider.second.HandleMouseMove())
+						valueChanged = true;
+				}
+			}
 			break;
-		case WM_LBUTTONUP:
-			clusterToleranceSlider.HandleLeftMouseButtonUp();
+			case WM_DRAWITEM:
+			{
+				for (auto& slider : sliderMap)
+				{
+					if (slider.second.HasHandle(((LPDRAWITEMSTRUCT)lParam)->hwndItem))
+						return slider.second.Draw(((LPDRAWITEMSTRUCT)lParam)->hwndItem, lParam);
+				}
+			}
 			break;
-		case WM_MOUSEMOVE:
-			if (clusterToleranceSlider.HandleMouseMove())
-				DebugUtility::DbgOut(L"yea");
-			break;
-		case WM_DRAWITEM:
+		}
+		if (valueChanged)
 		{
-			if (clusterToleranceSlider.HasHandle(((LPDRAWITEMSTRUCT)lParam)->hwndItem))
-				return clusterToleranceSlider.Draw(((LPDRAWITEMSTRUCT)lParam)->hwndItem, lParam);
+			valueChanged = false;
+			UpdateSegmentationPreviewValues();
 		}
-		break;
-		}
+
 		return SubWindow::SubWindowProc(windowHandle, message, wParam, lParam);
 	}
 
@@ -273,171 +290,19 @@ namespace InteractiveFusion {
 		{
 			DebugUtility::DbgOut(L"SegmentationWindow::ProcessUI::Done");
 			eventQueue.push(SegmentationWindowEvent::StateChange);
-			//parentWindow->ChangeState(Processing);
-			/*if (stateManager.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
-			{
-				appStatus.SetViewportStatusMessage(L"Finishing segmentation");
-				glSegmentation.previewMode = false;
-				glSegmentation.StartSegmentation();
-			}*/
 		}
 		if (IDC_SEGMENTATION_EUCLIDEAN == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			DebugUtility::DbgOut(L"SegmentationWindow::ProcessUI::Euclidean");
 			selectedSegmentationType = Euclidean;
 			UpdateSegmentationUI();
-			/*if (stateManager.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
-			{
-				glSegmentation.SetSegmentationMode(SEGMENTATION_EUCLIDEAN);
-				EnableWindow(hButtonRegionGrowthSegmentation, true);
-				EnableWindow(hButtonEuclideanSegmentation, false);
-				regionGrowthUi->Hide();
-				euclideanUi->Show();
-				MoveButtonsOnResize();
-			}*/
 		}
 		if (IDC_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			DebugUtility::DbgOut(L"SegmentationWindow::ProcessUI::RG");
 			selectedSegmentationType = RegionGrowth;
 			UpdateSegmentationUI();
-			/*if (stateManager.GetWindowMode() == IF_MODE_SEGMENTATION && glSegmentation.GetSegmentationState() == IF_SEGSTATE_OBJECT_SEGMENTATION)
-			{
-				glSegmentation.SetSegmentationMode(SEGMENTATION_REGIONGROWTH);
-				EnableWindow(hButtonRegionGrowthSegmentation, false);
-				EnableWindow(hButtonEuclideanSegmentation, true);
-				euclideanUi->Hide();
-				regionGrowthUi->Show();
-				MoveButtonsOnResize();
-			}*/
-		}
-		if (IDC_SEGMENTATION_RG_BUTTON_CURVATURE_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-				float step = 0.0f;
-				if (regionGrowthParams.curvatureThreshold > 10)
-					step = 1;
-				else if (regionGrowthParams.curvatureThreshold > 3)
-					step = 0.5f;
-				else
-					step = 0.1f;
 
-				//glSegmentation.segmentValuesChanged = true;
-				regionGrowthParams.curvatureThreshold += step;
-				UpdateSegmentationPreviewValues();
-		}
-		if (IDC_SEGMENTATION_RG_BUTTON_CURVATURE_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-			if (regionGrowthParams.curvatureThreshold <= 0.1f)
-					return;
-				float step = 0.0f;
-				if (regionGrowthParams.curvatureThreshold > 10)
-					step = 1;
-				else if (regionGrowthParams.curvatureThreshold > 3)
-					step = 0.5f;
-				else
-					step = 0.1f;
-
-				//glSegmentation.segmentValuesChanged = true;
-				regionGrowthParams.curvatureThreshold -= step;
-				UpdateSegmentationPreviewValues();
-		}
-		if (IDC_SEGMENTATION_RG_BUTTON_NEIGHBORS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-				int step = 1;
-
-				//glSegmentation.segmentValuesChanged = true;
-				regionGrowthParams.numberOfNeighbors += step;
-				UpdateSegmentationPreviewValues();
-		}
-		if (IDC_SEGMENTATION_RG_BUTTON_NEIGHBORS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-			if (regionGrowthParams.numberOfNeighbors <= 1)
-					return;
-				int step = 1;
-
-				//glSegmentation.segmentValuesChanged = true;
-				regionGrowthParams.numberOfNeighbors -= step;
-				UpdateSegmentationPreviewValues();
-		}
-		if (IDC_SEGMENTATION_RG_BUTTON_KSEARCH_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-				int step = 1;
-
-				//glSegmentation.segmentValuesChanged = true;
-				regionGrowthParams.kSearchValue += step;
-				UpdateSegmentationPreviewValues();
-		}
-		if (IDC_SEGMENTATION_RG_BUTTON_KSEARCH_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-			if (regionGrowthParams.kSearchValue <= 1)
-					return;
-				int step = 1;
-
-				//glSegmentation.segmentValuesChanged = true;
-				regionGrowthParams.kSearchValue -= step;
-				UpdateSegmentationPreviewValues();
-		}
-		if (IDC_SEGMENTATION_RG_BUTTON_SMOOTHNESS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-				float step = 0.0f;
-				if (regionGrowthParams.smoothnessThreshold > 100)
-					step = 10;
-				else if (regionGrowthParams.smoothnessThreshold > 20)
-					step = 5;
-				else
-					step = 1;
-
-				//glSegmentation.segmentValuesChanged = true;
-				regionGrowthParams.smoothnessThreshold += step;
-				UpdateSegmentationPreviewValues();
-		}
-		if (IDC_SEGMENTATION_RG_BUTTON_SMOOTHNESS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-			if (regionGrowthParams.smoothnessThreshold <= 1)
-					return;
-				float step = 0.0f;
-				if (regionGrowthParams.smoothnessThreshold > 100)
-					step = 10;
-				else if (regionGrowthParams.smoothnessThreshold > 20)
-					step = 5;
-				else
-					step = 1;
-
-				//glSegmentation.segmentValuesChanged = true;
-				regionGrowthParams.smoothnessThreshold -= step;
-				UpdateSegmentationPreviewValues();
-		}
-		if (IDC_SEGMENTATION_E_BUTTON_CLUSTERTOLERANCE_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-				float step = 0.0f;
-				if (euclideanParams.clusterTolerance >= 0.05f)
-					step = 0.01f;
-				else if (euclideanParams.clusterTolerance >= 0.01f)
-					step = 0.005f;
-				else
-					step = 0.001f;
-
-				//glSegmentation.segmentValuesChanged = true;
-				euclideanParams.clusterTolerance += step;
-				DebugUtility::DbgOut(L"PLUS: ", euclideanParams.clusterTolerance);
-				UpdateSegmentationPreviewValues();
-		}
-		if (IDC_SEGMENTATION_E_BUTTON_CLUSTERTOLERANCE_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-			if (euclideanParams.clusterTolerance <= 0.001f)
-					return;
-				float step = 0.0f;
-				if (euclideanParams.clusterTolerance > 0.05f)
-					step = 0.01f;
-				else if (euclideanParams.clusterTolerance > 0.01f)
-					step = 0.005f;
-				else
-					step = 0.001f;
-
-				//glSegmentation.segmentValuesChanged = true;
-				euclideanParams.clusterTolerance -= step;
-				DebugUtility::DbgOut(L"MINUS: ", euclideanParams.clusterTolerance);
-				UpdateSegmentationPreviewValues();
 		}
 	}
 
@@ -472,11 +337,15 @@ namespace InteractiveFusion {
 		}
 	}
 
+	void SegmentationWindow::Show()
+	{
+		SubWindow::Show();
+		UpdateSegmentationUI();
+	}
+
 	void SegmentationWindow::Resize(int parentWidth, int parentHeight)
 	{
 		DebugUtility::DbgOut(L"SegmentationWindow::RESIZE");
-		//RECT rRect;
-		//GetClientRect(parentHandle, &rRect);
 
 		SubWindow::Resize(parentWidth, parentHeight);
 
@@ -485,46 +354,30 @@ namespace InteractiveFusion {
 
 		int leftSegmentationXPosition = width / 2 - (int)(0.48f*width);
 		int rightSegmentationRightXPosition = (int)(width / 2) + (int)(0.48f*width);
-		MoveWindow(buttonEuclideanSegmentation, 0, (int)(0.05*height), (int)(width/2), 50, true);
-		MoveWindow(buttonRegionGrowthSegmentation, (int)(width / 2), (int)(0.05*height), (int)(width / 2), 50, true);
-		//MoveWindow(buttonEuclideanSegmentation, (int)(0.05f*width), (int)(0.15f*height), (int)(0.45f*width), 50, true);
-		//MoveWindow(buttonRegionGrowthSegmentation, (int)(0.50f*width), (int)(0.15f*height), (int)(0.45f*width), 50, true);
+		MoveWindow(buttonEuclideanSegmentation, 0, 0, (int)(width/2), (int)(0.1f*height), true);
+		MoveWindow(buttonRegionGrowthSegmentation, (int)(width / 2), 0, (int)(width / 2), (int)(0.1f*height), true);
 
-		//if (glSegmentation.GetSegmentationMode() == SEGMENTATION_EUCLIDEAN)
-		//{
-		int textXPosition = (width / 2) - (int)(0.25*width);
-		int textWidth = (int)(0.5f*width);
-		MoveWindow(textClusterToleranceLabel, textXPosition, (int)(0.15f*height), textWidth, 25, true);
-		MoveWindow(buttonClusterToleranceMinus, leftSegmentationXPosition, (int)(0.15f*height), 50, 50, true);
-		MoveWindow(textClusterTolerance, textXPosition, (int)(0.15f*height) + 25, textWidth, 25, true);
-			MoveWindow(buttonClusterTolerancePlus, rightSegmentationRightXPosition - 50, (int)(0.15f*height), 50, 50, true);
+		int controlWidth = rightSegmentationRightXPosition - leftSegmentationXPosition;
 
+		MoveWindow(textClusterToleranceLabel, leftSegmentationXPosition, (int)(0.12f*height), controlWidth / 2, 25, true);
+		sliderMap[Tolerance].Resize(leftSegmentationXPosition, (int)(0.12f*height) + 30, controlWidth, 40);
+		MoveWindow(textClusterTolerance, leftSegmentationXPosition + controlWidth / 2, (int)(0.12f*height), controlWidth / 2, 25, true);
 
-			clusterToleranceSlider.Resize(leftSegmentationXPosition, (int)(0.15f*height) + 70, rightSegmentationRightXPosition-leftSegmentationXPosition, 50);
-		//}
-		//else if (glSegmentation.GetSegmentationMode() == SEGMENTATION_REGIONGROWTH)
-		//{
+		MoveWindow(textRGSmoothnessLabel, leftSegmentationXPosition, (int)(0.12f*height), controlWidth / 2, 25, true);
+		sliderMap[Smoothness].Resize(leftSegmentationXPosition, (int)(0.12f*height) + 30, controlWidth, 40);
+		MoveWindow(textRGSmoothness, leftSegmentationXPosition + controlWidth / 2, (int)(0.12f*height), controlWidth / 2, 25, true);
 			
-			MoveWindow(textRGSmoothnessLabel, textXPosition, (int)(0.15f*height), textWidth, 25, true);
-			MoveWindow(buttonRGSmoothnessMinus, leftSegmentationXPosition, (int)(0.15f*height), 50, 50, true);
-			MoveWindow(textRGSmoothness, textXPosition, (int)(0.15f*height) + 25, textWidth, 25, true);
-			MoveWindow(buttonRGSmoothnessPlus, rightSegmentationRightXPosition - 50, (int)(0.15f*height), 50, 50, true);
+		MoveWindow(textRGCurvatureLabel, leftSegmentationXPosition, (int)(0.12f*height) + 75, controlWidth/2, 25, true);
+		sliderMap[Curvature].Resize(leftSegmentationXPosition, (int)(0.12f*height) + 105, controlWidth, 40);
+		MoveWindow(textRGCurvature, leftSegmentationXPosition + controlWidth / 2, (int)(0.12f*height) + 75, controlWidth / 2, 25, true);
 
-			MoveWindow(textRGCurvatureLabel, textXPosition, (int)(0.15f*height) + 70, textWidth, 25, true);
-			MoveWindow(buttonRGCurvatureMinus, leftSegmentationXPosition, (int)(0.15f*height) + 70, 50, 50, true);
-			MoveWindow(textRGCurvature, textXPosition, (int)(0.15f*height) + 95, textWidth, 25, true);
-			MoveWindow(buttonRGCurvaturePlus, rightSegmentationRightXPosition - 50, (int)(0.15f*height) + 70, 50, 50, true);
+		MoveWindow(textRGNeighborsLabel, leftSegmentationXPosition, (int)(0.12f*height) + 150, controlWidth / 2, 25, true);
+		sliderMap[Neighbors].Resize(leftSegmentationXPosition, (int)(0.12f*height) + 180, controlWidth, 40);
+		MoveWindow(textRGNeighbors, leftSegmentationXPosition + controlWidth / 2, (int)(0.12f*height) + 150, controlWidth / 2, 25, true);
 
-			MoveWindow(textRGNeighborsLabel, textXPosition, (int)(0.15f*height) + 140, textWidth, 25, true);
-			MoveWindow(buttonRGNeighborsMinus, leftSegmentationXPosition, (int)(0.15f*height) + 140, 50, 50, true);
-			MoveWindow(textRGNeighbors, textXPosition, (int)(0.15f*height) + 165, textWidth, 25, true);
-			MoveWindow(buttonRGNeighborsPlus, rightSegmentationRightXPosition - 50, (int)(0.15f*height) + 140, 50, 50, true);
-
-			MoveWindow(textRGKSearchLabel, textXPosition, (int)(0.15f*height) + 210, textWidth, 25, true);
-			MoveWindow(buttonRGKSearchMinus, leftSegmentationXPosition, (int)(0.15f*height) + 210, 50, 50, true);
-			MoveWindow(textRGKSearch, textXPosition, (int)(0.15f*height) + 235, textWidth, 25, true);
-			MoveWindow(buttonRGKSearchPlus, rightSegmentationRightXPosition - 50, (int)(0.15f*height) + 210, 50, 50, true);
-		//}
+		MoveWindow(textRGKSearchLabel, leftSegmentationXPosition, (int)(0.12f*height) + 225, controlWidth / 2, 25, true);
+		sliderMap[MinSize].Resize(leftSegmentationXPosition, (int)(0.12f*height) + 255, controlWidth, 40);
+		MoveWindow(textRGKSearch, leftSegmentationXPosition + controlWidth / 2, (int)(0.12f*height) + 225, controlWidth / 2, 25, true);
 
 
 	}
@@ -539,7 +392,8 @@ namespace InteractiveFusion {
 		generalSegmentationUi.CleanUp();
 		euclideanSegmentationUi.CleanUp();
 		regionSegmentationUi.CleanUp();
-		clusterToleranceSlider.CleanUp();
+		for (auto& slider : sliderMap)
+			slider.second.CleanUp();
 		SubWindow::CleanUp();
 	}
 }

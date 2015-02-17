@@ -87,7 +87,7 @@ namespace InteractiveFusion {
 
 		StyleSheet::GetInstance()->CreateStyles();
 		uiFontMedium = CreateFont(30, 0, 0, 0, StyleSheet::GetInstance()->GetGlobalFontWeight(), 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, StyleSheet::GetInstance()->GetGlobalFontName().c_str());
-		uiFontSmall = CreateFont(15, 0, 0, 0, StyleSheet::GetInstance()->GetGlobalFontWeight(), 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, StyleSheet::GetInstance()->GetGlobalFontName().c_str());
+		uiFontSmall = CreateFont(13, 0, 0, 0, StyleSheet::GetInstance()->GetGlobalFontWeight(), 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, StyleSheet::GetInstance()->GetGlobalFontName().c_str());
 
 		statusBarFont = CreateFont(22, 10, 0, 0, StyleSheet::GetInstance()->GetGlobalFontWeight(), 0, 0, 0, 0, 0, 0, 0, 0, StyleSheet::GetInstance()->GetGlobalFontName().c_str());
 
@@ -146,16 +146,21 @@ namespace InteractiveFusion {
 		SendMessage(fpsText, WM_SETFONT, (WPARAM)uiFontMedium, 0);
 		SendMessage(fpsCount, WM_SETFONT, (WPARAM)uiFontMedium, 0);
 
-		verticesLabel = CreateWindowEx(0, L"STATIC", L"Vertices:", WS_CHILD | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWndMain, (HMENU)0, NULL, 0);
-		verticesCount = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWndMain, (HMENU)IDC_VERTICES_COUNT, NULL, 0);
-		trianglesLabel = CreateWindowEx(0, L"STATIC", L"Triangles:", WS_CHILD | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWndMain, (HMENU)0, NULL, 0);
-		trianglesCount = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWndMain, (HMENU)IDC_TRIANGLES_COUNT, NULL, 0);
+		verticesLabel = CreateWindowEx(0, L"STATIC", L"Vertices:", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTERIMAGE , 250, 50, 150, 50, hWndMain, (HMENU)0, NULL, 0);
+		verticesCount = CreateWindowEx(0, L"STATIC", L"0", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWndMain, (HMENU)IDC_VERTICES_COUNT, NULL, 0);
+		trianglesLabel = CreateWindowEx(0, L"STATIC", L"Triangles:", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWndMain, (HMENU)0, NULL, 0);
+		trianglesCount = CreateWindowEx(0, L"STATIC", L"0", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWndMain, (HMENU)IDC_TRIANGLES_COUNT, NULL, 0);
 
 		SendMessage(verticesLabel, WM_SETFONT, (WPARAM)uiFontSmall, 0);
 		SendMessage(trianglesLabel, WM_SETFONT, (WPARAM)uiFontSmall, 0);
 		SendMessage(verticesCount, WM_SETFONT, (WPARAM)uiFontSmall, 0);
 		SendMessage(trianglesCount, WM_SETFONT, (WPARAM)uiFontSmall, 0);
 
+		SetWindowPos(verticesLabel, HWND_TOP, 0, 0, 0, 0, 0);
+		SetWindowPos(trianglesLabel, verticesLabel, 0, 0, 0, 0, 0);
+		SetWindowPos(verticesCount, trianglesLabel, 0, 0, 0, 0, 0);
+		SetWindowPos(trianglesCount, verticesCount, 0, 0, 0, 0, 0);
+		SetWindowPos(statusHandle, trianglesCount, 0, 0, 0, 0, 0);
 		hSubModeBackground = CreateWindowEx(0, (LPCTSTR)MAKELONG(ClassAtom, 0), L"", WS_CHILD | WS_CLIPSIBLINGS, 250, 50, 150, 50, hWndMain, (HMENU)0, NULL, 0);
 
 		hSubModePlaneSegmentation = CreateWindowEx(0, L"BUTTON", L"", WS_CHILD | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, hSubModeBackground, (HMENU)IDC_MODE_BUTTON_SEG_PLANE, NULL, 0);
@@ -235,7 +240,7 @@ namespace InteractiveFusion {
 			if (glControl.IsRendering())
 			{
 				UpdateOpenGLControl();
-				//UpdateSceneInformation();
+				UpdateSceneInformation();
 			}
 			if (helpWindow.IsVisible())
 				helpWindow.HandleEvents(this);
@@ -265,6 +270,10 @@ namespace InteractiveFusion {
 		
 		if (currentState == PlaneSelection)
 			helpWindow.Show();
+		if (currentState == Prepare || currentState == Scan || currentState == Interaction)
+			dynamic_cast<ScanWindow*>(subWindowMap[Scan].get())->UnpauseScan();
+		else
+			dynamic_cast<ScanWindow*>(subWindowMap[Scan].get())->PauseScan();
 
 		MainWindowProc(hWndMain, WM_SIZE, 0, MAKELPARAM(rRect.right, rRect.bottom));
 
@@ -405,10 +414,11 @@ namespace InteractiveFusion {
 		glControl.FinishProcessing();
 	}
 
-	void MainWindow::InitializeOpenGLScene(MeshContainer* _scannedMesh)
+	void MainWindow::InitializeOpenGLScene(std::shared_ptr<MeshContainer> _scannedMesh)
 	{
 		SetStatusBarMessage(L"Reconstructing and cleaning scene...");
-		boost::thread(&OpenGLControl::LoadAndSegmentModelDataFromScan, &glControl, _scannedMesh);
+		glControl.LoadAndSegmentModelDataFromScan(_scannedMesh);
+		//boost::thread(&OpenGLControl::LoadAndSegmentModelDataFromScan, &glControl, _scannedMesh);
 	}
 
 	void MainWindow::SetPlaneRenderer(bool _flag)
@@ -545,54 +555,51 @@ namespace InteractiveFusion {
 	/// <returns>result of message processing</returns>
 	LRESULT CALLBACK MainWindow::MainWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
-		
-		//CheckForStateChanges();
-		//UpdateStatusBarMessage();
 		switch (message)
 		{
-		case WM_CLOSE:
-			DestroyWindow(hWnd);
-			ShutdownWindow();
-			PostQuitMessage(0);
-			break;
-		case WM_DESTROY:
-			break;
-		case WM_COMMAND:
-			if (!glControl.IsBusy())
-				ProcessUI(wParam, lParam);
-			break;
-		case WM_DRAWITEM:
-		{
-			auto currentButtonLayout = buttonLayout.find(((LPDRAWITEMSTRUCT)lParam)->hwndItem);
-			if (currentButtonLayout != buttonLayout.end()) {
-				return currentButtonLayout->second.Draw(lParam);
-			}
-		}
-			break;
-		case WM_CTLCOLORSTATIC:
-		{
-			HDC hdc = reinterpret_cast<HDC>(wParam);
-			SetBkMode((HDC)wParam, TRANSPARENT);
-			SetTextColor(hdc, RGB(StyleSheet::GetInstance()->GetDefaultTextColor().r, StyleSheet::GetInstance()->GetDefaultTextColor().g, StyleSheet::GetInstance()->GetDefaultTextColor().b));
-
-			return (LRESULT)backgroundBrush;
-		}
-		break;
-		case WM_MOUSEWHEEL:
-			glControl.SetMouseWheelDelta(GET_WHEEL_DELTA_WPARAM(wParam));
-			break;
-		case WM_NCLBUTTONDBLCLK:
-		case WM_SIZE:
-			MoveModeButtonsOnResize(LOWORD(lParam), HIWORD(lParam));
-			helpWindow.Resize(LOWORD(lParam), HIWORD(lParam));
-			if (IsValidState(currentState))
+			case WM_CLOSE:
+				DestroyWindow(hWnd);
+				ShutdownWindow();
+				PostQuitMessage(0);
+				break;
+			case WM_DESTROY:
+				break;
+			case WM_COMMAND:
+				if (!glControl.IsBusy())
+					ProcessUI(wParam, lParam);
+				break;
+			case WM_DRAWITEM:
 			{
-				subWindowMap[currentState]->Resize(LOWORD(lParam), HIWORD(lParam));
-				glControl.PrepareViewportResize();
+				auto currentButtonLayout = buttonLayout.find(((LPDRAWITEMSTRUCT)lParam)->hwndItem);
+				if (currentButtonLayout != buttonLayout.end()) {
+					return currentButtonLayout->second.Draw(lParam);
+				}
+			}
+				break;
+			case WM_CTLCOLORSTATIC:
+			{
+				HDC hdc = reinterpret_cast<HDC>(wParam);
+				SetBkMode((HDC)wParam, TRANSPARENT);
+				SetTextColor(hdc, RGB(StyleSheet::GetInstance()->GetDefaultTextColor().r, StyleSheet::GetInstance()->GetDefaultTextColor().g, StyleSheet::GetInstance()->GetDefaultTextColor().b));
+
+				return (LRESULT)backgroundBrush;
 			}
 			break;
-		default:
-			return DefWindowProc(hWnd, message, wParam, lParam);
+			case WM_MOUSEWHEEL:
+				glControl.SetMouseWheelDelta(GET_WHEEL_DELTA_WPARAM(wParam));
+				break;
+			case WM_NCLBUTTONDBLCLK:
+			case WM_SIZE:
+				MoveModeButtonsOnResize(LOWORD(lParam), HIWORD(lParam));
+				helpWindow.Resize(LOWORD(lParam), HIWORD(lParam));
+				if (IsValidState(currentState))
+				{
+					subWindowMap[currentState]->Resize(LOWORD(lParam), HIWORD(lParam));
+					glControl.PrepareViewportResize();
+				}
+				break;
+			default:
+				return DefWindowProc(hWnd, message, wParam, lParam);
 		}
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -655,7 +662,7 @@ namespace InteractiveFusion {
 
 		MoveWindow(hModeInteraction, width / 2 + 195, 8, 185, (int)(0.07f*height) - 8, true);
 
-		MoveWindow(statusHandle, 10, height - 30, width, 30, true);
+		MoveWindow(statusHandle, 10, height - 30, width-10, 30, true);
 
 		MoveWindow(hSubModeBackground, width / 2 - 140, (int)(0.07f*height), 205, 30, true);
 
@@ -663,13 +670,13 @@ namespace InteractiveFusion {
 		MoveWindow(hSubModeObjectSegmentation, 93, 5, 20, 20, true);
 		MoveWindow(hSubModePlaneCut, 165, 5, 20, 20, true);
 
-		MoveWindow(fpsText, width-95, 8, 40, 40, true);
-		MoveWindow(fpsCount, width-50, 8, 40, 40, true);
+		MoveWindow(fpsText, width - 95, 0, 40, (int)(0.07f*height), true);
+		MoveWindow(fpsCount, width - 50, 0, 40, (int)(0.07f*height), true);
 
-		MoveWindow(verticesLabel, 10, 1, 80, 15, true);
-		MoveWindow(verticesCount, 105, 1, 80, 15, true);
-		MoveWindow(trianglesLabel, 10, 16, 80, 15, true);
-		MoveWindow(trianglesCount, 105, 16, 80, 15, true);
+		MoveWindow(verticesLabel, width-120, height - 29, 60, 12, true);
+		MoveWindow(verticesCount, width-60, height - 29, 60, 12, true);
+		MoveWindow(trianglesLabel, width-120, height - 15, 60, 12, true);
+		MoveWindow(trianglesCount, width-60, height - 15, 60, 12, true);
 	}
 
 	void MainWindow::ShutdownWindow()
@@ -683,7 +690,6 @@ namespace InteractiveFusion {
 		if (hWndMain)
 			DestroyWindow(hWndMain);
 
-		//interactionWindow.ShutdownWindow();
 	}
 
 	void MainWindow::UpdateUIActivation()
@@ -693,7 +699,6 @@ namespace InteractiveFusion {
 			if (subWindowMap[currentState]->IsActive())
 			{
 				subWindowMap[currentState]->Deactivate();
-				//modeUi.Deactivate();
 			}
 		}
 		else if (!subWindowMap[currentState]->IsActive())

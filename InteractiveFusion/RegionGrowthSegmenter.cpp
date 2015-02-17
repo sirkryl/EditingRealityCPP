@@ -54,7 +54,7 @@ namespace InteractiveFusion {
 		}
 		pcl::RegionGrowing<pcl::PointXYZRGBNormal, pcl::Normal> reg;
 		//reg.setMinClusterSize(openGLWin.minClusterSize);
-		reg.setMinClusterSize(1000);
+		reg.setMinClusterSize(segmentationParameters.minComponentSize);
 		reg.setMaxClusterSize(1000000);
 
 		reg.setSearchMethod(tree);

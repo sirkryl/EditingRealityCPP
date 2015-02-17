@@ -14,9 +14,13 @@ namespace InteractiveFusion {
 	};
 	struct EuclideanSegmentationParams : ObjectSegmentationParams
 	{
-		EuclideanSegmentationParams() : ObjectSegmentationParams(Euclidean), clusterTolerance(0.02f) {};
+		EuclideanSegmentationParams() : 
+			ObjectSegmentationParams(Euclidean), 
+			clusterTolerance(0.02f),
+			minComponentSize(1000){};
 		virtual ~EuclideanSegmentationParams() {};
 		float clusterTolerance;
+		int minComponentSize;
 	};
 
 	struct RegionGrowthSegmentationParams : ObjectSegmentationParams
@@ -26,12 +30,14 @@ namespace InteractiveFusion {
 			kSearchValue(20),
 			numberOfNeighbors(20),
 			smoothnessThreshold(100),
-			curvatureThreshold(10) {};
+			curvatureThreshold(10),
+			minComponentSize(1000){};
 		virtual ~RegionGrowthSegmentationParams() {};
 		int kSearchValue;
 		int numberOfNeighbors;
 		double smoothnessThreshold;
 		double curvatureThreshold;
+		int minComponentSize;
 	};
 
 	struct PlaneSegmentationParams

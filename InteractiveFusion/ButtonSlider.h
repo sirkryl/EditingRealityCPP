@@ -1,6 +1,7 @@
 #pragma once
 #include <Windows.h>
 #include <string>
+#include <vector>
 #include "ButtonLayout.h"
 
 namespace InteractiveFusion {
@@ -10,7 +11,7 @@ namespace InteractiveFusion {
 		ButtonSlider();
 		~ButtonSlider();
 
-		void HandleLeftMouseButtonDown();
+		bool HandleLeftMouseButtonDown();
 		void HandleLeftMouseButtonUp();
 		bool HandleMouseMove();
 
@@ -24,6 +25,7 @@ namespace InteractiveFusion {
 		bool HasHandle(HWND _handle);
 		void Initialize(HWND _parentHandle, HINSTANCE _hInstance);
 
+		std::vector<HWND> GetHandles();
 		void SetLayout(ButtonLayoutParams _sliderButtonLayout, ButtonLayoutParams _sliderBackgroundLayout);
 
 		void Show();
@@ -53,6 +55,6 @@ namespace InteractiveFusion {
 		void MoveHandle();
 		void Redraw();
 
-		bool IsMouseInHandle();
+		bool IsMouseInHandle(HWND _handle);
 	};
 }

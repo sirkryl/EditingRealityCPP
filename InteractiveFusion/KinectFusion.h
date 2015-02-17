@@ -6,6 +6,7 @@
 #include <string>
 #include <Windows.h>
 #include <glm/glm.hpp>
+#include <memory>
 namespace InteractiveFusion {
 	class MeshContainer;
 	class KinectFusion
@@ -34,7 +35,7 @@ namespace InteractiveFusion {
 		std::wstring GetAndResetStatus();
 
 		void PrepareMeshSave();
-		MeshContainer* GetScannedMesh();
+		std::shared_ptr<MeshContainer> GetScannedMesh();
 		void FinishMeshSave();
 
 		void ResetScan();

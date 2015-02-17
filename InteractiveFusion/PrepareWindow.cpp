@@ -136,7 +136,10 @@ namespace InteractiveFusion {
 		switch (message)
 		{
 		case WM_LBUTTONDOWN:
-			scanSizeSlider.HandleLeftMouseButtonDown();
+		{
+			if (scanSizeSlider.HandleLeftMouseButtonDown())
+				UpdateScanVolumeSize();
+		}
 			break;
 		case WM_LBUTTONUP:
 			scanSizeSlider.HandleLeftMouseButtonUp();

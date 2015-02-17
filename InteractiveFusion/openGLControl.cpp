@@ -43,6 +43,7 @@
 #include "OpenGLShaderProgram.h"
 
 #include "OpenGLContext.h"
+#include "MeshContainer.h"
 
 using namespace std;
 
@@ -251,7 +252,9 @@ namespace InteractiveFusion {
 				ResizeOpenGLWindow(parentRect.right, parentRect.bottom);
 				break;
 			case ModelDataUpdated:
+				DebugUtility::DbgOut(L"Before ModelDataUpdated");
 				sceneMap[currentApplicationState]->GenerateBuffers();
+				DebugUtility::DbgOut(L"After ModelDataUpdated");
 				break;
 			case ModelHighlightsUpdated:
 				sceneMap[currentApplicationState]->SwapToHighlightBuffers();
@@ -797,7 +800,7 @@ namespace InteractiveFusion {
 
 #pragma region
 
-	int OpenGLControl::LoadAndSegmentModelDataFromScan(MeshContainer* _scannedMesh)
+	int OpenGLControl::LoadAndSegmentModelDataFromScan(std::shared_ptr<MeshContainer> _scannedMesh)
 	{
 		DebugUtility::DbgOut(L"OpenGLControl::LoadAndSegmentModelDataFromScan::Starting with Reconstruction");
 		SetStatusMessage(L"Reconstructing model");
@@ -844,6 +847,7 @@ namespace InteractiveFusion {
 		SetStatusMessage(L"Updating segmentation");
 		SetBusy(true);
 		currentSegmentationType = _params->GetType();
+		segmenterMap[currentSegmentationType]->SetSegmentationParameters(_params);
 		segmenterMap[currentSegmentationType]->UpdateSegmentation(this, sceneMap[currentApplicationState].get());
 		SetBusy(false);
 		

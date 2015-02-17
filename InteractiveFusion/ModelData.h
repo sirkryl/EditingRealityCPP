@@ -14,7 +14,7 @@ namespace InteractiveFusion {
 		ModelData();
 		virtual ~ModelData();
 		void LoadFromFile(const char* fileName);
-		void LoadFromData(MeshContainer* _meshContainer);
+		void LoadFromData(std::shared_ptr<MeshContainer> _meshContainer);
 		void GenerateBuffers();
 		void SwapToHighlightBuffers();
 
@@ -91,7 +91,7 @@ namespace InteractiveFusion {
 		void DrawNonStaticMeshWithAssignedColorCodes(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix);
 		void DrawAllButIndexWithAssignedColorCodes(int _index, glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix);
 
-		void SetGroundAlignmentRotation(float _angle, glm::vec3 _axis);
+		void SetGroundPlane(int _index);
 		glm::mat4 GetNegativeGroundAlignmentRotation();
 		void CombineAndAlignModelData(VCGMesh& _combinedMesh);
 

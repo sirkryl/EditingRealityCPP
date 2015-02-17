@@ -1,4 +1,5 @@
 #pragma once
+#include "ButtonSlider.h"
 #include <vector>
 #include <Windows.h>
 namespace InteractiveFusion {
@@ -10,6 +11,7 @@ namespace InteractiveFusion {
 		void Activate();
 		void Deactivate();
 		void Add(HWND _element);
+		void Add(ButtonSlider _element);
 		void CleanUp();
 		void Redraw();
 		bool IsMouseInUI();

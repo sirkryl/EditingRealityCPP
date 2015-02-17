@@ -49,11 +49,16 @@ namespace InteractiveFusion {
 
 	}
 
+	std::vector<HWND> ButtonSlider::GetHandles()
+	{
+		return std::vector < HWND > {hSliderButton, hSliderBackground};
+	}
+
 	bool ButtonSlider::HandleMouseMove()
 	{
 		if (sliderDown)
 		{
-			if (IsMouseInHandle())
+			if (IsMouseInHandle(hSliderBackground))
 			{
 				DebugUtility::DbgOut(L"ButtonSlider::HandleMouseMove()::sliderValue::", sliderValue);
 				POINT p;
@@ -129,19 +134,22 @@ namespace InteractiveFusion {
 		return sliderValue - (sliderValue % step);
 	}
 
-	void ButtonSlider::HandleLeftMouseButtonDown()
+	bool ButtonSlider::HandleLeftMouseButtonDown()
 	{
 		DebugUtility::DbgOut(L"ButtonSlider::HandleLeftClickDown()::Before");
 		if (!sliderDown)
 		{
-			if (IsMouseInHandle())
+			if (IsMouseInHandle(hSliderBackground))
 			{
 				DebugUtility::DbgOut(L"ButtonSlider::HandleLeftClickDown()");
 				sliderDown = true;
 				sliderButtonLayout.SetInactiveGradient(pressedGradient);
 				Redraw();
+				HandleMouseMove();
+				return true;
 			}
 		}
+		return false;
 	}
 
 	void ButtonSlider::HandleLeftMouseButtonUp()
@@ -175,17 +183,7 @@ namespace InteractiveFusion {
 
 	void ButtonSlider::MoveHandle()
 	{
-		if (repositioningNecessary)
-		{
-			RECT rect;
-			GetClientRect(hSliderButton, &rect);
-			if (rect.bottom != 0)
-			{
-				Reposition();
-				repositioningNecessary = false;
-			}
-		}
-		MoveWindow(hSliderButton, x+sliderPos, y, 50, height, true);
+		MoveWindow(hSliderButton, x + sliderPos, y, glm::max(30, width / 8), height, true);
 	}
 	void ButtonSlider::Resize(int _x, int _y, int _width, int _height)
 	{
@@ -193,8 +191,15 @@ namespace InteractiveFusion {
 		y = _y;
 		width = _width;
 		height = _height;
-		MoveHandle();
 		MoveWindow(hSliderBackground, _x, _y, _width, _height, true);
+
+		if (height != 0)
+		{
+			Reposition();
+		}
+
+		MoveHandle();
+		
 	}
 
 	void ButtonSlider::Redraw()
@@ -204,12 +209,12 @@ namespace InteractiveFusion {
 		InvalidateRect(hSliderButton, &rect, TRUE);
 	}
 
-	bool ButtonSlider::IsMouseInHandle()
+	bool ButtonSlider::IsMouseInHandle(HWND _handle)
 	{
 		POINT pCur;
 		GetCursorPos(&pCur);
 
-		RECT rRect; GetWindowRect(hSliderButton, &rRect);
+		RECT rRect; GetWindowRect(_handle, &rRect);
 		if (pCur.x >= rRect.left && pCur.x <= rRect.right &&
 			pCur.y >= rRect.top && pCur.y <= rRect.bottom)
 			return true;

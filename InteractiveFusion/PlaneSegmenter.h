@@ -33,7 +33,7 @@ namespace InteractiveFusion {
 		std::vector<pcl::ModelCoefficients::Ptr> planeCoefficients;
 
 		int axisChangedCount = 0;
-
+		int indexOfGroundPlane = -1;
 		PlaneParameters GetModelCoefficients(int _clusterIndex);
 
 		virtual bool Segment();

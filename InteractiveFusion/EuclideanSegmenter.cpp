@@ -43,7 +43,7 @@ namespace InteractiveFusion {
 		ec.setClusterTolerance(segmentationParameters.clusterTolerance);
 
 
-		ec.setMinClusterSize(1000);
+		ec.setMinClusterSize(segmentationParameters.minComponentSize);
 
 		ec.setMaxClusterSize(9000000);
 		//ec.setSearchMethod(tree);

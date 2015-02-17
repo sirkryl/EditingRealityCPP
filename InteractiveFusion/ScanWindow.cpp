@@ -27,6 +27,8 @@ namespace InteractiveFusion {
 
 	int voxelsPerMeter;
 
+	bool pauseFusion = false;
+
 	DWORD scanTickLastFpsUpdate;
 
 	ScanWindow::ScanWindow()
@@ -81,9 +83,11 @@ namespace InteractiveFusion {
 			kinectFusionScanner.ResolvePotentialSensorConflict(lParam);
 			break;
 		case WM_FRAMEREADY:
-			//DebugUtility::DbgOut(L"WM_FRAMEREADY");
-			kinectFusionScanner.HandleCompletedFrame();
-			cameraMatrix = kinectFusionScanner.GetTransformedCameraMatrix();
+			if (!pauseFusion)
+			{
+				kinectFusionScanner.HandleCompletedFrame();
+				cameraMatrix = kinectFusionScanner.GetTransformedCameraMatrix();
+			}
 			break;
 		case WM_UPDATESENSORSTATUS:
 			kinectFusionScanner.UpdateSensorStatus(wParam);
@@ -106,7 +110,9 @@ namespace InteractiveFusion {
 			_parentWindow->SetFramesPerSecond(kinectFusionScanner.GetFramesPerSecond());
 			scanTickLastFpsUpdate = GetTickCount();
 		}
-		_parentWindow->SetStatusBarMessage(kinectFusionScanner.GetAndResetStatus());
+		std::wstring fusionStatus = kinectFusionScanner.GetAndResetStatus();
+		if (fusionStatus.length() > 0)
+			_parentWindow->SetStatusBarMessage(fusionStatus);
 		if (kinectFusionScanner.GetGpuMemory() > 0 && kinectFusionScanner.GetGpuMemory() != _parentWindow->GetGpuMemory())
 		{
 			_parentWindow->SetGpuMemory(kinectFusionScanner.GetGpuMemory());
@@ -118,8 +124,12 @@ namespace InteractiveFusion {
 			switch (event)
 			{
 			case ScanWindowEvent::StateChange:
+				pauseFusion = true;
 				_parentWindow->ChangeState(PlaneSelection);
+				
 				kinectFusionScanner.PrepareMeshSave();
+				//_parentWindow->InitializeOpenGLScene(kinectFusionScanner.GetScannedMesh());
+				//kinectFusionScanner.FinishMeshSave();
 				boost::thread(&ScanWindow::FinishFusionScan, this, _parentWindow);
 				//_parentWindow->InitializeOpenGLScene(kinectFusionScanner.FinishScan());
 				break;
@@ -134,8 +144,10 @@ namespace InteractiveFusion {
 
 	void ScanWindow::FinishFusionScan(MainWindow* _parentWindow)
 	{
+		//_parentWindow->InitializeOpenGLScene(MeshContainer());
 		_parentWindow->InitializeOpenGLScene(kinectFusionScanner.GetScannedMesh());
 		kinectFusionScanner.FinishMeshSave();
+		//pauseFusion = false;
 	}
 
 	void ScanWindow::ProcessUI(WPARAM wParam, LPARAM lParam)
@@ -164,18 +176,14 @@ namespace InteractiveFusion {
 		SubWindow::Resize(parentWidth, parentHeight);
 		MoveWindow(buttonScanDone, (int)(parentWidth - 0.135*parentWidth), (int)(height / 2 - (int)(0.12*parentWidth) / 2) - 28, (int)(0.12*parentWidth), (int)(0.12*parentWidth), true);
 		
-		MoveWindow(reconstructionView, (int)(0.15f*parentWidth), 0, (int)(0.7f*parentWidth), parentHeight - 70, true);
+		int reconstructionHeight = parentHeight - 70;
+		int reconstructionWidth = glm::min(width-(int)(0.30f*parentWidth),(int)((parentHeight - 70)*1.33f));
+
+		//MoveWindow(reconstructionView, (int)(0.15f*parentWidth), 0, (int)(0.7f*parentWidth), parentHeight - 70, true);
+		MoveWindow(reconstructionView, width/2 - reconstructionWidth/2, 0, reconstructionWidth, reconstructionHeight, true);
 		MoveWindow(buttonScanReset, (int)(0.015f*parentWidth), (int)(height / 2 - (int)(0.12*parentWidth) / 2) - 28, (int)(0.12*parentWidth), (int)(0.12*parentWidth), true);
 		//MoveWindow(residualsView, 0, 0, 0.11*parentWidth, 0.11*parentWidth, true);
 		//MoveWindow(depthView, 0, 0.11*parentWidth, 0.11*parentWidth, 0.11*parentWidth, true);
-		
-	/*	MoveWindow(buttonScanDone, width - 200, height / 2 + 50, 150, 150, true);
-		//MoveWindow(hButtonTestTwo, rRect.right - 350, 10, 300, 50, true);
-		//MoveWindow(hButtonTestOne, rRect.right - 350, 10, 300, 50, true);
-		MoveWindow(buttonScanReset, width - 200, height / 2 - 200, 150, 150, true);
-		MoveWindow(reconstructionView, 250, 55, parentWidth-450, parentHeight-80, true);
-		MoveWindow(residualsView, 30, 55, 200, 200, true);
-		MoveWindow(depthView, 30, 255, 200, 200, true);*/
 	}
 
 	glm::mat4 ScanWindow::GetCameraMatrix()
@@ -195,6 +203,16 @@ namespace InteractiveFusion {
 		kinectFusionScanner.PauseRendering();
 		SubWindow::Hide();
 		DebugUtility::DbgOut(L"Hiding ScanWindow");
+	}
+
+	void ScanWindow::PauseScan()
+	{
+		pauseFusion = true;
+	}
+
+	void ScanWindow::UnpauseScan()
+	{
+		pauseFusion = false;
 	}
 
 	bool ScanWindow::HasVolumeSizeChanged(int _voxelsPerMeter)

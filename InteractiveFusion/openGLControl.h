@@ -7,6 +7,7 @@
 #include <boost/thread.hpp>
 #include <Windows.h>
 #include <string>
+#include <memory>
 namespace InteractiveFusion {
 
 	class MeshContainer;
@@ -78,7 +79,7 @@ namespace InteractiveFusion {
 
 		void FinishProcessing();
 
-		int LoadAndSegmentModelDataFromScan(MeshContainer* _scannedMesh);
+		int LoadAndSegmentModelDataFromScan(std::shared_ptr<MeshContainer> _scannedMesh);
 
 		void PushEvent(OpenGLControlEvent _event);
 

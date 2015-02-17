@@ -122,6 +122,12 @@ namespace InteractiveFusion {
 
 		temporarySegmentationClusterIndices.push_back(*inlierIndices);
 		planeCoefficients.push_back(coefficients);
+
+		if (axisChangedCount == 0 && indexOfGroundPlane == -1)
+		{
+			indexOfGroundPlane = temporarySegmentationClusterIndices.size() - 1;
+			DebugUtility::DbgOut(L"axisChangedCount:: 0, this is ground plane ", indexOfGroundPlane);
+		}
 		return true;
 	}
 
@@ -147,7 +153,8 @@ namespace InteractiveFusion {
 	{
 		if (temporarySegmentationClusterIndices.size() == 0)
 			return;
-
+		if (indexOfGroundPlane == temporarySegmentationClusterIndices.size() - 1)
+			indexOfGroundPlane = -1;
 		temporarySegmentationClusterIndices.pop_back();
 		planeCoefficients.pop_back();
 	}
@@ -233,30 +240,32 @@ namespace InteractiveFusion {
 			DebugUtility::DbgOut(L"Finishing plane segmentation... index: ", i);
 			if (planeParameters.IsInitialized())
 			{
-				//TODO: HOW TO DETERMINE GROUND PLANE (if it's not the first element?)
-				if (i == 0)
-				{
-					glm::vec3 normalVector = glm::normalize(glm::vec3(planeParameters.x, planeParameters.y, planeParameters.z));
-
-					glm::vec3 yAxis = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f));
-
-					if (normalVector.y < 0)
-						yAxis.y = -1.0f;
-
-					glm::vec3 rotationAxis = glm::cross(normalVector, yAxis);
-
-					//float xRotation = glm::acos(glm::dot(normalVector, glm::vec3(1.0f, 0.0f, 0.0f)));
-					float rotY = glm::acos(glm::dot(normalVector, yAxis)) * 180.0f / M_PI;
-					//float zRotation = glm::acos(glm::dot(normalVector, glm::vec3(0.0f, 0.0f, 1.0f)));
-					//_temporaryModelData->SetGroundAlignmentRotation(glm::rotate(glm::mat4(1.0), rotY, rotationAxis));
-					_outputModelData->SetGroundAlignmentRotation(rotY, rotationAxis);
-				}
 				_outputModelData->AddPlaneMeshToData(ConvertToMesh(i), planeParameters);
 			}
 			else
 				_outputModelData->AddObjectMeshToData(ConvertToMesh(i));
-
 		}
+		if (indexOfGroundPlane == -1)
+		{
+			DebugUtility::DbgOut(L"indexOfGroundPlane == -1");
+			/*float minDistance = std::numeric_limits<float>::max();
+			glm::vec3 yAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+			for (int i = 0; i < GetClusterCount(); i++)
+			{
+				PlaneParameters planeParameters = GetModelCoefficients(i);
+				if (planeParameters.IsInitialized())
+				{
+					glm::vec3 normalVector = glm::normalize(glm::vec3(planeParameters.x, planeParameters.y, planeParameters.z));
+					float planeDistance = glm::distance(yAxis, glm::vec3(abs(normalVector.x), abs(normalVector.y), abs(normalVector.z)));
+					if (planeDistance < minDistance)
+					{
+						minDistance = planeDistance;
+						indexOfGroundPlane = i;
+					}
+				}
+			}*/
+		}
+		_outputModelData->SetGroundPlane(indexOfGroundPlane);
 	}
 
 	void PlaneSegmenter::CleanUp()
@@ -271,6 +280,7 @@ namespace InteractiveFusion {
 		indicesUsedForNextPlaneSegmentation->indices.clear();
 		indicesFromLastPlaneSegmentation->indices.clear();
 		planeCoefficients.clear();
+		indexOfGroundPlane = -1;
 		Segmenter::CleanUp();
 	}
 }

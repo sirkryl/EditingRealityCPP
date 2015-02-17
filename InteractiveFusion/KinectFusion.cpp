@@ -116,6 +116,7 @@ namespace InteractiveFusion {
 	
 	void KinectFusion::HandleCompletedFrame()
 	{
+		//DebugUtility::DbgOut(L"KinectFusion::HandleCompletedFrame()::Beginning");
 		KinectFusionProcessorFrame const* pFrame = nullptr;
 
 		// Flush any extra WM_FRAMEREADY messages from the queue
@@ -134,7 +135,7 @@ namespace InteractiveFusion {
 			}
 
 			wstring status = pFrame->m_statusMessage;
-			if (status.length() != 0)
+			if (status.length() > 0)
 				SetStatus(status);
 			framesPerSecond = pFrame->m_fFramesPerSecond;
 		}
@@ -192,7 +193,7 @@ namespace InteractiveFusion {
 
 			m_bUIUpdated = true;
 		}
-
+		//DebugUtility::DbgOut(L"KinectFusion::HandleCompletedFrame()::Ending");
 		m_bColorCaptured = pFrame->m_bColorCaptured;
 
 		m_processor.UnlockFrame();
@@ -212,7 +213,7 @@ namespace InteractiveFusion {
 		m_bSavingMesh = false;
 	}
 
-	MeshContainer* KinectFusion::GetScannedMesh()
+	std::shared_ptr<MeshContainer> KinectFusion::GetScannedMesh()
 	{
 		INuiFusionColorMesh *mesh = nullptr;
 		HRESULT hr = m_processor.CalculateMesh(&mesh, 2);
@@ -272,10 +273,12 @@ namespace InteractiveFusion {
 			
 			hr = S_OK;
 			// Release the mesh
+			DebugUtility::DbgOut(L"KinectFusion::FinishScan()::Before SafeRelease");
 			SafeRelease(mesh);
+			DebugUtility::DbgOut(L"KinectFusion::FinishScan()::After SafeRelease");
 		}
 
-		return new MeshContainer(meshVertices, meshTriangles);;
+		return std::shared_ptr<MeshContainer>(new MeshContainer(meshVertices, meshTriangles));
 	}
 
 	void KinectFusion::UpdateSensorStatus(WPARAM _wParam)
