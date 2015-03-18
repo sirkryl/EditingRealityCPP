@@ -3,13 +3,10 @@
 #include <NuiSensorChooserUI.h>
 #include "KinectFusionParams.h"
 #include "KinectFusionProcessor.h"
-#include <string>
-#include <Windows.h>
-#include <glm/glm.hpp>
-#include <memory>
+#include "IScanner.h"
 namespace InteractiveFusion {
 	class MeshContainer;
-	class KinectFusion
+	class KinectFusion : public IScanner
 	{
 	public:
 		KinectFusion();

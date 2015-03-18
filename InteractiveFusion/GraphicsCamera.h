@@ -3,11 +3,11 @@
 
 namespace InteractiveFusion {
 	
-	class OpenGLCamera
+	class GraphicsCamera
 	{
 	public:
 
-		OpenGLCamera();
+		GraphicsCamera();
 		
 		void Initialize(glm::vec3 _position, glm::vec3 _lookAt, glm::vec3 _upDirection);
 		void Initialize(glm::vec3 _position, glm::vec3 _lookAt, glm::vec3 _upDirection, float _zoomStep, float _orbitXStep, float _orbitYStep, float _strafeXStep, float _strafeYStep);

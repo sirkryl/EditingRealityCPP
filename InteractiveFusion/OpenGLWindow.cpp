@@ -5,7 +5,7 @@
 #include "KeyState.h"
 #include "OpenGLWindow.h"
 #include "MainWindow.h"
-#include "OpenGLControl.h"
+#include "GraphicsControl.h"
 #include "StyleSheet.h"
 #include "DebugUtility.h"
 #include "IFResources.h"
@@ -145,7 +145,7 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void OpenGLWindow::HandleEvents(OpenGLControl* _glControl)
+	void OpenGLWindow::HandleEvents(GraphicsControl* _glControl)
 	{
 		while (!eventQueue.empty())
 		{

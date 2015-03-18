@@ -1,7 +1,7 @@
 #include "PlaneCutRenderer.h"
 
 #include "DebugUtility.h"
-#include "OpenGLControl.h"
+#include "GraphicsControl.h"
 #include "ModelData.h"
 #include "IconData.h"
 
@@ -25,12 +25,12 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void PlaneCutRenderer::Initialize(OpenGLControl* _glControl)
+	void PlaneCutRenderer::Initialize(GraphicsControl* _glControl)
 	{
 		OpenGLRenderer::Initialize(_glControl);		
 	}
 
-	void PlaneCutRenderer::Render(OpenGLControl* _glControl, ModelData* _modelData, IconData* _iconData)
+	void PlaneCutRenderer::Render(GraphicsControl* _glControl, ModelData* _modelData, IconData* _iconData)
 	{
 		//if (!plane->AreBuffersInitialized() && _modelData->GetUpperBounds().x != -999.0f && _modelData->GetLowerBounds().x != 999.0f)
 		//	InitializePlane(_glControl, _modelData);

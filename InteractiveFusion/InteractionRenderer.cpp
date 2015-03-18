@@ -1,8 +1,8 @@
 #include "InteractionRenderer.h"
-#include "OpenGLCamera.h"
+#include "GraphicsCamera.h"
 #include "KeyState.h"
 #include "DebugUtility.h"
-#include "OpenGLControl.h"
+#include "GraphicsControl.h"
 #include "ModelData.h"
 #include "IconData.h"
 
@@ -21,12 +21,12 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void InteractionRenderer::Initialize(OpenGLControl* _glControl)
+	void InteractionRenderer::Initialize(GraphicsControl* _glControl)
 	{
 		OpenGLRenderer::Initialize(_glControl);
 	}
 
-	void InteractionRenderer::Render(OpenGLControl* _glControl, ModelData* _modelData, IconData* _iconData)
+	void InteractionRenderer::Render(GraphicsControl* _glControl, ModelData* _modelData, IconData* _iconData)
 	{
 		OpenGLRenderer::PrepareRender(_glControl);
 		OpenGLRenderer::Render(_glControl, _modelData, _iconData);

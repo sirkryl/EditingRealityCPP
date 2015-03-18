@@ -35,8 +35,8 @@ namespace InteractiveFusion {
 		std::uniform_real_distribution<> dis(0.3f, 0.7f);
 
 		int segmentedMeshIndex = _modelData->GetFirstMeshIndexThatIsNotPlane();
-		DebugUtility::DbgOut(L"OpenGLControl::UpdateObjectSegmentationHighlights::segmentedMeshIndex: ", segmentedMeshIndex);
-		DebugUtility::DbgOut(L"OpenGLControl::UpdateObjectSegmentationHighlights::clusterCount: ", GetClusterCount());
+		DebugUtility::DbgOut(L"GraphicsControl::UpdateObjectSegmentationHighlights::segmentedMeshIndex: ", segmentedMeshIndex);
+		DebugUtility::DbgOut(L"GraphicsControl::UpdateObjectSegmentationHighlights::clusterCount: ", GetClusterCount());
 		for (int i = 0; i < GetClusterCount(); i++)
 		{
 			ColorIF color = { dis(gen), dis(gen), dis(gen) };

@@ -11,7 +11,7 @@ namespace InteractiveFusion {
 		};
 	};
 
-	class OpenGLControl;
+	class GraphicsControl;
 	class OpenGLWindow : 
 		public SubWindow
 	{
@@ -40,6 +40,6 @@ namespace InteractiveFusion {
 		virtual void CleanUp();
 		virtual LRESULT CALLBACK SubWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 		virtual void ProcessUI(WPARAM wParam, LPARAM lParam);
-		void HandleEvents(OpenGLControl* _glControl);
+		void HandleEvents(GraphicsControl* _glControl);
 	};
 }

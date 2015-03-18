@@ -1,6 +1,6 @@
 #include "PlaneSelector.h"
 #include "DebugUtility.h"
-#include "OpenGLControl.h"
+#include "GraphicsControl.h"
 #include "ModelData.h"
 #include "IconData.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -24,7 +24,7 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void PlaneSelector::HandleLeftMouseClick(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
+	void PlaneSelector::HandleLeftMouseClick(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
 	{
 		
 		int newIndex = GetIndexOfMeshUnderCursor(_glControl, _modelData, _overlayHelper, _glControl->GetOpenGLWindowHandle());
@@ -52,7 +52,7 @@ namespace InteractiveFusion {
 		
 	}
 
-	void PlaneSelector::HandleLeftMouseDown(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
+	void PlaneSelector::HandleLeftMouseDown(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
 	{
 		if (_selectedIndex != -1)
 		{
@@ -62,7 +62,7 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void PlaneSelector::HandleLeftMouseRelease(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
+	void PlaneSelector::HandleLeftMouseRelease(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
 	{
 		if (_selectedIndex != -1 && firstClick)
 		{
@@ -111,7 +111,7 @@ namespace InteractiveFusion {
 		UpdatePlaneTranslation();
 	}
 
-	void PlaneSelector::ApplyPlaneRotation(OpenGLControl* _glControl, float _offSet)
+	void PlaneSelector::ApplyPlaneRotation(GraphicsControl* _glControl, float _offSet)
 	{
 		if (_offSet > 0 && absoluteDegree > -30 ||
 			_offSet < 0 && absoluteDegree < 30)
@@ -139,7 +139,7 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void PlaneSelector::HandlePlaneTransformation(OpenGLControl* _glControl)
+	void PlaneSelector::HandlePlaneTransformation(GraphicsControl* _glControl)
 	{
 		POINT pCur;
 		GetCursorPos(&pCur);
@@ -188,7 +188,7 @@ namespace InteractiveFusion {
 		plane->SetTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
 	}
 
-	void PlaneSelector::DrawForColorPicking(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper)
+	void PlaneSelector::DrawForColorPicking(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper)
 	{
 		_modelData->DrawNonStaticMeshWithAssignedColorCodes(_glControl->GetProjectionMatrix(), _glControl->GetViewMatrix());
 	}

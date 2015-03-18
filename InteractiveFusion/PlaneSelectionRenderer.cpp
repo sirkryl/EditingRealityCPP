@@ -1,7 +1,7 @@
 #include "PlaneSelectionRenderer.h"
 #include "DebugUtility.h"
 #include "StyleSheet.h"
-#include "OpenGLControl.h"
+#include "GraphicsControl.h"
 #include "ModelData.h"
 #include "IconData.h"
 
@@ -20,12 +20,12 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void PlaneSelectionRenderer::Initialize(OpenGLControl* _glControl)
+	void PlaneSelectionRenderer::Initialize(GraphicsControl* _glControl)
 	{
 		OpenGLRenderer::Initialize(_glControl);
 	}
 
-	void PlaneSelectionRenderer::InitializeOverlays(OpenGLControl* _glControl)
+	void PlaneSelectionRenderer::InitializeOverlays(GraphicsControl* _glControl)
 	{
 		OpenGLRenderer::InitializeOverlays(_glControl);
 		std::vector<Vertex> planeSelectionQuestionOverlayVertices;
@@ -75,7 +75,7 @@ namespace InteractiveFusion {
 		glEnable(GL_DEPTH_TEST);
 	}
 
-	void PlaneSelectionRenderer::Render(OpenGLControl* _glControl, ModelData* _modelData, IconData* _iconData)
+	void PlaneSelectionRenderer::Render(GraphicsControl* _glControl, ModelData* _modelData, IconData* _iconData)
 	{
 		OpenGLRenderer::PrepareRender(_glControl);
 		OpenGLRenderer::Render(_glControl, _modelData, _iconData);

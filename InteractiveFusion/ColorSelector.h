@@ -11,7 +11,7 @@ namespace InteractiveFusion {
 
 	protected:
 
-		virtual void DrawForColorPicking(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper);
-		virtual void HandleLeftMouseClick(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex);
+		virtual void DrawForColorPicking(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper);
+		virtual void HandleLeftMouseClick(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex);
 	};
 }

@@ -1,4 +1,4 @@
-#include "OpenGLCamera.h"
+#include "GraphicsCamera.h"
 
 #include "KeyState.h"
 
@@ -10,17 +10,17 @@ namespace InteractiveFusion {
 	POINT currentCursorPosition;
 	POINT previousCursorPosition;
 	bool rotationPointInitialized = false;
-	OpenGLCamera::OpenGLCamera()
+	GraphicsCamera::GraphicsCamera()
 	{
 		Initialize(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
-	void OpenGLCamera::Initialize(glm::vec3 _position, glm::vec3 _lookAt, glm::vec3 _upDirection)
+	void GraphicsCamera::Initialize(glm::vec3 _position, glm::vec3 _lookAt, glm::vec3 _upDirection)
 	{
 		Initialize(_position, _lookAt, _upDirection, 0.05f, 0.15f, 0.2f, 0.002f, 0.002f);
 	}
 
-	void OpenGLCamera::Initialize(glm::vec3 _position, glm::vec3 _lookAt, glm::vec3 _upDirection, float _zoomStep, float _orbitXStep, float _orbitYStep, float _strafeXStep, float _strafeYStep)
+	void GraphicsCamera::Initialize(glm::vec3 _position, glm::vec3 _lookAt, glm::vec3 _upDirection, float _zoomStep, float _orbitXStep, float _orbitYStep, float _strafeXStep, float _strafeYStep)
 	{
 
 		camPosition = _position;
@@ -38,7 +38,7 @@ namespace InteractiveFusion {
 		//rotationPoint = glm::vec3(0.0f, 0.0f, -1.0f);
 	}
 
-	void OpenGLCamera::ResetCameraPosition()
+	void GraphicsCamera::ResetCameraPosition()
 	{
 		zoomFactor = 1.0f;
 		zoomStep = 0.2f;
@@ -57,20 +57,20 @@ namespace InteractiveFusion {
 		camUpDirection = glm::vec3(0.0f, 1.0f, 0.0f);
 	}
 
-	void OpenGLCamera::Update(bool _enableMouseInput, int _mouseWheelDelta)
+	void GraphicsCamera::Update(bool _enableMouseInput, int _mouseWheelDelta)
 	{
 		enableMouseInput = _enableMouseInput && rotationPointInitialized;
 		mouseWheelDelta = _mouseWheelDelta;
 	}
 
-	void OpenGLCamera::SetRotationPoint(glm::vec3 point)
+	void GraphicsCamera::SetRotationPoint(glm::vec3 point)
 	{
 		rotationPoint = point;
 		camLookAt = rotationPoint;
 		rotationPointInitialized = true;
 	}
 
-	void OpenGLCamera::Zoom()
+	void GraphicsCamera::Zoom()
 	{
 		if (mouseWheelDelta != 0)
 		{
@@ -86,13 +86,13 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void OpenGLCamera::Strafe()
+	void GraphicsCamera::Strafe()
 	{
 		completeStrafeX += (float)(previousCursorPosition.x - currentCursorPosition.x)*strafeXStep;
 		completeStrafeY += (float)(currentCursorPosition.y - previousCursorPosition.y)*strafeYStep;
 	}
 
-	void OpenGLCamera::Orbit()
+	void GraphicsCamera::Orbit()
 	{
 		float cursorOffsetY = (float)(previousCursorPosition.y - currentCursorPosition.y)*orbitYStep;
 		float cursorOffsetX = (float)(previousCursorPosition.x - currentCursorPosition.x)*orbitXStep;
@@ -124,7 +124,7 @@ namespace InteractiveFusion {
 		}
 	}
 
-	glm::mat4 OpenGLCamera::GetViewMatrix()
+	glm::mat4 GraphicsCamera::GetViewMatrix()
 	{
 		camDirection = glm::normalize(camPosition - camLookAt);
 

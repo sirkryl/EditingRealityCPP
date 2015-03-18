@@ -18,18 +18,18 @@ namespace InteractiveFusion {
 		void ChangeMode(PlaneCutMode _mode);
 
 	protected:
-		virtual void HandleLeftMouseClick(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex);
-		virtual void HandleLeftMouseDown(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex);
-		virtual void HandleLeftMouseRelease(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex);
-		virtual void DrawForColorPicking(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper);
+		virtual void HandleLeftMouseClick(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex);
+		virtual void HandleLeftMouseDown(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex);
+		virtual void HandleLeftMouseRelease(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex);
+		virtual void DrawForColorPicking(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper);
 		virtual void CleanUp();
 
 		
-		void HandlePlaneTransformation(OpenGLControl* _glControl);
+		void HandlePlaneTransformation(GraphicsControl* _glControl);
 		void ResetPlaneRotation();
 
 		void UpdatePlaneTranslation();
-		void ApplyPlaneRotation(OpenGLControl* _glControl, float _offSet);
+		void ApplyPlaneRotation(GraphicsControl* _glControl, float _offSet);
 		void ApplyPlaneTranslation(float _offSet);
 	private:
 		

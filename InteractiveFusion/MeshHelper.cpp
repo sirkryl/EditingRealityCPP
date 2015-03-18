@@ -1,7 +1,7 @@
 #include "MeshHelper.h"
 #include "MainWindow.h"
 #include "OpenGLShaderProgram.h"
-#include "OpenGLCamera.h"
+#include "GraphicsCamera.h"
 #include<wrap/io_trimesh/export.h>
 #include<wrap/io_trimesh/import.h>
 

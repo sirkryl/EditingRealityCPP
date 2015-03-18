@@ -117,12 +117,6 @@
     <ClInclude Include="IFValues.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="OpenGLCamera.h">
-      <Filter>Header Files\OpenGL</Filter>
-    </ClInclude>
-    <ClInclude Include="OpenGLControl.h">
-      <Filter>Header Files\OpenGL</Filter>
-    </ClInclude>
     <ClInclude Include="OpenGLText.h">
       <Filter>Header Files\OpenGL</Filter>
     </ClInclude>
@@ -312,6 +306,15 @@
     <ClInclude Include="ButtonSlider.h">
       <Filter>Header Files\UI\Layout</Filter>
     </ClInclude>
+    <ClInclude Include="GraphicsControl.h">
+      <Filter>Header Files\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsCamera.h">
+      <Filter>Header Files\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="IScanner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="plylib.cpp">
@@ -319,12 +322,6 @@
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenGLCamera.cpp">
-      <Filter>Source Files\OpenGL</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenGLControl.cpp">
-      <Filter>Source Files\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="OpenGLText.cpp">
       <Filter>Source Files\OpenGL</Filter>
@@ -496,6 +493,12 @@
     </ClCompile>
     <ClCompile Include="ButtonSlider.cpp">
       <Filter>Source Files\UI\Layout</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsControl.cpp">
+      <Filter>Source Files\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsCamera.cpp">
+      <Filter>Source Files\OpenGL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

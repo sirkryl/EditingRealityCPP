@@ -9,7 +9,7 @@
 #include "KeyState.h"
 #include "StyleSheet.h"
 
-#include "OpenGLControl.h"
+#include "GraphicsControl.h"
 
 #include "ButtonLayout.h"
 #include "GUIContainer.h"
@@ -34,7 +34,7 @@ namespace InteractiveFusion {
 	HINSTANCE appInstance;
 	WindowState currentState;
 	
-	OpenGLControl glControl;
+	GraphicsControl glControl;
 
 	std::unordered_map<WindowState, unique_ptr<SubWindow>> subWindowMap;
 
@@ -379,14 +379,14 @@ namespace InteractiveFusion {
 	void MainWindow::UpdateObjectSegmentation(ObjectSegmentationParams* _params)
 	{
 		SetStatusBarMessage(L"Updating object segmentation...");
-		boost::thread(&OpenGLControl::UpdateObjectSegmentation, &glControl, _params);
+		boost::thread(&GraphicsControl::UpdateObjectSegmentation, &glControl, _params);
 		//glControl.UpdateObjectSegmentation(_params);
 	}
 
 	void MainWindow::UpdatePlaneSegmentation(PlaneSegmentationParams* _params)
 	{
 		SetStatusBarMessage(L"Updating plane segmentation...");
-		boost::thread(&OpenGLControl::UpdatePlaneSegmentation, &glControl, _params);
+		boost::thread(&GraphicsControl::UpdatePlaneSegmentation, &glControl, _params);
 		//glControl.UpdatePlaneSegmentation(_params);
 	}
 
@@ -418,7 +418,7 @@ namespace InteractiveFusion {
 	{
 		SetStatusBarMessage(L"Reconstructing and cleaning scene...");
 		glControl.LoadAndSegmentModelDataFromScan(_scannedMesh);
-		//boost::thread(&OpenGLControl::LoadAndSegmentModelDataFromScan, &glControl, _scannedMesh);
+		//boost::thread(&GraphicsControl::LoadAndSegmentModelDataFromScan, &glControl, _scannedMesh);
 	}
 
 	void MainWindow::SetPlaneRenderer(bool _flag)
@@ -428,7 +428,7 @@ namespace InteractiveFusion {
 
 	void MainWindow::ExecutePlaneCut()
 	{
-		boost::thread(&OpenGLControl::ExecutePlaneCut, &glControl);
+		boost::thread(&GraphicsControl::ExecutePlaneCut, &glControl);
 	}
 
 	int MainWindow::GetScanVolumeSize()

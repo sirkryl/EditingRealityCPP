@@ -1,8 +1,8 @@
 #include "VisualizationHelper.h"
-#include "OpenGLCamera.h"
+#include "GraphicsCamera.h"
 #include "SelectionHelper.h"
 #include "OpenGLShaderProgram.h"
-#include "OpenGLControl.h"
+#include "GraphicsControl.h"
 
 namespace InteractiveFusion {
 	void VisualizationHelper::FillPointsToVisualize()

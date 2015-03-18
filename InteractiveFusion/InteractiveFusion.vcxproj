@@ -193,6 +193,7 @@
     </ClInclude>
     <ClInclude Include="InteractionRenderer.h" />
     <ClInclude Include="InteractionWindow.h" />
+    <ClInclude Include="IScanner.h" />
     <ClInclude Include="KinectFusion.h" />
     <ClInclude Include="ManipulationSelector.h" />
     <ClInclude Include="MeshContainer2D.h" />
@@ -232,8 +233,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="OpenGLCamera.h" />
-    <ClInclude Include="OpenGLControl.h" />
+    <ClInclude Include="GraphicsCamera.h" />
+    <ClInclude Include="GraphicsControl.h" />
     <ClInclude Include="SimplePlaneRenderable3D.h" />
     <ClInclude Include="StringConverter.h" />
     <ClInclude Include="StyleSheet.h" />
@@ -322,8 +323,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="OpenGLCamera.cpp" />
-    <ClCompile Include="OpenGLControl.cpp" />
+    <ClCompile Include="GraphicsCamera.cpp" />
+    <ClCompile Include="GraphicsControl.cpp" />
     <ClCompile Include="SimplePlaneRenderable3D.cpp" />
     <ClCompile Include="StopWatch.cpp" />
     <ClCompile Include="StyleSheet.cpp" />

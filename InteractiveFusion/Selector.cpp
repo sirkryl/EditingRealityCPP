@@ -4,7 +4,7 @@
 #include "ColorCoder.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include "DebugUtility.h"
-#include "OpenGLControl.h"
+#include "GraphicsControl.h"
 #include "ModelData.h"
 #include "IconData.h"
 
@@ -18,7 +18,7 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void Selector::HandleSelection(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper)
+	void Selector::HandleSelection(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper)
 	{
 		int currentlySelectedMeshIndex = _modelData->GetCurrentlySelectedMeshIndex();
 		if (KeyState::LeftMouseDownTouchCheck())
@@ -35,25 +35,25 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void Selector::HandleLeftMouseClick(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
+	void Selector::HandleLeftMouseClick(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
 	{
 	}
 
-	void Selector::HandleLeftMouseDown(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
+	void Selector::HandleLeftMouseDown(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
 	{
 	}
 
-	void Selector::HandleLeftMouseRelease(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
+	void Selector::HandleLeftMouseRelease(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
 	{
 	}
 
-	void Selector::DrawForColorPicking(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper)
+	void Selector::DrawForColorPicking(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper)
 	{
 		_modelData->DrawAllButIndexWithAssignedColorCodes(_modelData->GetCurrentlySelectedMeshIndex(), _glControl->GetProjectionMatrix(), _glControl->GetViewMatrix());
 		_overlayHelper->DrawForColorPicking(_glControl->GetViewportWidth(), _glControl->GetViewportHeight());
 	}
 
-	int Selector::GetIndexOfMeshUnderCursor(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, HWND _windowHandle)
+	int Selector::GetIndexOfMeshUnderCursor(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, HWND _windowHandle)
 	{
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClearDepth(1.0);

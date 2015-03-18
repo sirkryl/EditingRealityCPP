@@ -14,14 +14,14 @@
 namespace InteractiveFusion {
 	class MeshContainer;
 	class ModelData;
-	class OpenGLControl;
+	class GraphicsControl;
 	class Segmenter
 	{
 	public:
 		Segmenter();
 		virtual ~Segmenter();
 
-		virtual bool UpdateSegmentation(OpenGLControl* _glControl, ModelData* _modelData);
+		virtual bool UpdateSegmentation(GraphicsControl* _glControl, ModelData* _modelData);
 		
 		virtual void FinishSegmentation(ModelData* _inputModelData, ModelData* _outputModelData);
 		

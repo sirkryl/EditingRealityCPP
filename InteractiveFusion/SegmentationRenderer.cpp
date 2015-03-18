@@ -1,6 +1,6 @@
 #include "SegmentationRenderer.h"
 #include "DebugUtility.h"
-#include "OpenGLControl.h"
+#include "GraphicsControl.h"
 #include "ModelData.h"
 #include "IconData.h"
 
@@ -21,12 +21,12 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void SegmentationRenderer::Initialize(OpenGLControl* _glControl)
+	void SegmentationRenderer::Initialize(GraphicsControl* _glControl)
 	{
 		OpenGLRenderer::Initialize(_glControl);
 	}
 
-	void SegmentationRenderer::Render(OpenGLControl* _glControl, ModelData* _modelData, IconData* _iconData)
+	void SegmentationRenderer::Render(GraphicsControl* _glControl, ModelData* _modelData, IconData* _iconData)
 	{
 
 		OpenGLRenderer::PrepareRender(_glControl);

@@ -11,8 +11,8 @@ namespace InteractiveFusion {
 		SegmentationRenderer(OpenGLCameraMode _cameraMode);
 		virtual ~SegmentationRenderer();
 
-		virtual void Initialize(OpenGLControl* _glControl);
-		virtual void Render(OpenGLControl* _glControl, ModelData* _modelData, IconData* _iconData);
+		virtual void Initialize(GraphicsControl* _glControl);
+		virtual void Render(GraphicsControl* _glControl, ModelData* _modelData, IconData* _iconData);
 
 		virtual void CleanUp();
 

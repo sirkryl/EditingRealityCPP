@@ -1,7 +1,7 @@
 #include "OpenGLRenderer.h"
 #include "StyleSheet.h"
 #include "DebugUtility.h"
-#include "OpenGLControl.h"
+#include "GraphicsControl.h"
 #include "ModelData.h"
 #include "IconData.h"
 #include "MeshContainer2D.h"
@@ -33,7 +33,7 @@ namespace InteractiveFusion {
 	}
 
 
-	void OpenGLRenderer::Initialize(OpenGLControl* _glControl)
+	void OpenGLRenderer::Initialize(GraphicsControl* _glControl)
 	{
 		viewportWidth = _glControl->GetViewportWidth();
 		viewportHeight = _glControl->GetViewportHeight();
@@ -59,7 +59,7 @@ namespace InteractiveFusion {
 		OpenGLRenderer::initialized = true;
 	}
 
-	void OpenGLRenderer::InitializeOverlays(OpenGLControl* _glControl)
+	void OpenGLRenderer::InitializeOverlays(GraphicsControl* _glControl)
 	{
 		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::Begin");
 		vector<Vertex> statusMessageBackgroundVertices;
@@ -193,7 +193,7 @@ namespace InteractiveFusion {
 		
 	}
 
-	void OpenGLRenderer::Render(OpenGLControl* _glControl, ModelData* _modelData, IconData* _iconData)
+	void OpenGLRenderer::Render(GraphicsControl* _glControl, ModelData* _modelData, IconData* _iconData)
 	{
 
 		if (_modelData->IsReadyForRendering())
@@ -202,7 +202,7 @@ namespace InteractiveFusion {
 			_iconData->Draw(_glControl->GetViewportWidth(), _glControl->GetViewportHeight());
 	}
 
-	void OpenGLRenderer::PrepareRender(OpenGLControl* _glControl)
+	void OpenGLRenderer::PrepareRender(GraphicsControl* _glControl)
 	{
 		viewportWidth = _glControl->GetViewportWidth();
 		viewportHeight = _glControl->GetViewportHeight();
@@ -227,7 +227,7 @@ namespace InteractiveFusion {
 
 	}
 
-	void OpenGLRenderer::FinishRender(OpenGLControl* _glControl)
+	void OpenGLRenderer::FinishRender(GraphicsControl* _glControl)
 	{
 		if (_glControl->IsBusy())
 			ShowStatusOverlay(_glControl);
@@ -236,7 +236,7 @@ namespace InteractiveFusion {
 		_glControl->SwapBuffers();
 	}
 
-	void OpenGLRenderer::ShowStatusOverlay(OpenGLControl* _glControl)
+	void OpenGLRenderer::ShowStatusOverlay(GraphicsControl* _glControl)
 	{
 		glDisable(GL_DEPTH_TEST);
 

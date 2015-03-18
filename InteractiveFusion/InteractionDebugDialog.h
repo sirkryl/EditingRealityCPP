@@ -2,11 +2,11 @@
 #include "SegmentationHelper.h"
 #include "SelectionHelper.h"
 #include "MeshHelper.h"
-#include "OpenGLCamera.h"
+#include "GraphicsCamera.h"
 namespace InteractiveFusion {
 	class InteractionDebugDialog {
 	public:
-		void InitializeDialog(HINSTANCE _hInstance, HWND _parent, shared_ptr<Parameters> _params, shared_ptr<SegmentationHelper> _segmentationHelper, shared_ptr<SelectionHelper> _selectionHelper, shared_ptr<MeshHelper> _meshHelper, shared_ptr<OpenGLCamera> _openGLCamera);
+		void InitializeDialog(HINSTANCE _hInstance, HWND _parent, shared_ptr<Parameters> _params, shared_ptr<SegmentationHelper> _segmentationHelper, shared_ptr<SelectionHelper> _selectionHelper, shared_ptr<MeshHelper> _meshHelper, shared_ptr<GraphicsCamera> _openGLCamera);
 
 		void Show();
 		void Hide();
@@ -23,7 +23,7 @@ namespace InteractiveFusion {
 		shared_ptr<SegmentationHelper>       segmentationHelper;
 		shared_ptr<SelectionHelper> selectionHelper;
 		shared_ptr<MeshHelper> meshHelper;
-		shared_ptr<OpenGLCamera> openGLCamera;
+		shared_ptr<GraphicsCamera> openGLCamera;
 		void SetBackgroundColor(int redValue, int greenValue, int blueValue);
 		void ResetEditControls();
 		void ResetSliders();

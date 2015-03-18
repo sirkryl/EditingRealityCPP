@@ -35,7 +35,7 @@ namespace InteractiveFusion {
 		return true;
 	}
 
-	bool PlaneCutSegmenter::UpdateSegmentation(OpenGLControl* _glControl, ModelData* _modelData)
+	bool PlaneCutSegmenter::UpdateSegmentation(GraphicsControl* _glControl, ModelData* _modelData)
 	{
 		if (!HasPointCloudData())
 		{

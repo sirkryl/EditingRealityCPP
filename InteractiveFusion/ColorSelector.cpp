@@ -1,6 +1,6 @@
 #include "ColorSelector.h"
 #include "DebugUtility.h"
-#include "OpenGLControl.h"
+#include "GraphicsControl.h"
 #include "ModelData.h"
 #include "IconData.h"
 
@@ -14,7 +14,7 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void ColorSelector::HandleLeftMouseClick(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
+	void ColorSelector::HandleLeftMouseClick(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
 	{
 		DebugUtility::DbgOut(L"ColorSelector::HandleLeftMouseClick");
 		if (_selectedIndex != -1)
@@ -27,7 +27,7 @@ namespace InteractiveFusion {
 		_modelData->TemporarilyColorMesh(_selectedIndex);
 	}
 
-	void ColorSelector::DrawForColorPicking(OpenGLControl* _glControl, ModelData* _modelData, IconData* _overlayHelper)
+	void ColorSelector::DrawForColorPicking(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper)
 	{
 		_modelData->DrawWithAssignedColorCodes(_glControl->GetProjectionMatrix(), _glControl->GetViewMatrix());
 	}

@@ -4,7 +4,7 @@
 
 namespace InteractiveFusion {
 
-	void InteractionDebugDialog::InitializeDialog(HINSTANCE _hInstance, HWND _parent, shared_ptr<Parameters> _params, shared_ptr<SegmentationHelper> _segmentationHelper, shared_ptr<SelectionHelper> _selectionHelper, shared_ptr<MeshHelper> _meshHelper, shared_ptr<OpenGLCamera> _openGLCamera)
+	void InteractionDebugDialog::InitializeDialog(HINSTANCE _hInstance, HWND _parent, shared_ptr<Parameters> _params, shared_ptr<SegmentationHelper> _segmentationHelper, shared_ptr<SelectionHelper> _selectionHelper, shared_ptr<MeshHelper> _meshHelper, shared_ptr<GraphicsCamera> _openGLCamera)
 	{
 		hInstance = _hInstance;
 		parentHandle = _parent;
