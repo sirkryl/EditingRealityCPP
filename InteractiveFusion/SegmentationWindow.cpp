@@ -338,7 +338,7 @@ namespace InteractiveFusion {
 			case SegmentationWindowEvent::StateChange:
 				_parentWindow->FinishObjectSegmentation();
 				_parentWindow->ChangeState(PlaneCut);
-				_parentWindow->ShowHelpMessage(HelpMessage::PlaneCutHelp);
+				_parentWindow->SetAndShowHelpMessage(HelpMessage::PlaneCutHelp);
 				break;
 			case SegmentationWindowEvent::SegmentationFinished:
 				//do stuff

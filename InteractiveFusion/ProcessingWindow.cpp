@@ -173,7 +173,7 @@ namespace InteractiveFusion {
 			case ProcessingWindowEvent::StateChange:
 				_parentWindow->FinishProcessing();
 				_parentWindow->ChangeState(Interaction);
-				_parentWindow->ShowHelpMessage(HelpMessage::InteractionHelp);
+				_parentWindow->SetAndShowHelpMessage(HelpMessage::InteractionHelp);
 				break;
 			case ProcessingWindowEvent::FillHoles:
 				DebugUtility::DbgOut(L"ProcessingWindow::HandleEvents::FillHoles");

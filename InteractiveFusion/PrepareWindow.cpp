@@ -179,9 +179,14 @@ namespace InteractiveFusion {
 				break;
 			case PrepareWindowEvent::Start:
 				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::Start");
-				_parentWindow->ShowHelpMessage(HelpMessage::ScanHelp);
+				_parentWindow->SetAndShowHelpMessage(HelpMessage::ScanHelp);
 				boost::thread(&PrepareWindow::CountdownThread, this, _parentWindow);
 				
+				break;
+			case PrepareWindowEvent::HelpChanged:
+				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::HelpChanged");
+				_parentWindow->ToggleHelp(helpActive);
+
 				break;
 			}
 
@@ -196,14 +201,17 @@ namespace InteractiveFusion {
 		{
 			if (IsDlgButtonChecked(windowHandle, IDC_PREPARE_CHECK_HELP))
 			{
+				helpActive = true;
 				DebugUtility::DbgOut(L"HELP checked");
 				//params.showHelp = true;
 			}
 			else
 			{
+				helpActive = false;
 				//params.showHelp = false;
 				DebugUtility::DbgOut(L"HELP unchecked");
 			}
+			eventQueue.push(PrepareWindowEvent::HelpChanged);
 		}
 
 		if (IDC_PREPARE_CHECK_SCENARIO_ONE == LOWORD(wParam))

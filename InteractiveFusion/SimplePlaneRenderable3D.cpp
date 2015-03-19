@@ -40,6 +40,7 @@ namespace InteractiveFusion {
 	{
 		//return translation * scaleMatrix * zRotation * yRotation * xRotation;
 		//return Renderable3D::CalculateModelMatrix();
+		//return -originTransform * translation * xRotation * originTransform;
 		return translation * xRotation;
 	}
 

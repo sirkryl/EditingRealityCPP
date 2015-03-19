@@ -21,7 +21,7 @@ namespace InteractiveFusion {
 
 		void ChangeState(WindowState _state);
 
-		void ShowHelpMessage(HelpMessage _state);
+		void SetAndShowHelpMessage(HelpMessage _state);
 		bool IsHelpVisible();
 		void ChangeScanVolumeSize(int _voxelsPerMeter);
 
@@ -48,7 +48,7 @@ namespace InteractiveFusion {
 		void FinishObjectSegmentation();
 		
 		void FinishProcessing();
-
+		void ToggleHelp(bool flag);
 		int GetScanVolumeSize();
 		int GetGpuMemory();
 
@@ -71,10 +71,10 @@ namespace InteractiveFusion {
 		
 
 		static const DWORD          statusTimeOutInMilliSeconds = 5000;
-		
+		bool isHelpEnabled = true;
 		bool IsValidState(WindowState _state);
 
-
+		void ShowHelp();
 		void CleanUp();
 
 	};

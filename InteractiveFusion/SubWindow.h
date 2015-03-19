@@ -11,6 +11,7 @@ namespace InteractiveFusion {
 		enum Type {
 			StateChange,
 			Start,
+			HelpChanged,
 			Last
 		};
 	};
@@ -40,7 +41,7 @@ namespace InteractiveFusion {
 
 		bool isVisible = false;
 		bool isActive = true;
-
+		bool helpActive = true;
 		HWND parentHandle;
 		HWND windowHandle;
 

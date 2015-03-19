@@ -229,7 +229,7 @@ namespace InteractiveFusion {
 		glControl.RunOpenGLThread();
 
 		ChangeState(Prepare);
-		ShowHelpMessage(HelpMessage::PrepareHelp);
+		SetAndShowHelpMessage(HelpMessage::PrepareHelp);
 
 		ShowWindow(hWndMain, SW_MAXIMIZE);
 		MSG       msg = { 0 };
@@ -277,8 +277,6 @@ namespace InteractiveFusion {
 		subWindowMap[currentState]->Show();
 		glControl.UpdateApplicationState(currentState);
 		
-		if (currentState == PlaneSelection)
-			helpWindow.Show();
 		if (currentState == Prepare || currentState == Scan || currentState == Interaction)
 			dynamic_cast<ScanWindow*>(subWindowMap[Scan].get())->UnpauseScan();
 		else
@@ -289,15 +287,21 @@ namespace InteractiveFusion {
 		DebugUtility::DbgOut(L"End ChangeState ", currentState);
 	}
 
-	void MainWindow::ShowHelpMessage(HelpMessage _state)
+	void MainWindow::SetAndShowHelpMessage(HelpMessage _state)
 	{
 		helpWindow.SetHelpState(_state);
-		helpWindow.Show();
-		RECT rRect;
-		GetClientRect(hWndMain, &rRect);
-		helpWindow.Resize(rRect.right, rRect.bottom);
+		ShowHelp();
 	}
-
+	void MainWindow::ShowHelp()
+	{
+		if (isHelpEnabled)
+		{
+			helpWindow.Show();
+			RECT rRect;
+			GetClientRect(hWndMain, &rRect);
+			helpWindow.Resize(rRect.right, rRect.bottom);
+		}
+	}
 	bool MainWindow::IsHelpVisible()
 	{
 		return helpWindow.IsVisible();
@@ -550,7 +554,7 @@ namespace InteractiveFusion {
 			if ((int)currentState+1 <= Interaction)
 				ChangeState((WindowState)((int)currentState + 1));
 			if (currentState == Segmentation)
-				ShowHelpMessage(HelpMessage::SegmentationHelp);
+				SetAndShowHelpMessage(HelpMessage::SegmentationHelp);
 			
 		}
 	}
@@ -679,10 +683,7 @@ namespace InteractiveFusion {
 		if (IDC_BUTTON_HELP == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			helpWindow.SetDefaultMessage(currentState);
-			helpWindow.Show();
-			RECT rRect;
-			GetClientRect(hWndMain, &rRect);
-			helpWindow.Resize(rRect.right, rRect.bottom);
+			ShowHelp();
 		}
 	}
 
@@ -729,6 +730,11 @@ namespace InteractiveFusion {
 		if (hWndMain)
 			DestroyWindow(hWndMain);
 
+	}
+
+	void MainWindow::ToggleHelp(bool flag)
+	{
+		isHelpEnabled = flag;
 	}
 
 	void MainWindow::UpdateUIActivation()

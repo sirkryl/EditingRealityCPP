@@ -305,7 +305,7 @@ namespace InteractiveFusion {
 			{
 			case PlaneSelectionWindowEvent::StateChange:
 				_parentWindow->ChangeState(Segmentation);
-				_parentWindow->ShowHelpMessage(HelpMessage::SegmentationHelp);
+				_parentWindow->SetAndShowHelpMessage(HelpMessage::SegmentationHelp);
 				_parentWindow->UpdateObjectSegmentation(new EuclideanSegmentationParams());
 				break;
 			case PlaneSelectionWindowEvent::PlaneConfirmed:

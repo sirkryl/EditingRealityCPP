@@ -106,7 +106,7 @@ namespace InteractiveFusion {
 			case PlaneCutWindowEvent::StateChange:
 				_parentWindow->FinishProcessing();
 				_parentWindow->ChangeState(Processing);
-				_parentWindow->ShowHelpMessage(HelpMessage::ProcessingHelp);
+				_parentWindow->SetAndShowHelpMessage(HelpMessage::ProcessingHelp);
 				break;
 			case PlaneCutWindowEvent::ActivatePlane:
 				DebugUtility::DbgOut(L"PlaneCutWindow::HandleEvents::ActivatePlane");
