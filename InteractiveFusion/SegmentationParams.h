@@ -17,7 +17,7 @@ namespace InteractiveFusion {
 		EuclideanSegmentationParams() : 
 			ObjectSegmentationParams(Euclidean), 
 			clusterTolerance(0.02f),
-			minComponentSize(1000){};
+			minComponentSize(100){};
 		virtual ~EuclideanSegmentationParams() {};
 		float clusterTolerance;
 		int minComponentSize;
@@ -31,7 +31,7 @@ namespace InteractiveFusion {
 			numberOfNeighbors(20),
 			smoothnessThreshold(100),
 			curvatureThreshold(10),
-			minComponentSize(1000){};
+			minComponentSize(100){};
 		virtual ~RegionGrowthSegmentationParams() {};
 		int kSearchValue;
 		int numberOfNeighbors;

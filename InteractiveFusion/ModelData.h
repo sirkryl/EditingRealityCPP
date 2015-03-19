@@ -118,5 +118,6 @@ namespace InteractiveFusion {
 		private:
 			static int colorCodeCount;
 			int GetNextColorCode();
+			bool isBusy = false;
 	};
 }

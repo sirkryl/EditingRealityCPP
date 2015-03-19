@@ -22,6 +22,7 @@ namespace InteractiveFusion {
 	//EUCLIDEAN UI
 	GUIContainer euclideanSegmentationUi;
 	HWND textClusterToleranceLabel, textClusterTolerance;
+	HWND textEuclideanMinSizeLabel, textEuclideanMinSize;
 
 	//REGION GROWTH UI
 	GUIContainer  regionSegmentationUi;
@@ -29,7 +30,7 @@ namespace InteractiveFusion {
 	HWND textRGSmoothnessLabel, textRGSmoothness;
 	HWND textRGCurvatureLabel, textRGCurvature;
 	HWND textRGNeighborsLabel, textRGNeighbors;
-	HWND textRGKSearchLabel, textRGKSearch;
+	HWND textRGMinSizeLabel, textRGMinSize;
 
 	EuclideanSegmentationParams euclideanParams;
 	RegionGrowthSegmentationParams regionGrowthParams;
@@ -103,18 +104,27 @@ namespace InteractiveFusion {
 
 		SendMessage(textRGNeighborsLabel, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
 
-		textRGKSearch = CreateWindowEx(0, L"STATIC", std::to_wstring(regionGrowthParams.minComponentSize).c_str(), WS_CHILD | WS_VISIBLE | SS_RIGHT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_SIZE, hInstance, 0);
+		textRGMinSize = CreateWindowEx(0, L"STATIC", std::to_wstring(regionGrowthParams.minComponentSize).c_str(), WS_CHILD | WS_VISIBLE | SS_RIGHT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_SIZE, hInstance, 0);
 
-		SendMessage(textRGKSearch, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
-		textRGKSearchLabel = CreateWindowEx(0, L"STATIC", L"MIN SIZE", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_KSEARCH_LABEL, hInstance, 0);
+		SendMessage(textRGMinSize, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
+		textRGMinSizeLabel = CreateWindowEx(0, L"STATIC", L"MIN SIZE", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_MINSIZE_LABEL, hInstance, 0);
 
-		SendMessage(textRGKSearchLabel, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
+		SendMessage(textRGMinSizeLabel, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
+
+		textEuclideanMinSize = CreateWindowEx(0, L"STATIC", std::to_wstring(euclideanParams.minComponentSize).c_str(), WS_CHILD | WS_VISIBLE | SS_RIGHT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_EUCLIDEAN_TEXT_MINSIZE, hInstance, 0);
+
+
+		SendMessage(textEuclideanMinSize, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
+		textEuclideanMinSizeLabel = CreateWindowEx(0, L"STATIC", L"MIN SIZE", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_MINSIZE_LABEL, hInstance, 0);
+
+		SendMessage(textEuclideanMinSizeLabel, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
 
 		sliderMap.emplace(Tolerance, ButtonSlider());
 		sliderMap.emplace(Smoothness, ButtonSlider());
 		sliderMap.emplace(Curvature, ButtonSlider());
 		sliderMap.emplace(Neighbors, ButtonSlider());
-		sliderMap.emplace(MinSize, ButtonSlider());
+		sliderMap.emplace(RGMinSize, ButtonSlider());
+		sliderMap.emplace(EuclideanMinSize, ButtonSlider());
 
 		for (auto& slider : sliderMap)
 		{
@@ -126,14 +136,15 @@ namespace InteractiveFusion {
 		
 		sliderMap[Smoothness].SetLimits(1, 200);
 		sliderMap[Curvature].SetLimits(1, 200);
-		sliderMap[MinSize].SetLimits(100, 10000);
-
+		sliderMap[RGMinSize].SetLimits(100, 10000);
+		sliderMap[EuclideanMinSize].SetLimits(100, 10000);
 		sliderMap[Tolerance].SetValue((int)(euclideanParams.clusterTolerance*1000.0f));
 		sliderMap[Smoothness].SetValue((int)regionGrowthParams.smoothnessThreshold);
 		sliderMap[Curvature].SetValue((int)(regionGrowthParams.curvatureThreshold*10.0f));
 		sliderMap[Neighbors].SetValue(regionGrowthParams.numberOfNeighbors);
-		sliderMap[MinSize].SetValue(regionGrowthParams.minComponentSize);
-		
+		sliderMap[RGMinSize].SetValue(regionGrowthParams.minComponentSize);
+		sliderMap[EuclideanMinSize].SetValue(euclideanParams.minComponentSize);
+
 
 		generalSegmentationUi.Add(buttonSegmentationFinish);
 		generalSegmentationUi.Add(buttonSegmentationBegin);
@@ -144,7 +155,7 @@ namespace InteractiveFusion {
 		regionSegmentationUi.Add(sliderMap[Smoothness]);
 		regionSegmentationUi.Add(sliderMap[Curvature]);
 		regionSegmentationUi.Add(sliderMap[Neighbors]);
-		regionSegmentationUi.Add(sliderMap[MinSize]);
+		regionSegmentationUi.Add(sliderMap[RGMinSize]);
 
 		regionSegmentationUi.Add(textRGSmoothness);
 		regionSegmentationUi.Add(textRGSmoothnessLabel);
@@ -153,12 +164,15 @@ namespace InteractiveFusion {
 		regionSegmentationUi.Add(textRGCurvatureLabel);
 		regionSegmentationUi.Add(textRGNeighbors);
 		regionSegmentationUi.Add(textRGNeighborsLabel);
-		regionSegmentationUi.Add(textRGKSearch);
-		regionSegmentationUi.Add(textRGKSearchLabel);
+		regionSegmentationUi.Add(textRGMinSize);
+		regionSegmentationUi.Add(textRGMinSizeLabel);
 
 		euclideanSegmentationUi.Add(sliderMap[Tolerance]);
+		euclideanSegmentationUi.Add(sliderMap[EuclideanMinSize]);
 		euclideanSegmentationUi.Add(textClusterTolerance);
 		euclideanSegmentationUi.Add(textClusterToleranceLabel);
+		euclideanSegmentationUi.Add(textEuclideanMinSize);
+		euclideanSegmentationUi.Add(textEuclideanMinSizeLabel);
 
 		selectedSegmentationType = Euclidean;
 		UpdateSegmentationPreviewValues();
@@ -195,6 +209,13 @@ namespace InteractiveFusion {
 			SetDlgItemText(windowHandle, IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE, clusterToleranceString.c_str());
 			DebugUtility::DbgOut(L"euclideanParams.clusterTolerance = ", euclideanParams.clusterTolerance);
 		}
+		if (euclideanParams.minComponentSize != sliderMap[EuclideanMinSize].GetValue())
+		{
+			euclideanParams.minComponentSize = sliderMap[EuclideanMinSize].GetValue();
+			wstring minComponentsString = to_wstring(euclideanParams.minComponentSize) + L"";
+			SetDlgItemText(windowHandle, IDC_SEGMENTATION_EUCLIDEAN_TEXT_MINSIZE, minComponentsString.c_str());
+			DebugUtility::DbgOut(L"euclideanParams.minComponentSize = ", euclideanParams.minComponentSize);
+		}
 
 		if (regionGrowthParams.smoothnessThreshold != sliderMap[Smoothness].GetValue())
 		{
@@ -223,9 +244,9 @@ namespace InteractiveFusion {
 			DebugUtility::DbgOut(L"regionGrowthParams.numberOfNeighbors = ", regionGrowthParams.numberOfNeighbors);
 		}
 
-		if (regionGrowthParams.minComponentSize != sliderMap[MinSize].GetValue())
+		if (regionGrowthParams.minComponentSize != sliderMap[RGMinSize].GetValue())
 		{
-			regionGrowthParams.minComponentSize = sliderMap[MinSize].GetValue();
+			regionGrowthParams.minComponentSize = sliderMap[RGMinSize].GetValue();
 			wstring minComponentsString = to_wstring(regionGrowthParams.minComponentSize) + L"";
 			SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_SIZE, minComponentsString.c_str());
 			DebugUtility::DbgOut(L"regionGrowthParams.minComponentSize = ", regionGrowthParams.minComponentSize);
@@ -366,6 +387,10 @@ namespace InteractiveFusion {
 		MoveWindow(textClusterToleranceLabel, leftSegmentationXPosition, (int)(0.12f*height), controlWidth / 2, 25, true);
 		sliderMap[Tolerance].Resize(leftSegmentationXPosition, (int)(0.12f*height) + 30, controlWidth, 40);
 		MoveWindow(textClusterTolerance, leftSegmentationXPosition + controlWidth / 2, (int)(0.12f*height), controlWidth / 2, 25, true);
+		
+		MoveWindow(textEuclideanMinSizeLabel, leftSegmentationXPosition, (int)(0.12f*height) + 75, controlWidth / 2, 25, true);
+		sliderMap[EuclideanMinSize].Resize(leftSegmentationXPosition, (int)(0.12f*height) + 105, controlWidth, 40);
+		MoveWindow(textEuclideanMinSize, leftSegmentationXPosition + controlWidth / 2, (int)(0.12f*height) + 75, controlWidth / 2, 25, true);
 
 		MoveWindow(textRGSmoothnessLabel, leftSegmentationXPosition, (int)(0.12f*height), controlWidth / 2, 25, true);
 		sliderMap[Smoothness].Resize(leftSegmentationXPosition, (int)(0.12f*height) + 30, controlWidth, 40);
@@ -379,9 +404,9 @@ namespace InteractiveFusion {
 		sliderMap[Neighbors].Resize(leftSegmentationXPosition, (int)(0.12f*height) + 180, controlWidth, 40);
 		MoveWindow(textRGNeighbors, leftSegmentationXPosition + controlWidth / 2, (int)(0.12f*height) + 150, controlWidth / 2, 25, true);
 
-		MoveWindow(textRGKSearchLabel, leftSegmentationXPosition, (int)(0.12f*height) + 225, controlWidth / 2, 25, true);
-		sliderMap[MinSize].Resize(leftSegmentationXPosition, (int)(0.12f*height) + 255, controlWidth, 40);
-		MoveWindow(textRGKSearch, leftSegmentationXPosition + controlWidth / 2, (int)(0.12f*height) + 225, controlWidth / 2, 25, true);
+		MoveWindow(textRGMinSizeLabel, leftSegmentationXPosition, (int)(0.12f*height) + 225, controlWidth / 2, 25, true);
+		sliderMap[RGMinSize].Resize(leftSegmentationXPosition, (int)(0.12f*height) + 255, controlWidth, 40);
+		MoveWindow(textRGMinSize, leftSegmentationXPosition + controlWidth / 2, (int)(0.12f*height) + 225, controlWidth / 2, 25, true);
 
 
 	}

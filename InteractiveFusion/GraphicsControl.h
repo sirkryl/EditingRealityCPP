@@ -61,6 +61,7 @@ namespace InteractiveFusion {
 		void ChangePlaneCutMode(PlaneCutMode _mode);
 		void SetCameraMode(OpenGLCameraMode _cameraMode);
 		void ResetModel();
+		void ReloadCurrentState();
 		int FillHoles(int _holeSize);
 		int RemoveConnectedComponents(int _maxComponentSize);
 		

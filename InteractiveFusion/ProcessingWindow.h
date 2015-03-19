@@ -8,6 +8,7 @@ namespace InteractiveFusion {
 		enum Type {
 			FillHoles = SubWindowEvent::Last,
 			RemoveComponents,
+			Reset,
 			Last
 		};
 	};

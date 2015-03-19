@@ -36,6 +36,7 @@ namespace InteractiveFusion {
 
 		virtual void FinishDrawing();
 
+
 		void CleanUp();
 
 	protected:

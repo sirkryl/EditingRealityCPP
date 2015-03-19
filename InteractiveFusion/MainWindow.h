@@ -32,6 +32,7 @@ namespace InteractiveFusion {
 		void ChangePlaneCutMode(PlaneCutMode _mode);
 		void SetCameraMode(OpenGLCameraMode _cameraMode);
 
+		void ReloadModel();
 		void ExportModel();
 		void ResetModel();
 

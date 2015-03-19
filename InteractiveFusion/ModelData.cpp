@@ -142,6 +142,8 @@ namespace InteractiveFusion {
 
 	bool ModelData::IsReadyForRendering()
 	{
+		if (isBusy)
+			return false;
 		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
 		{
 			if (!(*mI)->AreBuffersInitialized())
@@ -301,6 +303,7 @@ namespace InteractiveFusion {
 
 	int ModelData::FillHoles(int _holeSize)
 	{
+		
 		int holeCount = 0;
 		if (currentlySelectedMesh != -1)
 		{
@@ -313,6 +316,7 @@ namespace InteractiveFusion {
 				holeCount += FillHoles(_holeSize, index);
 			}
 		}
+		
 		return holeCount;
 	}
 
@@ -320,7 +324,7 @@ namespace InteractiveFusion {
 	{
 		if (!IsValidMeshDataIndex(_index))
 			return 0;
-
+		isBusy = true;
 		int holeCount = 0;
 		currentMeshData[_index]->CopyVisibleToInternalData();
 		currentMeshData[_index]->Clean();
@@ -328,11 +332,13 @@ namespace InteractiveFusion {
 		currentMeshData[_index]->FillHoles(_holeSize);
 		currentMeshData[_index]->CopyInternalToVisibleData();
 		currentMeshData[_index]->UpdateEssentials();
+		isBusy = false;
 		return holeCount;
 	}
 
 	int ModelData::RemoveConnectedComponents(int _maxComponentSize)
 	{
+		isBusy = true;
 		int removedComponentCount = 0;
 		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
 		{
@@ -341,6 +347,7 @@ namespace InteractiveFusion {
 			(*mI)->CopyInternalToVisibleData();
 			(*mI)->UpdateEssentials();
 		}
+		isBusy = false;
 		return removedComponentCount;
 	}
 
@@ -362,9 +369,12 @@ namespace InteractiveFusion {
 	{
 		if (!IsValidMeshDataIndex(_index))
 			return;
+
+		isBusy = true;
 		currentMeshData[_index]->SetSelected(false);
 		currentlySelectedMesh = -1;
 		currentMeshData[_index]->SetDeleted(true);
+		isBusy = false;
 	}
 
 	void ModelData::MarkDataAsDeleted()
@@ -400,6 +410,7 @@ namespace InteractiveFusion {
 
 	void ModelData::ResetToInitialState()
 	{
+		isBusy = true;
 		std::vector<int> indicesOfDuplicatesToBeRemoved;
 		int meshCount = 0;
 		for (auto& mesh : currentMeshData)
@@ -428,6 +439,7 @@ namespace InteractiveFusion {
 			currentMeshData.erase(currentMeshData.begin() + index - meshCount);
 			meshCount++;
 		}
+		isBusy = false;
 		/*for (int i = 0; i < indicesOfDuplicatesToBeRemoved.size(); i++)
 		{
 			currentMeshData[indicesOfDuplicatesToBeRemoved[i] - meshCount]->CleanUp();
@@ -479,231 +491,231 @@ namespace InteractiveFusion {
 		currentMeshData[_index]->HighlightTrianglesWithColor(verticesBelow, ColorIF{ 0.0f, 0.0f, 1.0f, 1.0f }, false);
 	}
 
-	void ModelData::CutWithPlane(int _index, PlaneParameters _parameters)
-	{
-		if (!IsValidMeshDataIndex(_index))
-			return;
-
-		DebugUtility::DbgOut(L"GraphicsControl::CutWithPlane ", _index);
-
-/*		VCGMesh mesh;
-		VCGMesh outputMesh;
-		currentMeshData[_index]->GetVcgData(mesh);
-
-		vcg::Box3f ClipBB;
-		ClipBB.min = vcg::Point3f(-10000.0f, -10000.0f, _parameters.d);
-		ClipBB.max = vcg::Point3f(10000.0f, 10000.0f, _parameters.d + 10000.0f);
-		vcg::tri::GenericVertexInterpolator<VCGMesh> interp(mesh);
-		vcg::tri::TriMeshClipper<VCGMesh>::Box(ClipBB, interp, mesh);
-		
-		DebugUtility::DbgOut(L"GraphicsControl::CutWithPlane::Clipped Mesh VN ", (int)mesh.vn);
-		DebugUtility::DbgOut(L"GraphicsControl::CutWithPlane::Clipped Mesh FN ", (int)mesh.fn);
-
-		currentMeshData[_index]->SetDeleted(true);
-		currentMeshData.erase(currentMeshData.begin() + _index);
-		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(mesh)));
-		currentMeshData[currentMeshData.size() - 1]->SetColorCode(currentMeshData.size() + 2);
-		currentMeshData[currentMeshData.size() - 1]->CopyInternalToVisibleData();
-		currentMeshData[currentMeshData.size() - 1]->UpdateEssentials();
-		currentMeshData[currentMeshData.size() - 1]->SetShaderProgram(currentMeshData[_index]->GetShaderProgram());
-		UnselectMesh();*/
-		std::vector<Vertex> verticesAbove;
-		std::vector<Vertex> verticesBelow;
-
-		std::unordered_map<int, int> vertexAboveIndexMap;
-		std::unordered_map<int, int> vertexBelowIndexMap;
-
-		std::unordered_map<int, std::vector<int>> indexMap;
-
-		for (auto& triangle : currentMeshData[_index]->GetTriangles())
-		{
-			indexMap[triangle.v1] = { (int)triangle.v2, (int)triangle.v3 };
-			indexMap[triangle.v2] = { (int)triangle.v1, (int)triangle.v3 };
-			indexMap[triangle.v3] = { (int)triangle.v1, (int)triangle.v2 };
-		}
-
-		int index = 0;
-
-		std::vector<Vertex> originalVertices = currentMeshData[_index]->GetVertices();
-
-		for (auto& vertex : originalVertices)
-		{
-			float iO = vertex.x*_parameters.x + vertex.y*_parameters.y + vertex.z * _parameters.z + _parameters.d;
-			if (iO > 0)
-			{
-				verticesAbove.push_back(vertex);
-				vertexAboveIndexMap[index] = verticesAbove.size() - 1;
-			}
-			else
-			{
-				verticesBelow.push_back(vertex);
-				vertexBelowIndexMap[index] = verticesBelow.size() - 1;
-			}
-			index++;
-		}
-
-		std::vector<Triangle> meshTriangles = currentMeshData[_index]->GetTriangles();
-
-		std::vector<Triangle> trianglesAbove;
-		std::vector<Triangle> trianglesBelow;
-		
-		std::unordered_map<int, int>::const_iterator mapIterator;
-
-		for (auto& vertexIndexAbove : vertexAboveIndexMap)
-		{
-			vector<int> savedIndexValues = indexMap[vertexIndexAbove.first];
-			for (size_t j = 0; j < savedIndexValues.size(); j += 3)
-			{
-				Triangle triangle;
-				/*if the index is the first value in the current face, look for 2nd and 3rd in the current cluster
-				and either add them to the new face or add new vertices to fill the face */
-				if (savedIndexValues[j] == vertexIndexAbove.first)
-				{
-					//first index of face
-					triangle.v1 = vertexIndexAbove.second;
-
-					//second index of face
-
-					//way faster than vector::find or unordered_set::find for that matter
-					mapIterator = vertexAboveIndexMap.find(savedIndexValues[j + 1]);
-
-					size_t indexOfSecondVertex;
-					if (mapIterator != vertexAboveIndexMap.end())
-					{
-						indexOfSecondVertex = vertexAboveIndexMap[savedIndexValues[j + 1]];
-					}
-					else
-					{
-						indexOfSecondVertex = verticesAbove.size();
-						verticesAbove.push_back(originalVertices[savedIndexValues[j + 1]]);
-					}
-					triangle.v2 = indexOfSecondVertex;
-
-					//third index of face
-					mapIterator = vertexAboveIndexMap.find(savedIndexValues[j + 2]);
-
-					size_t indexOfThirdVertex;
-					if (mapIterator != vertexAboveIndexMap.end())
-					{
-						indexOfThirdVertex = vertexAboveIndexMap[savedIndexValues[j + 2]];
-					}
-					else
-					{
-						indexOfThirdVertex = verticesAbove.size();
-						verticesAbove.push_back(originalVertices[savedIndexValues[j + 2]]);
-					}
-
-					triangle.v3 = indexOfThirdVertex;
-
-					trianglesAbove.push_back(triangle);
-				}
-				else if (savedIndexValues[j + 1] == vertexIndexAbove.first)
-				{
-					//first index of face
-					mapIterator = vertexAboveIndexMap.find(savedIndexValues[j]);
-
-					size_t indexOfFirstVertex;
-					if (mapIterator != vertexAboveIndexMap.end())
-					{
-						indexOfFirstVertex = vertexAboveIndexMap[savedIndexValues[j]];
-					}
-					else
-					{
-						indexOfFirstVertex = verticesAbove.size();
-						verticesAbove.push_back(originalVertices[savedIndexValues[j]]);
-					}
-
-					triangle.v1 = indexOfFirstVertex;
-
-					//second index of face
-					triangle.v2 = vertexIndexAbove.second;
-
-					//third index of face
-					mapIterator = vertexAboveIndexMap.find(savedIndexValues[j + 2]);
-
-					size_t indexOfThirdVertex;
-					if (mapIterator != vertexAboveIndexMap.end())
-					{
-						indexOfThirdVertex = vertexAboveIndexMap[savedIndexValues[j + 2]];
-					}
-					else
-					{
-						indexOfThirdVertex = verticesAbove.size();
-						verticesAbove.push_back(originalVertices[savedIndexValues[j + 2]]);
-					}
-					triangle.v3 = indexOfThirdVertex;
-
-					trianglesAbove.push_back(triangle);
-				}
-				else if (savedIndexValues[j + 2] == vertexIndexAbove.first)
-				{
-					//first index of face
-					mapIterator = vertexAboveIndexMap.find(savedIndexValues[j]);
-
-					size_t indexOfFirstVertex;
-					if (mapIterator != vertexAboveIndexMap.end())
-					{
-						indexOfFirstVertex = vertexAboveIndexMap[savedIndexValues[j]];
-					}
-					else
-					{
-						indexOfFirstVertex = verticesAbove.size();
-						verticesAbove.push_back(originalVertices[savedIndexValues[j]]);
-					}
-					triangle.v1 = indexOfFirstVertex;
-
-					//second index of face
-					mapIterator = vertexAboveIndexMap.find(savedIndexValues[j + 1]);
-
-					size_t indexOfSecondVertex;
-					if (mapIterator != vertexAboveIndexMap.end())
-					{
-						indexOfSecondVertex = vertexAboveIndexMap[savedIndexValues[j + 1]];
-					}
-					else
-					{
-						indexOfSecondVertex = verticesAbove.size();
-						verticesAbove.push_back(originalVertices[savedIndexValues[j + 1]]);
-					}
-					triangle.v2 = indexOfSecondVertex;
-
-					//third index of face
-					triangle.v3 = vertexIndexAbove.second;
-					trianglesAbove.push_back(triangle);
-				}
-			}
-			/*Triangle newTriangle;
-			auto firstTriangle = indexMap.find(vertexIndexAbove.first);
-			if (firstTriangle != indexMap.end())
-			{
-				Triangle oldTriangle;
-				oldTriangle.v1 = vertexIndexAbove.first;
-				oldTriangle.v2 = indexMap[vertexIndexAbove.first][0];
-				oldTriangle.v3 = indexMap[vertexIndexAbove.first][1];
-
-				newTriangle.v1 = vertexIndexAbove.second;
-
-				auto secondTriangle = vertexAboveIndexMap.find(oldTriangle.v2);
-				if (secondTriangle != vertexAboveIndexMap.end())
-				{
-					newTriangle.v2 = vertexAboveIndexMap[secondTriangle];
-				}
-			}*/
-			
-		}
-
-		currentMeshData[_index]->SetDeleted(true);
-		//currentMeshData.erase(currentMeshData.begin() + _index);
-		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(verticesAbove, trianglesAbove)));
-		currentMeshData[currentMeshData.size() - 1]->CopyVisibleToInternalData();
-		currentMeshData[currentMeshData.size() - 1]->PrepareMesh();
-		currentMeshData[currentMeshData.size() - 1]->SetColorCode(GetNextColorCode());
-		
-		currentMeshData[currentMeshData.size() - 1]->UpdateEssentials();
-		currentMeshData[currentMeshData.size() - 1]->SetShaderProgram(defaultShaderProgram);
-
-		
-	}
+//	void ModelData::CutWithPlane(int _index, PlaneParameters _parameters)
+//	{
+//		if (!IsValidMeshDataIndex(_index))
+//			return;
+//
+//		DebugUtility::DbgOut(L"GraphicsControl::CutWithPlane ", _index);
+//
+///*		VCGMesh mesh;
+//		VCGMesh outputMesh;
+//		currentMeshData[_index]->GetVcgData(mesh);
+//
+//		vcg::Box3f ClipBB;
+//		ClipBB.min = vcg::Point3f(-10000.0f, -10000.0f, _parameters.d);
+//		ClipBB.max = vcg::Point3f(10000.0f, 10000.0f, _parameters.d + 10000.0f);
+//		vcg::tri::GenericVertexInterpolator<VCGMesh> interp(mesh);
+//		vcg::tri::TriMeshClipper<VCGMesh>::Box(ClipBB, interp, mesh);
+//		
+//		DebugUtility::DbgOut(L"GraphicsControl::CutWithPlane::Clipped Mesh VN ", (int)mesh.vn);
+//		DebugUtility::DbgOut(L"GraphicsControl::CutWithPlane::Clipped Mesh FN ", (int)mesh.fn);
+//
+//		currentMeshData[_index]->SetDeleted(true);
+//		currentMeshData.erase(currentMeshData.begin() + _index);
+//		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(mesh)));
+//		currentMeshData[currentMeshData.size() - 1]->SetColorCode(currentMeshData.size() + 2);
+//		currentMeshData[currentMeshData.size() - 1]->CopyInternalToVisibleData();
+//		currentMeshData[currentMeshData.size() - 1]->UpdateEssentials();
+//		currentMeshData[currentMeshData.size() - 1]->SetShaderProgram(currentMeshData[_index]->GetShaderProgram());
+//		UnselectMesh();*/
+//		std::vector<Vertex> verticesAbove;
+//		std::vector<Vertex> verticesBelow;
+//
+//		std::unordered_map<int, int> vertexAboveIndexMap;
+//		std::unordered_map<int, int> vertexBelowIndexMap;
+//
+//		std::unordered_map<int, std::vector<int>> indexMap;
+//
+//		for (auto& triangle : currentMeshData[_index]->GetTriangles())
+//		{
+//			indexMap[triangle.v1] = { (int)triangle.v2, (int)triangle.v3 };
+//			indexMap[triangle.v2] = { (int)triangle.v1, (int)triangle.v3 };
+//			indexMap[triangle.v3] = { (int)triangle.v1, (int)triangle.v2 };
+//		}
+//
+//		int index = 0;
+//
+//		std::vector<Vertex> originalVertices = currentMeshData[_index]->GetVertices();
+//
+//		for (auto& vertex : originalVertices)
+//		{
+//			float iO = vertex.x*_parameters.x + vertex.y*_parameters.y + vertex.z * _parameters.z + _parameters.d;
+//			if (iO > 0)
+//			{
+//				verticesAbove.push_back(vertex);
+//				vertexAboveIndexMap[index] = verticesAbove.size() - 1;
+//			}
+//			else
+//			{
+//				verticesBelow.push_back(vertex);
+//				vertexBelowIndexMap[index] = verticesBelow.size() - 1;
+//			}
+//			index++;
+//		}
+//
+//		std::vector<Triangle> meshTriangles = currentMeshData[_index]->GetTriangles();
+//
+//		std::vector<Triangle> trianglesAbove;
+//		std::vector<Triangle> trianglesBelow;
+//		
+//		std::unordered_map<int, int>::const_iterator mapIterator;
+//
+//		for (auto& vertexIndexAbove : vertexAboveIndexMap)
+//		{
+//			vector<int> savedIndexValues = indexMap[vertexIndexAbove.first];
+//			for (size_t j = 0; j < savedIndexValues.size(); j += 3)
+//			{
+//				Triangle triangle;
+//				/*if the index is the first value in the current face, look for 2nd and 3rd in the current cluster
+//				and either add them to the new face or add new vertices to fill the face */
+//				if (savedIndexValues[j] == vertexIndexAbove.first)
+//				{
+//					//first index of face
+//					triangle.v1 = vertexIndexAbove.second;
+//
+//					//second index of face
+//
+//					//way faster than vector::find or unordered_set::find for that matter
+//					mapIterator = vertexAboveIndexMap.find(savedIndexValues[j + 1]);
+//
+//					size_t indexOfSecondVertex;
+//					if (mapIterator != vertexAboveIndexMap.end())
+//					{
+//						indexOfSecondVertex = vertexAboveIndexMap[savedIndexValues[j + 1]];
+//					}
+//					else
+//					{
+//						indexOfSecondVertex = verticesAbove.size();
+//						verticesAbove.push_back(originalVertices[savedIndexValues[j + 1]]);
+//					}
+//					triangle.v2 = indexOfSecondVertex;
+//
+//					//third index of face
+//					mapIterator = vertexAboveIndexMap.find(savedIndexValues[j + 2]);
+//
+//					size_t indexOfThirdVertex;
+//					if (mapIterator != vertexAboveIndexMap.end())
+//					{
+//						indexOfThirdVertex = vertexAboveIndexMap[savedIndexValues[j + 2]];
+//					}
+//					else
+//					{
+//						indexOfThirdVertex = verticesAbove.size();
+//						verticesAbove.push_back(originalVertices[savedIndexValues[j + 2]]);
+//					}
+//
+//					triangle.v3 = indexOfThirdVertex;
+//
+//					trianglesAbove.push_back(triangle);
+//				}
+//				else if (savedIndexValues[j + 1] == vertexIndexAbove.first)
+//				{
+//					//first index of face
+//					mapIterator = vertexAboveIndexMap.find(savedIndexValues[j]);
+//
+//					size_t indexOfFirstVertex;
+//					if (mapIterator != vertexAboveIndexMap.end())
+//					{
+//						indexOfFirstVertex = vertexAboveIndexMap[savedIndexValues[j]];
+//					}
+//					else
+//					{
+//						indexOfFirstVertex = verticesAbove.size();
+//						verticesAbove.push_back(originalVertices[savedIndexValues[j]]);
+//					}
+//
+//					triangle.v1 = indexOfFirstVertex;
+//
+//					//second index of face
+//					triangle.v2 = vertexIndexAbove.second;
+//
+//					//third index of face
+//					mapIterator = vertexAboveIndexMap.find(savedIndexValues[j + 2]);
+//
+//					size_t indexOfThirdVertex;
+//					if (mapIterator != vertexAboveIndexMap.end())
+//					{
+//						indexOfThirdVertex = vertexAboveIndexMap[savedIndexValues[j + 2]];
+//					}
+//					else
+//					{
+//						indexOfThirdVertex = verticesAbove.size();
+//						verticesAbove.push_back(originalVertices[savedIndexValues[j + 2]]);
+//					}
+//					triangle.v3 = indexOfThirdVertex;
+//
+//					trianglesAbove.push_back(triangle);
+//				}
+//				else if (savedIndexValues[j + 2] == vertexIndexAbove.first)
+//				{
+//					//first index of face
+//					mapIterator = vertexAboveIndexMap.find(savedIndexValues[j]);
+//
+//					size_t indexOfFirstVertex;
+//					if (mapIterator != vertexAboveIndexMap.end())
+//					{
+//						indexOfFirstVertex = vertexAboveIndexMap[savedIndexValues[j]];
+//					}
+//					else
+//					{
+//						indexOfFirstVertex = verticesAbove.size();
+//						verticesAbove.push_back(originalVertices[savedIndexValues[j]]);
+//					}
+//					triangle.v1 = indexOfFirstVertex;
+//
+//					//second index of face
+//					mapIterator = vertexAboveIndexMap.find(savedIndexValues[j + 1]);
+//
+//					size_t indexOfSecondVertex;
+//					if (mapIterator != vertexAboveIndexMap.end())
+//					{
+//						indexOfSecondVertex = vertexAboveIndexMap[savedIndexValues[j + 1]];
+//					}
+//					else
+//					{
+//						indexOfSecondVertex = verticesAbove.size();
+//						verticesAbove.push_back(originalVertices[savedIndexValues[j + 1]]);
+//					}
+//					triangle.v2 = indexOfSecondVertex;
+//
+//					//third index of face
+//					triangle.v3 = vertexIndexAbove.second;
+//					trianglesAbove.push_back(triangle);
+//				}
+//			}
+//			/*Triangle newTriangle;
+//			auto firstTriangle = indexMap.find(vertexIndexAbove.first);
+//			if (firstTriangle != indexMap.end())
+//			{
+//				Triangle oldTriangle;
+//				oldTriangle.v1 = vertexIndexAbove.first;
+//				oldTriangle.v2 = indexMap[vertexIndexAbove.first][0];
+//				oldTriangle.v3 = indexMap[vertexIndexAbove.first][1];
+//
+//				newTriangle.v1 = vertexIndexAbove.second;
+//
+//				auto secondTriangle = vertexAboveIndexMap.find(oldTriangle.v2);
+//				if (secondTriangle != vertexAboveIndexMap.end())
+//				{
+//					newTriangle.v2 = vertexAboveIndexMap[secondTriangle];
+//				}
+//			}*/
+//			
+//		}
+//
+//		currentMeshData[_index]->SetDeleted(true);
+//		//currentMeshData.erase(currentMeshData.begin() + _index);
+//		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(verticesAbove, trianglesAbove)));
+//		currentMeshData[currentMeshData.size() - 1]->CopyVisibleToInternalData();
+//		currentMeshData[currentMeshData.size() - 1]->PrepareMesh();
+//		currentMeshData[currentMeshData.size() - 1]->SetColorCode(GetNextColorCode());
+//		
+//		currentMeshData[currentMeshData.size() - 1]->UpdateEssentials();
+//		currentMeshData[currentMeshData.size() - 1]->SetShaderProgram(defaultShaderProgram);
+//
+//		
+//	}
 
 	int ModelData::ReturnIndexOfMeshWithColorCode(int _colorCode)
 	{
@@ -796,6 +808,7 @@ namespace InteractiveFusion {
 
 	void ModelData::AddObjectMeshToData(MeshContainer* _mesh)
 	{
+		isBusy = true;
 		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(_mesh->GetVertices(), _mesh->GetTriangles())));
 		currentMeshData[currentMeshData.size() - 1]->SetColorCode(GetNextColorCode());
 		currentMeshData[currentMeshData.size() - 1]->CopyVisibleToInternalData();
@@ -804,10 +817,12 @@ namespace InteractiveFusion {
 		currentMeshData[currentMeshData.size() - 1]->CopyInternalToVisibleData();
 		currentMeshData[currentMeshData.size() - 1]->UpdateEssentials();
 		currentMeshData[currentMeshData.size() - 1]->SetShaderProgram(defaultShaderProgram);
+		isBusy = false;
 	}
 
 	void ModelData::AddPlaneMeshToData(MeshContainer* _plane, PlaneParameters _planeParameters)
 	{
+		isBusy = true;
 		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(_plane->GetVertices(), _plane->GetTriangles())));
 		currentMeshData[currentMeshData.size() - 1]->SetColorCode(GetNextColorCode());
 		currentMeshData[currentMeshData.size() - 1]->CopyVisibleToInternalData();
@@ -822,7 +837,7 @@ namespace InteractiveFusion {
 		currentMeshData[currentMeshData.size() - 1]->SetPlane(true);
 		currentMeshData[currentMeshData.size() - 1]->SetPlaneParameters(_planeParameters);
 		currentMeshData[currentMeshData.size() - 1]->SetShaderProgram(defaultShaderProgram);
-
+		isBusy = false;
 	}
 
 	void ModelData::SetGroundPlane(int _index)

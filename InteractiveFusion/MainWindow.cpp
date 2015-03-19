@@ -350,6 +350,12 @@ namespace InteractiveFusion {
 		glControl.SetCameraMode(_cameraMode);
 	}
 
+	void MainWindow::ReloadModel()
+	{
+		glControl.ReloadCurrentState();
+		SetStatusBarMessage(L"Reloading current state.");
+	}
+
 	void MainWindow::ResetModel()
 	{
 		glControl.ResetModel();

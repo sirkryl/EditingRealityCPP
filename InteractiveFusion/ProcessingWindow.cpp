@@ -13,7 +13,7 @@ namespace InteractiveFusion {
 	HWND textRemoveComponentsLabel, textRemoveComponents;
 	HWND textHoleSizeLabel, textHoleSize;
 	HWND buttonProcessingDone;
-
+	HWND buttonProcessingReset;
 	ProcessingWindow::ProcessingWindow()
 	{
 	}
@@ -62,6 +62,11 @@ namespace InteractiveFusion {
 
 		buttonLayoutMap[buttonProcessingDone].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Green));
 
+		buttonProcessingReset = CreateWindowEx(0, L"BUTTON", L"Reset", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PROCESSING_RESET, hInstance, 0);
+
+		buttonLayoutMap.emplace(buttonProcessingReset, ButtonLayout());
+		buttonLayoutMap[buttonProcessingReset].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Red));
+
 		sliderMap.emplace(HoleSize, ButtonSlider());
 		sliderMap.emplace(ComponentSize, ButtonSlider());
 
@@ -87,6 +92,7 @@ namespace InteractiveFusion {
 		procUi.Add(textRemoveComponents);
 		procUi.Add(textRemoveComponentsLabel);
 		procUi.Add(buttonProcessingDone);
+		procUi.Add(buttonProcessingReset);
 
 		UpdateProcessingValues();
 	}
@@ -177,6 +183,10 @@ namespace InteractiveFusion {
 				_parentWindow->RemoveConnectedComponents(maxComponentSizeToBeRemoved);
 				//do stuff
 				break;
+			case ProcessingWindowEvent::Reset:
+				DebugUtility::DbgOut(L"ProcessingWindow::HandleEvents::Reset");
+				_parentWindow->ReloadModel();
+				break;
 			}
 
 			eventQueue.pop();
@@ -192,6 +202,11 @@ namespace InteractiveFusion {
 		if(IDC_PROCESSING_BUTTON_FILLHOLES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			eventQueue.push(ProcessingWindowEvent::FillHoles);
+		}
+		if (IDC_PROCESSING_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			DebugUtility::DbgOut(L"ProcessingWindowEvent::ProcessUI::Reset");
+			eventQueue.push(ProcessingWindowEvent::Reset);
 		}
 		if (IDC_PROCESSING_BUTTON_DONE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
@@ -209,10 +224,11 @@ namespace InteractiveFusion {
 		int controlX = (int)(0.02f*width);
 		int controlWidth = (int)(0.96f*width);
 		int buttonHeight = (int)(0.08f*height);
-		int componentsY = (int)(0.15f*height);
+		int componentsY = (int)(0.35f*height);
 		int holeSizeY = componentsY + buttonHeight + 115;
 
 		//Remove Components Group
+		MoveWindow(buttonProcessingReset, controlX, (int)(0.05f*height), controlWidth, (int)(0.2f*height), true);
 		MoveWindow(textRemoveComponentsLabel, controlX, componentsY, controlWidth / 2, 25, true);
 		MoveWindow(textRemoveComponents, controlX + controlWidth / 2, componentsY, controlWidth / 2, 25, true);
 		sliderMap[ComponentSize].Resize(controlX, componentsY + 30, controlWidth, 50);

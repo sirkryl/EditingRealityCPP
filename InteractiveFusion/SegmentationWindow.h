@@ -31,7 +31,7 @@ namespace InteractiveFusion {
 
 	private:
 		
-		enum SliderType { Tolerance, Smoothness, Curvature, Neighbors, MinSize };
+		enum SliderType { Tolerance, Smoothness, Curvature, Neighbors, RGMinSize, EuclideanMinSize };
 		std::unordered_map<SliderType, ButtonSlider> sliderMap;
 
 		virtual void ProcessUI(WPARAM wParam, LPARAM lParam);

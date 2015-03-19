@@ -9,6 +9,7 @@ namespace InteractiveFusion {
 			ActivatePlane = SubWindowEvent::Last,
 			ExecutePlaneCut,
 			ChangePlaneCutMode,
+			Reset,
 			Last
 		};
 	};

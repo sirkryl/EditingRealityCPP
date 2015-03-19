@@ -12,6 +12,7 @@ namespace InteractiveFusion {
 	HWND buttonPlane, buttonExecutePlaneCut;
 	HWND buttonAxisX, buttonAxisY, buttonAxisZ;
 	HWND buttonPlaneCutDone;
+	HWND buttonCutReset;
 
 	bool showPlaneCutPlane = false;
 
@@ -71,12 +72,18 @@ namespace InteractiveFusion {
 
 		buttonLayoutMap[buttonPlaneCutDone].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Green));
 
+		buttonCutReset = CreateWindowEx(0, L"BUTTON", L"Reset", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PLANECUT_RESET, hInstance, 0);
+
+		buttonLayoutMap.emplace(buttonCutReset, ButtonLayout());
+		buttonLayoutMap[buttonCutReset].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Red));
+
 		planeCutUi.Add(buttonPlane);
 		planeCutUi.Add(buttonAxisX);
 		planeCutUi.Add(buttonAxisY);
 		planeCutUi.Add(buttonAxisZ);
 		planeCutUi.Add(buttonExecutePlaneCut);
 		planeCutUi.Add(buttonPlaneCutDone);
+		planeCutUi.Add(buttonCutReset);
 
 		ChangePlaneCutMode(AxisY);
 
@@ -111,6 +118,10 @@ namespace InteractiveFusion {
 			case PlaneCutWindowEvent::ChangePlaneCutMode:
 				DebugUtility::DbgOut(L"PlaneCutWindow::HandleEvents::ChangePlaneCutMode");
 				_parentWindow->ChangePlaneCutMode(planeCutMode);
+				break;
+			case PlaneCutWindowEvent::Reset:
+				DebugUtility::DbgOut(L"PlaneCutWindow::HandleEvents::Reset");
+				_parentWindow->ReloadModel();
 				break;
 			}
 
@@ -150,6 +161,11 @@ namespace InteractiveFusion {
 			DebugUtility::DbgOut(L"PlaneCutWindow::ProcessUI::Z Axis");
 			ChangePlaneCutMode(AxisZ);
 		}
+		if (IDC_PLANECUT_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			DebugUtility::DbgOut(L"PlaneCutWindow::ProcessUI::Reset");
+			eventQueue.push(PlaneCutWindowEvent::Reset);
+		}
 		if (IDC_PLANECUT_EXECUTE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			DebugUtility::DbgOut(L"PlaneCutWindow::ProcessUI::Execute");
@@ -173,12 +189,13 @@ namespace InteractiveFusion {
 		int controlWidth = (int)(0.96f*width);
 		int buttonHeight = (int)(0.08f*height);
 
-		MoveWindow(buttonAxisX, controlX, (int)(0.27f*height), (int)(0.30f*width), (int)(0.05f*height), true);
-		MoveWindow(buttonAxisY, (int)(0.35f*width), (int)(0.27f*height), (int)(0.30f*width), (int)(0.05f*height), true);
-		MoveWindow(buttonAxisZ, (int)(0.68f*width), (int)(0.27f*height), (int)(0.30f*width), (int)(0.05f*height), true);
-		MoveWindow(buttonPlane, controlX, (int)(0.15f*height), controlWidth, (int)(0.1f*height), true);
+		MoveWindow(buttonCutReset, controlX, (int)(0.05f*height), controlWidth, (int)(0.2f*height), true);
+		MoveWindow(buttonAxisX, controlX, (int)(0.47f*height), (int)(0.30f*width), (int)(0.05f*height), true);
+		MoveWindow(buttonAxisY, (int)(0.35f*width), (int)(0.47f*height), (int)(0.30f*width), (int)(0.05f*height), true);
+		MoveWindow(buttonAxisZ, (int)(0.68f*width), (int)(0.47f*height), (int)(0.30f*width), (int)(0.05f*height), true);
+		MoveWindow(buttonPlane, controlX, (int)(0.35f*height), controlWidth, (int)(0.1f*height), true);
 
-		MoveWindow(buttonExecutePlaneCut, controlX, (int)(0.425f*height), controlWidth, (int)(0.1f*height), true);
+		MoveWindow(buttonExecutePlaneCut, controlX, (int)(0.525f*height), controlWidth, (int)(0.1f*height), true);
 
 		MoveWindow(buttonPlaneCutDone, controlX, (int)(0.75f*height), controlWidth, (int)(0.2f*height), true);
 	}

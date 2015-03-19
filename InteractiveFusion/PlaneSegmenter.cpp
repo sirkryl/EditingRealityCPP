@@ -156,7 +156,9 @@ namespace InteractiveFusion {
 		if (indexOfGroundPlane == temporarySegmentationClusterIndices.size() - 1)
 			indexOfGroundPlane = -1;
 		temporarySegmentationClusterIndices.pop_back();
-		planeCoefficients.pop_back();
+
+		if (planeCoefficients.size() > 0)
+			planeCoefficients.pop_back();
 	}
 
 	PlaneParameters PlaneSegmenter::GetModelCoefficients(int _clusterIndex)

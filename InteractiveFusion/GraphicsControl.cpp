@@ -276,6 +276,17 @@ namespace InteractiveFusion {
 
 				SetBusy(false);
 				break;
+			case ResetCurrentStateModelData:
+				SetBusy(true);
+				if (currentApplicationState > WindowState::PlaneSelection)
+				{
+					WindowState previousApplicationState = (WindowState)(currentApplicationState - 1);
+					sceneMap[currentApplicationState]->CleanUp();
+					sceneMap[currentApplicationState]->CopyFrom(*sceneMap[previousApplicationState].get());
+					sceneMap[currentApplicationState]->GenerateBuffers();
+				}
+				SetBusy(false);
+				break;
 			case ResetModelData:
 				sceneMap[currentApplicationState]->ResetToInitialState();
 				sceneMap[currentApplicationState]->GenerateBuffers();
@@ -700,6 +711,11 @@ namespace InteractiveFusion {
 		eventQueue.push(ResetModelData);
 	}
 
+	void GraphicsControl::ReloadCurrentState()
+	{
+		eventQueue.push(ResetCurrentStateModelData);
+	}
+
 	int GraphicsControl::FillHoles(int _holeSize)
 	{
 		SetStatusMessage(L"Filling holes");
@@ -830,7 +846,9 @@ namespace InteractiveFusion {
 		stopWatch.Start();
 
 
-		sceneMap[PlaneSelection]->LoadFromFile("data\\models\\testScene.ply");
+		sceneMap[PlaneSelection]->LoadFromFile("data\\models\\lowPolyTest.ply");
+
+		//sceneMap[PlaneSelection]->LoadFromFile("data\\models\\testScene.ply");
 		//sceneMap[PlaneSelection]->LoadFromData(_scannedMesh);
 
 		DebugUtility::DbgOut(L"Initialized scene in  ", stopWatch.Stop());
