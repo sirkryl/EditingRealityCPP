@@ -736,10 +736,10 @@ namespace InteractiveFusion {
 	int ModelData::GetNumberOfVertices()
 	{
 		int numberOfVertices = 0;
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			if (!(*mI)->IsDeleted())
-				numberOfVertices += (*mI)->GetNumberOfVertices();
+			if (!mesh->IsDeleted())
+				numberOfVertices += mesh->GetNumberOfVertices();
 		}
 		return numberOfVertices;
 	}
@@ -747,10 +747,10 @@ namespace InteractiveFusion {
 	int ModelData::GetNumberOfTriangles()
 	{
 		int numberOfFaces = 0;
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			if (!(*mI)->IsDeleted())
-				numberOfFaces += (*mI)->GetNumberOfTriangles();
+			if (!mesh->IsDeleted())
+				numberOfFaces += mesh->GetNumberOfTriangles();
 		}
 		return numberOfFaces;
 	}

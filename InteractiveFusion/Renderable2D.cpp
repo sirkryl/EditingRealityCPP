@@ -3,6 +3,7 @@
 #include "ColorCoder.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include "DebugUtility.h"
+#include <sstream>
 namespace InteractiveFusion {
 	Renderable2D::Renderable2D()
 	{
@@ -52,10 +53,21 @@ namespace InteractiveFusion {
 
 	void Renderable2D::Draw(int _viewportWidth, int _viewportHeight)
 	{
-		meshShaderProgram.UseProgram();
+		try
+		{
+			meshShaderProgram.UseProgram();
 
-		SetUniforms(alphaValue, false, CalculateTransformationMatrix(_viewportWidth, _viewportHeight));
-
+			SetUniforms(alphaValue, false, CalculateTransformationMatrix(_viewportWidth, _viewportHeight));
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while drawing 2d renderable with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new RenderingException(ss.str().c_str());
+		}
 		FinishDrawing();
 	}
 
@@ -63,11 +75,21 @@ namespace InteractiveFusion {
 	{
 		if (colorCode == -1)
 			return;
+		try
+		{
+			meshShaderProgram.UseProgram();
 
-		meshShaderProgram.UseProgram();
-
-		SetUniforms(1.0f, true, CalculateTransformationMatrix(_viewportWidth, _viewportHeight));
-
+			SetUniforms(1.0f, true, CalculateTransformationMatrix(_viewportWidth, _viewportHeight));
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while drawing 2d renderable for color picking with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new RenderingException(ss.str().c_str());
+		}
 		FinishDrawing();
 	}
 }

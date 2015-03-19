@@ -10,7 +10,7 @@
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <wrap/io_trimesh/import.h>
-
+#include "VcgException.h"
 
 
 namespace InteractiveFusion {
@@ -53,7 +53,18 @@ namespace InteractiveFusion {
 
 	MeshContainer::MeshContainer(VCGMesh& _mesh)
 	{
-		vcg::tri::Append<VCGMesh, VCGMesh>::MeshCopy(currentMesh, _mesh);
+		try
+		{
+			vcg::tri::Append<VCGMesh, VCGMesh>::MeshCopy(currentMesh, _mesh);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while calling Append function in MeshContainer Constructor";
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new VcgException(ss.str().c_str());
+		}
 	}
 	#pragma endregion Constructors
 
@@ -61,8 +72,19 @@ namespace InteractiveFusion {
 
 	void MeshContainer::LoadFromFile(const char* filename)
 	{
-		vcg::tri::io::ImporterPLY<VCGMesh>::Open(currentMesh, filename);
-
+		try
+		{
+			vcg::tri::io::ImporterPLY<VCGMesh>::Open(currentMesh, filename);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while calling Open function in LoadFromFile() with parameter ";
+			ss << filename;
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new VcgException(ss.str().c_str());
+		}
 		PrepareMesh();
 	}
 
@@ -162,23 +184,34 @@ namespace InteractiveFusion {
 	}
 	void MeshContainer::CopyVisibleToVcg(VCGMesh& _outputMesh)
 	{
-		_outputMesh.Clear();
-		vcg::tri::Allocator<VCGMesh>::AddVertices(_outputMesh, vertices.size());
-
-		for (int i = 0; i < vertices.size(); i++)
+		try
 		{
-			_outputMesh.vert[i].P() = vcg::Point3f(vertices[i].x, vertices[i].y, vertices[i].z);
-			_outputMesh.vert[i].C() = vcg::Color4b((int)(vertices[i].r * 255.0f), (int)(vertices[i].g * 255.0f), (int)(vertices[i].b * 255.0f), 255);
-			_outputMesh.vert[i].N() = vcg::Point3f(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z);
+			_outputMesh.Clear();
+			vcg::tri::Allocator<VCGMesh>::AddVertices(_outputMesh, vertices.size());
+
+			for (int i = 0; i < vertices.size(); i++)
+			{
+				_outputMesh.vert[i].P() = vcg::Point3f(vertices[i].x, vertices[i].y, vertices[i].z);
+				_outputMesh.vert[i].C() = vcg::Color4b((int)(vertices[i].r * 255.0f), (int)(vertices[i].g * 255.0f), (int)(vertices[i].b * 255.0f), 255);
+				_outputMesh.vert[i].N() = vcg::Point3f(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z);
+			}
+
+			vcg::tri::Allocator<VCGMesh>::AddFaces(_outputMesh, triangles.size());
+
+			for (int i = 0; i < triangles.size(); i++)
+			{
+				_outputMesh.face[i].V(0) = &_outputMesh.vert[triangles[i].v1];
+				_outputMesh.face[i].V(1) = &_outputMesh.vert[triangles[i].v2];
+				_outputMesh.face[i].V(2) = &_outputMesh.vert[triangles[i].v3];
+			}
 		}
-
-		vcg::tri::Allocator<VCGMesh>::AddFaces(_outputMesh, triangles.size());
-
-		for (int i = 0; i<triangles.size(); i++)
+		catch (std::exception& e)
 		{
-			_outputMesh.face[i].V(0) = &_outputMesh.vert[triangles[i].v1];
-			_outputMesh.face[i].V(1) = &_outputMesh.vert[triangles[i].v2];
-			_outputMesh.face[i].V(2) = &_outputMesh.vert[triangles[i].v3];
+			std::stringstream ss;
+			ss << "Exception in CopyVisibleToVcg() with parameter ";
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new VcgException(ss.str().c_str());
 		}
 	}
 
@@ -205,12 +238,23 @@ namespace InteractiveFusion {
 
 	void MeshContainer::EnsureAttributesAreCorrect()
 	{
-		vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
-		vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromFF(currentMesh);
-		vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalizedPerFace(currentMesh);
-		vcg::tri::UpdateBounding<VCGMesh>::Box(currentMesh);
-		vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
-		vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromNone(currentMesh);
+		try
+		{
+			vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
+			vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromFF(currentMesh);
+			vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalizedPerFace(currentMesh);
+			vcg::tri::UpdateBounding<VCGMesh>::Box(currentMesh);
+			vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
+			vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromNone(currentMesh);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception in MeshContainer::EnsureAttributesAreCorrect() ";
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new VcgException(ss.str().c_str());
+		}
 	}
 
 	void MeshContainer::Clean()
@@ -218,19 +262,30 @@ namespace InteractiveFusion {
 
 		EnsureAttributesAreCorrect();
 
-		int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(currentMesh);
-		DebugUtility::DbgOut(L"Removed duplicates: ", dup);
-		int dupFa = vcg::tri::Clean<VCGMesh>::RemoveDuplicateFace(currentMesh);
-		DebugUtility::DbgOut(L"Removed duplicate faces: ", dupFa);
-		int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(currentMesh);
-		DebugUtility::DbgOut(L"Removed unreferenced: ", unref);
-		int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(currentMesh);
-		DebugUtility::DbgOut(L"Removed degenerate faces: ", deg);
-		int zero = vcg::tri::Clean<VCGMesh>::RemoveZeroAreaFace(currentMesh);
-		DebugUtility::DbgOut(L"Removed zero area faces: ", zero);
+		try
+		{
+			int dup = vcg::tri::Clean<VCGMesh>::RemoveDuplicateVertex(currentMesh);
+			DebugUtility::DbgOut(L"Removed duplicates: ", dup);
+			int dupFa = vcg::tri::Clean<VCGMesh>::RemoveDuplicateFace(currentMesh);
+			DebugUtility::DbgOut(L"Removed duplicate faces: ", dupFa);
+			int unref = vcg::tri::Clean<VCGMesh>::RemoveUnreferencedVertex(currentMesh);
+			DebugUtility::DbgOut(L"Removed unreferenced: ", unref);
+			int deg = vcg::tri::Clean<VCGMesh>::RemoveDegenerateFace(currentMesh);
+			DebugUtility::DbgOut(L"Removed degenerate faces: ", deg);
+			int zero = vcg::tri::Clean<VCGMesh>::RemoveZeroAreaFace(currentMesh);
+			DebugUtility::DbgOut(L"Removed zero area faces: ", zero);
 
-		vcg::tri::RequirePerVertexNormal(currentMesh);
-		vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(currentMesh);
+			vcg::tri::RequirePerVertexNormal(currentMesh);
+			vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalized(currentMesh);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception in MeshContainer::Clean() ";
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new VcgException(ss.str().c_str());
+		}
 
 	}
 
@@ -462,17 +517,30 @@ namespace InteractiveFusion {
 
 	int MeshContainer::FillHoles(int _maxHoleSize)
 	{
-		vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
-		vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
 		int holeCnt = 0;
-		if (isPlane)
-			holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingIntersectionFill<vcg::tri::SelfIntersectionEar<VCGMesh> >(currentMesh, _maxHoleSize, false);
-		else
-			holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingFill<vcg::tri::MinimumWeightEar<VCGMesh> >(currentMesh, _maxHoleSize, false);
-		//int holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingFillAllButLargest<vcg::tri::MinimumWeightEar<VCGMesh> >(currentMesh, _maxHoleSize, false);
-		//int holeCnt = vcg::tri::Hole<VCGMesh>::FillHoleEar<vcg::tri::TrivialEar<VCGMesh> >(currentMesh, holeSize, false);
+		try
+		{
+			vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
+			vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
+			
+			if (isPlane)
+				holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingIntersectionFill<vcg::tri::SelfIntersectionEar<VCGMesh> >(currentMesh, _maxHoleSize, false);
+			else
+				holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingFill<vcg::tri::MinimumWeightEar<VCGMesh> >(currentMesh, _maxHoleSize, false);
+			//int holeCnt = vcg::tri::Hole<VCGMesh>::EarCuttingFillAllButLargest<vcg::tri::MinimumWeightEar<VCGMesh> >(currentMesh, _maxHoleSize, false);
+			//int holeCnt = vcg::tri::Hole<VCGMesh>::FillHoleEar<vcg::tri::TrivialEar<VCGMesh> >(currentMesh, holeSize, false);
 
-		DebugUtility::DbgOut(L"Closed holes: ", holeCnt);
+			DebugUtility::DbgOut(L"Closed holes: ", holeCnt);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception in MeshContainer::FillHoles() with parameter ";
+			ss << _maxHoleSize;
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new VcgException(ss.str().c_str());
+		}
 		Clean();
 		RemoveNonManifoldFaces();
 		return holeCnt;
@@ -480,42 +548,89 @@ namespace InteractiveFusion {
 
 	void MeshContainer::LaplacianSmooth(int _vertexStep)
 	{
-		vcg::tri::Smooth<VCGMesh>::VertexCoordLaplacian(currentMesh, _vertexStep, false, false);
+		try
+		{
+			vcg::tri::Smooth<VCGMesh>::VertexCoordLaplacian(currentMesh, _vertexStep, false, false);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception in MeshContainer::LaplacianSmooth() with parameter ";
+			ss << _vertexStep;
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new VcgException(ss.str().c_str());
+		}
 	}
 
 	int MeshContainer::MergeCloseVertices(float _distanceThreshold)
 	{
-		return vcg::tri::Clean<VCGMesh>::MergeCloseVertex(currentMesh, _distanceThreshold);
+		try
+		{
+			return vcg::tri::Clean<VCGMesh>::MergeCloseVertex(currentMesh, _distanceThreshold);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception in MeshContainer::MergeCloseVertices() with parameter ";
+			ss << _distanceThreshold;
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new VcgException(ss.str().c_str());
+		}
 	}
 
 	void MeshContainer::RemoveNonManifoldFaces()
 	{
 		EnsureAttributesAreCorrect();
 
-		StopWatch stopWatch;
-		stopWatch.Start();
-		int manifoldFaceCount = vcg::tri::Clean<VCGMesh>::RemoveNonManifoldFace(currentMesh);
-
-		int count;
-		while (count = vcg::tri::Clean<VCGMesh>::CountNonManifoldVertexFF(currentMesh) > 0)
+		try
 		{
-			int total = vcg::tri::Clean<VCGMesh>::SplitNonManifoldVertex(currentMesh, 0);
-			DebugUtility::DbgOut(L"Removed non manifold vertices: ", total);
-			DebugUtility::DbgOut(L"Still remaining: ", count);
-		}
+			StopWatch stopWatch;
+			stopWatch.Start();
+			int manifoldFaceCount = vcg::tri::Clean<VCGMesh>::RemoveNonManifoldFace(currentMesh);
 
-		DebugUtility::DbgOut(L"Removed " + to_wstring(manifoldFaceCount) + L" non manifold faces in ", stopWatch.Stop());
+			int count;
+			while (count = vcg::tri::Clean<VCGMesh>::CountNonManifoldVertexFF(currentMesh) > 0)
+			{
+				int total = vcg::tri::Clean<VCGMesh>::SplitNonManifoldVertex(currentMesh, 0);
+				DebugUtility::DbgOut(L"Removed non manifold vertices: ", total);
+				DebugUtility::DbgOut(L"Still remaining: ", count);
+			}
+
+			DebugUtility::DbgOut(L"Removed " + to_wstring(manifoldFaceCount) + L" non manifold faces in ", stopWatch.Stop());
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception in MeshContainer::RemoveNonManifoldFaces()";
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new VcgException(ss.str().c_str());
+		}
 	}
 
 	int MeshContainer::RemoveSmallComponents(int _maxComponentSize)
 	{
-		vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
-		vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
+		std::pair<int, int> compCnt = std::pair<int, int>();
+		try
+		{
+			vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
+			vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
 
-		std::pair<int, int> compCnt = vcg::tri::Clean<VCGMesh>::RemoveSmallConnectedComponentsSize(currentMesh, _maxComponentSize);
+			compCnt = vcg::tri::Clean<VCGMesh>::RemoveSmallConnectedComponentsSize(currentMesh, _maxComponentSize);
 
-		DebugUtility::DbgOut(L"Removed components:", compCnt.second);
-
+			DebugUtility::DbgOut(L"Removed components:", compCnt.second);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception in MeshContainer::RemoveSmallComponents() with parameter ";
+			ss << _maxComponentSize;
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new VcgException(ss.str().c_str());
+		}
 		Clean();
 
 		return compCnt.second;
@@ -523,22 +638,34 @@ namespace InteractiveFusion {
 
 	void MeshContainer::UnsharpColor(float _alpha)
 	{
-		float alphaorig = 1.0f;
-		int smoothIter = 5;
-
-		vcg::tri::Allocator<VCGMesh>::CompactVertexVector(currentMesh);
-		vector<vcg::Color4f> colorOrig(currentMesh.vn);
-		for (int i = 0; i<currentMesh.vn; ++i)
-			colorOrig[i].Import(currentMesh.vert[i].C());
-
-		vcg::tri::Smooth<VCGMesh>::VertexColorLaplacian(currentMesh, smoothIter);
-		for (int i = 0; i<currentMesh.vn; ++i)
+		try
 		{
-			vcg::Color4f colorDelta = colorOrig[i] - vcg::Color4f::Construct(currentMesh.vert[i].C());
-			vcg::Color4f newCol = colorOrig[i] * alphaorig + colorDelta*_alpha;       // Unsharp formula 
-			vcg::Clamp(newCol); // Clamp everything in the 0..1 range
-			currentMesh.vert[i].C().Import(newCol);
+			float alphaorig = 1.0f;
+			int smoothIter = 5;
 
+			vcg::tri::Allocator<VCGMesh>::CompactVertexVector(currentMesh);
+			vector<vcg::Color4f> colorOrig(currentMesh.vn);
+			for (int i = 0; i < currentMesh.vn; ++i)
+				colorOrig[i].Import(currentMesh.vert[i].C());
+
+			vcg::tri::Smooth<VCGMesh>::VertexColorLaplacian(currentMesh, smoothIter);
+			for (int i = 0; i < currentMesh.vn; ++i)
+			{
+				vcg::Color4f colorDelta = colorOrig[i] - vcg::Color4f::Construct(currentMesh.vert[i].C());
+				vcg::Color4f newCol = colorOrig[i] * alphaorig + colorDelta*_alpha;       // Unsharp formula 
+				vcg::Clamp(newCol); // Clamp everything in the 0..1 range
+				currentMesh.vert[i].C().Import(newCol);
+
+			}
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception in MeshContainer::UnsharpColor() with parameter ";
+			ss << _alpha;
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new VcgException(ss.str().c_str());
 		}
 	}
 
@@ -546,7 +673,18 @@ namespace InteractiveFusion {
 	{
 		VCGMesh temporaryMesh;
 		CopyVisibleToVcg(temporaryMesh);
-		vcg::tri::Append<VCGMesh, VCGMesh>::MeshCopy(_outputMesh, temporaryMesh);
+		try
+		{
+			vcg::tri::Append<VCGMesh, VCGMesh>::MeshCopy(_outputMesh, temporaryMesh);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception in MeshContainer::GetVcgData()";
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new VcgException(ss.str().c_str());
+		}
 	}
 
 	void MeshContainer::GetAlignedVcgData(VCGMesh& _outputMesh, glm::mat4 _originTranslation, glm::mat4 _groundAlignmentRotation)

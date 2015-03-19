@@ -349,15 +349,19 @@ namespace InteractiveFusion {
 
 		SubWindow::Resize(parentWidth, parentHeight);
 
-		MoveWindow(buttonSegmentationFinish, (int)(0.1f*width), (int)(0.75f*height), (int)(0.80f*width), (int)(0.2f*height), true);
-		MoveWindow(buttonSegmentationBegin, (int)(0.1f*width), (int)(0.625f*height), (int)(0.80f*width), (int)(0.1f*height), true);
+		int controlX = (int)(0.02f*width);
+		int controlWidth = (int)(0.96f*width);
+		int buttonHeight = (int)(0.08f*height);
+
+		MoveWindow(buttonSegmentationFinish, controlX, (int)(0.75f*height), controlWidth, (int)(0.2f*height), true);
+		MoveWindow(buttonSegmentationBegin, controlX, (int)(0.625f*height), controlWidth, (int)(0.1f*height), true);
 
 		int leftSegmentationXPosition = width / 2 - (int)(0.48f*width);
 		int rightSegmentationRightXPosition = (int)(width / 2) + (int)(0.48f*width);
 		MoveWindow(buttonEuclideanSegmentation, 0, 0, (int)(width/2), (int)(0.1f*height), true);
 		MoveWindow(buttonRegionGrowthSegmentation, (int)(width / 2), 0, (int)(width / 2), (int)(0.1f*height), true);
 
-		int controlWidth = rightSegmentationRightXPosition - leftSegmentationXPosition;
+		//int controlWidth = rightSegmentationRightXPosition - leftSegmentationXPosition;
 
 		MoveWindow(textClusterToleranceLabel, leftSegmentationXPosition, (int)(0.12f*height), controlWidth / 2, 25, true);
 		sliderMap[Tolerance].Resize(leftSegmentationXPosition, (int)(0.12f*height) + 30, controlWidth, 40);

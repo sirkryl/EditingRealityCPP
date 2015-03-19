@@ -12,7 +12,6 @@ namespace InteractiveFusion {
 	public:
 
 		static const DWORD          updateFpsCounterInMilliSeconds = 5000;
-
 		void InitApplication(HINSTANCE hInstance);
 		void MoveModeButtonsOnResize(int width, int height);
 

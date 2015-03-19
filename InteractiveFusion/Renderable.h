@@ -2,6 +2,8 @@
 
 #include "CommonStructs.h"
 #include "OpenGLShaderProgram.h"
+#include "RenderingException.h"
+#include "BufferException.h"
 #include <vector>
 namespace InteractiveFusion {
 	class Renderable

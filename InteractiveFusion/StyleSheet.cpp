@@ -75,6 +75,7 @@ namespace InteractiveFusion {
 		{ 113, 113, 113 },
 		{ 79, 79, 79 } };
 
+
 		Gradient inactiveGradient{
 			{ 40, 40, 40 },
 			{ 40, 40, 40 } };

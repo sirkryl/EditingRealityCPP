@@ -103,6 +103,9 @@
     <Filter Include="Header Files\Export">
       <UniqueIdentifier>{211a5497-0e09-470b-928c-591041adc5b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Exceptions">
+      <UniqueIdentifier>{570ffa7e-2cd6-4b0b-83d7-bc7bf3fee362}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="plylib.h">
@@ -314,6 +317,18 @@
     </ClInclude>
     <ClInclude Include="IScanner.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IFException.h">
+      <Filter>Header Files\Exceptions</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderingException.h">
+      <Filter>Header Files\Exceptions</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferException.h">
+      <Filter>Header Files\Exceptions</Filter>
+    </ClInclude>
+    <ClInclude Include="VcgException.h">
+      <Filter>Header Files\Exceptions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,8 @@
 #include "Renderable.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include "DebugUtility.h"
+#include <exception>
+#include <sstream>
 namespace InteractiveFusion {
 	Renderable::Renderable()
 	{
@@ -76,79 +78,157 @@ namespace InteractiveFusion {
 
 	void Renderable::GenerateBufferObjects()
 	{
-		DebugUtility::DbgOut(L"Renderable::GenerateBufferObjects()::Begin");
 		GenerateVertexBuffer();
-		DebugUtility::DbgOut(L"Renderable::GenerateBufferObjects()::22");
 		if (triangles.size() > 2)
 			GenerateIndexBuffer();
 	}
 
 	void Renderable::GenerateIndexBuffer()
 	{
-		DebugUtility::DbgOut(L"Renderable::GenerateIndexBuffer()::Begin");
-		if (!glIsBuffer(ibo))
-			glGenBuffers(1, &ibo);
+		try
+		{
+			if (!glIsBuffer(ibo))
+				glGenBuffers(1, &ibo);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while generating index buffer in renderable with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new BufferException(ss.str().c_str());
+		}
 		UpdateIndexBuffer();
 	}
 
 	void Renderable::GenerateVertexBuffer()
 	{
-		DebugUtility::DbgOut(L"Renderable::GenerateVertexBuffer()::Begin");
-		if (!glIsBuffer(vbo))
-			glGenBuffers(1, &vbo);
+		try
+		{
+			if (!glIsBuffer(vbo))
+				glGenBuffers(1, &vbo);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while generating vertex buffer in renderable with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new BufferException(ss.str().c_str());
+		}
 		UpdateVertexBuffer();
 	}
 
 	void Renderable::GenerateVertexArrayObject()
 	{
-		DebugUtility::DbgOut(L"Renderable::GenerateVertexArrayObject()::Begin");
-		if (!glIsBuffer(vao))
-			glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao);
+		try
+		{
+			if (!glIsBuffer(vao))
+				glGenVertexArrays(1, &vao);
+			glBindVertexArray(vao);
 
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			glEnableVertexAttribArray(0);
+			glEnableVertexAttribArray(1);
 
-		if (triangles.size() > 2)
-			glEnableVertexAttribArray(2);
+			if (triangles.size() > 2)
+				glEnableVertexAttribArray(2);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float) * 3));
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float) * 3));
 
-		if (triangles.size() > 2)
-			glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float) * 6));
+			if (triangles.size() > 2)
+				glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float) * 6));
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while generating vertex array buffer in renderable with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new BufferException(ss.str().c_str());
+		}
 	}
 
 	void Renderable::UpdateVertexBuffer()
 	{
-		DebugUtility::DbgOut(L"Renderable::UpdateVertexBuffer()::Begin, vertices size: ", (int)vertices.size());
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		try
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while updating vertex buffer in renderable with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new BufferException(ss.str().c_str());
+		}
 	}
 
 	void Renderable::UpdateIndexBuffer()
 	{
-		DebugUtility::DbgOut(L"Renderable::UpdateIndexBuffer()::Begin");
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, triangles.size() * sizeof(Triangle), &triangles[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		try
+		{
+			DebugUtility::DbgOut(L"Renderable::UpdateIndexBuffer()::Begin");
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, triangles.size() * sizeof(Triangle), &triangles[0], GL_STATIC_DRAW);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while updating index buffer in renderable with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new BufferException(ss.str().c_str());
+		}
 	}
 
 	bool Renderable::AreBuffersInitialized()
 	{
-		return glIsBuffer(vbo);
+		try
+		{
+			return glIsBuffer(vbo);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while checking if buffer is initialized in renderable with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new BufferException(ss.str().c_str());
+		}
 	}
 
 	void Renderable::ClearBuffers()
 	{
-		if (glIsBuffer(vbo))
-			glDeleteBuffers(1, &vbo);
-		if (glIsBuffer(ibo))
-			glDeleteBuffers(1, &ibo);
-		if (glIsBuffer(vao))
-			glDeleteVertexArrays(1, &vao);
+		try
+		{
+			if (glIsBuffer(vbo))
+				glDeleteBuffers(1, &vbo);
+			if (glIsBuffer(ibo))
+				glDeleteBuffers(1, &ibo);
+			if (glIsBuffer(vao))
+				glDeleteVertexArrays(1, &vao);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while clearing buffers in renderable with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new BufferException(ss.str().c_str());
+		}
 	}
 
 	glm::vec3 Renderable::GetLowerBounds()
@@ -178,22 +258,34 @@ namespace InteractiveFusion {
 
 	void Renderable::FinishDrawing()
 	{
-		if (triangles.size() > 2)
+		try
 		{
-			glBindVertexArray(vao);
+			if (triangles.size() > 2)
+			{
+				glBindVertexArray(vao);
 
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-			glDrawElements(GL_TRIANGLES, triangles.size() * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+				glDrawElements(GL_TRIANGLES, triangles.size() * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+			}
+			else
+			{
+				glBindVertexArray(vao);
+				glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+			}
+			glBindVertexArray(0);
+			glUseProgram(0);
 		}
-		else
+		catch (std::exception& e)
 		{
-			glBindVertexArray(vao);
-			glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+			std::stringstream ss;
+			ss << "Exception while finishing renderable drawing with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new RenderingException(ss.str().c_str());
 		}
-		glBindVertexArray(0);
-		glUseProgram(0);
 	}
 
 	void Renderable::CleanUp()

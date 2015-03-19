@@ -10,7 +10,7 @@
 #include "StyleSheet.h"
 
 #include "GraphicsControl.h"
-
+#include "StringConverter.h"
 #include "ButtonLayout.h"
 #include "GUIContainer.h"
 
@@ -526,22 +526,19 @@ namespace InteractiveFusion {
 
 	void MainWindow::UpdateSceneInformation()
 	{
-		if (!glControl.IsBusy())
+		if (glControl.GetNumberOfVertices() != currentVertexCount)
 		{
-			if (glControl.GetNumberOfVertices() != currentVertexCount)
-			{
-				currentVertexCount = glControl.GetNumberOfVertices();
-				std::wstringstream out;
-				out << std::setprecision(2) << currentVertexCount;
-				SetDlgItemText(hWndMain, IDC_VERTICES_COUNT, out.str().c_str());
-			}
-			if (glControl.GetNumberOfTriangles() != currentTriangleCount)
-			{
-				currentTriangleCount = glControl.GetNumberOfTriangles();
-				std::wstringstream out;
-				out << std::setprecision(2) << currentTriangleCount;
-				SetDlgItemText(hWndMain, IDC_TRIANGLES_COUNT, out.str().c_str());
-			}
+			currentVertexCount = glControl.GetNumberOfVertices();
+			std::wstringstream out;
+			out << std::setprecision(2) << currentVertexCount;
+			SetDlgItemText(hWndMain, IDC_VERTICES_COUNT, out.str().c_str());
+		}
+		if (glControl.GetNumberOfTriangles() != currentTriangleCount)
+		{
+			currentTriangleCount = glControl.GetNumberOfTriangles();
+			std::wstringstream out;
+			out << std::setprecision(2) << currentTriangleCount;
+			SetDlgItemText(hWndMain, IDC_TRIANGLES_COUNT, out.str().c_str());
 		}
 	}
 

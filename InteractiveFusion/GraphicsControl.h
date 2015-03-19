@@ -85,9 +85,12 @@ namespace InteractiveFusion {
 
 		bool IsBusy();
 		
+
 		void ExecutePlaneCut();
 		void PlaneCutPreview();
 		std::wstring GetStatusMessage();
+
+		
 		int GetNumberOfVertices();
 		int GetNumberOfTriangles();
 		int GetNumberOfVisibleModels();
@@ -117,9 +120,13 @@ namespace InteractiveFusion {
 		glm::mat4 mOrtho;
 		glm::mat4 mView;
 
+		int numberOfClusters = 0;
+		int numberOfVertices = 0;
+		int numberOfTriangles = 0;
+
 		void SetBusy(bool _isBusy);
 		void SetStatusMessage(std::wstring _message);
-
+		
 		int OpenGLThreadMessageLoop();
 
 		int PlaneSelectionThread(PlaneSegmentationParams* _params);
@@ -136,7 +143,7 @@ namespace InteractiveFusion {
 		void UpdateFrame();
 		void HandleEvents();
 		void HandleInput();
-		
+		void UpdateSceneInformation();
 
 		void CleanUpShaders();
 		void CleanUpRenderer();

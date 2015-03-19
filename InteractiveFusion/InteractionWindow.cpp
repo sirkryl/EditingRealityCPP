@@ -199,12 +199,16 @@ namespace InteractiveFusion {
 
 		SubWindow::Resize(parentWidth, parentHeight);
 
-		MoveWindow(buttonReset, (int)(0.1f*width), (int)(0.05f*height), (int)(0.80f*width), (int)(0.2f*height), true);
-		MoveWindow(buttonFreeCamera, (int)(0.1f*width), (int)(0.350f*height), (int)(0.80f*width), (int)(0.15f*height), true);
-		MoveWindow(buttonDuplicate, width / 2, (int)(0.50f*height), (int)(0.4f*width), (int)(0.15f*height), true);
-		MoveWindow(buttonTransformation, width / 2 - (int)(0.4f*width), (int)(0.50f*height), (int)(0.4f*width), (int)(0.15f*height), true);
+		int controlX = (int)(0.02f*width);
+		int controlWidth = (int)(0.96f*width);
+		int buttonHeight = (int)(0.08f*height);
 
-		MoveWindow(buttonExport, (int)(0.1f*width), (int)(0.75f*height), (int)(0.80f*width), (int)(0.2f*height), true);
+		MoveWindow(buttonReset, controlX, (int)(0.05f*height), controlWidth, (int)(0.2f*height), true);
+		MoveWindow(buttonFreeCamera, controlX, (int)(0.350f*height), controlWidth, (int)(0.15f*height), true);
+		MoveWindow(buttonDuplicate, controlWidth / 2 + controlX, (int)(0.50f*height), controlWidth / 2, (int)(0.15f*height), true);
+		MoveWindow(buttonTransformation, controlX, (int)(0.50f*height), controlWidth/2, (int)(0.15f*height), true);
+
+		MoveWindow(buttonExport, controlX, (int)(0.75f*height), controlWidth, (int)(0.2f*height), true);
 	}
 
 	void InteractionWindow::CleanUp()

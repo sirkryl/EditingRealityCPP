@@ -21,6 +21,7 @@ namespace InteractiveFusion {
 			_modelData->UnselectMesh();
 		}
 		_selectedIndex = GetIndexOfMeshUnderCursor(_glControl, _modelData, _overlayHelper, _glControl->GetOpenGLWindowHandle());
+
 		_modelData->MarkMeshAsSelected(_modelData->DuplicateMeshAndGetItsIndex(_selectedIndex));
 		_glControl->PushEvent(ModelDataUpdated);
 	}

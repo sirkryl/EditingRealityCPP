@@ -255,6 +255,11 @@ namespace InteractiveFusion {
 		mesh->GetTriangleIndices(&scanTriangleIndices);
 		DebugUtility::DbgOut(L"KinectFusion::FinishScan()::Scanned Triangles: ", (int)mesh->TriangleVertexIndexCount());
 		vector<Triangle> meshTriangles;
+		if (mesh->TriangleVertexIndexCount() <= 0)
+		{
+			DebugUtility::DbgOut(L"No vertices in scanned mesh");
+			return std::shared_ptr<MeshContainer>(new MeshContainer());;
+		}
 		for (int i = 0; i < mesh->TriangleVertexIndexCount()-2; i+=3)
 		{
 			Triangle newTriangle;

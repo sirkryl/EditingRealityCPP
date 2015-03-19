@@ -1,6 +1,8 @@
 #include "Renderable3D.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include "ColorCoder.h"
+#include <sstream>
+
 namespace InteractiveFusion {
 	Renderable3D::Renderable3D()
 	{
@@ -79,11 +81,23 @@ namespace InteractiveFusion {
 
 	void Renderable3D::SwapToHighlightBuffer()
 	{
-		if (!glIsBuffer(vbo))
-			return;
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, verticesWithHighlights.size() * sizeof(Vertex), &verticesWithHighlights[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		try
+		{
+			if (!glIsBuffer(vbo))
+				return;
+			glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			glBufferData(GL_ARRAY_BUFFER, verticesWithHighlights.size() * sizeof(Vertex), &verticesWithHighlights[0], GL_STATIC_DRAW);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while swapping to highlight buffers in 3d renderable with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new RenderingException(ss.str().c_str());
+		}
 	}
 
 	void Renderable3D::SetScale(bool _isPositiveFactor)
@@ -156,27 +170,49 @@ namespace InteractiveFusion {
 
 	void Renderable3D::Draw(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix)
 	{
-		meshShaderProgram.UseProgram();
+		try
+		{
+			meshShaderProgram.UseProgram();
 
-		SetUniforms(isHighlighted, false, 1.0f, _projectionMatrix, _viewMatrix);
+			SetUniforms(isHighlighted, false, 1.0f, _projectionMatrix, _viewMatrix);
 
-		glm::mat4 modelMatrix = CalculateModelMatrix();
+			glm::mat4 modelMatrix = CalculateModelMatrix();
 
-		meshShaderProgram.SetUniform("matrices.modelMatrix", modelMatrix);
-
+			meshShaderProgram.SetUniform("matrices.modelMatrix", modelMatrix);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while drawing 3d renderable with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new RenderingException(ss.str().c_str());
+		}
 		FinishDrawing();
 	}
 
 	void Renderable3D::DrawForColorPicking(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix)
 	{
-		meshShaderProgram.UseProgram();
+		try
+		{
+			meshShaderProgram.UseProgram();
 
-		SetUniforms(false, true, 1.0f, _projectionMatrix, _viewMatrix);
+			SetUniforms(false, true, 1.0f, _projectionMatrix, _viewMatrix);
 
-		glm::mat4 modelMatrix = CalculateModelMatrix();
+			glm::mat4 modelMatrix = CalculateModelMatrix();
 
-		meshShaderProgram.SetUniform("matrices.modelMatrix", modelMatrix);
-
+			meshShaderProgram.SetUniform("matrices.modelMatrix", modelMatrix);
+		}
+		catch (std::exception& e)
+		{
+			std::stringstream ss;
+			ss << "Exception while drawing 3d renderable for color picking with vertex count: ";
+			ss << GetNumberOfVertices();
+			ss << ", Exception type: ";
+			ss << e.what();
+			throw new RenderingException(ss.str().c_str());
+		}
 		FinishDrawing();
 	}
 }

@@ -207,6 +207,7 @@ namespace InteractiveFusion {
 				HandleEvents();
 			}
 			CountFPS();
+			UpdateSceneInformation();
 		}
 		if (quitMessageLoop)
 		{
@@ -597,12 +598,15 @@ namespace InteractiveFusion {
 
 	void GraphicsControl::PlaneCutPreview()
 	{
+		SetBusy(true);
+		SetStatusMessage(L"Showing plane cut preview");
 		//DebugUtility::DbgOut(L"GraphicsControl::PlaneCutPreview");
 		if (sceneMap[currentApplicationState]->GetCurrentlySelectedMeshIndex() != -1)
 		{
 			sceneMap[currentApplicationState]->PlaneCutPreview(sceneMap[currentApplicationState]->GetCurrentlySelectedMeshIndex(), cutPlane->GetPlaneParameters());
 			eventQueue.push(ModelHighlightsUpdated);
 		}
+		SetBusy(false);
 	}
 
 	wstring GraphicsControl::GetStatusMessage()
@@ -764,9 +768,21 @@ namespace InteractiveFusion {
 		SetBusy(false);
 	}
 
+	void GraphicsControl::UpdateSceneInformation()
+	{
+		WindowState temporaryState = currentApplicationState;
+		std::unordered_map<WindowState, unique_ptr<ModelData>>::iterator it = sceneMap.find(temporaryState);
+		if (it != sceneMap.end())
+		{
+			numberOfVertices = sceneMap[temporaryState]->GetNumberOfVertices();
+			numberOfTriangles = sceneMap[temporaryState]->GetNumberOfTriangles();
+			numberOfClusters = sceneMap[temporaryState]->GetVisibleMeshCount();
+		}
+	}
 
 	int GraphicsControl::GetNumberOfVertices()
 	{
+		return numberOfVertices;
 		std::unordered_map<WindowState, unique_ptr<ModelData>>::iterator it = sceneMap.find(currentApplicationState);
 		if (it != sceneMap.end())
 		{
@@ -778,6 +794,7 @@ namespace InteractiveFusion {
 
 	int GraphicsControl::GetNumberOfTriangles()
 	{
+		return numberOfTriangles;
 		std::unordered_map<WindowState, unique_ptr<ModelData>>::iterator it = sceneMap.find(currentApplicationState);
 		if (it != sceneMap.end())
 		{
@@ -788,6 +805,7 @@ namespace InteractiveFusion {
 
 	int GraphicsControl::GetNumberOfVisibleModels()
 	{
+		return numberOfClusters;
 		std::unordered_map<WindowState, unique_ptr<ModelData>>::iterator it = sceneMap.find(currentApplicationState);
 		if (it != sceneMap.end())
 		{
@@ -810,6 +828,7 @@ namespace InteractiveFusion {
 		
 		StopWatch stopWatch;
 		stopWatch.Start();
+
 
 		sceneMap[PlaneSelection]->LoadFromFile("data\\models\\testScene.ply");
 		//sceneMap[PlaneSelection]->LoadFromData(_scannedMesh);

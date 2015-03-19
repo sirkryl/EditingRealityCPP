@@ -167,17 +167,20 @@ namespace InteractiveFusion {
 	{
 		DebugUtility::DbgOut(L"PlaneCutWindow::RESIZE");
 
-
 		SubWindow::Resize(parentWidth, parentHeight);
 
-		MoveWindow(buttonAxisX, (int)(0.1f*width), (int)(0.27f*height), (int)(0.25f*width), (int)(0.05f*height), true);
-		MoveWindow(buttonAxisY, (int)(0.375f*width), (int)(0.27f*height), (int)(0.25f*width), (int)(0.05f*height), true);
-		MoveWindow(buttonAxisZ, (int)(0.65f*width), (int)(0.27f*height), (int)(0.25f*width), (int)(0.05f*height), true);
-		MoveWindow(buttonPlane, (int)(0.1f*width), (int)(0.15f*height), (int)(0.80f*width), (int)(0.1f*height), true);
+		int controlX = (int)(0.02f*width);
+		int controlWidth = (int)(0.96f*width);
+		int buttonHeight = (int)(0.08f*height);
 
-		MoveWindow(buttonExecutePlaneCut, (int)(0.1f*width), (int)(0.425f*height), (int)(0.80f*width), (int)(0.1f*height), true);
+		MoveWindow(buttonAxisX, controlX, (int)(0.27f*height), (int)(0.30f*width), (int)(0.05f*height), true);
+		MoveWindow(buttonAxisY, (int)(0.35f*width), (int)(0.27f*height), (int)(0.30f*width), (int)(0.05f*height), true);
+		MoveWindow(buttonAxisZ, (int)(0.68f*width), (int)(0.27f*height), (int)(0.30f*width), (int)(0.05f*height), true);
+		MoveWindow(buttonPlane, controlX, (int)(0.15f*height), controlWidth, (int)(0.1f*height), true);
 
-		MoveWindow(buttonPlaneCutDone, (int)(0.1f*width), (int)(0.75f*height), (int)(0.80f*width), (int)(0.2f*height), true);
+		MoveWindow(buttonExecutePlaneCut, controlX, (int)(0.425f*height), controlWidth, (int)(0.1f*height), true);
+
+		MoveWindow(buttonPlaneCutDone, controlX, (int)(0.75f*height), controlWidth, (int)(0.2f*height), true);
 	}
 
 	void PlaneCutWindow::ChangePlaneCutMode(PlaneCutMode _mode)
