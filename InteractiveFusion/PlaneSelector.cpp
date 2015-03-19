@@ -134,8 +134,8 @@ namespace InteractiveFusion {
 			absoluteDegree -= _offSet;
 			relativeDegree -= _offSet;
 			plane->ApplyTransformation(glm::rotate(glm::mat4(1.0), -_offSet, rotationAxis), glm::mat4());
-			//plane->RotateX(offSetX, glm::vec3(0.0f, 0.0f, 1.0f));
-			plane->GenerateBuffers();
+			//plane->RotateX(_offSet, rotationAxis);
+			//plane->GenerateBuffers();
 		}
 	}
 

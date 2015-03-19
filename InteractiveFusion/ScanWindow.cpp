@@ -138,7 +138,7 @@ namespace InteractiveFusion {
 			case ScanWindowEvent::StateChange:
 				pauseFusion = true;
 				_parentWindow->ChangeState(PlaneSelection);
-				
+				_parentWindow->ShowHelpMessage(HelpMessage::PlaneSelectionHelp);
 				scanner->PrepareMeshSave();
 				//kinectFusionScanner.PrepareMeshSave();
 				//_parentWindow->InitializeOpenGLScene(kinectFusionScanner.GetScannedMesh());

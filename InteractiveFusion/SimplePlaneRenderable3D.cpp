@@ -38,6 +38,7 @@ namespace InteractiveFusion {
 
 	glm::mat4 SimplePlaneRenderable3D::CalculateModelMatrix()
 	{
+		//return translation * scaleMatrix * zRotation * yRotation * xRotation;
 		//return Renderable3D::CalculateModelMatrix();
 		return translation * xRotation;
 	}
@@ -85,6 +86,7 @@ namespace InteractiveFusion {
 		UpdateBounds();
 		UpdateTransformationMatrices();
 		CalculatePlaneParameters();
+		UpdateVertexBuffer();
 		
 	}
 

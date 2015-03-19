@@ -21,7 +21,8 @@ namespace InteractiveFusion {
 
 		void ChangeState(WindowState _state);
 
-		
+		void ShowHelpMessage(HelpMessage _state);
+		bool IsHelpVisible();
 		void ChangeScanVolumeSize(int _voxelsPerMeter);
 
 		void InitializeOpenGLScene(std::shared_ptr<MeshContainer> _scannedMesh);

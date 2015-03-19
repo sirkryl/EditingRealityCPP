@@ -54,6 +54,7 @@ namespace InteractiveFusion {
 	//WINDOW MODE TABS
 	GUIContainer  modeUi;
 	HWND hModePrepare, hModeScan, hModeSegmentation, hModeInteraction, hModeProcessing;
+	HWND helpButton;
 	GUIContainer segmentationModes;
 	HWND hSubModeBackground;
 	HWND hSubModePlaneSegmentation, hSubModeObjectSegmentation, hSubModePlaneCut;
@@ -140,6 +141,12 @@ namespace InteractiveFusion {
 		SendMessage(statusHandle, WM_SETFONT, (WPARAM)statusBarFont, 0);
 		ShowWindow(statusHandle, SW_SHOW);
 
+		
+		helpButton = CreateWindowEx(0, L"BUTTON", L"?", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, hWndMain, (HMENU)IDC_BUTTON_HELP, NULL, 0);
+		buttonLayout.emplace(helpButton, ButtonLayout());
+		buttonLayout[helpButton].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayout[helpButton].SetFontSize(50);
+
 		fpsText = CreateWindowEx(0, L"STATIC", L"FPS:", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWndMain, (HMENU)IDC_FRAMES_PER_SECOND_TEXT, NULL, 0);
 		fpsCount = CreateWindowEx(0, L"STATIC", L"10", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWndMain, (HMENU)IDC_FRAMES_PER_SECOND, NULL, 0);
 
@@ -190,6 +197,7 @@ namespace InteractiveFusion {
 		modeUi.Add(hModeSegmentation);
 		modeUi.Add(hModeScan);
 		modeUi.Add(hModeInteraction);
+		modeUi.Add(helpButton);
 
 		modeButtonMap[Prepare] = hModePrepare;
 		modeButtonMap[Scan] = hModeScan;
@@ -221,6 +229,7 @@ namespace InteractiveFusion {
 		glControl.RunOpenGLThread();
 
 		ChangeState(Prepare);
+		ShowHelpMessage(HelpMessage::PrepareHelp);
 
 		ShowWindow(hWndMain, SW_MAXIMIZE);
 		MSG       msg = { 0 };
@@ -278,6 +287,20 @@ namespace InteractiveFusion {
 		MainWindowProc(hWndMain, WM_SIZE, 0, MAKELPARAM(rRect.right, rRect.bottom));
 
 		DebugUtility::DbgOut(L"End ChangeState ", currentState);
+	}
+
+	void MainWindow::ShowHelpMessage(HelpMessage _state)
+	{
+		helpWindow.SetHelpState(_state);
+		helpWindow.Show();
+		RECT rRect;
+		GetClientRect(hWndMain, &rRect);
+		helpWindow.Resize(rRect.right, rRect.bottom);
+	}
+
+	bool MainWindow::IsHelpVisible()
+	{
+		return helpWindow.IsVisible();
 	}
 
 	void MainWindow::UpdateModeButtons()
@@ -526,6 +549,8 @@ namespace InteractiveFusion {
 		{
 			if ((int)currentState+1 <= Interaction)
 				ChangeState((WindowState)((int)currentState + 1));
+			if (currentState == Segmentation)
+				ShowHelpMessage(HelpMessage::SegmentationHelp);
 			
 		}
 	}
@@ -568,7 +593,7 @@ namespace InteractiveFusion {
 			case WM_DESTROY:
 				break;
 			case WM_COMMAND:
-				if (!glControl.IsBusy())
+				if (!glControl.IsBusy() && !helpWindow.IsVisible())
 					ProcessUI(wParam, lParam);
 				break;
 			case WM_DRAWITEM:
@@ -651,6 +676,14 @@ namespace InteractiveFusion {
 			if (currentState != Interaction)
 				ChangeState(Interaction);
 		}
+		if (IDC_BUTTON_HELP == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			helpWindow.SetDefaultMessage(currentState);
+			helpWindow.Show();
+			RECT rRect;
+			GetClientRect(hWndMain, &rRect);
+			helpWindow.Resize(rRect.right, rRect.bottom);
+		}
 	}
 
 
@@ -680,6 +713,9 @@ namespace InteractiveFusion {
 		MoveWindow(verticesCount, width-60, height - 29, 60, 12, true);
 		MoveWindow(trianglesLabel, width-120, height - 15, 60, 12, true);
 		MoveWindow(trianglesCount, width-60, height - 15, 60, 12, true);
+
+		MoveWindow(helpButton, (int)(0.05f*width), 4, (int)(0.07f*height) - 8, (int)(0.07f*height) - 8, true);
+		buttonLayout[helpButton].SetFontSize((width+height)/50);
 	}
 
 	void MainWindow::ShutdownWindow()

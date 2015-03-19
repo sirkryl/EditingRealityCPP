@@ -1,6 +1,6 @@
 #pragma once
 #include "SubWindow.h"
-
+#include "EnumDeclarations.h"
 namespace InteractiveFusion {
 
 	class HelpWindowEvent : public SubWindowEvent{
@@ -27,11 +27,13 @@ namespace InteractiveFusion {
 
 		virtual void Resize(int parentWidth, int parentHeight);
 
+		void SetHelpState(HelpMessage state);
+		void SetDefaultMessage(WindowState state);
 		virtual void CleanUp();
 		virtual LRESULT CALLBACK SubWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	protected:
-
+		void NextHelpMessage();
 		virtual void ProcessUI(WPARAM wParam, LPARAM lParam);
 
 	private:

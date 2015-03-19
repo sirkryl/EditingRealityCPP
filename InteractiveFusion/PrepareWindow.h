@@ -40,7 +40,7 @@ namespace InteractiveFusion {
 
 		void UpdateScanVolumeSize();
 
-		int CountdownThread();
+		int CountdownThread(MainWindow* _parentWindow);
 
 	};
 }

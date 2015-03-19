@@ -7,7 +7,7 @@
 #include "GUIContainer.h"
 #include "ButtonSlider.h"
 #include <boost/thread.hpp>
-
+#include <boost/date_time/posix_time/posix_time.hpp>
 namespace InteractiveFusion {
 
 	ButtonSlider scanSizeSlider;
@@ -177,6 +177,12 @@ namespace InteractiveFusion {
 				_parentWindow->ChangeScanVolumeSize(voxelsPerMeter);
 				_parentWindow->ChangeState(Scan);
 				break;
+			case PrepareWindowEvent::Start:
+				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::Start");
+				_parentWindow->ShowHelpMessage(HelpMessage::ScanHelp);
+				boost::thread(&PrepareWindow::CountdownThread, this, _parentWindow);
+				
+				break;
 			}
 
 			eventQueue.pop();
@@ -239,7 +245,7 @@ namespace InteractiveFusion {
 		if (IDC_PREPARE_BUTTON_START == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			DebugUtility::DbgOut(L"START");
-			boost::thread(&PrepareWindow::CountdownThread, this);
+			eventQueue.push(PrepareWindowEvent::Start);
 			//StartScan();
 
 			//SetWindowState(SCAN);
@@ -324,12 +330,16 @@ namespace InteractiveFusion {
 		MoveWindow(hSliderText, width / 2 - 70, (int)(0.40*height - 32), 200, 25, true);
 		MoveWindow(hSliderDescription, width / 2 - 235, (int)(0.40*height), 60, 50, true);
 
-		UpdateWindow(windowHandle);
+		//UpdateWindow(windowHandle);
 	}
 
-	int PrepareWindow::CountdownThread()
+	int PrepareWindow::CountdownThread(MainWindow* _parentWindow)
 	{
-
+		while (_parentWindow->IsHelpVisible())
+		{
+			boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+			DebugUtility::DbgOut(L"still checking");
+		}
 		int secondTimer = 3;
 		//FusionWindow* pThis = reinterpret_cast<FusionWindow*>(::GetWindowLongPtr(parentHandle, GWLP_USERDATA));
 

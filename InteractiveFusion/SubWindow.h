@@ -10,6 +10,7 @@ namespace InteractiveFusion {
 	public:
 		enum Type {
 			StateChange,
+			Start,
 			Last
 		};
 	};
