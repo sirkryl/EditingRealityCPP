@@ -253,9 +253,7 @@ namespace InteractiveFusion {
 				ResizeOpenGLWindow(parentRect.right, parentRect.bottom);
 				break;
 			case ModelDataUpdated:
-				DebugUtility::DbgOut(L"Before ModelDataUpdated");
 				sceneMap[currentApplicationState]->GenerateBuffers();
-				DebugUtility::DbgOut(L"After ModelDataUpdated");
 				break;
 			case ModelHighlightsUpdated:
 				sceneMap[currentApplicationState]->SwapToHighlightBuffers();
@@ -265,6 +263,14 @@ namespace InteractiveFusion {
 				break;
 			case RemoveModelData:
 				sceneMap[currentApplicationState]->CleanUp();
+				break;
+			case FillHolesInScene:
+				{
+					SetBusy(true);
+					int closedHoles = sceneMap[currentApplicationState]->FillHoles(holeSize);
+					eventQueue.push(ModelDataUpdated);
+					SetBusy(false);
+				}
 				break;
 			case CopyTemporaryInNextStateModelData:
 				SetBusy(true);
@@ -719,14 +725,13 @@ namespace InteractiveFusion {
 	int GraphicsControl::FillHoles(int _holeSize)
 	{
 		SetStatusMessage(L"Filling holes");
-		SetBusy(true);
+		holeSize = _holeSize;
+		eventQueue.push(FillHolesInScene);
+		//int closedHoles = sceneMap[currentApplicationState]->FillHoles(_holeSize);
+		//eventQueue.push(ModelDataUpdated);
 
-		int closedHoles = sceneMap[currentApplicationState]->FillHoles(_holeSize);
-		eventQueue.push(ModelDataUpdated);
-
-
-		SetBusy(false);
-		return closedHoles;
+		return 0;
+		//return closedHoles;
 
 	}
 

@@ -125,6 +125,8 @@ namespace InteractiveFusion {
 		int numberOfVertices = 0;
 		int numberOfTriangles = 0;
 
+		int holeSize = 0;
+
 		void SetBusy(bool _isBusy);
 		void SetStatusMessage(std::wstring _message);
 		

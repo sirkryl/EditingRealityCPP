@@ -16,7 +16,7 @@ namespace InteractiveFusion
 
 	enum HelpMessage { IntroHelp, PrepareHelp, ScanHelp, PlaneSelectionHelp, SegmentationHelp, PlaneCutHelp, ProcessingHelp, InteractionHelp };
 
-	enum OpenGLControlEvent { ModelDataUpdated, CopyTemporaryInModelData, CopyTemporaryInNextStateModelData, ResetCurrentStateModelData, ModelHighlightsUpdated, RemoveModelHighlights, RemoveModelData, ResizeOpenGLViewport, ResetModelData, UpdateSegmentation, UpdateHoleFilling, UpdateCutPlane, SetupCutPlaneMode };
+	enum OpenGLControlEvent { ModelDataUpdated, CopyTemporaryInModelData, CopyTemporaryInNextStateModelData, ResetCurrentStateModelData, ModelHighlightsUpdated, RemoveModelHighlights, FillHolesInScene, RemoveModelData, ResizeOpenGLViewport, ResetModelData, UpdateSegmentation, UpdateHoleFilling, UpdateCutPlane, SetupCutPlaneMode };
 
 	enum OpenGLCameraMode { Free, Sensor };
 
