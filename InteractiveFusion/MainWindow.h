@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <string>
 #include <memory>
+#include <vector>
 namespace InteractiveFusion {
 	class MeshContainer;
 	class MainWindow
@@ -18,6 +19,7 @@ namespace InteractiveFusion {
 		void SetFramesPerSecond(float fps);
 		void SetStatusBarMessage(std::wstring _statusBarMessage);
 		
+		void ForwardCameraMatrix(glm::mat4& matrix);
 
 		void ChangeState(WindowState _state);
 
@@ -25,14 +27,14 @@ namespace InteractiveFusion {
 		bool IsHelpVisible();
 		void ChangeScanVolumeSize(int _voxelsPerMeter);
 
-		void InitializeOpenGLScene(std::shared_ptr<MeshContainer> _scannedMesh);
+		void InitializeOpenGLScene(std::vector<Vertex>& scannedVertices, std::vector<Triangle>& scannedTriangles);
 
-		void SetPlaneRenderer(bool _flag);
+		void ChangePlaneCutTransformation(PlaneCutTransformation _transformationMode);
 		void ExecutePlaneCut();
 		void ChangeInteractionMode(InteractionMode _interactionMode);
-		void ChangePlaneCutMode(PlaneCutMode _mode);
+		void ChangePlaneCutAxis(PlaneCutAxis _axis);
 		void SetCameraMode(OpenGLCameraMode _cameraMode);
-
+		void SetCameraMovementEnabled(bool _flag);
 		void ReloadModel();
 		void ExportModel();
 		void ResetModel();
@@ -40,10 +42,10 @@ namespace InteractiveFusion {
 		int FillHoles(int _holeSize);
 		int RemoveConnectedComponents(int _maxComponentSize);
 		
-		void UpdateObjectSegmentation(ObjectSegmentationParams* _params);
-		void UpdatePlaneSegmentation(PlaneSegmentationParams* _params);
-		void ConfirmSegmentedPlane(PlaneSegmentationParams* _params);
-		void RejectSegmentedPlane(PlaneSegmentationParams* _params);
+		void UpdateObjectSegmentation(ObjectSegmentationParams& _params);
+		void UpdatePlaneSegmentation(PlaneSegmentationParams _params);
+		void ConfirmSegmentedPlane(PlaneSegmentationParams _params);
+		void RejectSegmentedPlane(PlaneSegmentationParams _params);
 		
 		void FinishObjectSegmentation();
 		
@@ -71,7 +73,7 @@ namespace InteractiveFusion {
 		
 
 		static const DWORD          statusTimeOutInMilliSeconds = 5000;
-		bool isHelpEnabled = true;
+		bool isHelpEnabled = false;
 		bool IsValidState(WindowState _state);
 
 		void ShowHelp();

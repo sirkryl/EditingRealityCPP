@@ -30,17 +30,30 @@ using namespace std;
 namespace InteractiveFusion {
 #pragma region
 
+	/*struct ShapePairHash
+	{
+		std::size_t operator()(const WindowState &state) const
+		{
+			return static_cast<std::size_t>(state.first)
+				* static_cast<std::size_t>(WindowState::LAST)
+				+ static_cast<std::size_t>(state.second)
+		}
+	};*/
+
 	HWND hWndMain;
 	HINSTANCE appInstance;
 	WindowState currentState;
 	
 	GraphicsControl glControl;
 
-	std::unordered_map<WindowState, unique_ptr<SubWindow>> subWindowMap;
-
+	std::unordered_map<WindowState, unique_ptr<SubWindow>, std::hash<std::underlying_type<WindowState>::type>> subWindowMap;
+	std::unordered_map<WindowState, unique_ptr<SubWindow>>::const_iterator currentWindow = subWindowMap.end();
+	std::unordered_map<WindowState, unique_ptr<SubWindow>>::const_iterator scanWindow = subWindowMap.end();
 	HelpWindow helpWindow;
 
-	std::unordered_map<WindowState, HWND> modeButtonMap;
+	std::unordered_map<WindowState, HWND, std::hash<std::underlying_type<WindowState>::type>> modeButtonMap;
+
+	bool setupComplete = false;
 
 	TCHAR KeyState::keysPressed[256] = { 0 };
 	bool KeyState::leftMouseDown = false;
@@ -93,7 +106,6 @@ namespace InteractiveFusion {
 		statusBarFont = CreateFont(22, 10, 0, 0, StyleSheet::GetInstance()->GetGlobalFontWeight(), 0, 0, 0, 0, 0, 0, 0, 0, StyleSheet::GetInstance()->GetGlobalFontName().c_str());
 
 		backgroundBrush = CreateSolidBrush(RGB(StyleSheet::GetInstance()->GetGlobalBackgroundColor().r, StyleSheet::GetInstance()->GetGlobalBackgroundColor().g, StyleSheet::GetInstance()->GetGlobalBackgroundColor().b));
-
 
 		WNDCLASSEX wc = { 0 };
 		wc.cbSize = sizeof(WNDCLASSEX);
@@ -222,6 +234,8 @@ namespace InteractiveFusion {
 		subWindowMap[Interaction] = unique_ptr<InteractionWindow>(new InteractionWindow());
 		subWindowMap[Interaction]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0.8f, L"Interaction", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
 
+		scanWindow = subWindowMap.find(Scan);
+
 		helpWindow.Initialize(hWndMain, hInstance, 0.35f, 0.35f, 0.225f, 0.225f, L"Help", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
 		
 
@@ -240,11 +254,17 @@ namespace InteractiveFusion {
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 			}
-			
-			subWindowMap[currentState]->HandleEvents(this);
 
-			UpdateUIActivation();
-			UpdateStatusBarMessage();
+			if (currentWindow != subWindowMap.end())
+			{
+				currentWindow->second->HandleEvents(*this);
+				UpdateUIActivation();
+			}
+
+			if (currentState == Interaction)
+				scanWindow->second->HandleEvents(*this);
+			
+			//UpdateStatusBarMessage();
 
 			if (glControl.IsRendering())
 			{
@@ -252,7 +272,7 @@ namespace InteractiveFusion {
 				UpdateSceneInformation();
 			}
 			if (helpWindow.IsVisible())
-				helpWindow.HandleEvents(this);
+				helpWindow.HandleEvents(*this);
 		}
 		quit = true;
 		CleanUp();
@@ -264,8 +284,8 @@ namespace InteractiveFusion {
 		DebugUtility::DbgOut(L"ChangeState ", currentState);
 		if (!IsValidState(_state))
 			return;
-		if (IsValidState(currentState))
-			subWindowMap[currentState]->Hide();
+		if (currentWindow != subWindowMap.end())
+			currentWindow->second->Hide();
 
 		
 		currentState = _state;
@@ -274,13 +294,20 @@ namespace InteractiveFusion {
 		GetClientRect(hWndMain, &rRect);
 		
 		UpdateModeButtons();
-		subWindowMap[currentState]->Show();
+
+		//currentWindow = subWindowMap[currentState];
+		currentWindow = subWindowMap.find(currentState);
+		
+		if (currentWindow != subWindowMap.end())
+		{
+			currentWindow->second->Show();
+		}
 		glControl.UpdateApplicationState(currentState);
 		
-		if (currentState == Prepare || currentState == Scan || currentState == Interaction)
-			dynamic_cast<ScanWindow*>(subWindowMap[Scan].get())->UnpauseScan();
+		if (currentState == Prepare || currentState == Scan || currentState == Interaction && scanWindow != subWindowMap.end())
+			dynamic_cast<ScanWindow*>(scanWindow->second.get())->UnpauseScan();
 		else
-			dynamic_cast<ScanWindow*>(subWindowMap[Scan].get())->PauseScan();
+			dynamic_cast<ScanWindow*>(scanWindow->second.get())->PauseScan();
 
 		MainWindowProc(hWndMain, WM_SIZE, 0, MAKELPARAM(rRect.right, rRect.bottom));
 
@@ -367,14 +394,19 @@ namespace InteractiveFusion {
 		glControl.ChangeInteractionMode(_interactionMode);
 	}
 
-	void MainWindow::ChangePlaneCutMode(PlaneCutMode _mode)
+	void MainWindow::ChangePlaneCutAxis(PlaneCutAxis _axis)
 	{
-		glControl.ChangePlaneCutMode(_mode);
+		glControl.ChangePlaneCutAxis(_axis);
 	}
 
 	void MainWindow::SetCameraMode(OpenGLCameraMode _cameraMode)
 	{
 		glControl.SetCameraMode(_cameraMode);
+	}
+
+	void MainWindow::SetCameraMovementEnabled(bool _flag)
+	{
+		glControl.SetCameraMovementEnabled(_flag);
 	}
 
 	void MainWindow::ReloadModel()
@@ -409,27 +441,27 @@ namespace InteractiveFusion {
 		glControl.ExportModel();
 	}
 
-	void MainWindow::UpdateObjectSegmentation(ObjectSegmentationParams* _params)
+	void MainWindow::UpdateObjectSegmentation(ObjectSegmentationParams& _params)
 	{
 		SetStatusBarMessage(L"Updating object segmentation...");
-		boost::thread(&GraphicsControl::UpdateObjectSegmentation, &glControl, _params);
+		boost::thread(&GraphicsControl::UpdateObjectSegmentation, &glControl, boost::ref(_params));
 		//glControl.UpdateObjectSegmentation(_params);
 	}
 
-	void MainWindow::UpdatePlaneSegmentation(PlaneSegmentationParams* _params)
+	void MainWindow::UpdatePlaneSegmentation(PlaneSegmentationParams _params)
 	{
 		SetStatusBarMessage(L"Updating plane segmentation...");
 		boost::thread(&GraphicsControl::UpdatePlaneSegmentation, &glControl, _params);
 		//glControl.UpdatePlaneSegmentation(_params);
 	}
 
-	void MainWindow::ConfirmSegmentedPlane(PlaneSegmentationParams* _params)
+	void MainWindow::ConfirmSegmentedPlane(PlaneSegmentationParams _params)
 	{
 		SetStatusBarMessage(L"Confirmed plane, looking for more...");
 		glControl.ConfirmSegmentedPlane(_params);
 	}
 
-	void MainWindow::RejectSegmentedPlane(PlaneSegmentationParams* _params)
+	void MainWindow::RejectSegmentedPlane(PlaneSegmentationParams _params)
 	{
 		SetStatusBarMessage(L"Rejected plane, looking for more...");
 		glControl.RejectSegmentedPlane(_params);
@@ -447,16 +479,20 @@ namespace InteractiveFusion {
 		glControl.FinishProcessing();
 	}
 
-	void MainWindow::InitializeOpenGLScene(std::shared_ptr<MeshContainer> _scannedMesh)
+	void MainWindow::InitializeOpenGLScene(std::vector<Vertex>& scannedVertices, std::vector<Triangle>& scannedTriangles)
 	{
 		SetStatusBarMessage(L"Reconstructing and cleaning scene...");
-		glControl.LoadAndSegmentModelDataFromScan(_scannedMesh);
+		//glControl.SetScannedMesh(scannedVertices, scannedTriangles);
+
+		glControl.LoadAndSegmentModelDataFromScan(scannedVertices, scannedTriangles);
+
+		//glControl.LoadAndSegmentModelDataFromScan(_scannedMesh);
 		//boost::thread(&GraphicsControl::LoadAndSegmentModelDataFromScan, &glControl, _scannedMesh);
 	}
 
-	void MainWindow::SetPlaneRenderer(bool _flag)
+	void MainWindow::ChangePlaneCutTransformation(PlaneCutTransformation _transformationMode)
 	{
-		glControl.ShowPlaneRenderer(_flag);
+		glControl.ChangePlaneCutTransformation(_transformationMode);
 	}
 
 	void MainWindow::ExecutePlaneCut()
@@ -485,18 +521,15 @@ namespace InteractiveFusion {
 		nextStatusBarMessage = _statusBarMessage;
 	}
 
+
 	void MainWindow::UpdateStatusBarMessage()
 	{
 		if (nextStatusBarMessage.length() > 0 && nextStatusBarMessage != currentStatusBarMessage)
 		{
-			DebugUtility::DbgOut(L"MainWindow::UpdateStatusBarMessage()::UpdatingStatusBarMessage");
 			currentStatusBarMessage = nextStatusBarMessage;
-			DebugUtility::DbgOut(L"MainWindow::UpdateStatusBarMessage()::NEW UpdatingStatusBarMessage: " + currentStatusBarMessage);
 			SetDlgItemText(hWndMain, IDC_STATUS, currentStatusBarMessage.c_str());
 
-			DebugUtility::DbgOut(L"MainWindow::UpdateStatusBarMessage()::NEW MESSAGE: " + currentStatusBarMessage);
 			tickLastStatus = GetTickCount();
-			DebugUtility::DbgOut(L"MainWindow::UpdateStatusBarMessage()::After Clearing: " + currentStatusBarMessage);
 		}
 		else if (GetTickCount() - tickLastStatus > statusTimeOutInMilliSeconds)
 		{
@@ -538,10 +571,15 @@ namespace InteractiveFusion {
 		return 0;
 	}
 
+	void MainWindow::ForwardCameraMatrix(glm::mat4& matrix)
+	{
+		glControl.SetCameraMatrix(matrix);
+	}
+
 	void MainWindow::UpdateOpenGLControl()
 	{
-		if (currentState == Interaction)
-			glControl.SetCameraMatrix(dynamic_cast<ScanWindow*>(subWindowMap[Scan].get())->GetCameraMatrix());
+		//if (currentState == Interaction)
+		//	glControl.SetCameraMatrix(dynamic_cast<ScanWindow*>(subWindowMap[Scan].get())->GetCameraMatrix());
 
 		if (GetTickCount() - tickLastFpsUpdate > updateFpsCounterInMilliSeconds)
 		{
@@ -624,9 +662,9 @@ namespace InteractiveFusion {
 			case WM_SIZE:
 				MoveModeButtonsOnResize(LOWORD(lParam), HIWORD(lParam));
 				helpWindow.Resize(LOWORD(lParam), HIWORD(lParam));
-				if (IsValidState(currentState))
+				if (currentWindow != subWindowMap.end())
 				{
-					subWindowMap[currentState]->Resize(LOWORD(lParam), HIWORD(lParam));
+					currentWindow->second->Resize(LOWORD(lParam), HIWORD(lParam));
 					glControl.PrepareViewportResize();
 				}
 				break;
@@ -739,16 +777,17 @@ namespace InteractiveFusion {
 
 	void MainWindow::UpdateUIActivation()
 	{
+		
 		if (glControl.IsBusy() || helpWindow.IsVisible())
 		{
-			if (subWindowMap[currentState]->IsActive())
+			if (currentWindow->second->IsActive())
 			{
-				subWindowMap[currentState]->Deactivate();
+				currentWindow->second->Deactivate();
 			}
 		}
-		else if (!subWindowMap[currentState]->IsActive())
+		else if (!currentWindow->second->IsActive())
 		{
-			subWindowMap[currentState]->Activate();
+			currentWindow->second->Activate();
 			UpdateModeButtons();
 		}
 	}

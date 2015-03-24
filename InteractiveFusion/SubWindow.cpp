@@ -111,7 +111,7 @@ namespace InteractiveFusion {
 
 	}
 
-	void SubWindow::HandleEvents(MainWindow* _parentWindow)
+	void SubWindow::HandleEvents(MainWindow& _parentWindow)
 	{
 
 	}

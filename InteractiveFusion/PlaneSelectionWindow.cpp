@@ -295,7 +295,7 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void PlaneSelectionWindow::HandleEvents(MainWindow* _parentWindow)
+	void PlaneSelectionWindow::HandleEvents(MainWindow& _parentWindow)
 	{
 		while (!eventQueue.empty()) 
 		{
@@ -304,18 +304,18 @@ namespace InteractiveFusion {
 			switch (event)
 			{
 			case PlaneSelectionWindowEvent::StateChange:
-				_parentWindow->ChangeState(Segmentation);
-				_parentWindow->SetAndShowHelpMessage(HelpMessage::SegmentationHelp);
-				_parentWindow->UpdateObjectSegmentation(new EuclideanSegmentationParams());
+				_parentWindow.ChangeState(Segmentation);
+				_parentWindow.SetAndShowHelpMessage(HelpMessage::SegmentationHelp);
+				_parentWindow.UpdateObjectSegmentation(EuclideanSegmentationParams());
 				break;
 			case PlaneSelectionWindowEvent::PlaneConfirmed:
-				_parentWindow->ConfirmSegmentedPlane(&planeParams);
+				_parentWindow.ConfirmSegmentedPlane(planeParams);
 				break;
 			case PlaneSelectionWindowEvent::PlaneRejected:
-				_parentWindow->RejectSegmentedPlane(&planeParams);
+				_parentWindow.RejectSegmentedPlane(planeParams);
 				break;
 			case PlaneSelectionWindowEvent::UpdateSegmentation:
-				_parentWindow->UpdatePlaneSegmentation(&planeParams);
+				_parentWindow.UpdatePlaneSegmentation(planeParams);
 				break;
 			}
 

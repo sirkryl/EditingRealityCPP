@@ -25,30 +25,28 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void PlaneCutRenderer::Initialize(GraphicsControl* _glControl)
+	void PlaneCutRenderer::Initialize(GraphicsControl& _glControl)
 	{
 		OpenGLRenderer::Initialize(_glControl);		
 	}
 
-	void PlaneCutRenderer::Render(GraphicsControl* _glControl, ModelData* _modelData, IconData* _iconData)
+	void PlaneCutRenderer::Render(GraphicsControl& _glControl, ModelData& _modelData, IconData& _iconData)
 	{
-		//if (!plane->AreBuffersInitialized() && _modelData->GetUpperBounds().x != -999.0f && _modelData->GetLowerBounds().x != 999.0f)
+		//if (!plane->AreBuffersInitialized() && _modelData.GetUpperBounds().x != -999.0f && _modelData.GetLowerBounds().x != 999.0f)
 		//	InitializePlane(_glControl, _modelData);
 		
 		OpenGLRenderer::PrepareRender(_glControl);
 		OpenGLRenderer::Render(_glControl, _modelData, _iconData);
 
-		if (_glControl->IsPlaneRendererVisible())
-		{
-			plane->Draw(_glControl->GetProjectionMatrix(), _glControl->GetViewMatrix());
-		}
+
+		plane->Draw(_glControl.GetProjectionMatrix(), _glControl.GetViewMatrix());
 
 		glText.PrepareForRender();
 
-		glText.RenderText(L"Clusters: ", _modelData->GetVisibleMeshCount(), 13, -0.98f, 0.93f, 2.0f / _glControl->GetViewportWidth(), 2.0f / _glControl->GetViewportHeight());
-		glText.RenderText(L"Vertices: ", _modelData->GetNumberOfVertices(), 13, -0.98f, 0.88f, 2.0f / _glControl->GetViewportWidth(), 2.0f / _glControl->GetViewportHeight());
-		glText.RenderText(L"Triangles: ", _modelData->GetNumberOfTriangles(), 13, -0.98f, 0.83f, 2.0f / _glControl->GetViewportWidth(), 2.0f / _glControl->GetViewportHeight());
-
+		glText.RenderText(L"Clusters: ", _modelData.GetVisibleMeshCount(), 13, -0.98f, 0.93f, 2.0f / _glControl.GetViewportWidth(), 2.0f / _glControl.GetViewportHeight());
+		glText.RenderText(L"Vertices: ", _modelData.GetNumberOfVertices(), 13, -0.98f, 0.88f, 2.0f / _glControl.GetViewportWidth(), 2.0f / _glControl.GetViewportHeight());
+		glText.RenderText(L"Triangles: ", _modelData.GetNumberOfTriangles(), 13, -0.98f, 0.83f, 2.0f / _glControl.GetViewportWidth(), 2.0f / _glControl.GetViewportHeight());
+		glText.FinishRender();
 
 
 		OpenGLRenderer::FinishRender(_glControl);

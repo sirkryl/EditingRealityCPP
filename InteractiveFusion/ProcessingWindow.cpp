@@ -4,6 +4,7 @@
 #include "DebugUtility.h"
 #include "IFResources.h"
 #include "GUIContainer.h"
+#include <boost/thread.hpp>
 namespace InteractiveFusion {
 
 
@@ -162,7 +163,7 @@ namespace InteractiveFusion {
 		return SubWindow::SubWindowProc(windowHandle, message, wParam, lParam);
 	}
 
-	void ProcessingWindow::HandleEvents(MainWindow* _parentWindow)
+	void ProcessingWindow::HandleEvents(MainWindow& _parentWindow)
 	{
 		while (!eventQueue.empty())
 		{
@@ -171,22 +172,23 @@ namespace InteractiveFusion {
 			switch (event)
 			{
 			case ProcessingWindowEvent::StateChange:
-				_parentWindow->FinishProcessing();
-				_parentWindow->ChangeState(Interaction);
-				_parentWindow->SetAndShowHelpMessage(HelpMessage::InteractionHelp);
+				_parentWindow.FinishProcessing();
+				_parentWindow.ChangeState(Interaction);
+				_parentWindow.SetAndShowHelpMessage(HelpMessage::InteractionHelp);
 				break;
 			case ProcessingWindowEvent::FillHoles:
 				DebugUtility::DbgOut(L"ProcessingWindow::HandleEvents::FillHoles");
-				_parentWindow->FillHoles(maxHoleSizeToBeClosed);
+				boost::thread(&MainWindow::FillHoles, _parentWindow, maxHoleSizeToBeClosed);
+				//_parentWindow.FillHoles(maxHoleSizeToBeClosed);
 				break;
 			case ProcessingWindowEvent::RemoveComponents:
 				DebugUtility::DbgOut(L"ProcessingWindow::HandleEvents::RemoveComponents");
-				_parentWindow->RemoveConnectedComponents(maxComponentSizeToBeRemoved);
+				_parentWindow.RemoveConnectedComponents(maxComponentSizeToBeRemoved);
 				//do stuff
 				break;
 			case ProcessingWindowEvent::Reset:
 				DebugUtility::DbgOut(L"ProcessingWindow::HandleEvents::Reset");
-				_parentWindow->ReloadModel();
+				_parentWindow.ReloadModel();
 				break;
 			}
 

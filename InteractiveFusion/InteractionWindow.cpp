@@ -71,7 +71,7 @@ namespace InteractiveFusion {
 		return SubWindow::SubWindowProc(windowHandle, message, wParam, lParam);
 	}
 
-	void InteractionWindow::HandleEvents(MainWindow* _parentWindow)
+	void InteractionWindow::HandleEvents(MainWindow& _parentWindow)
 	{
 		while (!eventQueue.empty())
 		{
@@ -81,21 +81,21 @@ namespace InteractiveFusion {
 			{
 			case InteractionWindowEvent::StateChange:
 				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::StateChange");
-				_parentWindow->ChangeState(Scan);
+				_parentWindow.ChangeState(Scan);
 				break;
 			case InteractionWindowEvent::ExportModel:
 				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::ExportModel");
-				_parentWindow->ExportModel();
+				_parentWindow.ExportModel();
 				break;
 			case InteractionWindowEvent::ChangeCameraMode:
-				_parentWindow->SetCameraMode(cameraMode);
+				_parentWindow.SetCameraMode(cameraMode);
 				break;
 			case InteractionWindowEvent::ChangeManipulationMode:
-				_parentWindow->ChangeInteractionMode(interactionMode);
+				_parentWindow.ChangeInteractionMode(interactionMode);
 				//do stuff
 				break;
 			case InteractionWindowEvent::Reset:
-				_parentWindow->ResetModel();
+				_parentWindow.ResetModel();
 				//do stuff
 				break;
 			}

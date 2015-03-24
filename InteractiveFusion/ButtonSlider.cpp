@@ -60,7 +60,7 @@ namespace InteractiveFusion {
 		{
 			if (IsMouseInHandle(hSliderBackground))
 			{
-				DebugUtility::DbgOut(L"ButtonSlider::HandleMouseMove()::sliderValue::", sliderValue);
+				//DebugUtility::DbgOut(L"ButtonSlider::HandleMouseMove()::sliderValue::", sliderValue);
 				POINT p;
 				GetCursorPos(&p);
 				RECT borderRect; GetClientRect(hSliderBackground, &borderRect);
@@ -100,9 +100,9 @@ namespace InteractiveFusion {
 		float channelWidth = borderRect.right - (sliderRect.right / 2.0f) - borderRect.left - (sliderRect.right / 2.0f);
 		sliderPos = (int)(percent * channelWidth);
 
-		DebugUtility::DbgOut(L"ButtonSlider::SetPositionToValue::percent: ", percent);
+		/*DebugUtility::DbgOut(L"ButtonSlider::SetPositionToValue::percent: ", percent);
 		DebugUtility::DbgOut(L"ButtonSlider::SetPositionToValue::sliderValue: ", sliderValue);
-		DebugUtility::DbgOut(L"ButtonSlider::SetPositionToValue::sliderPos: ", sliderPos);
+		DebugUtility::DbgOut(L"ButtonSlider::SetPositionToValue::sliderPos: ", sliderPos);*/
 	}
 
 	void ButtonSlider::SetValue(int _value)
@@ -136,12 +136,12 @@ namespace InteractiveFusion {
 
 	bool ButtonSlider::HandleLeftMouseButtonDown()
 	{
-		DebugUtility::DbgOut(L"ButtonSlider::HandleLeftClickDown()::Before");
+		//DebugUtility::DbgOut(L"ButtonSlider::HandleLeftClickDown()::Before");
 		if (!sliderDown)
 		{
 			if (IsMouseInHandle(hSliderBackground))
 			{
-				DebugUtility::DbgOut(L"ButtonSlider::HandleLeftClickDown()");
+				//DebugUtility::DbgOut(L"ButtonSlider::HandleLeftClickDown()");
 				sliderDown = true;
 				sliderButtonLayout.SetInactiveGradient(pressedGradient);
 				Redraw();
@@ -156,7 +156,7 @@ namespace InteractiveFusion {
 	{
 		if (sliderDown)
 		{
-			DebugUtility::DbgOut(L"ButtonSlider::HandleLeftClickUp()");
+			//DebugUtility::DbgOut(L"ButtonSlider::HandleLeftClickUp()");
 			sliderDown = false;
 			sliderButtonLayout.SetInactiveGradient(defaultGradient);
 			Redraw();

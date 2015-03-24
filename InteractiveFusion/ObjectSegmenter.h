@@ -10,11 +10,11 @@ namespace InteractiveFusion {
 		~ObjectSegmenter();
 
 
-		virtual void SetSegmentationParameters(ObjectSegmentationParams* _segmentationParams);
-		virtual void FinishSegmentation(ModelData* _inputModelData, ModelData* _outputModelData);
+		virtual void SetSegmentationParameters(ObjectSegmentationParams& _segmentationParams);
+		virtual void FinishSegmentation(ModelData& _inputModelData, ModelData& _outputModelData);
 
 	protected:
-		virtual void UpdateHighlights(ModelData* _modelData);
+		virtual void UpdateHighlights(ModelData& _modelData);
 	};
 }
 

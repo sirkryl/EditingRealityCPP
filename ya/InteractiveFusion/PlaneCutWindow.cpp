@@ -9,14 +9,12 @@ namespace InteractiveFusion {
 
 	//PROCESSING UI
 	GUIContainer planeCutUi;
-	HWND buttonPlaneRotation, buttonPlaneTranslation;
-	HWND buttonExecutePlaneCut;
-	HWND hButtonFreeCamera;
+	HWND buttonPlane, buttonExecutePlaneCut;
 	HWND buttonAxisX, buttonAxisY, buttonAxisZ;
 	HWND buttonPlaneCutDone;
 	HWND buttonCutReset;
 
-	bool rotatePlane = false;
+	bool showPlaneCutPlane = false;
 
 	
 
@@ -33,19 +31,12 @@ namespace InteractiveFusion {
 	{
 		SubWindow::Initialize(_parentHandle, _hInstance, _marginTop, _marginBottom, _marginRight, _marginLeft, _className, _backgroundColor);
 
-		buttonPlaneRotation = CreateWindowEx(0, L"Button", L"Rotate", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PLANECUT_ROTATE, hInstance, 0);
+		buttonPlane = CreateWindowEx(0, L"Button", L"Show Plane", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PLANECUT_SHOW_PLANE, hInstance, 0);
 
-		buttonLayoutMap.emplace(buttonPlaneRotation, ButtonLayout());
+		buttonLayoutMap.emplace(buttonPlane, ButtonLayout());
 
-		buttonLayoutMap[buttonPlaneRotation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-		buttonLayoutMap[buttonPlaneRotation].SetFontSize(30);
-
-		buttonPlaneTranslation = CreateWindowEx(0, L"Button", L"Translate", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PLANECUT_TRANSLATE, hInstance, 0);
-
-		buttonLayoutMap.emplace(buttonPlaneTranslation, ButtonLayout());
-
-		buttonLayoutMap[buttonPlaneTranslation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-		buttonLayoutMap[buttonPlaneTranslation].SetFontSize(30);
+		buttonLayoutMap[buttonPlane].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayoutMap[buttonPlane].SetFontSize(30);
 		
 		buttonAxisX = CreateWindowEx(0, L"Button", L"X", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PLANECUT_XAXIS, hInstance, 0);
 
@@ -68,7 +59,7 @@ namespace InteractiveFusion {
 		buttonLayoutMap[buttonAxisZ].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
 		buttonLayoutMap[buttonAxisZ].SetFontSize(40);
 
-		buttonExecutePlaneCut = CreateWindowEx(0, L"Button", L"Cut", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PLANECUT_EXECUTE, hInstance, 0);
+		buttonExecutePlaneCut = CreateWindowEx(0, L"Button", L"Plane Cut", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PLANECUT_EXECUTE, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonExecutePlaneCut, ButtonLayout());
 
@@ -86,15 +77,7 @@ namespace InteractiveFusion {
 		buttonLayoutMap.emplace(buttonCutReset, ButtonLayout());
 		buttonLayoutMap[buttonCutReset].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Red));
 
-		hButtonFreeCamera = CreateWindowEx(0, L"BUTTON", L"Free Camera", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | BS_OWNERDRAW | BS_MULTILINE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PLANECUT_FREE_CAMERA, hInstance, 0);
-
-		buttonLayoutMap.emplace(hButtonFreeCamera, ButtonLayout());
-		buttonLayoutMap[hButtonFreeCamera].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-		buttonLayoutMap[hButtonFreeCamera].SetFontSize(30);
-
-		planeCutUi.Add(buttonPlaneRotation);
-		planeCutUi.Add(buttonPlaneTranslation);
-		planeCutUi.Add(hButtonFreeCamera);
+		planeCutUi.Add(buttonPlane);
 		planeCutUi.Add(buttonAxisX);
 		planeCutUi.Add(buttonAxisY);
 		planeCutUi.Add(buttonAxisZ);
@@ -102,8 +85,8 @@ namespace InteractiveFusion {
 		planeCutUi.Add(buttonPlaneCutDone);
 		planeCutUi.Add(buttonCutReset);
 
-		ChangePlaneCutAxis(AxisY);
-		ChangePlaneTransformation(PlaneCutTransformation::Translate);
+		ChangePlaneCutMode(AxisY);
+
 	}
 
 
@@ -125,25 +108,21 @@ namespace InteractiveFusion {
 				_parentWindow.ChangeState(Processing);
 				_parentWindow.SetAndShowHelpMessage(HelpMessage::ProcessingHelp);
 				break;
-			case PlaneCutWindowEvent::ChangePlaneTransformation:
-				DebugUtility::DbgOut(L"PlaneCutWindow::HandleEvents::ChangePlaneCutTransformation");
-				_parentWindow.ChangePlaneCutTransformation(planeCutTransformation);
+			case PlaneCutWindowEvent::ActivatePlane:
+				DebugUtility::DbgOut(L"PlaneCutWindow::HandleEvents::ActivatePlane");
+				_parentWindow.SetPlaneRenderer(showPlaneCutPlane);
 				break;
 			case PlaneCutWindowEvent::ExecutePlaneCut:
 				DebugUtility::DbgOut(L"PlaneCutWindow::HandleEvents::ExecutePlaneCut");
 				_parentWindow.ExecutePlaneCut();
 				break;
-			case PlaneCutWindowEvent::ChangePlaneCutAxis:
-				DebugUtility::DbgOut(L"PlaneCutWindow::HandleEvents::ChangePlaneCutAxis");
-				_parentWindow.ChangePlaneCutAxis(planeCutAxis);
+			case PlaneCutWindowEvent::ChangePlaneCutMode:
+				DebugUtility::DbgOut(L"PlaneCutWindow::HandleEvents::ChangePlaneCutMode");
+				_parentWindow.ChangePlaneCutMode(planeCutMode);
 				break;
 			case PlaneCutWindowEvent::Reset:
 				DebugUtility::DbgOut(L"PlaneCutWindow::HandleEvents::Reset");
 				_parentWindow.ReloadModel();
-				break;
-			case PlaneCutWindowEvent::ChangeCameraMovement:
-				DebugUtility::DbgOut(L"PlaneCutWindow::HandleEvents::ChangeCameraMode");
-				_parentWindow.SetCameraMovementEnabled(cameraMovementEnabled);
 				break;
 			}
 
@@ -153,32 +132,35 @@ namespace InteractiveFusion {
 
 	void PlaneCutWindow::ProcessUI(WPARAM wParam, LPARAM lParam)
 	{
-		if (IDC_PLANECUT_ROTATE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		if (IDC_PLANECUT_SHOW_PLANE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (cameraMovementEnabled)
-			{
-				ToggleCameraMovementEnabled();
-				eventQueue.push(PlaneCutWindowEvent::ChangeCameraMovement);
-			}
-			ChangePlaneTransformation(PlaneCutTransformation::Rotate);
+			DebugUtility::DbgOut(L"PlaneCutWindow::ProcessUI::ShowPlane");
 
-			eventQueue.push(PlaneCutWindowEvent::ChangePlaneTransformation);
+			showPlaneCutPlane = !showPlaneCutPlane;
+
+			if (showPlaneCutPlane)
+				buttonLayoutMap[buttonPlane].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Blue));
+			else
+				buttonLayoutMap[buttonPlane].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+
+			buttonLayoutMap[buttonPlane].SetFontSize(30);
+			eventQueue.push(PlaneCutWindowEvent::ActivatePlane);
 
 		}
 		if (IDC_PLANECUT_XAXIS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			DebugUtility::DbgOut(L"PlaneCutWindow::ProcessUI::X Axis");
-			ChangePlaneCutAxis(AxisX);
+			ChangePlaneCutMode(AxisX);
 		}
 		if (IDC_PLANECUT_YAXIS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			DebugUtility::DbgOut(L"PlaneCutWindow::ProcessUI::Y Axis");
-			ChangePlaneCutAxis(AxisY);
+			ChangePlaneCutMode(AxisY);
 		}
 		if (IDC_PLANECUT_ZAXIS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			DebugUtility::DbgOut(L"PlaneCutWindow::ProcessUI::Z Axis");
-			ChangePlaneCutAxis(AxisZ);
+			ChangePlaneCutMode(AxisZ);
 		}
 		if (IDC_PLANECUT_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
@@ -195,69 +177,8 @@ namespace InteractiveFusion {
 			DebugUtility::DbgOut(L"PlaneCutWindow::ProcessUI::Done");
 			eventQueue.push(PlaneCutWindowEvent::StateChange);
 		}
-		if (IDC_PLANECUT_FREE_CAMERA == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-			ToggleCameraMovementEnabled();
-			if (cameraMovementEnabled)
-				ChangePlaneTransformation(PlaneCutTransformation::None);
-			else
-				ChangePlaneTransformation(planeCutTransformation);
-
-			eventQueue.push(PlaneCutWindowEvent::ChangeCameraMovement);
-		}
-		if (IDC_PLANECUT_TRANSLATE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-			if (cameraMovementEnabled)
-			{
-				ToggleCameraMovementEnabled();
-				eventQueue.push(PlaneCutWindowEvent::ChangeCameraMovement);
-			}
-			ChangePlaneTransformation(PlaneCutTransformation::Translate);
-				
-			eventQueue.push(PlaneCutWindowEvent::ChangePlaneTransformation);
-		}
-		
-
-	}
-	void PlaneCutWindow::ToggleCameraMovementEnabled()
-	{
-		cameraMovementEnabled = !cameraMovementEnabled;
-
-		if (!cameraMovementEnabled)
-		{
-			buttonLayoutMap[hButtonFreeCamera].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-			buttonLayoutMap[hButtonFreeCamera].SetFontSize(30);
-		}
-		else
-		{
-			buttonLayoutMap[hButtonFreeCamera].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Blue));
-			buttonLayoutMap[hButtonFreeCamera].SetFontSize(30);
-		}
-		planeCutUi.Redraw();
 	}
 
-	void PlaneCutWindow::ChangePlaneTransformation(PlaneCutTransformation _transformationMode)
-	{
-		if (_transformationMode == PlaneCutTransformation::Translate)
-		{
-			buttonLayoutMap[buttonPlaneTranslation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Blue));
-			buttonLayoutMap[buttonPlaneRotation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-			planeCutTransformation = _transformationMode;
-		}
-		else if (_transformationMode == PlaneCutTransformation::Rotate)
-		{
-			buttonLayoutMap[buttonPlaneTranslation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-			buttonLayoutMap[buttonPlaneRotation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Blue));
-			planeCutTransformation = _transformationMode;
-		}
-		else
-		{
-			buttonLayoutMap[buttonPlaneTranslation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-			buttonLayoutMap[buttonPlaneRotation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-		}
-		
-		planeCutUi.Redraw();
-	}
 
 	void PlaneCutWindow::Resize(int parentWidth, int parentHeight)
 	{
@@ -270,38 +191,37 @@ namespace InteractiveFusion {
 		int buttonHeight = (int)(0.08f*height);
 
 		MoveWindow(buttonCutReset, controlX, (int)(0.05f*height), controlWidth, (int)(0.2f*height), true);
-		MoveWindow(buttonAxisX, controlX, (int)(0.4f*height), (int)(0.30f*width), (int)(0.075f*height), true);
-		MoveWindow(buttonAxisY, (int)(0.35f*width), (int)(0.4f*height), (int)(0.30f*width), (int)(0.075f*height), true);
-		MoveWindow(buttonAxisZ, (int)(0.68f*width), (int)(0.4f*height), (int)(0.30f*width), (int)(0.075f*height), true);
-		MoveWindow(buttonPlaneRotation, controlX, (int)(0.50f*height), controlWidth/2 - controlX, (int)(0.1f*height), true);
-		MoveWindow(buttonPlaneTranslation, controlWidth/2 + 2*controlX, (int)(0.50f*height), controlWidth/2 - controlX, (int)(0.1f*height), true);
+		MoveWindow(buttonAxisX, controlX, (int)(0.47f*height), (int)(0.30f*width), (int)(0.05f*height), true);
+		MoveWindow(buttonAxisY, (int)(0.35f*width), (int)(0.47f*height), (int)(0.30f*width), (int)(0.05f*height), true);
+		MoveWindow(buttonAxisZ, (int)(0.68f*width), (int)(0.47f*height), (int)(0.30f*width), (int)(0.05f*height), true);
+		MoveWindow(buttonPlane, controlX, (int)(0.35f*height), controlWidth, (int)(0.1f*height), true);
 
-		MoveWindow(hButtonFreeCamera, controlX, (int)(0.275f*height), controlWidth, (int)(0.1f*height), true);
-		MoveWindow(buttonExecutePlaneCut, controlX, (int)(0.625f*height), controlWidth, (int)(0.1f*height), true);
+		MoveWindow(buttonExecutePlaneCut, controlX, (int)(0.525f*height), controlWidth, (int)(0.1f*height), true);
+
 		MoveWindow(buttonPlaneCutDone, controlX, (int)(0.75f*height), controlWidth, (int)(0.2f*height), true);
 	}
 
-	void PlaneCutWindow::ChangePlaneCutAxis(PlaneCutAxis _axis)
+	void PlaneCutWindow::ChangePlaneCutMode(PlaneCutMode _mode)
 	{
-		planeCutAxis = _axis;
+		planeCutMode = _mode;
 
 		buttonLayoutMap[buttonAxisX].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
 		buttonLayoutMap[buttonAxisY].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
 		buttonLayoutMap[buttonAxisZ].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
 		
 		
-		if (planeCutAxis == AxisX)
+		if (planeCutMode == AxisX)
 			buttonLayoutMap[buttonAxisX].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Blue));
-		else if (planeCutAxis == AxisY)
+		else if (planeCutMode == AxisY)
 			buttonLayoutMap[buttonAxisY].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Blue));
-		else if (planeCutAxis == AxisZ)
+		else if (planeCutMode == AxisZ)
 			buttonLayoutMap[buttonAxisZ].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Blue));
 
 		buttonLayoutMap[buttonAxisX].SetFontSize(40);
 		buttonLayoutMap[buttonAxisY].SetFontSize(40);
 		buttonLayoutMap[buttonAxisZ].SetFontSize(40);
 		planeCutUi.Redraw();
-		eventQueue.push(PlaneCutWindowEvent::ChangePlaneCutAxis);
+		eventQueue.push(PlaneCutWindowEvent::ChangePlaneCutMode);
 
 	}
 

@@ -65,6 +65,6 @@ namespace InteractiveFusion {
 		void UpdateIndexBuffer();
 		virtual void GenerateBufferObjects();
 
-		//virtual void SetUniforms(bool _highlight, bool _colorPicking, glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix);
+		//virtual void SetUniforms(bool _highlight, bool _colorPicking, glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix);
 	};
 }

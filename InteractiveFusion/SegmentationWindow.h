@@ -21,7 +21,7 @@ namespace InteractiveFusion {
 
 		virtual void Initialize(HWND _parentHandle, HINSTANCE _hInstance, float _marginTop, float _marginBottom, float _marginRight, float _marginLeft, std::wstring _className, ColorInt _backgroundColor);
 
-		virtual void HandleEvents(MainWindow* _parentWindow);
+		virtual void HandleEvents(MainWindow& _parentWindow);
 
 		virtual void Show();
 		virtual void Resize(int parentWidth, int parentHeight);

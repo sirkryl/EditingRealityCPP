@@ -29,9 +29,10 @@ namespace InteractiveFusion {
 	
 	void ModelData::LoadFromFile(const char* fileName)
 	{
+		isBusy = true;
 		CleanUp();
 
-		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer));
+		currentMeshData.push_back(shared_ptr<MeshContainer>(new MeshContainer));
 		currentMeshData[currentMeshData.size() - 1]->SetColorCode(GetNextColorCode());
 		
 		currentMeshData[currentMeshData.size() - 1]->LoadFromFile(fileName);
@@ -39,13 +40,15 @@ namespace InteractiveFusion {
 		currentMeshData[currentMeshData.size() - 1]->CopyInternalToVisibleData();
 		currentMeshData[currentMeshData.size() - 1]->UpdateEssentials();
 		currentMeshData[currentMeshData.size() - 1]->SetShaderProgram(defaultShaderProgram);
+		isBusy = false;
 	}
 
-	void ModelData::LoadFromData(std::shared_ptr<MeshContainer> _meshContainer)
+	void ModelData::LoadFromData(std::vector<Vertex>& _vertices, std::vector<Triangle>& _triangles)
 	{
+		isBusy = true;
 		CleanUp();
 
-		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(_meshContainer->GetVertices(), _meshContainer->GetTriangles())));
+		currentMeshData.push_back(shared_ptr<MeshContainer>(new MeshContainer(_vertices, _triangles)));
 		currentMeshData[currentMeshData.size() - 1]->SetColorCode(GetNextColorCode());
 		currentMeshData[currentMeshData.size() - 1]->CopyVisibleToInternalData();
 		currentMeshData[currentMeshData.size() - 1]->PrepareMesh();
@@ -53,23 +56,24 @@ namespace InteractiveFusion {
 		currentMeshData[currentMeshData.size() - 1]->CopyInternalToVisibleData();
 		currentMeshData[currentMeshData.size() - 1]->UpdateEssentials();
 		currentMeshData[currentMeshData.size() - 1]->SetShaderProgram(defaultShaderProgram);
+		isBusy = false;
 	}
 
 	void ModelData::GenerateBuffers()
 	{
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			//(*mI)->ClearBuffers();
-			(*mI)->GenerateBuffers();
+			//mesh->ClearBuffers();
+			mesh->GenerateBuffers();
 		}
 	}
 
 	void ModelData::SwapToHighlightBuffers()
 	{
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			if ((*mI)->HasColorHighlights())
-				(*mI)->SwapToHighlightBuffer();
+			if (mesh->HasColorHighlights())
+				mesh->SwapToHighlightBuffer();
 		}
 	}
 
@@ -102,40 +106,40 @@ namespace InteractiveFusion {
 	}
 
 
-	void ModelData::Draw(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix)
+	void ModelData::Draw(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix)
 	{
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			if ((*mI)->AreBuffersInitialized())
-				(*mI)->Draw(_projectionMatrix, _viewMatrix);
+			if (mesh->AreBuffersInitialized())
+				mesh->Draw(_projectionMatrix, _viewMatrix);
 		}
 	}
 
-	void ModelData::DrawWithAssignedColorCodes(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix)
+	void ModelData::DrawWithAssignedColorCodes(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix)
 	{
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			if (!(*mI)->IsDeleted() && (*mI)->AreBuffersInitialized())
-				(*mI)->DrawForColorPicking(_projectionMatrix, _viewMatrix);
+			if (!mesh->IsDeleted() && mesh->AreBuffersInitialized())
+				mesh->DrawForColorPicking(_projectionMatrix, _viewMatrix);
 		}
 	}
 	
-	void ModelData::DrawNonStaticMeshWithAssignedColorCodes(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix)
+	void ModelData::DrawNonStaticMeshWithAssignedColorCodes(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix)
 	{
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh: currentMeshData)
 		{
-			if (!(*mI)->IsPlane() && !(*mI)->IsDeleted() && (*mI)->AreBuffersInitialized())
-				(*mI)->DrawForColorPicking(_projectionMatrix, _viewMatrix);
+			if (!mesh->IsPlane() && !mesh->IsDeleted() && mesh->AreBuffersInitialized())
+				mesh->DrawForColorPicking(_projectionMatrix, _viewMatrix);
 		}
 	}
 
-	void ModelData::DrawAllButIndexWithAssignedColorCodes(int _index, glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix)
+	void ModelData::DrawAllButIndexWithAssignedColorCodes(int _index, glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix)
 	{
 		int meshIndex = 0;
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			if (!(*mI)->IsDeleted() && meshIndex != _index && (*mI)->AreBuffersInitialized())
-				(*mI)->DrawForColorPicking(_projectionMatrix, _viewMatrix);
+			if (!mesh->IsDeleted() && meshIndex != _index && mesh->AreBuffersInitialized())
+				mesh->DrawForColorPicking(_projectionMatrix, _viewMatrix);
 			meshIndex++;
 		}
 	}
@@ -144,9 +148,11 @@ namespace InteractiveFusion {
 	{
 		if (isBusy)
 			return false;
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		if (currentMeshData.size() == 0)
+			return false;
+		for (auto& mesh : currentMeshData)
 		{
-			if (!(*mI)->AreBuffersInitialized())
+			if (!mesh->AreBuffersInitialized())
 			{
 				return false;
 			}
@@ -157,9 +163,9 @@ namespace InteractiveFusion {
 	glm::vec3 ModelData::GetCenterPoint()
 	{
 		glm::vec3 centerPoint(0.0f, 0.0f, 0.0f);
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			centerPoint += (*mI)->GetCenterPoint();
+			centerPoint += mesh->GetCenterPoint();
 		}
 		centerPoint = centerPoint / (float)currentMeshData.size();
 		return centerPoint;
@@ -169,7 +175,6 @@ namespace InteractiveFusion {
 	{
 		if (!IsValidMeshDataIndex(_index))
 			return;
-		DebugUtility::DbgOut(L"Hello, temporarily coloring ", _index);
 		currentMeshData[_index]->HighlightTrianglesWithColor(_triangles, _color, _additive);
 	}
 
@@ -256,7 +261,14 @@ namespace InteractiveFusion {
 		//currentMeshData[_index]->UpdateBuffers();
 	}
 
-	void ModelData::RotateMeshAroundHorizontalAxis(int _index, float _degree, glm::vec3 _axis)
+	void ModelData::RotateMeshAroundAxis(int _index, float _degree, glm::vec3 _axis)
+	{
+		if (!IsValidMeshDataIndex(_index))
+			return;
+		currentMeshData[_index]->AddRotation(_degree, _axis);
+	}
+
+	/*void ModelData::RotateMeshAroundHorizontalAxis(int _index, float _degree, glm::vec3 _axis)
 	{
 		if (!IsValidMeshDataIndex(_index))
 			return;
@@ -268,7 +280,7 @@ namespace InteractiveFusion {
 		if (!IsValidMeshDataIndex(_index))
 			return;
 		currentMeshData[_index]->RotateY(_degree, _axis);
-	}
+	}*/
 
 	void ModelData::ResetTemporaryTranslations(int _index)
 	{
@@ -340,12 +352,13 @@ namespace InteractiveFusion {
 	{
 		isBusy = true;
 		int removedComponentCount = 0;
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			(*mI)->CopyVisibleToInternalData();
-			removedComponentCount += (*mI)->RemoveSmallComponents(_maxComponentSize);
-			(*mI)->CopyInternalToVisibleData();
-			(*mI)->UpdateEssentials();
+			mesh->CopyVisibleToInternalData();
+			removedComponentCount += mesh->RemoveSmallComponents(_maxComponentSize);
+			mesh->CopyInternalToVisibleData();
+			mesh->UpdateEssentials();
+			DebugUtility::DbgOut(L"meshData vertex size after component removal ", mesh->GetNumberOfVertices());
 		}
 		isBusy = false;
 		return removedComponentCount;
@@ -355,13 +368,14 @@ namespace InteractiveFusion {
 	{
 		if (!IsValidMeshDataIndex(_index))
 			return -1;
-
-		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(currentMeshData[_index]->GetVertices(), currentMeshData[_index]->GetTriangles())));
+		isBusy = true;
+		currentMeshData.push_back(shared_ptr<MeshContainer>(new MeshContainer(currentMeshData[_index]->GetVertices(), currentMeshData[_index]->GetTriangles())));
 		currentMeshData[currentMeshData.size() - 1]->SetColorCode(GetNextColorCode());
 		currentMeshData[currentMeshData.size() - 1]->CopyVisibleToInternalData();
 		currentMeshData[currentMeshData.size() - 1]->UpdateEssentials();
 		currentMeshData[currentMeshData.size() - 1]->SetDuplicate(true);
 		currentMeshData[currentMeshData.size() - 1]->SetShaderProgram(currentMeshData[_index]->GetShaderProgram());
+		isBusy = false;
 		return currentMeshData.size() - 1;
 	}
 
@@ -389,12 +403,12 @@ namespace InteractiveFusion {
 	{
 		std::vector<int> indicesToBeRemoved;
 		int meshCount = 0;
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			if ((*mI)->IsDeleted())
+			if (mesh->IsDeleted())
 			{
 				indicesToBeRemoved.push_back(meshCount);
-				(*mI)->CleanUp();
+				mesh->CleanUp();
 			}
 			meshCount++;
 		}
@@ -424,7 +438,7 @@ namespace InteractiveFusion {
 			if (mesh->IsDeleted())
 			{
 				mesh->SetDeleted(false);
-				//(*mI)->ResetSelectedTransformation();
+				//mesh->ResetSelectedTransformation();
 			}
 			mesh->CopyInternalToVisibleData();
 			mesh->UpdateEssentials();
@@ -513,7 +527,7 @@ namespace InteractiveFusion {
 //
 //		currentMeshData[_index]->SetDeleted(true);
 //		currentMeshData.erase(currentMeshData.begin() + _index);
-//		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(mesh)));
+//		currentMeshData.push_back(shared_ptr<MeshContainer>(new MeshContainer(mesh)));
 //		currentMeshData[currentMeshData.size() - 1]->SetColorCode(currentMeshData.size() + 2);
 //		currentMeshData[currentMeshData.size() - 1]->CopyInternalToVisibleData();
 //		currentMeshData[currentMeshData.size() - 1]->UpdateEssentials();
@@ -706,7 +720,7 @@ namespace InteractiveFusion {
 //
 //		currentMeshData[_index]->SetDeleted(true);
 //		//currentMeshData.erase(currentMeshData.begin() + _index);
-//		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(verticesAbove, trianglesAbove)));
+//		currentMeshData.push_back(shared_ptr<MeshContainer>(new MeshContainer(verticesAbove, trianglesAbove)));
 //		currentMeshData[currentMeshData.size() - 1]->CopyVisibleToInternalData();
 //		currentMeshData[currentMeshData.size() - 1]->PrepareMesh();
 //		currentMeshData[currentMeshData.size() - 1]->SetColorCode(GetNextColorCode());
@@ -720,9 +734,9 @@ namespace InteractiveFusion {
 	int ModelData::ReturnIndexOfMeshWithColorCode(int _colorCode)
 	{
 		int selectedMeshIndex = 0;
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			if (_colorCode == (*mI)->GetColorCode())
+			if (_colorCode == mesh->GetColorCode())
 				return selectedMeshIndex;
 			selectedMeshIndex++;
 		}
@@ -732,9 +746,9 @@ namespace InteractiveFusion {
 	int ModelData::GetVisibleMeshCount()
 	{
 		int visibleMeshCount = 0;
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			if (!(*mI)->IsDeleted())
+			if (!mesh->IsDeleted())
 				visibleMeshCount++;
 		}
 		return visibleMeshCount;
@@ -806,10 +820,10 @@ namespace InteractiveFusion {
 		return (_index >= 0 && _index <= currentMeshData.size());
 	}
 
-	void ModelData::AddObjectMeshToData(MeshContainer* _mesh)
+	void ModelData::AddObjectMeshToData(MeshContainer _mesh)
 	{
 		isBusy = true;
-		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(_mesh->GetVertices(), _mesh->GetTriangles())));
+		currentMeshData.push_back(shared_ptr<MeshContainer>(new MeshContainer(_mesh.GetVertices(), _mesh.GetTriangles())));
 		currentMeshData[currentMeshData.size() - 1]->SetColorCode(GetNextColorCode());
 		currentMeshData[currentMeshData.size() - 1]->CopyVisibleToInternalData();
 		currentMeshData[currentMeshData.size() - 1]->Clean();
@@ -820,15 +834,15 @@ namespace InteractiveFusion {
 		isBusy = false;
 	}
 
-	void ModelData::AddPlaneMeshToData(MeshContainer* _plane, PlaneParameters _planeParameters)
+	void ModelData::AddPlaneMeshToData(MeshContainer _plane, PlaneParameters _planeParameters)
 	{
 		isBusy = true;
-		currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(_plane->GetVertices(), _plane->GetTriangles())));
+		currentMeshData.push_back(shared_ptr<MeshContainer>(new MeshContainer(_plane.GetVertices(), _plane.GetTriangles())));
 		currentMeshData[currentMeshData.size() - 1]->SetColorCode(GetNextColorCode());
 		currentMeshData[currentMeshData.size() - 1]->CopyVisibleToInternalData();
 		currentMeshData[currentMeshData.size() - 1]->MergeCloseVertices(0.005f);
 		currentMeshData[currentMeshData.size() - 1]->Clean();
-		currentMeshData[currentMeshData.size() - 1]->RemoveSmallComponents(_plane->GetNumberOfVertices() / 5);
+		currentMeshData[currentMeshData.size() - 1]->RemoveSmallComponents(_plane.GetNumberOfVertices() / 5);
 		currentMeshData[currentMeshData.size() - 1]->RemoveNonManifoldFaces();
 		currentMeshData[currentMeshData.size() - 1]->MergeCloseVertices(0.005f);
 		currentMeshData[currentMeshData.size() - 1]->Clean();
@@ -879,7 +893,7 @@ namespace InteractiveFusion {
 		{
 			if (!mesh->IsDeleted())
 			{
-				currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(mesh->GetVertices(), mesh->GetTriangles())));
+				currentMeshData.push_back(shared_ptr<MeshContainer>(new MeshContainer(mesh->GetVertices(), mesh->GetTriangles())));
 				currentMeshData[meshCount]->CopyVisibleToInternalData();
 				currentMeshData[meshCount]->SetColorCode(mesh->GetColorCode());
 				currentMeshData[meshCount]->UpdateEssentials();
@@ -907,7 +921,7 @@ namespace InteractiveFusion {
 		{
 			if (mesh->IsPlane())
 			{
-				currentMeshData.push_back(unique_ptr<MeshContainer>(new MeshContainer(mesh->GetVertices(), mesh->GetTriangles())));
+				currentMeshData.push_back(shared_ptr<MeshContainer>(new MeshContainer(mesh->GetVertices(), mesh->GetTriangles())));
 				currentMeshData[meshCount]->CopyVisibleToInternalData();
 				currentMeshData[meshCount]->SetColorCode(mesh->GetColorCode());
 				currentMeshData[meshCount]->UpdateEssentials();
@@ -940,22 +954,22 @@ namespace InteractiveFusion {
 		return true;
 	}
 
-	MeshContainer* ModelData::GetFirstMeshThatIsNotPlane()
+	std::shared_ptr<MeshContainer> ModelData::GetFirstMeshThatIsNotPlane()
 	{
 		for (auto &mesh : currentMeshData)
 		{
 			if (!mesh->IsPlane())
 			{
-				return mesh.get();
+				return mesh;
 			}
 		}
 		return nullptr;
 	}
 
-	MeshContainer* ModelData::GetCurrentlySelectedMesh()
+	std::shared_ptr<MeshContainer> ModelData::GetCurrentlySelectedMesh()
 	{
 		if (currentlySelectedMesh != -1)
-			return currentMeshData[currentlySelectedMesh].get();
+			return currentMeshData[currentlySelectedMesh];
 		else
 			return nullptr;
 	}
@@ -983,10 +997,26 @@ namespace InteractiveFusion {
 
 	void ModelData::CleanUp()
 	{
-		for (vector <unique_ptr<MeshContainer>>::iterator mI = currentMeshData.begin(); mI != currentMeshData.end(); ++mI)
+		for (auto& mesh : currentMeshData)
 		{
-			(*mI)->CleanUp();
+			mesh->CleanUp();
 		}
 		currentMeshData.clear();
+	}
+
+
+	void ModelData::Lock()
+	{
+		scene_mutex.lock();
+	}
+
+	void ModelData::Unlock()
+	{
+		scene_mutex.unlock();
+	}
+
+	void ModelData::TryLock()
+	{
+		scene_mutex.try_lock();
 	}
 }

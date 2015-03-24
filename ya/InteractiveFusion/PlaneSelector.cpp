@@ -7,10 +7,9 @@
 namespace InteractiveFusion {
 
 	Vertex currentCursorToMeshHitpoint;
-	float absoluteDegreeX = 0.0f;
-	float absoluteDegreeY = 0.0f;
-	glm::vec3 horizontalRotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
-	glm::vec3 verticalRotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
+	float absoluteDegree = 0.0f;
+	float relativeDegree = 0.0f;
+	glm::vec3 rotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
 	PlaneSelector::PlaneSelector(std::shared_ptr<SimplePlaneRenderable3D> _plane)
 	{
 		plane = _plane;
@@ -48,6 +47,7 @@ namespace InteractiveFusion {
 			Ray cursorToFarPlaneRay = GetRayCastFromCursor(_glControl.GetOpenGLWindowHandle(), _glControl.GetViewMatrix(), _glControl.GetProjectionMatrix());
 			Vertex hitPoint = _modelData.GetHitpoint(_selectedIndex, cursorToFarPlaneRay);
 			currentCursorToMeshHitpoint = hitPoint;
+			DebugUtility::DbgOut(L"ModelData...", _modelData.GetVisibleMeshCount());
 			UpdatePlaneTranslation();
 		}
 		
@@ -82,7 +82,10 @@ namespace InteractiveFusion {
 	{
 		
 		glm::vec3 centerPoint = plane->GetCenterPoint();
-		switch (currentAxis)
+		DebugUtility::DbgOut(L"UpdatePlaneTranslation::x::", currentCursorToMeshHitpoint.x);
+		DebugUtility::DbgOut(L"UpdatePlaneTranslation::y::", currentCursorToMeshHitpoint.y);
+		DebugUtility::DbgOut(L"UpdatePlaneTranslation::z::", currentCursorToMeshHitpoint.z);
+		switch (currentMode)
 		{
 			case AxisX:
 				plane->SetTranslation(glm::vec3(-centerPoint.x + currentCursorToMeshHitpoint.x, 0.0f, 0.0f));
@@ -98,7 +101,7 @@ namespace InteractiveFusion {
 
 	void PlaneSelector::ApplyPlaneTranslation(float _offSet)
 	{
-		switch (currentAxis)
+		switch (currentMode)
 		{
 			case AxisX:
 				currentCursorToMeshHitpoint.x += _offSet;
@@ -113,106 +116,58 @@ namespace InteractiveFusion {
 		UpdatePlaneTranslation();
 	}
 
-	void PlaneSelector::ApplyPlaneRotation(GraphicsControl& _glControl, float _offSetX, float _offSetY)
+	void PlaneSelector::ApplyPlaneRotation(GraphicsControl& _glControl, float _offSet)
 	{
-		
+		if (_offSet > 0 && absoluteDegree > -30 ||
+			_offSet < 0 && absoluteDegree < 30)
+		{
 			glm::mat4 cameraMatrix = _glControl.GetViewMatrix();
-			switch (currentAxis)
+			switch (currentMode)
 			{
 				case AxisX:
-					//horizontalRotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
-					verticalRotationAxis = glm::vec3(cameraMatrix[2][0], cameraMatrix[2][1], cameraMatrix[2][2]);
-					horizontalRotationAxis = glm::vec3(cameraMatrix[1][0], cameraMatrix[1][1], cameraMatrix[1][2]);
+					rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
 					//rotationAxis = glm::vec3(cameraMatrix[1][0], cameraMatrix[1][1], cameraMatrix[1][2]);
 					break;
 				case AxisY:
-					horizontalRotationAxis = glm::vec3(cameraMatrix[2][0], cameraMatrix[2][1], cameraMatrix[2][2]);
-					verticalRotationAxis = glm::vec3(cameraMatrix[0][0], cameraMatrix[0][1], cameraMatrix[0][2]);
-					//_offSetX = -_offSetX;
-					/*glm::vec3 horizontalRotation = glm::vec3(cameraMatrix[0][0], cameraMatrix[0][1], cameraMatrix[0][2]);
-					glm::vec3 verticalRotation = glm::vec3(cameraMatrix[1][0], cameraMatrix[1][1], cameraMatrix[1][2]);*/
+					rotationAxis = glm::vec3(cameraMatrix[2][0], cameraMatrix[2][1], cameraMatrix[2][2]);
 					break;
 				case AxisZ:
-					verticalRotationAxis = glm::vec3(cameraMatrix[0][0], cameraMatrix[0][1], cameraMatrix[0][2]);
-					horizontalRotationAxis = glm::vec3(cameraMatrix[1][0], cameraMatrix[1][1], cameraMatrix[1][2]);
-					//horizontalRotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+					rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
 					//rotationAxis = glm::vec3(cameraMatrix[1][0], cameraMatrix[1][1], cameraMatrix[1][2]);
 					break;
 			}
-			if (CheckRotationLimitsX(_offSetX))
-			{
-				if (currentAxis == AxisY)
-					_offSetX = -_offSetX;
-				plane->AddRotation(_offSetX, horizontalRotationAxis);
-			
-			if (CheckRotationLimitsY(_offSetY))
-			{
-				plane->AddRotation(_offSetY, verticalRotationAxis);
-			}
-				DebugUtility::DbgOut(L"Applying rotation");
-				//plane->ApplyTransformation(glm::rotate(glm::mat4(1.0), -_offSet, rotationAxis), glm::mat4());
-				
-				
-			}
+			absoluteDegree -= _offSet;
+			relativeDegree -= _offSet;
+			DebugUtility::DbgOut(L"Applying rotation");
+			plane->ApplyTransformation(glm::rotate(glm::mat4(1.0), -_offSet, rotationAxis), glm::mat4());
+
+
 			//plane->RotateX(_offSet, rotationAxis);
 			//plane->GenerateBuffers();
-	}
-
-	bool PlaneSelector::CheckRotationLimitsX(float _offSetX)
-	{
-		float temporaryDegreeX = absoluteDegreeX + _offSetX;
-		
-		if (temporaryDegreeX < -30 ||
-			temporaryDegreeX > 30)
-			return false;
-		else
-		{
-			absoluteDegreeX += _offSetX;
-			return true;
 		}
 	}
-	bool PlaneSelector::CheckRotationLimitsY(float _offSetY)
-	{
-		float temporaryDegreeY = absoluteDegreeY + _offSetY;
-
-		if (temporaryDegreeY < -30 ||
-			temporaryDegreeY > 30)
-			return false;
-		else
-		{
-			absoluteDegreeY += _offSetY;
-			return true;
-		}
-	}
-
 
 	void PlaneSelector::HandlePlaneTransformation(GraphicsControl& _glControl)
 	{
 		POINT pCur;
 		GetCursorPos(&pCur);
 		float translationOffSet = 0.0f;
-		float rotationOffSetX = 0.0f;
-		float rotationOffSetY = 0.0f;
-		if (currentAxis == AxisX)
+		float rotationOffSet = 0.0f;
+		if (currentMode == AxisX)
 		{
 			translationOffSet = (float)((pCur.x - oldPosX)*0.0025f);
-			rotationOffSetX = (float)((pCur.x - oldPosX)*0.05f);
-			rotationOffSetY = (float)((pCur.y - oldPosY)*0.05f);
+			rotationOffSet = (float)((pCur.y - oldPosY)*0.05f);
 		}
 		else
 		{
 			translationOffSet = (float)((pCur.y - oldPosY)*0.0025f);
-			rotationOffSetX = (float)((pCur.x - oldPosX)*0.05f);
-			rotationOffSetY = (float)((pCur.y - oldPosY)*0.05f);
+			rotationOffSet = (float)((pCur.x - oldPosX)*0.05f);
 		}
 
 		if (firstClick)
 		{
-			
-			if (currentTransformation == PlaneCutTransformation::Rotate)
-				ApplyPlaneRotation(_glControl, rotationOffSetX, rotationOffSetY);
-			else if (currentTransformation == PlaneCutTransformation::Translate)
-				ApplyPlaneTranslation(translationOffSet);
+			ApplyPlaneTranslation(translationOffSet);
+			ApplyPlaneRotation(_glControl, rotationOffSet);
 		}
 		oldPosX = pCur.x;
 		oldPosY = pCur.y;
@@ -221,30 +176,24 @@ namespace InteractiveFusion {
 	void PlaneSelector::ApplyModeChange()
 	{
 		ResetPlaneRotation();
-		plane->SetTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
-		if (currentAxis == AxisX)
+		if (currentMode == AxisX)
 			plane->ApplyTransformation(glm::rotate(glm::mat4(1.0), 90.0f, glm::vec3(0.0f, 0.0f, 1.0f)), glm::mat4());
-		else if (currentAxis == AxisZ)
+		else if (currentMode == AxisZ)
 			plane->ApplyTransformation(glm::rotate(glm::mat4(1.0), 90.0f, glm::vec3(1.0f, 0.0f, 0.0f)), glm::mat4());
 
 		//plane->GenerateBuffers();
 	}
 
-	void PlaneSelector::ChangeAxis(PlaneCutAxis _axis)
+	void PlaneSelector::ChangeMode(PlaneCutMode _mode)
 	{
-		currentAxis = _axis;
+		currentMode = _mode;
 	}
 
-	void PlaneSelector::ChangeTransformation(PlaneCutTransformation _transformationMode)
-	{
-		currentTransformation = _transformationMode;
-	}
 	void PlaneSelector::ResetPlaneRotation()
 	{
-		absoluteDegreeX = 0.0f;
-		absoluteDegreeY = 0.0f;
-		
-		plane->ResetRotation();
+		absoluteDegree = 0.0f;
+		relativeDegree = 0.0f;
+		plane->SetTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
 	}
 
 	void PlaneSelector::DrawForColorPicking(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper)

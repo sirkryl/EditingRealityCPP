@@ -19,9 +19,9 @@ namespace InteractiveFusion {
 	{
 	}
 
-	bool Segmenter::InitializeSegmentation(ModelData* _modelData)
+	bool Segmenter::InitializeSegmentation(ModelData& _modelData)
 	{
-		MeshContainer* remainingMesh = _modelData->GetFirstMeshThatIsNotPlane();
+		std::shared_ptr<MeshContainer> remainingMesh = _modelData.GetFirstMeshThatIsNotPlane();
 		if (remainingMesh == nullptr)
 		{
 			DebugUtility::DbgOut(L"GraphicsControl::StartSegmentationThread::No Mesh found that is not a plane");
@@ -33,7 +33,7 @@ namespace InteractiveFusion {
 		return true;
 	}
 
-	bool Segmenter::UpdateSegmentation(GraphicsControl* _glControl, ModelData* _modelData)
+	bool Segmenter::UpdateSegmentation(GraphicsControl& _glControl, ModelData& _modelData)
 	{
 		if (!HasPointCloudData())
 		{
@@ -49,18 +49,18 @@ namespace InteractiveFusion {
 			return false;
 		}
 
-		_modelData->RemoveTemporaryTriangleColor();
+		_modelData.RemoveTemporaryTriangleColor();
 
 		UpdateHighlights(_modelData);
-		_glControl->PushEvent(OpenGLControlEvent::ModelHighlightsUpdated);
+		_glControl.PushEvent(OpenGLControlEvent::ModelHighlightsUpdated);
 		return true;
 	}
 
-	void Segmenter::UpdateHighlights(ModelData* _modelData)
+	void Segmenter::UpdateHighlights(ModelData& _modelData)
 	{
 
 	}
-	void Segmenter::FinishSegmentation(ModelData* _inputModelData, ModelData* _outputModelData)
+	void Segmenter::FinishSegmentation(ModelData& _inputModelData, ModelData& _outputModelData)
 	{
 
 	}
@@ -184,17 +184,17 @@ namespace InteractiveFusion {
 		return false;
 	}
 
-	MeshContainer* Segmenter::ConvertToMesh(int _clusterIndex)
+	MeshContainer Segmenter::ConvertToMesh(int _clusterIndex)
 	{
 		if (!IsValidClusterIndex(_clusterIndex))
 		{
 			DebugUtility::DbgOut(L"Segmenter::ConvertToMesh::ERROR:: Invalid Cluster Index");
-			return nullptr;
+			return MeshContainer();
 		}
 		if (meshVertices.size() == 0)
 		{
 			DebugUtility::DbgOut(L"Segmenter::ConvertToMesh::ERROR:: No mesh vertices available ");
-			return nullptr;
+			return MeshContainer();
 		}
 
 		pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cluster = finalSegmentationClusters[_clusterIndex];
@@ -202,7 +202,7 @@ namespace InteractiveFusion {
 		if (cluster->empty()) 
 		{
 			DebugUtility::DbgOut(L"Segmenter::ConvertToMesh::ERROR:: clusterCloud is empty ");
-			return nullptr;
+			return MeshContainer();
 		}
 
 		StopWatch stopWatch;
@@ -382,7 +382,7 @@ namespace InteractiveFusion {
 		}
 		DebugUtility::DbgOut(L"Cluster to mesh with indexSet in ", stopWatch.Stop());
 
-		return new MeshContainer(resultingVertices, resultingTriangles);
+		return MeshContainer(resultingVertices, resultingTriangles);
 	}
 
 

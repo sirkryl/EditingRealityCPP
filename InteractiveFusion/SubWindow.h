@@ -31,7 +31,7 @@ namespace InteractiveFusion {
 		virtual void Deactivate();
 		bool IsActive();
 
-		virtual void HandleEvents(MainWindow* _parentWindow);
+		virtual void HandleEvents(MainWindow& _parentWindow);
 		virtual void Resize(int parentWidth, int parentHeight);
 		virtual void CleanUp();
 

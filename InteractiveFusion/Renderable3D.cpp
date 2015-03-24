@@ -2,7 +2,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "ColorCoder.h"
 #include <sstream>
-
+#include "DebugUtility.h"
 namespace InteractiveFusion {
 	Renderable3D::Renderable3D()
 	{
@@ -35,6 +35,8 @@ namespace InteractiveFusion {
 	void Renderable3D::UpdateTransformationMatrices()
 	{
 		originTransform = glm::translate(glm::mat4(1.0), -centerPoint);
+		
+		
 	}
 
 	void Renderable3D::SetTranslation(glm::vec3 _translation)
@@ -109,8 +111,18 @@ namespace InteractiveFusion {
 
 		scaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(scaleFactor, scaleFactor, scaleFactor));
 	}
+	void Renderable3D::AddRotation(float _angle, glm::vec3 _axis)
+	{
+		quatRotation = glm::angleAxis(_angle, _axis) * quatRotation;
 
-	void Renderable3D::RotateX(int _degree)
+	}
+
+	void Renderable3D::ResetRotation()
+	{
+		quatRotation = glm::quat();
+
+	}
+	/*void Renderable3D::RotateX(int _degree)
 	{
 		xRotation = glm::rotate(glm::mat4(1.0), angleX, glm::vec3(1.0f, 0.0f, 0.0f));
 	}
@@ -128,7 +140,7 @@ namespace InteractiveFusion {
 	void Renderable3D::RotateY(float _degree, glm::vec3 _axis)
 	{
 		yRotation = glm::rotate(glm::mat4(1.0), (float)_degree, _axis);
-	}
+	}*/
 
 	void Renderable3D::ApplyTransformation(glm::mat4 _vertexTransformation, glm::mat4 _normalTransformation)
 	{
@@ -152,7 +164,7 @@ namespace InteractiveFusion {
 		UpdateBounds();
 	}
 
-	void Renderable3D::SetUniforms(bool _highlight, bool _colorPicking, float _alpha, glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix)
+	void Renderable3D::SetUniforms(bool _highlight, bool _colorPicking, float _alpha, glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix)
 	{
 
 		meshShaderProgram.SetUniform("highlight", _highlight);
@@ -165,10 +177,11 @@ namespace InteractiveFusion {
 
 	glm::mat4 Renderable3D::CalculateModelMatrix()
 	{
-		return translation * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+		return translation * scaleMatrix * glm::mat4_cast(quatRotation) * originTransform;
+		/*return translation * scaleMatrix * zRotation * yRotation * xRotation * originTransform;*/
 	}
 
-	void Renderable3D::Draw(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix)
+	void Renderable3D::Draw(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix)
 	{
 		try
 		{
@@ -192,7 +205,7 @@ namespace InteractiveFusion {
 		FinishDrawing();
 	}
 
-	void Renderable3D::DrawForColorPicking(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix)
+	void Renderable3D::DrawForColorPicking(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix)
 	{
 		try
 		{

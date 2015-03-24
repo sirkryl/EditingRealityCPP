@@ -33,10 +33,10 @@ namespace InteractiveFusion {
 	}
 
 
-	void OpenGLRenderer::Initialize(GraphicsControl* _glControl)
+	void OpenGLRenderer::Initialize(GraphicsControl& _glControl)
 	{
-		viewportWidth = _glControl->GetViewportWidth();
-		viewportHeight = _glControl->GetViewportHeight();
+		viewportWidth = _glControl.GetViewportWidth();
+		viewportHeight = _glControl.GetViewportHeight();
 		dots.push_back(L".");
 		dots.push_back(L"..");
 		dots.push_back(L"...");
@@ -59,7 +59,7 @@ namespace InteractiveFusion {
 		OpenGLRenderer::initialized = true;
 	}
 
-	void OpenGLRenderer::InitializeOverlays(GraphicsControl* _glControl)
+	void OpenGLRenderer::InitializeOverlays(GraphicsControl& _glControl)
 	{
 		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::Begin");
 		vector<Vertex> statusMessageBackgroundVertices;
@@ -87,7 +87,7 @@ namespace InteractiveFusion {
 		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::22");
 		statusMessageBackground = unique_ptr<MeshContainer2D>(new MeshContainer2D(statusMessageBackgroundVertices));
 		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::33");
-		statusMessageBackground->SetShaderProgram(_glControl->GetShader(Orthographic));
+		statusMessageBackground->SetShaderProgram(_glControl.GetShader(Orthographic));
 		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::44");
 		statusMessageBackground->SetAlpha(0.5f);
 		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::55");
@@ -115,7 +115,7 @@ namespace InteractiveFusion {
 			0.0f, 0.0f, 0.0f));
 
 		alphaOverlay = unique_ptr<MeshContainer2D>(new MeshContainer2D(overlayVertices));
-		alphaOverlay->SetShaderProgram(_glControl->GetShader(Orthographic));
+		alphaOverlay->SetShaderProgram(_glControl.GetShader(Orthographic));
 		alphaOverlay->SetAlpha(0.5f);
 		alphaOverlay->GenerateBuffers();
 
@@ -186,26 +186,26 @@ namespace InteractiveFusion {
 			colorTop, colorTop, colorTop,
 			0.0f, 0.0f, 0.0f));
 		backgroundGradient = unique_ptr<MeshContainer2D>(new MeshContainer2D(backgroundGradientVertices));
-		backgroundGradient->SetShaderProgram(_glControl->GetShader(Orthographic));
+		backgroundGradient->SetShaderProgram(_glControl.GetShader(Orthographic));
 		backgroundGradient->SetAlpha(1.0f);
 		backgroundGradient->GenerateBuffers();
 
 		
 	}
 
-	void OpenGLRenderer::Render(GraphicsControl* _glControl, ModelData* _modelData, IconData* _iconData)
+	void OpenGLRenderer::Render(GraphicsControl& _glControl, ModelData& _modelData, IconData& _iconData)
 	{
 
-		if (_modelData->IsReadyForRendering())
-			_modelData->Draw(_glControl->GetProjectionMatrix(), _glControl->GetViewMatrix());
-		if (_iconData->IsReadyForRendering() && cameraMode == Sensor)
-			_iconData->Draw(_glControl->GetViewportWidth(), _glControl->GetViewportHeight());
+		if (_modelData.IsReadyForRendering())
+			_modelData.Draw(_glControl.GetProjectionMatrix(), _glControl.GetViewMatrix());
+		if (_iconData.IsReadyForRendering() && cameraMode == Sensor)
+			_iconData.Draw(_glControl.GetViewportWidth(), _glControl.GetViewportHeight());
 	}
 
-	void OpenGLRenderer::PrepareRender(GraphicsControl* _glControl)
+	void OpenGLRenderer::PrepareRender(GraphicsControl& _glControl)
 	{
-		viewportWidth = _glControl->GetViewportWidth();
-		viewportHeight = _glControl->GetViewportHeight();
+		viewportWidth = _glControl.GetViewportWidth();
+		viewportHeight = _glControl.GetViewportHeight();
 
 		if (!viewportBackgroundInitialized)
 		{
@@ -223,28 +223,28 @@ namespace InteractiveFusion {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 		glEnable(GL_DITHER);
-		backgroundGradient->Draw(_glControl->GetViewportWidth(), _glControl->GetViewportHeight());
+		backgroundGradient->Draw(_glControl.GetViewportWidth(), _glControl.GetViewportHeight());
 
 	}
 
-	void OpenGLRenderer::FinishRender(GraphicsControl* _glControl)
+	void OpenGLRenderer::FinishRender(GraphicsControl& _glControl)
 	{
-		if (_glControl->IsBusy())
+		if (_glControl.IsBusy())
 			ShowStatusOverlay(_glControl);
 
 		glEnable(GL_DEPTH_TEST);
-		_glControl->SwapBuffers();
+		_glControl.SwapBuffers();
 	}
 
-	void OpenGLRenderer::ShowStatusOverlay(GraphicsControl* _glControl)
+	void OpenGLRenderer::ShowStatusOverlay(GraphicsControl& _glControl)
 	{
 		glDisable(GL_DEPTH_TEST);
 
-		alphaOverlay->Draw(_glControl->GetViewportWidth(), _glControl->GetViewportHeight());
-		statusMessageBackground->Draw(_glControl->GetViewportWidth(), _glControl->GetViewportHeight());
+		alphaOverlay->Draw(_glControl.GetViewportWidth(), _glControl.GetViewportHeight());
+		statusMessageBackground->Draw(_glControl.GetViewportWidth(), _glControl.GetViewportHeight());
 
-		float xPos = 0.0f - _glControl->GetStatusMessage().length() * 0.008f;
-		wstring loadString = _glControl->GetStatusMessage() + L"" + dots[(int)floor(dotCount / 100)];
+		float xPos = 0.0f - _glControl.GetStatusMessage().length() * 0.008f;
+		wstring loadString = _glControl.GetStatusMessage() + L"" + dots[(int)floor(dotCount / 100)];
 		if (dotCount == 299)
 			dotCount = 0;
 		else
@@ -261,8 +261,14 @@ namespace InteractiveFusion {
 		}
 		else
 		{*/
+			//glText.RenderText(loadString, 25, xPos, 0.00f, 2.0f / viewportWidth, 2.0f / viewportHeight);
+
+		if (viewportWidth > 100 && viewportWidth < 2000 && viewportHeight > 100 && viewportHeight < 2000)
 			glText.RenderText(loadString, 25, xPos, 0.00f, 2.0f / viewportWidth, 2.0f / viewportHeight);
+		else
+			DebugUtility::DbgOut(L"yes:");
 		//}
+		glText.FinishRender();
 		glEnable(GL_DEPTH_TEST);
 	}
 

@@ -20,12 +20,12 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void PlaneSelectionRenderer::Initialize(GraphicsControl* _glControl)
+	void PlaneSelectionRenderer::Initialize(GraphicsControl& _glControl)
 	{
 		OpenGLRenderer::Initialize(_glControl);
 	}
 
-	void PlaneSelectionRenderer::InitializeOverlays(GraphicsControl* _glControl)
+	void PlaneSelectionRenderer::InitializeOverlays(GraphicsControl& _glControl)
 	{
 		OpenGLRenderer::InitializeOverlays(_glControl);
 		std::vector<Vertex> planeSelectionQuestionOverlayVertices;
@@ -58,24 +58,24 @@ namespace InteractiveFusion {
 
 	void PlaneSelectionRenderer::ShowPlaneSelectionOverlay()
 	{
-		glDisable(GL_DEPTH_TEST);
+		//glDisable(GL_DEPTH_TEST);
 
-		//if (stateManager.GetDeviceClass() == IF_DEVICE_PC)
-		//	gl2DHelper.DrawRectangle(0.7f, 0.8f, 0.2f);
-		//else if (stateManager.GetDeviceClass() == IF_DEVICE_TABLET)
-		planeSelectionQuestionOverlay->Draw(viewportWidth, viewportHeight);
-		//OpenGLRenderer::gl2dHelper.DrawRectangle(0.88f, 0.8f, 0.25f);
+		////if (stateManager.GetDeviceClass() == IF_DEVICE_PC)
+		////	gl2DHelper.DrawRectangle(0.7f, 0.8f, 0.2f);
+		////else if (stateManager.GetDeviceClass() == IF_DEVICE_TABLET)
+		//planeSelectionQuestionOverlay->Draw(viewportWidth, viewportHeight);
+		////OpenGLRenderer::gl2dHelper.DrawRectangle(0.88f, 0.8f, 0.25f);
 
-		std::wstring wallMessage = L"Is the highlighted area (part of) a wall, floor or ceiling?";
+		//const std::wstring wallMessage = L"Is the highlighted area (part of) a wall, floor or ceiling?";
 
-		float xPos = 0.0f - wallMessage.length() * 0.008f;
+		//float xPos = 0.0f - wallMessage.length() * 0.008f;
 
-		OpenGLRenderer::glText.PrepareForRender();
-		OpenGLRenderer::glText.RenderText(wallMessage, 28, xPos, 0.77f, 2.0f / viewportWidth, 2.0f / viewportHeight);
-		glEnable(GL_DEPTH_TEST);
+		//OpenGLRenderer::glText.PrepareForRender();
+		//OpenGLRenderer::glText.RenderText(wallMessage, 28, xPos, 0.77f, 2.0f / viewportWidth, 2.0f / viewportHeight);
+		//glEnable(GL_DEPTH_TEST);
 	}
 
-	void PlaneSelectionRenderer::Render(GraphicsControl* _glControl, ModelData* _modelData, IconData* _iconData)
+	void PlaneSelectionRenderer::Render(GraphicsControl& _glControl, ModelData& _modelData, IconData& _iconData)
 	{
 		OpenGLRenderer::PrepareRender(_glControl);
 		OpenGLRenderer::Render(_glControl, _modelData, _iconData);

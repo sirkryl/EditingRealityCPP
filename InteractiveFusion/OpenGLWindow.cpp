@@ -145,7 +145,7 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void OpenGLWindow::HandleEvents(GraphicsControl* _glControl)
+	void OpenGLWindow::HandleEvents(GraphicsControl& _glControl)
 	{
 		while (!eventQueue.empty())
 		{
@@ -155,7 +155,7 @@ namespace InteractiveFusion {
 			{
 			case OpenGLWindowEvent::ResetCamera:
 				DebugUtility::DbgOut(L"OpenGLWindow::HandleEvents::ResetCamera");
-				_glControl->ResetCamera();
+				_glControl.ResetCamera();
 				break;
 			}
 
@@ -213,6 +213,7 @@ namespace InteractiveFusion {
 	void OpenGLWindow::ShowButtons()
 	{
 		ShowWindow(resetCameraButton, SW_SHOW);
+		SetWindowPos(resetCameraButton, HWND_TOP, 0, 0, 0, 0, 0);
 	}
 
 	void OpenGLWindow::CleanUp()

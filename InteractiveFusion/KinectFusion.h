@@ -5,7 +5,6 @@
 #include "KinectFusionProcessor.h"
 #include "IScanner.h"
 namespace InteractiveFusion {
-	class MeshContainer;
 	class KinectFusion : public IScanner
 	{
 	public:
@@ -32,14 +31,18 @@ namespace InteractiveFusion {
 		std::wstring GetAndResetStatus();
 
 		void PrepareMeshSave();
-		std::shared_ptr<MeshContainer> GetScannedMesh();
+		std::vector<Vertex>& GetScannedVertices();
+
+		std::vector<Triangle>& GetScannedTriangles();
 		void FinishMeshSave();
 
 		void ResetScan();
 
 		void PauseRendering();
-
+		void PauseProcessing(bool flag);
 		void ResumeRendering();
+
+		bool IsReconstructionReady();
 
 		void CleanUp();
 
@@ -64,7 +67,10 @@ namespace InteractiveFusion {
 		bool                        m_bColorCaptured = false;
 		bool                        pauseRendering = false;
 
-		
+		bool reconstructionReady = false;
+
+		std::vector<Vertex> scannedVertices;
+		std::vector<Triangle> scannedTriangles;
 		void SetStatus(std::wstring _status);
 	};
 

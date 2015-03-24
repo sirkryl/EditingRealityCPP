@@ -21,12 +21,12 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void SegmentationRenderer::Initialize(GraphicsControl* _glControl)
+	void SegmentationRenderer::Initialize(GraphicsControl& _glControl)
 	{
 		OpenGLRenderer::Initialize(_glControl);
 	}
 
-	void SegmentationRenderer::Render(GraphicsControl* _glControl, ModelData* _modelData, IconData* _iconData)
+	void SegmentationRenderer::Render(GraphicsControl& _glControl, ModelData& _modelData, IconData& _iconData)
 	{
 
 		OpenGLRenderer::PrepareRender(_glControl);
@@ -35,10 +35,10 @@ namespace InteractiveFusion {
 
 		glText.PrepareForRender();
 
-		glText.RenderText(L"Clusters: ", _modelData->GetVisibleMeshCount(), 13, -0.98f, 0.93f, 2.0f / _glControl->GetViewportWidth(), 2.0f / _glControl->GetViewportHeight());
-		glText.RenderText(L"Vertices: ", _modelData->GetNumberOfVertices(), 13, -0.98f, 0.88f, 2.0f / _glControl->GetViewportWidth(), 2.0f / _glControl->GetViewportHeight());
-		glText.RenderText(L"Triangles: ", _modelData->GetNumberOfTriangles(), 13, -0.98f, 0.83f, 2.0f / _glControl->GetViewportWidth(), 2.0f / _glControl->GetViewportHeight());
-		
+		glText.RenderText(L"Clusters: ", _modelData.GetVisibleMeshCount(), 13, -0.98f, 0.93f, 2.0f / _glControl.GetViewportWidth(), 2.0f / _glControl.GetViewportHeight());
+		glText.RenderText(L"Vertices: ", _modelData.GetNumberOfVertices(), 13, -0.98f, 0.88f, 2.0f / _glControl.GetViewportWidth(), 2.0f / _glControl.GetViewportHeight());
+		glText.RenderText(L"Triangles: ", _modelData.GetNumberOfTriangles(), 13, -0.98f, 0.83f, 2.0f / _glControl.GetViewportWidth(), 2.0f / _glControl.GetViewportHeight());
+		glText.FinishRender();
 		
 
 		OpenGLRenderer::FinishRender(_glControl);

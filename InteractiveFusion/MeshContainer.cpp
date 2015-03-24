@@ -93,6 +93,8 @@ namespace InteractiveFusion {
 		StopWatch stopWatch;
 		stopWatch.Start();
 
+		EnsureAttributesAreCorrect();
+
 		float threshold = 0.0005f;
 		int total = MergeCloseVertices(threshold);
 
@@ -102,7 +104,14 @@ namespace InteractiveFusion {
 		LaplacianSmooth(3);
 		//UnsharpColor(0.3f);
 		Clean();
-		RemoveSmallComponents(currentMesh.vn / 100);
+		if (currentMesh.vn > 100)
+		{
+			RemoveSmallComponents(currentMesh.vn / 100);
+		}
+		else
+		{
+			DebugUtility::DbgOut(L"MeshContainer::PrepareMesh()::Not enough vertices for component removal: ", currentMesh.vn);
+		}
 		Clean();
 
 	}
@@ -187,22 +196,34 @@ namespace InteractiveFusion {
 		try
 		{
 			_outputMesh.Clear();
-			vcg::tri::Allocator<VCGMesh>::AddVertices(_outputMesh, vertices.size());
+			VCGMesh::VertexIterator vi = vcg::tri::Allocator<VCGMesh>::AddVertices(_outputMesh, vertices.size());
+
+			std::vector<VCGMesh::VertexPointer> ivp;
+			ivp.resize(vertices.size());
 
 			for (int i = 0; i < vertices.size(); i++)
 			{
-				_outputMesh.vert[i].P() = vcg::Point3f(vertices[i].x, vertices[i].y, vertices[i].z);
+				ivp[i] = &*vi; 
+				vi->P() = vcg::Point3f(vertices[i].x, vertices[i].y, vertices[i].z);
+				vi->C() = vcg::Color4b((int)(vertices[i].r * 255.0f), (int)(vertices[i].g * 255.0f), (int)(vertices[i].b * 255.0f), 255);
+				vi->N() = vcg::Point3f(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z);
+				++vi;
+				/*_outputMesh.vert[i].P() = vcg::Point3f(vertices[i].x, vertices[i].y, vertices[i].z);
 				_outputMesh.vert[i].C() = vcg::Color4b((int)(vertices[i].r * 255.0f), (int)(vertices[i].g * 255.0f), (int)(vertices[i].b * 255.0f), 255);
-				_outputMesh.vert[i].N() = vcg::Point3f(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z);
+				_outputMesh.vert[i].N() = vcg::Point3f(vertices[i].normal_x, vertices[i].normal_y, vertices[i].normal_z);*/
 			}
 
-			vcg::tri::Allocator<VCGMesh>::AddFaces(_outputMesh, triangles.size());
+			VCGMesh::FaceIterator fi = vcg::tri::Allocator<VCGMesh>::AddFaces(_outputMesh, triangles.size());
 
 			for (int i = 0; i < triangles.size(); i++)
 			{
-				_outputMesh.face[i].V(0) = &_outputMesh.vert[triangles[i].v1];
+				fi->V(0) = ivp[triangles[i].v1];
+				fi->V(1) = ivp[triangles[i].v2];
+				fi->V(2) = ivp[triangles[i].v3];
+				++fi;
+				/*_outputMesh.face[i].V(0) = &_outputMesh.vert[triangles[i].v1];
 				_outputMesh.face[i].V(1) = &_outputMesh.vert[triangles[i].v2];
-				_outputMesh.face[i].V(2) = &_outputMesh.vert[triangles[i].v3];
+				_outputMesh.face[i].V(2) = &_outputMesh.vert[triangles[i].v3];*/
 			}
 		}
 		catch (std::exception& e)
@@ -229,6 +250,7 @@ namespace InteractiveFusion {
 		xRotation = glm::mat4(1.0f);
 		yRotation = glm::mat4(1.0f);
 		zRotation = glm::mat4(1.0f);
+		quatRotation = glm::quat();
 		scaleMatrix = glm::mat4(1.0f);
 	}
 
@@ -245,6 +267,10 @@ namespace InteractiveFusion {
 			vcg::tri::UpdateNormal<VCGMesh>::PerVertexNormalizedPerFace(currentMesh);
 			vcg::tri::UpdateBounding<VCGMesh>::Box(currentMesh);
 			vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
+			vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromNone(currentMesh);
+			vcg::tri::UpdateSelection<VCGMesh>::FaceFromBorderFlag(currentMesh);
+			vcg::tri::UpdateFlags<VCGMesh>::VertexBorderFromNone(currentMesh);
+			vcg::tri::UpdateSelection<VCGMesh>::VertexFromBorderFlag(currentMesh);
 			vcg::tri::UpdateFlags<VCGMesh>::FaceBorderFromNone(currentMesh);
 		}
 		catch (std::exception& e)
@@ -297,13 +323,13 @@ namespace InteractiveFusion {
 	{
 		if (attachToCursor)
 		{
-			return translation * cursorTranslation * selectScaleMatrix * scaleMatrix * zRotation * yRotation * xRotation * originTransform;
+			return translation * cursorTranslation * selectScaleMatrix * scaleMatrix * glm::mat4_cast(quatRotation) * originTransform;
 		}
 		else
 			return glm::mat4(1.0f);
 	}
 
-	void MeshContainer::Draw(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix)
+	void MeshContainer::Draw(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix)
 	{
 		if (!isDeleted)
 		{
@@ -311,7 +337,7 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void MeshContainer::DrawForColorPicking(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix)
+	void MeshContainer::DrawForColorPicking(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix)
 	{
 		if (!isDeleted)
 		{
@@ -359,7 +385,7 @@ namespace InteractiveFusion {
 		glm::mat4 snapTransform = CalculateSnapTransform(_orientation);
 
 
-		glm::mat4 combinedTranslation = (snapTransform * pointTranslation * scaleMatrix * zRotation * yRotation * xRotation * originTransform);
+		glm::mat4 combinedTranslation = (snapTransform * pointTranslation * scaleMatrix * glm::mat4_cast(quatRotation) * originTransform);
 		glm::mat4 normalTranslation = glm::transpose(glm::inverse(glm::mat4(combinedTranslation)));
 
 		ApplyTransformation(combinedTranslation, normalTranslation);
@@ -506,7 +532,13 @@ namespace InteractiveFusion {
 		hitPoint.normal_z = vertices[i].normal_z;
 		}
 		}*/
-
+		DebugUtility::DbgOut(L"ray far", _ray.startPoint.x);
+		DebugUtility::DbgOut(L"ray end", _ray.endPoint.x);
+		DebugUtility::DbgOut(L"Vertex count: ", (int)vertices.size());
+		DebugUtility::DbgOut(L"hitPoint x", hitPoint.x);
+		DebugUtility::DbgOut(L"hitPoint x", hitPoint.x);
+		DebugUtility::DbgOut(L"hitPoint y", hitPoint.y);
+		DebugUtility::DbgOut(L"hitPoint z", hitPoint.z);
 		return hitPoint;
 
 	}
@@ -617,7 +649,7 @@ namespace InteractiveFusion {
 		{
 			vcg::tri::UpdateTopology<VCGMesh>::FaceFace(currentMesh);
 			vcg::tri::UpdateTopology<VCGMesh>::VertexFace(currentMesh);
-
+			EnsureAttributesAreCorrect();
 			compCnt = vcg::tri::Clean<VCGMesh>::RemoveSmallConnectedComponentsSize(currentMesh, _maxComponentSize);
 
 			DebugUtility::DbgOut(L"Removed components:", compCnt.second);

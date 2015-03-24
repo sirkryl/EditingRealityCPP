@@ -17,11 +17,11 @@ namespace InteractiveFusion {
 
 	}
 
-	void RegionGrowthSegmenter::SetSegmentationParameters(ObjectSegmentationParams* _segmentationParams)
+	void RegionGrowthSegmenter::SetSegmentationParameters(ObjectSegmentationParams& _segmentationParams)
 	{
 		DebugUtility::DbgOut(L"RegionGrowthSegmenter::SetSegmentationParameters");
 
-		RegionGrowthSegmentationParams* temporaryParams = dynamic_cast<RegionGrowthSegmentationParams*>(_segmentationParams);
+		RegionGrowthSegmentationParams* temporaryParams = dynamic_cast<RegionGrowthSegmentationParams*>(&_segmentationParams);
 		if (temporaryParams != nullptr)
 			segmentationParameters = *temporaryParams;
 		else

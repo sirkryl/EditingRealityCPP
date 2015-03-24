@@ -7,7 +7,6 @@
 #include "DebugUtility.h"
 #include "IFResources.h"
 #include "KinectFusion.h"
-
 #include <boost/thread.hpp>
 
 namespace InteractiveFusion {
@@ -23,7 +22,7 @@ namespace InteractiveFusion {
 
 	std::unique_ptr<IScanner> scanner;
 	//KinectFusion kinectFusionScanner;
-
+	std::shared_ptr<MeshContainer> scannedMesh;
 	glm::mat4 cameraMatrix;
 
 	int voxelsPerMeter;
@@ -71,6 +70,7 @@ namespace InteractiveFusion {
 
 		scanner->Initialize(windowHandle, depthView, reconstructionView, residualsView);
 		scanner->PauseRendering();
+		PauseScan();
 		//kinectFusionScanner.Initialize(windowHandle, depthView, reconstructionView, residualsView);
 		//kinectFusionScanner.PauseRendering();
 	}
@@ -105,9 +105,21 @@ namespace InteractiveFusion {
 		return SubWindow::SubWindowProc(hWnd, message, wParam, lParam);
 	}
 
-	void ScanWindow::HandleEvents(MainWindow* _parentWindow)
+
+	void ScanWindow::HandleEvents(MainWindow& _parentWindow)
 	{
-		int newVolumeSize = _parentWindow->GetScanVolumeSize();
+		//if (scanner->IsReconstructionReady())
+		//{
+		//	_parentWindow.InitializeOpenGLScene(scanner->GetScannedMesh());
+		//}
+		
+		if (!IsVisible())
+		{
+			_parentWindow.ForwardCameraMatrix(cameraMatrix);
+			return;
+		}
+
+		int newVolumeSize = _parentWindow.GetScanVolumeSize();
 		if (HasVolumeSizeChanged(newVolumeSize))
 		{
 			voxelsPerMeter = newVolumeSize;
@@ -115,20 +127,20 @@ namespace InteractiveFusion {
 			//kinectFusionScanner.ChangeVolumeSize(newVolumeSize);
 		}
 
-		if (GetTickCount() - scanTickLastFpsUpdate > _parentWindow->updateFpsCounterInMilliSeconds)
+		if (GetTickCount() - scanTickLastFpsUpdate > _parentWindow.updateFpsCounterInMilliSeconds)
 		{
-			_parentWindow->SetFramesPerSecond(scanner->GetFramesPerSecond());
-			//_parentWindow->SetFramesPerSecond(kinectFusionScanner.GetFramesPerSecond());
+			_parentWindow.SetFramesPerSecond(scanner->GetFramesPerSecond());
+			//_parentWindow.SetFramesPerSecond(kinectFusionScanner.GetFramesPerSecond());
 			scanTickLastFpsUpdate = GetTickCount();
 		}
 		std::wstring fusionStatus = scanner->GetAndResetStatus();
 		//std::wstring fusionStatus = kinectFusionScanner.GetAndResetStatus();
 		if (fusionStatus.length() > 0)
-			_parentWindow->SetStatusBarMessage(fusionStatus);
-		if (scanner->GetGpuMemory() > 0 && scanner->GetGpuMemory() != _parentWindow->GetGpuMemory())
+			_parentWindow.SetStatusBarMessage(fusionStatus);
+		/*if (scanner->GetGpuMemory() > 0 && scanner->GetGpuMemory() != _parentWindow.GetGpuMemory())
 		{
-			_parentWindow->SetGpuMemory(scanner->GetGpuMemory());
-		}
+			_parentWindow.SetGpuMemory(scanner->GetGpuMemory());
+		}*/
 		while (!eventQueue.empty())
 		{
 			int event = eventQueue.front();
@@ -137,14 +149,14 @@ namespace InteractiveFusion {
 			{
 			case ScanWindowEvent::StateChange:
 				pauseFusion = true;
-				_parentWindow->ChangeState(PlaneSelection);
-				_parentWindow->SetAndShowHelpMessage(HelpMessage::PlaneSelectionHelp);
+				_parentWindow.ChangeState(PlaneSelection);
+				_parentWindow.SetAndShowHelpMessage(HelpMessage::PlaneSelectionHelp);
 				scanner->PrepareMeshSave();
 				//kinectFusionScanner.PrepareMeshSave();
-				//_parentWindow->InitializeOpenGLScene(kinectFusionScanner.GetScannedMesh());
+				//_parentWindow.InitializeOpenGLScene(kinectFusionScanner.GetScannedMesh());
 				//kinectFusionScanner.FinishMeshSave();
-				boost::thread(&ScanWindow::FinishFusionScan, this, _parentWindow);
-				//_parentWindow->InitializeOpenGLScene(kinectFusionScanner.FinishScan());
+				boost::thread(&ScanWindow::FinishFusionScan, this, boost::ref(_parentWindow));
+				//_parentWindow.InitializeOpenGLScene(kinectFusionScanner.FinishScan());
 				break;
 			case ScanWindowEvent::Reset:
 				//do stuff
@@ -155,12 +167,12 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void ScanWindow::FinishFusionScan(MainWindow* _parentWindow)
+	void ScanWindow::FinishFusionScan(MainWindow& _parentWindow)
 	{
-		_parentWindow->InitializeOpenGLScene(scanner->GetScannedMesh());
 		scanner->FinishMeshSave();
-		//_parentWindow->InitializeOpenGLScene(MeshContainer());
-		//_parentWindow->InitializeOpenGLScene(kinectFusionScanner.GetScannedMesh());
+		_parentWindow.InitializeOpenGLScene(scanner->GetScannedVertices(), scanner->GetScannedTriangles());
+		//_parentWindow.InitializeOpenGLScene(MeshContainer());
+		//_parentWindow.InitializeOpenGLScene(kinectFusionScanner.GetScannedMesh());
 		//kinectFusionScanner.FinishMeshSave();
 	}
 
@@ -223,11 +235,13 @@ namespace InteractiveFusion {
 
 	void ScanWindow::PauseScan()
 	{
+		scanner->PauseProcessing(true);
 		pauseFusion = true;
 	}
 
 	void ScanWindow::UnpauseScan()
 	{
+		scanner->PauseProcessing(false);
 		pauseFusion = false;
 	}
 

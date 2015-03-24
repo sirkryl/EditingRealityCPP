@@ -28,8 +28,8 @@ namespace InteractiveFusion {
 
 		OpenGLShaderProgram GetShaderProgram();
 
-		virtual void Draw(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix);
-		virtual void DrawForColorPicking(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix);
+		virtual void Draw(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix);
+		virtual void DrawForColorPicking(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix);
 
 		Vertex GetHitpoint(Ray _ray);
 		

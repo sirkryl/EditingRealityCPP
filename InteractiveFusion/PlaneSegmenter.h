@@ -9,13 +9,14 @@ namespace InteractiveFusion {
 		PlaneSegmenter();
 		~PlaneSegmenter();
 
-		virtual void SetSegmentationParameters(PlaneSegmentationParams* _segmentationParams);
+		virtual void SetSegmentationParameters(PlaneSegmentationParams _segmentationParams);
 
 		void ConfirmLastSegment();
 		void RejectLastSegment();
+		void AddPreviouslyRejectedSegments();
 		void RemoveLastSegmentForNewSegmentation();
 
-		virtual void FinishSegmentation(ModelData* _inputModelData, ModelData* _outputModelData);
+		virtual void FinishSegmentation(ModelData& _inputModelData, ModelData& _outputModelData);
 
 		void CleanUp();
 	protected:
@@ -38,7 +39,7 @@ namespace InteractiveFusion {
 
 		virtual bool Segment();
 		virtual bool ConvertToPointCloud(MeshContainer &_mesh);
-		virtual void UpdateHighlights(ModelData* _modelData);
+		virtual void UpdateHighlights(ModelData& _modelData);
 		void UpdateIndicesUsedForNextSegmentation();
 		pcl::PointIndices GetIndicesThatWereNotSegmented();
 	};

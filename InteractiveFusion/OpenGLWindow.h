@@ -40,6 +40,6 @@ namespace InteractiveFusion {
 		virtual void CleanUp();
 		virtual LRESULT CALLBACK SubWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 		virtual void ProcessUI(WPARAM wParam, LPARAM lParam);
-		void HandleEvents(GraphicsControl* _glControl);
+		void HandleEvents(GraphicsControl& _glControl);
 	};
 }

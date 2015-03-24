@@ -14,21 +14,21 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void ColorSelector::HandleLeftMouseClick(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
+	void ColorSelector::HandleLeftMouseClick(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		DebugUtility::DbgOut(L"ColorSelector::HandleLeftMouseClick");
 		if (_selectedIndex != -1)
 		{
-			_modelData->RemoveTemporaryMeshColor(_selectedIndex);
-			_modelData->UnselectMesh();
+			_modelData.RemoveTemporaryMeshColor(_selectedIndex);
+			_modelData.UnselectMesh();
 		}
-		_selectedIndex = GetIndexOfMeshUnderCursor(_glControl, _modelData, _overlayHelper, _glControl->GetOpenGLWindowHandle());
-		_modelData->MarkMeshAsSelected(_selectedIndex);
-		_modelData->TemporarilyColorMesh(_selectedIndex);
+		_selectedIndex = GetIndexOfMeshUnderCursor(_glControl, _modelData, _overlayHelper, _glControl.GetOpenGLWindowHandle());
+		_modelData.MarkMeshAsSelected(_selectedIndex);
+		_modelData.TemporarilyColorMesh(_selectedIndex);
 	}
 
-	void ColorSelector::DrawForColorPicking(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper)
+	void ColorSelector::DrawForColorPicking(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper)
 	{
-		_modelData->DrawWithAssignedColorCodes(_glControl->GetProjectionMatrix(), _glControl->GetViewMatrix());
+		_modelData.DrawWithAssignedColorCodes(_glControl.GetProjectionMatrix(), _glControl.GetViewMatrix());
 	}
 }

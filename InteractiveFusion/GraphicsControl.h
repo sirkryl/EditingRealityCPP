@@ -18,13 +18,14 @@ namespace InteractiveFusion {
 
 		void RunOpenGLThread();
 
+		void SwitchToNewState();
 		void UpdateApplicationState(WindowState _state);
 
 		bool RequestsStateChange();
 
-		glm::mat4* GetProjectionMatrix();
+		glm::mat4& GetProjectionMatrix();
 		glm::mat4 GetOrthoMatrix();
-		glm::mat4* GetViewMatrix();
+		glm::mat4& GetViewMatrix();
 		void SetCameraMatrix(glm::mat4 viewMatrix);
 
 
@@ -58,7 +59,7 @@ namespace InteractiveFusion {
 		bool IsRendering();
 
 		void ChangeInteractionMode(InteractionMode _interactionMode);
-		void ChangePlaneCutMode(PlaneCutMode _mode);
+		void ChangePlaneCutAxis(PlaneCutAxis _axis);
 		void SetCameraMode(OpenGLCameraMode _cameraMode);
 		void ResetModel();
 		void ReloadCurrentState();
@@ -67,20 +68,21 @@ namespace InteractiveFusion {
 		
 		void ExportModel();
 
-		void UpdatePlaneSegmentation(PlaneSegmentationParams* _params);
-		void UpdateObjectSegmentation(ObjectSegmentationParams* _params);
+		void UpdatePlaneSegmentation(PlaneSegmentationParams _params);
+		void UpdateObjectSegmentation(ObjectSegmentationParams& _params);
 
 		
 
-		void ConfirmSegmentedPlane(PlaneSegmentationParams* _params);
+		void ConfirmSegmentedPlane(PlaneSegmentationParams _params);
 
-		void RejectSegmentedPlane(PlaneSegmentationParams* _params);
+		void RejectSegmentedPlane(PlaneSegmentationParams _params);
 
 		void FinishObjectSegmentation();
 
 		void FinishProcessing();
 
-		int LoadAndSegmentModelDataFromScan(std::shared_ptr<MeshContainer> _scannedMesh);
+		void SetScannedMesh(std::vector<Vertex>& _scannedVertices, std::vector<Triangle>& _scannedTriangles);
+		
 
 		void PushEvent(OpenGLControlEvent _event);
 
@@ -96,9 +98,10 @@ namespace InteractiveFusion {
 		int GetNumberOfTriangles();
 		int GetNumberOfVisibleModels();
 
-		void ShowPlaneRenderer(bool _flag);
-		bool IsPlaneRendererVisible();
+		void SetCameraMovementEnabled(bool _flag);
+		void ChangePlaneCutTransformation(PlaneCutTransformation _transformationMode);
 		void PrepareViewportResize();
+		int LoadAndSegmentModelDataFromScan(std::vector<Vertex>& _scannedVertices, std::vector<Triangle>& _scannedTriangles);
 
 	private:
 		HWND hWnd;
@@ -110,6 +113,7 @@ namespace InteractiveFusion {
 		
 		int mouseWheelDelta = 0;
 
+		bool isCameraMovementEnabled = true;
 		bool isBusy = false;
 
 		int fpsCount, currentFps;
@@ -127,12 +131,15 @@ namespace InteractiveFusion {
 
 		int holeSize = 0;
 
+		
+
 		void SetBusy(bool _isBusy);
 		void SetStatusMessage(std::wstring _message);
 		
 		int OpenGLThreadMessageLoop();
 
-		int PlaneSelectionThread(PlaneSegmentationParams* _params);
+
+		int PlaneSelectionThread(PlaneSegmentationParams _params);
 		
 		int SetupOpenGL();
 		void SetupRenderer();

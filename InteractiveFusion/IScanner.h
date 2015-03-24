@@ -2,10 +2,10 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <memory>
+#include "MeshContainer.h"
 #pragma once
 
 namespace InteractiveFusion {
-	class MeshContainer;
 	class IScanner
 	{
 	public:
@@ -24,10 +24,14 @@ namespace InteractiveFusion {
 		virtual int GetGpuMemory() = 0;
 		virtual void PrepareMeshSave() = 0;
 		virtual void FinishMeshSave() = 0;
-		virtual std::shared_ptr<MeshContainer> GetScannedMesh() = 0;
+		virtual std::vector<Vertex>& GetScannedVertices() = 0;
+		virtual std::vector<Triangle>& GetScannedTriangles() = 0;
 		virtual void ResetScan() = 0;
 		virtual void ResumeRendering() = 0;
 		virtual void CleanUp() = 0;
+		virtual void PauseProcessing(bool flag) = 0;
+		virtual bool IsReconstructionReady() = 0;
+		
 	};
 }
 

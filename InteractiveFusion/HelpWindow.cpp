@@ -169,7 +169,7 @@ ss << "If you don't get it right the first time, you can always press the ''RESE
 		return SubWindow::SubWindowProc(hWnd, message, wParam, lParam);;
 	}
 
-	void HelpWindow::HandleEvents(MainWindow* _parentWindow)
+	void HelpWindow::HandleEvents(MainWindow& _parentWindow)
 	{
 		while (!eventQueue.empty())
 		{
@@ -179,8 +179,8 @@ ss << "If you don't get it right the first time, you can always press the ''RESE
 			{
 			case HelpWindowEvent::OK:
 				DebugUtility::DbgOut(L"HelpWindow::HandleEvents::OK");
-				//_parentWindow->ChangeScanVolumeSize(voxelsPerMeter);
-				//_parentWindow->ChangeState(Scan);
+				//_parentWindow.ChangeScanVolumeSize(voxelsPerMeter);
+				//_parentWindow.ChangeState(Scan);
 				break;
 				//DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::ChangeSize");
 			}

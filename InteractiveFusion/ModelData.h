@@ -5,16 +5,19 @@
 #include <memory>
 #include <vector>
 #include "VcgTypes.h"
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lockable_adapter.hpp>
+
 namespace InteractiveFusion {
 	class MeshContainer;
-	class ModelData	
+	class ModelData
 	{
 		friend class Selector;
 	public:
 		ModelData();
 		virtual ~ModelData();
 		void LoadFromFile(const char* fileName);
-		void LoadFromData(std::shared_ptr<MeshContainer> _meshContainer);
+		void LoadFromData(std::vector<Vertex>& _vertices, std::vector<Triangle>& _triangles);
 		void GenerateBuffers();
 		void SwapToHighlightBuffers();
 
@@ -44,9 +47,9 @@ namespace InteractiveFusion {
 
 		void TranslateMeshToCursorRay(int _index, Ray _ray, int _distance);
 		void TranslateMeshToPoint(int _index, glm::vec3 _point, std::vector<int> _orientation);
-
-		void RotateMeshAroundHorizontalAxis(int _index, float _degree, glm::vec3 _axis);
-		void RotateMeshAroundVerticalAxis(int _index, float _degree, glm::vec3 _axis);
+		void RotateMeshAroundAxis(int _index, float _degree, glm::vec3 _axis);
+		/*void RotateMeshAroundHorizontalAxis(int _index, float _degree, glm::vec3 _axis);
+		void RotateMeshAroundVerticalAxis(int _index, float _degree, glm::vec3 _axis);*/
 		void ScaleMeshUp(int _index);
 		void ScaleMeshDown(int _index);
 		void ResetTemporaryTranslations(int _index);
@@ -69,15 +72,15 @@ namespace InteractiveFusion {
 		std::vector<int> GetPlaneIndices();
 		std::vector<int> GetObjectIndices();
 		bool IsEmpty();
-		void AddObjectMeshToData(MeshContainer* _mesh);
-		void AddPlaneMeshToData(MeshContainer* _plane, PlaneParameters _planeParameters);
+		void AddObjectMeshToData(MeshContainer _mesh);
+		void AddPlaneMeshToData(MeshContainer _plane, PlaneParameters _planeParameters);
 		void MarkDataAsDeleted();
 
 		void PermanentlyRemoveAllMeshWithDeletedFlag();
 
 		bool GetAlignedVcgMesh(int _index, VCGMesh& _outputMesh);
-		MeshContainer* GetFirstMeshThatIsNotPlane();
-		MeshContainer* GetCurrentlySelectedMesh();
+		std::shared_ptr<MeshContainer> GetFirstMeshThatIsNotPlane();
+		std::shared_ptr<MeshContainer> GetCurrentlySelectedMesh();
 		int GetFirstMeshIndexThatIsNotPlane();
 		void RemoveTemporaryTriangleColor();
 		void CopyFrom(const ModelData& _modelData);
@@ -86,10 +89,10 @@ namespace InteractiveFusion {
 
 		
 
-		void Draw(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix);
-		void DrawWithAssignedColorCodes(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix);
-		void DrawNonStaticMeshWithAssignedColorCodes(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix);
-		void DrawAllButIndexWithAssignedColorCodes(int _index, glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix);
+		void Draw(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix);
+		void DrawWithAssignedColorCodes(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix);
+		void DrawNonStaticMeshWithAssignedColorCodes(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix);
+		void DrawAllButIndexWithAssignedColorCodes(int _index, glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix);
 
 		void SetGroundPlane(int _index);
 		glm::mat4 GetNegativeGroundAlignmentRotation();
@@ -100,11 +103,17 @@ namespace InteractiveFusion {
 		void PlaneCutPreview(int _index, PlaneParameters _parameters);
 		void CutWithPlane(int _index, PlaneParameters _parameters);
 
+		void Lock();
+		void Unlock();
+		void TryLock();
+
 	protected:
+
+		boost::mutex scene_mutex;
 
 		OpenGLShaderProgram defaultShaderProgram;
 
-		std::vector<std::unique_ptr<MeshContainer>> currentMeshData;
+		std::vector<std::shared_ptr<MeshContainer>> currentMeshData;
 
 		int currentlySelectedMesh = -1;
 

@@ -30,15 +30,11 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void PlaneSegmenter::SetSegmentationParameters(PlaneSegmentationParams* _segmentationParams)
+	void PlaneSegmenter::SetSegmentationParameters(PlaneSegmentationParams _segmentationParams)
 	{
 		DebugUtility::DbgOut(L"PlaneSegmenter::SetSegmentationParameters");
 
-		PlaneSegmentationParams* temporaryParams = dynamic_cast<PlaneSegmentationParams*>(_segmentationParams);
-		if (temporaryParams != nullptr)
-			segmentationParameters = *temporaryParams;
-		else
-			segmentationParameters = PlaneSegmentationParams();
+		segmentationParameters = _segmentationParams;
 	}
 
 	bool PlaneSegmenter::ConvertToPointCloud(MeshContainer &_mesh)
@@ -83,8 +79,10 @@ namespace InteractiveFusion {
 		// Configure the object to look for a plane.
 		if (axisChangedCount <= 2)
 			segmentation.setModelType(pcl::SACMODEL_NORMAL_PARALLEL_PLANE);
-		else
+		else if (axisChangedCount == 3)
 			segmentation.setModelType(pcl::SACMODEL_NORMAL_PLANE);// SACMODEL_NORMAL_PLANE);
+		else if (axisChangedCount > 3)
+			segmentation.setModelType(pcl::SACMODEL_PLANE);
 		// Use RANSAC method.
 
 		segmentation.setMethodType(pcl::SAC_RANSAC);
@@ -103,17 +101,26 @@ namespace InteractiveFusion {
 			{
 				axisChangedCount++;
 				axisUsedForSegmentation = Eigen::Vector3f(1, 0, 0);
+				AddPreviouslyRejectedSegments();
 				return Segment();
 			}
 			else if (axisChangedCount == 1)
 			{
 				axisChangedCount++;
 				axisUsedForSegmentation = Eigen::Vector3f(0, 0, 1);
+				AddPreviouslyRejectedSegments();
 				return Segment();
 			}
 			else if (axisChangedCount == 2)
 			{
 				axisChangedCount++;
+				AddPreviouslyRejectedSegments();
+				return Segment();
+			}
+			else if (axisChangedCount == 3 && temporarySegmentationClusterIndices.size() == 0)
+			{
+				axisChangedCount++;
+				AddPreviouslyRejectedSegments();
 				return Segment();
 			}
 			temporarySegmentationClusterIndices.push_back(GetIndicesThatWereNotSegmented());
@@ -138,6 +145,20 @@ namespace InteractiveFusion {
 
 		UpdateIndicesUsedForNextSegmentation();
 	}
+	void PlaneSegmenter::AddPreviouslyRejectedSegments()
+	{
+		for (auto& segments : rejectedIndices)
+		{
+			for (auto& index : segments.indices)
+			{
+				indicesUsedForNextPlaneSegmentation->indices.push_back(index);
+				allPlaneSegmentIndices->indices.erase(std::remove(allPlaneSegmentIndices->indices.begin(), allPlaneSegmentIndices->indices.end(), index), allPlaneSegmentIndices->indices.end());
+			}
+		}
+		DebugUtility::DbgOut(L"Rejected Indices size: ", (int)rejectedIndices.size());
+		rejectedIndices.clear();
+		
+	}
 
 	void PlaneSegmenter::RejectLastSegment()
 	{
@@ -145,6 +166,8 @@ namespace InteractiveFusion {
 			return;
 
 		UpdateIndicesUsedForNextSegmentation();
+
+		rejectedIndices.push_back(temporarySegmentationClusterIndices.back());
 
 		RemoveLastSegmentForNewSegmentation();
 	}
@@ -202,14 +225,14 @@ namespace InteractiveFusion {
 		return *notPlaneIndices;
 	}
 
-	void PlaneSegmenter::UpdateHighlights(ModelData* _modelData)
+	void PlaneSegmenter::UpdateHighlights(ModelData& _modelData)
 	{
 		if (GetClusterCount() == 0)
 			return;
 		DebugUtility::DbgOut(L"UpdatePlaneSegmentationHighlights:: ", GetClusterCount() - 1);
 		std::vector<int> trianglesToBeColored = GetClusterIndices(GetClusterCount() - 1);
 
-		_modelData->TemporarilyColorTriangles(0, trianglesToBeColored, ColorIF{ 0.5f, 0.0f, 0.0f }, true);
+		_modelData.TemporarilyColorTriangles(0, trianglesToBeColored, ColorIF{ 0.5f, 0.0f, 0.0f }, true);
 	}
 
 	void PlaneSegmenter::UpdateIndicesUsedForNextSegmentation()
@@ -233,7 +256,7 @@ namespace InteractiveFusion {
 		extract.getRemovedIndices(*indicesUsedForNextPlaneSegmentation);
 	}
 
-	void PlaneSegmenter::FinishSegmentation(ModelData* _inputModelData, ModelData* _outputModelData)
+	void PlaneSegmenter::FinishSegmentation(ModelData& _inputModelData, ModelData& _outputModelData)
 	{
 		for (int i = 0; i < GetClusterCount(); i++)
 		{
@@ -242,10 +265,10 @@ namespace InteractiveFusion {
 			DebugUtility::DbgOut(L"Finishing plane segmentation... index: ", i);
 			if (planeParameters.IsInitialized())
 			{
-				_outputModelData->AddPlaneMeshToData(ConvertToMesh(i), planeParameters);
+				_outputModelData.AddPlaneMeshToData(ConvertToMesh(i), planeParameters);
 			}
 			else
-				_outputModelData->AddObjectMeshToData(ConvertToMesh(i));
+				_outputModelData.AddObjectMeshToData(ConvertToMesh(i));
 		}
 		if (indexOfGroundPlane == -1)
 		{
@@ -267,17 +290,17 @@ namespace InteractiveFusion {
 				}
 			}*/
 		}
-		_outputModelData->SetGroundPlane(indexOfGroundPlane);
+		_outputModelData.SetGroundPlane(indexOfGroundPlane);
 	}
 
 	void PlaneSegmenter::CleanUp()
 	{
 		DebugUtility::DbgOut(L"PlaneSegmenter::CleanUp()");
 		axisUsedForSegmentation = { 0, 1, 0 };
-
+		axisChangedCount = 0;
 		mainCloudWithoutNormals->clear();
 		mainCloudNormals->clear();
-
+		rejectedIndices.clear();
 		allPlaneSegmentIndices->indices.clear();
 		indicesUsedForNextPlaneSegmentation->indices.clear();
 		indicesFromLastPlaneSegmentation->indices.clear();

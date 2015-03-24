@@ -15,6 +15,8 @@ namespace InteractiveFusion {
 	{
 		if (IsInitialized())
 			return;
+
+		DebugUtility::DbgOut(L"OpenGLText::INitialize()::");
 		if (FT_Init_FreeType(&ft_lib) != 0) {
 			MessageBox(NULL, L"Couldn't initialize FreeType library", L"Error", MB_ICONERROR);
 		}
@@ -70,39 +72,84 @@ namespace InteractiveFusion {
 		textShader.SetUniform("color", glm::vec4((float)StyleSheet::GetInstance()->GetDefaultTextColor().r / 255.0f, (float)StyleSheet::GetInstance()->GetDefaultTextColor().g / 255.0f, (float)StyleSheet::GetInstance()->GetDefaultTextColor().b / 255.0f, 1));
 
 		textShader.SetUniform("tex", 0);
-
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	}
 
-	void OpenGLText::RenderText(const std::wstring &str, int data, int pixelSize, float x, float y, float sx, float sy)
+	void OpenGLText::RenderText(std::wstring text, int data, int pixelSize, float x, float y, float sx, float sy)
 	{
-		wstringstream meshStr;
-		meshStr << data;
-		wstring label = str + meshStr.str();
-		RenderText(label, pixelSize, x, y, sx, sy);
+		RenderText(text + std::to_wstring(data), pixelSize, x, y, sx, sy);
 	}
 
-	void OpenGLText::RenderText(const std::wstring &str, int pixelSize, float x, float y, float sx, float sy)
+	void OpenGLText::RenderText(std::wstring text, int pixelSize, float x, float y, float sx, float sy)
 	{
+		/*text_mutex.lock();
 		FT_Set_Pixel_Sizes(face, 0, pixelSize);
 
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		const FT_GlyphSlot glyph = face->glyph;
+		FT_GlyphSlot g = face->glyph;
+		for (auto& p : text) {
+			if (FT_Load_Char(face, p, FT_LOAD_RENDER))
+				continue;
 
-		for (auto c : str) {
-			if (FT_Load_Char(face, c, FT_LOAD_RENDER) != 0)
+			glTexImage2D(
+				GL_TEXTURE_2D,
+				0,
+				GL_RED,
+				g->bitmap.width,
+				g->bitmap.rows,
+				0,
+				GL_RED,
+				GL_UNSIGNED_BYTE,
+				g->bitmap.buffer
+				);
+
+			float x2 = x + g->bitmap_left * sx;
+			float y2 = -y - g->bitmap_top * sy;
+			float w = g->bitmap.width * sx;
+			float h = g->bitmap.rows * sy;
+
+			GLfloat box[4][4] = {
+				{ x2, -y2, 0, 0 },
+				{ x2 + w, -y2, 1, 0 },
+				{ x2, -y2 - h, 0, 1 },
+				{ x2 + w, -y2 - h, 1, 1 },
+			};
+
+			glBufferData(GL_ARRAY_BUFFER, sizeof box, box, GL_DYNAMIC_DRAW);
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+			x += (g->advance.x >> 6) * sx;
+			y += (g->advance.y >> 6) * sy;
+		}
+		text_mutex.unlock();*/
+		text_mutex.lock();
+		if (text.length() == 0)
+		{
+			DebugUtility::DbgOut(L"length is zero");
+			return;
+		}
+		if (pixelSize > 40)
+		{
+			DebugUtility::DbgOut(L"PixelSize way too big... ", pixelSize);
+		}
+		FT_Set_Pixel_Sizes(face, 0, pixelSize);
+
+		
+		FT_GlyphSlot glyph = face->glyph;
+
+		for (auto& c : text) {
+			if (FT_Load_Char(face, c, FT_LOAD_RENDER))
 				continue;
 
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_R8,
 				glyph->bitmap.width, glyph->bitmap.rows,
 				0, GL_RED, GL_UNSIGNED_BYTE, glyph->bitmap.buffer);
 
-			const float vx = x + glyph->bitmap_left * sx;
-			const float vy = y + glyph->bitmap_top * sy;
-			const float w = glyph->bitmap.width * sx;
-			const float h = glyph->bitmap.rows * sy;
+			float vx = x + glyph->bitmap_left * sx;
+			float vy = y + glyph->bitmap_top * sy;
+			float w = glyph->bitmap.width * sx;
+			float h = glyph->bitmap.rows * sy;
 
-			if (str == L"ALRIGHT")
-				DebugUtility::DbgOut(L"width: ", (int)glyph->bitmap.width);
 			struct {
 				float x, y, s, t;
 			} data[6] = {
@@ -121,8 +168,16 @@ namespace InteractiveFusion {
 			x += (glyph->advance.x >> 6) * sx;
 			y += (glyph->advance.y >> 6) * sy;
 		}
+		text_mutex.unlock();
+	}
 
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	void OpenGLText::FinishRender()
+	{
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindVertexArray(0);
+		textShader.UnUseProgram();
+		glDisableVertexAttribArray(0);
+
 	}
 
 	void OpenGLText::CleanUp()

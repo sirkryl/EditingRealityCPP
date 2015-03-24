@@ -18,9 +18,9 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void Selector::HandleSelection(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper)
+	void Selector::HandleSelection(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper)
 	{
-		int currentlySelectedMeshIndex = _modelData->GetCurrentlySelectedMeshIndex();
+		int currentlySelectedMeshIndex = _modelData.GetCurrentlySelectedMeshIndex();
 		if (KeyState::LeftMouseDownTouchCheck())
 		{
 			HandleLeftMouseClick(_glControl, _modelData, _overlayHelper, currentlySelectedMeshIndex);
@@ -35,25 +35,25 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void Selector::HandleLeftMouseClick(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
+	void Selector::HandleLeftMouseClick(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 	}
 
-	void Selector::HandleLeftMouseDown(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
+	void Selector::HandleLeftMouseDown(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 	}
 
-	void Selector::HandleLeftMouseRelease(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
+	void Selector::HandleLeftMouseRelease(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 	}
 
-	void Selector::DrawForColorPicking(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper)
+	void Selector::DrawForColorPicking(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper)
 	{
-		_modelData->DrawAllButIndexWithAssignedColorCodes(_modelData->GetCurrentlySelectedMeshIndex(), _glControl->GetProjectionMatrix(), _glControl->GetViewMatrix());
-		_overlayHelper->DrawForColorPicking(_glControl->GetViewportWidth(), _glControl->GetViewportHeight());
+		_modelData.DrawAllButIndexWithAssignedColorCodes(_modelData.GetCurrentlySelectedMeshIndex(), _glControl.GetProjectionMatrix(), _glControl.GetViewMatrix());
+		_overlayHelper.DrawForColorPicking(_glControl.GetViewportWidth(), _glControl.GetViewportHeight());
 	}
 
-	int Selector::GetIndexOfMeshUnderCursor(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, HWND _windowHandle)
+	int Selector::GetIndexOfMeshUnderCursor(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, HWND _windowHandle)
 	{
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClearDepth(1.0);
@@ -69,13 +69,13 @@ namespace InteractiveFusion {
 		//DebugUtility::DbgOut(L"SelectionHelperNew::GetIndexOfMeshUnderCursor::ColorCode:", _colorCodeUnderCursor);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		if (_overlayHelper->IsValidKey(_colorCodeUnderCursor))
+		if (_overlayHelper.IsValidKey(_colorCodeUnderCursor))
 			return _colorCodeUnderCursor;
 
-		return _modelData->ReturnIndexOfMeshWithColorCode(_colorCodeUnderCursor);
+		return _modelData.ReturnIndexOfMeshWithColorCode(_colorCodeUnderCursor);
 	}
 
-	Ray Selector::GetRayCastFromCursor(HWND _windowHandle, glm::mat4* _viewMatrix, glm::mat4* _projectionMatrix)
+	Ray Selector::GetRayCastFromCursor(HWND _windowHandle, glm::mat4& _viewMatrix, glm::mat4& _projectionMatrix)
 	{
 		POINT cursorPos;
 		GetCursorPos(&cursorPos);
@@ -90,9 +90,10 @@ namespace InteractiveFusion {
 		//DebugUtility::DbgOut(L"SelectionHelperNew::GetRayCastFromCursor::Viewport G: ", rect.bottom);
 
 		Ray outputRay;
-		outputRay.startPoint = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 0.0f), *_viewMatrix, *_projectionMatrix, viewport);
-		outputRay.endPoint = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 1.0f), *_viewMatrix, *_projectionMatrix, viewport);
-
+		outputRay.startPoint = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 0.0f), _viewMatrix, _projectionMatrix, viewport);
+		outputRay.endPoint = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 1.0f), _viewMatrix, _projectionMatrix, viewport);
+		DebugUtility::DbgOut(L"outputRay start", outputRay.startPoint.x);
+		DebugUtility::DbgOut(L"outputRay end", outputRay.endPoint.x);
 		return outputRay;
 	}
 

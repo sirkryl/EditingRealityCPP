@@ -13,25 +13,25 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void DialogExporter::Export(ModelData* _modelData, int _index)
+	void DialogExporter::Export(ModelData& _modelData, int _index)
 	{
 		string fileName = GetFileNameFromSaveFileDialog();
 		if (fileName.empty())
 			return;
 
-		VCGMesh outputMesh;// = _modelData->GetAlignedVcgMesh(_index, outputMesh);
-		if (!_modelData->GetAlignedVcgMesh(_index, outputMesh))
+		VCGMesh outputMesh;// = _modelData.GetAlignedVcgMesh(_index, outputMesh);
+		if (!_modelData.GetAlignedVcgMesh(_index, outputMesh))
 			return;
 		SaveMeshToFile(outputMesh, fileName);
 	}
 
-	void DialogExporter::Export(ModelData* _modelData)
+	void DialogExporter::Export(ModelData& _modelData)
 	{
 		string fileName = GetFileNameFromSaveFileDialog();
 		if (fileName.empty())
 			return;
 		VCGMesh combinedMesh;
-		_modelData->CombineAndAlignModelData(combinedMesh);
+		_modelData.CombineAndAlignModelData(combinedMesh);
 		SaveMeshToFile(combinedMesh, fileName);
 	}
 

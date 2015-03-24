@@ -25,6 +25,8 @@
 #define AssertOtherThread() \
     _ASSERT_EXPR(GetCurrentThreadId() != m_threadId, __FUNCTIONW__ L" called on wrong thread!");
 
+
+
 /// <summary>
 /// Constructor
 /// </summary>
@@ -213,6 +215,7 @@ HRESULT KinectFusionProcessor::StartProcessing()
 /// </summary>
 HRESULT KinectFusionProcessor::StopProcessing()
 {
+	PauseProcessing(false);
     AssertOtherThread();
 
     if (m_hThread != nullptr)
@@ -305,11 +308,13 @@ DWORD KinectFusionProcessor::MainLoop()
     // Main loop
     while (!bStopProcessing)
     {
+		if (processingPaused)
+			continue;
         HANDLE handles[] = { m_hStopProcessingEvent, m_hNextDepthFrameEvent, m_hStatusChangeEvent };
         DWORD waitResult = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
 
         // Get parameters and other external signals
-
+		processor_mutex.lock();
         EnterCriticalSection(&m_lockParams);
         bool bChangeNearMode = m_paramsCurrent.m_bNearMode != m_paramsNext.m_bNearMode;
         bool bRecreateVolume = m_paramsCurrent.VolumeChanged(m_paramsNext);
@@ -386,7 +391,6 @@ DWORD KinectFusionProcessor::MainLoop()
                     }
 
                     ProcessDepth();
-
                     LeaveCriticalSection(&m_lockVolume);
 
                     NotifyFrameReady();
@@ -426,6 +430,7 @@ DWORD KinectFusionProcessor::MainLoop()
             // We have no sensor: Set frame rate to zero and notify the UI
             NotifyEmptyFrame();
         }
+		processor_mutex.unlock();
     }
 
     ShutdownSensor();
@@ -2849,6 +2854,21 @@ void KinectFusionProcessor::NotifyEmptyFrame()
     LeaveCriticalSection(&m_lockFrame);
 
     NotifyFrameReady();
+}
+
+void KinectFusionProcessor::PauseProcessing(bool flag)
+{
+	processingPaused = flag;
+}
+
+void KinectFusionProcessor::LockMutex()
+{
+	processor_mutex.lock();
+}
+
+void KinectFusionProcessor::UnlockMutex()
+{
+	processor_mutex.unlock();
 }
 
 Matrix4 KinectFusionProcessor::GetWorldToCameraTransform()

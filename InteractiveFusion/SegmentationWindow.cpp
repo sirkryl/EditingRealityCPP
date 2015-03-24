@@ -327,7 +327,7 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void SegmentationWindow::HandleEvents(MainWindow* _parentWindow)
+	void SegmentationWindow::HandleEvents(MainWindow& _parentWindow)
 	{
 		while (!eventQueue.empty())
 		{
@@ -336,9 +336,9 @@ namespace InteractiveFusion {
 			switch (event)
 			{
 			case SegmentationWindowEvent::StateChange:
-				_parentWindow->FinishObjectSegmentation();
-				_parentWindow->ChangeState(PlaneCut);
-				_parentWindow->SetAndShowHelpMessage(HelpMessage::PlaneCutHelp);
+				_parentWindow.FinishObjectSegmentation();
+				_parentWindow.ChangeState(PlaneCut);
+				_parentWindow.SetAndShowHelpMessage(HelpMessage::PlaneCutHelp);
 				break;
 			case SegmentationWindowEvent::SegmentationFinished:
 				//do stuff
@@ -347,10 +347,10 @@ namespace InteractiveFusion {
 				switch (selectedSegmentationType)
 				{
 				case Euclidean:
-					_parentWindow->UpdateObjectSegmentation(&euclideanParams);
+					_parentWindow.UpdateObjectSegmentation(euclideanParams);
 					break;
 				case RegionGrowth:
-					_parentWindow->UpdateObjectSegmentation(&regionGrowthParams);
+					_parentWindow.UpdateObjectSegmentation(regionGrowthParams);
 					break;
 				}
 			}

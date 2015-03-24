@@ -14,14 +14,18 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void EuclideanSegmenter::SetSegmentationParameters(ObjectSegmentationParams* _segmentationParams)
+	void EuclideanSegmenter::SetSegmentationParameters(ObjectSegmentationParams& _segmentationParams)
 	{
 		DebugUtility::DbgOut(L"EuclideanSegmenter::SetSegmentationParameters");
-		EuclideanSegmentationParams* temporaryParams = dynamic_cast<EuclideanSegmentationParams*>(_segmentationParams);
+
+		EuclideanSegmentationParams* temporaryParams = dynamic_cast<EuclideanSegmentationParams*>(&_segmentationParams);
 		if (temporaryParams != nullptr)
 			segmentationParameters = *temporaryParams;
 		else
+		{
 			segmentationParameters = EuclideanSegmentationParams();
+		}
+
 	}
 
 	bool EuclideanSegmenter::Segment()
@@ -42,7 +46,6 @@ namespace InteractiveFusion {
 
 		ec.setClusterTolerance(segmentationParameters.clusterTolerance);
 
-		segmentationParameters.minComponentSize = 0;
 		ec.setMinClusterSize(segmentationParameters.minComponentSize);
 
 		ec.setMaxClusterSize(9000000);

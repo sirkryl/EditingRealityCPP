@@ -10,9 +10,8 @@
 #include "CommonStructs.h"
 #include <unordered_map>
 #include <vector>
-
+#include "MeshContainer.h"
 namespace InteractiveFusion {
-	class MeshContainer;
 	class ModelData;
 	class GraphicsControl;
 	class Segmenter
@@ -21,9 +20,9 @@ namespace InteractiveFusion {
 		Segmenter();
 		virtual ~Segmenter();
 
-		virtual bool UpdateSegmentation(GraphicsControl* _glControl, ModelData* _modelData);
+		virtual bool UpdateSegmentation(GraphicsControl& _glControl, ModelData& _modelData);
 		
-		virtual void FinishSegmentation(ModelData* _inputModelData, ModelData* _outputModelData);
+		virtual void FinishSegmentation(ModelData& _inputModelData, ModelData& _outputModelData);
 		
 		int GetClusterCount();
 
@@ -34,12 +33,13 @@ namespace InteractiveFusion {
 		std::unordered_map<int, std::vector<int>> indexMap;
 		std::unordered_map<float, std::vector<float>> vertexMap;
 		std::vector<pcl::PointIndices> temporarySegmentationClusterIndices;
+		std::vector<pcl::PointIndices> rejectedIndices;
 		std::vector<std::vector<int>> finalSegmentationClusterIndices;
 		std::vector<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr> finalSegmentationClusters;
 
 		std::vector<Vertex> meshVertices;
 
-		virtual bool InitializeSegmentation(ModelData* _modelData);
+		virtual bool InitializeSegmentation(ModelData& _modelData);
 
 		virtual bool ConvertToPointCloud(MeshContainer &_mesh);
 
@@ -51,9 +51,9 @@ namespace InteractiveFusion {
 
 		std::vector<int> GetClusterIndices(int _clusterIndex);
 
-		MeshContainer* ConvertToMesh(int _clusterIndex);
+		MeshContainer ConvertToMesh(int _clusterIndex);
 
-		virtual void UpdateHighlights(ModelData* _modelData);
+		virtual void UpdateHighlights(ModelData& _modelData);
 
 		bool HasPointCloudData();
 		bool IsValidClusterIndex(int _index);

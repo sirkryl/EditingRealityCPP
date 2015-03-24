@@ -23,8 +23,8 @@ namespace InteractiveFusion {
 
 		
 
-		virtual void Initialize(GraphicsControl* _glControl);
-		virtual void Render(GraphicsControl* _glControl, ModelData* _modelData, IconData* _iconData);
+		virtual void Initialize(GraphicsControl& _glControl);
+		virtual void Render(GraphicsControl& _glControl, ModelData& _modelData, IconData& _iconData);
 
 		OpenGLCameraMode GetCameraMode();
 		void SetCameraMode(OpenGLCameraMode _cameraMode);
@@ -44,11 +44,11 @@ namespace InteractiveFusion {
 		bool viewportBackgroundInitialized = false;
 		static bool initialized;
 
-		virtual void InitializeOverlays(GraphicsControl* _glControl);
+		virtual void InitializeOverlays(GraphicsControl& _glControl);
 
-		virtual void PrepareRender(GraphicsControl* _glControl);
-		virtual void FinishRender(GraphicsControl* _glControl);
-		virtual void ShowStatusOverlay(GraphicsControl* _glControl);
+		virtual void PrepareRender(GraphicsControl& _glControl);
+		virtual void FinishRender(GraphicsControl& _glControl);
+		virtual void ShowStatusOverlay(GraphicsControl& _glControl);
 
 		int dotCount;
 		std::vector<std::wstring> dots;

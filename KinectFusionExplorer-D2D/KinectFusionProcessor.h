@@ -13,7 +13,7 @@
 #include "Timer.h"
 #include "KinectFusionParams.h"
 #include "KinectFusionProcessorFrame.h"
-
+#include <mutex>
 #include "KinectFusionHelper.h"
 
 /// <summary>
@@ -106,7 +106,9 @@ public:
     /// </summary>
     bool                        IsCameraPoseFinderAvailable();
 
-
+	void LockMutex();
+	void UnlockMutex();
+	void PauseProcessing(bool flag);
 	Matrix4 GetWorldToCameraTransform();
 
 private:
@@ -139,6 +141,8 @@ private:
     KinectFusionProcessorFrame  m_frame;
     CRITICAL_SECTION            m_lockFrame;
 
+	bool processingPaused = false;
+	std::mutex processor_mutex;
     /// <summary>
     /// Shuts down the sensor.
     /// </summary>

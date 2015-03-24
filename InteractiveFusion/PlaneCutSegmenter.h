@@ -9,12 +9,12 @@ namespace InteractiveFusion {
 		PlaneCutSegmenter();
 		~PlaneCutSegmenter();
 
-		virtual void SetSegmentationParameters(PlaneCutSegmentationParams* _segmentationParams);
+		virtual void SetSegmentationParameters(PlaneCutSegmentationParams _segmentationParams);
 
-		virtual bool UpdateSegmentation(GraphicsControl* _glControl, ModelData* _modelData);
+		virtual bool UpdateSegmentation(GraphicsControl& _glControl, ModelData& _modelData);
 
-		virtual bool InitializeSegmentation(ModelData* _modelData);
-		virtual void FinishSegmentation(ModelData* _inputModelData, ModelData* _outputModelData);
+		virtual bool InitializeSegmentation(ModelData& _modelData);
+		virtual void FinishSegmentation(ModelData& _inputModelData, ModelData& _outputModelData);
 
 		void CleanUp();
 
@@ -23,7 +23,7 @@ namespace InteractiveFusion {
 
 		virtual bool Segment();
 		virtual bool ConvertToPointCloud(MeshContainer &_mesh);
-		virtual void UpdateHighlights(ModelData* _modelData);
+		virtual void UpdateHighlights(ModelData& _modelData);
 	};
 }
 

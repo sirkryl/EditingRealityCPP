@@ -8,6 +8,7 @@
 #include "ButtonSlider.h"
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <memory>
 namespace InteractiveFusion {
 
 	ButtonSlider scanSizeSlider;
@@ -25,7 +26,7 @@ namespace InteractiveFusion {
 
 	//SLIDER IN PREPARE UI
 	HWND hSliderText, hSliderDescription;
-
+	bool startCountDown = false;
 	bool countdownFinished = false;
 
 	//map << shared_ptr<ButtonLayout>, HWND > layoutTry;
@@ -159,8 +160,12 @@ namespace InteractiveFusion {
 		return SubWindow::SubWindowProc(hWnd, message, wParam, lParam);;
 	}
 
-	void PrepareWindow::HandleEvents(MainWindow* _parentWindow)
+	void PrepareWindow::HandleEvents(MainWindow& _parentWindow)
 	{
+		if (!_parentWindow.IsHelpVisible())
+		{
+			startCountDown = true;
+		}
 		if (countdownFinished)
 		{
 			eventQueue.push(PrepareWindowEvent::StateChange);
@@ -174,18 +179,18 @@ namespace InteractiveFusion {
 			{
 			case PrepareWindowEvent::StateChange:
 				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::StateChange");
-				_parentWindow->ChangeScanVolumeSize(voxelsPerMeter);
-				_parentWindow->ChangeState(Scan);
+				_parentWindow.ChangeScanVolumeSize(voxelsPerMeter);
+				_parentWindow.ChangeState(Scan);
 				break;
 			case PrepareWindowEvent::Start:
 				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::Start");
-				_parentWindow->SetAndShowHelpMessage(HelpMessage::ScanHelp);
-				boost::thread(&PrepareWindow::CountdownThread, this, _parentWindow);
+				_parentWindow.SetAndShowHelpMessage(HelpMessage::ScanHelp);
+				boost::thread(&PrepareWindow::CountdownThread, this);
 				
 				break;
 			case PrepareWindowEvent::HelpChanged:
 				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::HelpChanged");
-				_parentWindow->ToggleHelp(helpActive);
+				_parentWindow.ToggleHelp(helpActive);
 
 				break;
 			}
@@ -341,13 +346,14 @@ namespace InteractiveFusion {
 		//UpdateWindow(windowHandle);
 	}
 
-	int PrepareWindow::CountdownThread(MainWindow* _parentWindow)
+	int PrepareWindow::CountdownThread()
 	{
-		while (_parentWindow->IsHelpVisible())
+		while (!startCountDown)
 		{
 			boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
 			DebugUtility::DbgOut(L"still checking");
 		}
+		startCountDown = false;
 		int secondTimer = 3;
 		//FusionWindow* pThis = reinterpret_cast<FusionWindow*>(::GetWindowLongPtr(parentHandle, GWLP_USERDATA));
 
@@ -367,8 +373,9 @@ namespace InteractiveFusion {
 			secondTimer--;
 		}
 		//OutputDebugString(L"wel")
+		DebugUtility::DbgOut(L"CountdownFinished");
 		countdownFinished = true;
-		//_parentWindow->ChangeState(Scan);
+		//_parentWindow.ChangeState(Scan);
 		countdownUi.Hide();
 		prepareUi.Show();
 		scanSizeSlider.Show();

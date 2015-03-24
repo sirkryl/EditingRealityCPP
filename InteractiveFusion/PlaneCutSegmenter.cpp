@@ -17,11 +17,11 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void PlaneCutSegmenter::SetSegmentationParameters(PlaneCutSegmentationParams* _segmentationParams)
+	void PlaneCutSegmenter::SetSegmentationParameters(PlaneCutSegmentationParams _segmentationParams)
 	{
 		DebugUtility::DbgOut(L"PlaneCutSegmenter::SetSegmentationParameters");
 
-		PlaneCutSegmentationParams* temporaryParams = dynamic_cast<PlaneCutSegmentationParams*>(_segmentationParams);
+		PlaneCutSegmentationParams* temporaryParams = dynamic_cast<PlaneCutSegmentationParams*>(&_segmentationParams);
 		if (temporaryParams != nullptr)
 			segmentationParameters = *temporaryParams;
 		else
@@ -35,7 +35,7 @@ namespace InteractiveFusion {
 		return true;
 	}
 
-	bool PlaneCutSegmenter::UpdateSegmentation(GraphicsControl* _glControl, ModelData* _modelData)
+	bool PlaneCutSegmenter::UpdateSegmentation(GraphicsControl& _glControl, ModelData& _modelData)
 	{
 		if (!HasPointCloudData())
 		{
@@ -53,9 +53,9 @@ namespace InteractiveFusion {
 		return true;
 	}
 
-	bool PlaneCutSegmenter::InitializeSegmentation(ModelData* _modelData)
+	bool PlaneCutSegmenter::InitializeSegmentation(ModelData& _modelData)
 	{
-		MeshContainer* remainingMesh = _modelData->GetCurrentlySelectedMesh();
+		std::shared_ptr<MeshContainer> remainingMesh = _modelData.GetCurrentlySelectedMesh();
 		if (remainingMesh == nullptr)
 		{
 			DebugUtility::DbgOut(L"PlaneCutSegmenter::InitializeSegmentation::No Mesh selected");
@@ -94,24 +94,24 @@ namespace InteractiveFusion {
 		return true;
 	}
 
-	void PlaneCutSegmenter::UpdateHighlights(ModelData* _modelData)
+	void PlaneCutSegmenter::UpdateHighlights(ModelData& _modelData)
 	{
 		if (GetClusterCount() == 0)
 			return;
 		DebugUtility::DbgOut(L"UpdatePlaneCutSegmenterHighlights:: ", GetClusterCount() - 1);
 		std::vector<int> trianglesToBeColored = GetClusterIndices(GetClusterCount() - 1);
 
-		_modelData->TemporarilyColorTriangles(0, trianglesToBeColored, ColorIF{ 0.5f, 0.0f, 0.0f }, true);
+		_modelData.TemporarilyColorTriangles(0, trianglesToBeColored, ColorIF{ 0.5f, 0.0f, 0.0f }, true);
 	}
 
-	void PlaneCutSegmenter::FinishSegmentation(ModelData* _inputModelData, ModelData* _outputModelData)
+	void PlaneCutSegmenter::FinishSegmentation(ModelData& _inputModelData, ModelData& _outputModelData)
 	{
 		DebugUtility::DbgOut(L"PlaneCutSegmenter::FinishSegmentation:: ", GetClusterCount());
 
-		_outputModelData->SetMeshAsDeleted(_outputModelData->GetCurrentlySelectedMeshIndex());
+		_outputModelData.SetMeshAsDeleted(_outputModelData.GetCurrentlySelectedMeshIndex());
 		for (int i = 0; i < GetClusterCount(); i++)
 		{
-			_outputModelData->AddObjectMeshToData(ConvertToMesh(i));
+			_outputModelData.AddObjectMeshToData(ConvertToMesh(i));
 		}
 	}
 

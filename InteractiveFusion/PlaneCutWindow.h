@@ -6,10 +6,11 @@ namespace InteractiveFusion {
 	class PlaneCutWindowEvent : public SubWindowEvent{
 	public:
 		enum Type {
-			ActivatePlane = SubWindowEvent::Last,
+			ChangePlaneTransformation = SubWindowEvent::Last,
 			ExecutePlaneCut,
-			ChangePlaneCutMode,
+			ChangePlaneCutAxis,
 			Reset,
+			ChangeCameraMovement,
 			Last
 		};
 	};
@@ -23,7 +24,7 @@ namespace InteractiveFusion {
 
 		virtual void Initialize(HWND _parentHandle, HINSTANCE _hInstance, float _marginTop, float _marginBottom, float _marginRight, float _marginLeft, std::wstring _className, ColorInt _backgroundColor);
 
-		virtual void HandleEvents(MainWindow* _parentWindow);
+		virtual void HandleEvents(MainWindow& _parentWindow);
 
 		virtual void Resize(int parentWidth, int parentHeight);
 		virtual void CleanUp();
@@ -31,9 +32,12 @@ namespace InteractiveFusion {
 
 
 	private:
-		PlaneCutMode planeCutMode;
-
-		void ChangePlaneCutMode(PlaneCutMode _mode);
+		PlaneCutAxis planeCutAxis;
+		PlaneCutTransformation planeCutTransformation;
+		bool cameraMovementEnabled = false;
+		void ToggleCameraMovementEnabled();
+		void ChangePlaneCutAxis(PlaneCutAxis _axis);
+		void ChangePlaneTransformation(PlaneCutTransformation _transformationMode);
 		virtual void ProcessUI(WPARAM wParam, LPARAM lParam);
 	};
 }

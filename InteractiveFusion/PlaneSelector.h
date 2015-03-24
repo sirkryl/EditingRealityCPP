@@ -15,29 +15,34 @@ namespace InteractiveFusion {
 		~PlaneSelector();
 
 		void ApplyModeChange();
-		void ChangeMode(PlaneCutMode _mode);
-
+		void ChangeAxis(PlaneCutAxis _axis);
+		void ChangeTransformation(PlaneCutTransformation _transformationMode);
+		void ResetPlaneRotation();
 	protected:
-		virtual void HandleLeftMouseClick(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex);
-		virtual void HandleLeftMouseDown(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex);
-		virtual void HandleLeftMouseRelease(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex);
-		virtual void DrawForColorPicking(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper);
+		virtual void HandleLeftMouseClick(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
+		virtual void HandleLeftMouseDown(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
+		virtual void HandleLeftMouseRelease(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
+		virtual void DrawForColorPicking(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper);
 		virtual void CleanUp();
 
+		bool CheckRotationLimitsX(float _offSetX);
+		bool CheckRotationLimitsY(float _offSetY);
+		void HandlePlaneTransformation(GraphicsControl& _glControl);
 		
-		void HandlePlaneTransformation(GraphicsControl* _glControl);
-		void ResetPlaneRotation();
 
 		void UpdatePlaneTranslation();
-		void ApplyPlaneRotation(GraphicsControl* _glControl, float _offSet);
+		void ApplyPlaneRotation(GraphicsControl& _glControl, float _offSetX, float _offsetY);
 		void ApplyPlaneTranslation(float _offSet);
+
 	private:
 		
 		std::shared_ptr<SimplePlaneRenderable3D> plane;
 		int oldPosX;
 		int oldPosY;
 		bool firstClick = false;
-		PlaneCutMode currentMode = AxisY;
+		PlaneCutAxis currentAxis = AxisY;
+		PlaneCutTransformation currentTransformation = PlaneCutTransformation::Translate;
+		bool rotationEnabled = false;
 		
 	};
 }

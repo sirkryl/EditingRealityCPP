@@ -14,16 +14,16 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void DuplicateSelector::HandleLeftMouseClick(GraphicsControl* _glControl, ModelData* _modelData, IconData* _overlayHelper, int _selectedIndex)
+	void DuplicateSelector::HandleLeftMouseClick(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		if (_selectedIndex != -1)
 		{
-			_modelData->UnselectMesh();
+			_modelData.UnselectMesh();
 		}
-		_selectedIndex = GetIndexOfMeshUnderCursor(_glControl, _modelData, _overlayHelper, _glControl->GetOpenGLWindowHandle());
+		_selectedIndex = GetIndexOfMeshUnderCursor(_glControl, _modelData, _overlayHelper, _glControl.GetOpenGLWindowHandle());
 
-		_modelData->MarkMeshAsSelected(_modelData->DuplicateMeshAndGetItsIndex(_selectedIndex));
-		_glControl->PushEvent(ModelDataUpdated);
+		_modelData.MarkMeshAsSelected(_modelData.DuplicateMeshAndGetItsIndex(_selectedIndex));
+		_glControl.PushEvent(ModelDataUpdated);
 	}
 
 }

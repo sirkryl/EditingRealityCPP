@@ -9,7 +9,7 @@ namespace InteractiveFusion {
 		EuclideanSegmenter();
 		~EuclideanSegmenter();
 
-		virtual void SetSegmentationParameters(ObjectSegmentationParams* _segmentationParams);
+		virtual void SetSegmentationParameters(ObjectSegmentationParams& _segmentationParams);
 
 		
 	protected:

@@ -20,10 +20,18 @@ namespace InteractiveFusion {
 
 	Renderable::Renderable(std::vector<Vertex> _vertices, std::vector<Triangle> _triangles)
 	{
-		DebugUtility::DbgOut(L"Renderable::Renderable()::_vertices size ", (int)_vertices.size());
+		for(auto v : _vertices)
+		{
+			vertices.push_back(v);
+		}
+		for (auto t : _triangles)
+		{
+			triangles.push_back(t);
+		}
+		/*DebugUtility::DbgOut(L"Renderable::Renderable()::_vertices size ", (int)_vertices.size());
 		vertices = _vertices;
 		DebugUtility::DbgOut(L"Renderable::Renderable()::vertices size ", (int)vertices.size());
-		triangles = _triangles;
+		triangles = _triangles;*/
 	}
 
 	void Renderable::SetColorCode(int _colorCode)
@@ -57,17 +65,18 @@ namespace InteractiveFusion {
 
 		for (auto& vertex : vertices)
 		{
-			lowerBounds.x = glm::min(lowerBounds.x, vertex.x);
-			lowerBounds.y = glm::min(lowerBounds.y, vertex.y);
-			lowerBounds.z = glm::min(lowerBounds.z, vertex.z);
-			upperBounds.x = glm::max(upperBounds.x, vertex.x);
-			upperBounds.y = glm::max(upperBounds.y, vertex.y);
-			upperBounds.z = glm::max(upperBounds.z, vertex.z);
+			lowerBounds.x = (glm::min)(lowerBounds.x, vertex.x);
+			lowerBounds.y = (glm::min)(lowerBounds.y, vertex.y);
+			lowerBounds.z = (glm::min)(lowerBounds.z, vertex.z);
+			upperBounds.x = (glm::max)(upperBounds.x, vertex.x);
+			upperBounds.y = (glm::max)(upperBounds.y, vertex.y);
+			upperBounds.z = (glm::max)(upperBounds.z, vertex.z);
 		}
 
 		centerPoint.x = (lowerBounds.x + upperBounds.x) / 2.0f;
 		centerPoint.y = (lowerBounds.y + upperBounds.y) / 2.0f;
 		centerPoint.z = (lowerBounds.z + upperBounds.z) / 2.0f;
+		
 	}
 
 	void Renderable::GenerateBuffers()

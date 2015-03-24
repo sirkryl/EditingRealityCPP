@@ -9,8 +9,8 @@ namespace InteractiveFusion {
 		DialogExporter();
 		~DialogExporter();
 
-		virtual void Export(ModelData* _modelData, int _index);
-		virtual void Export(ModelData* _modelData);
+		virtual void Export(ModelData& _modelData, int _index);
+		virtual void Export(ModelData& _modelData);
 
 	protected:
 		std::string GetFileNameFromSaveFileDialog();

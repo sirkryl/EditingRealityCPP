@@ -1,5 +1,6 @@
 #pragma once
 #include "Renderable.h"
+#include <glm/gtx/quaternion.hpp>
 
 namespace InteractiveFusion {
 	class Renderable3D :
@@ -21,15 +22,17 @@ namespace InteractiveFusion {
 		void SwapToHighlightBuffer();
 
 		void SetScale(bool _isPositiveFactor);
-		void RotateX(int _degree);
+		void AddRotation(float _angle, glm::vec3 _axis);
+		void ResetRotation();
+		/*void RotateX(int _degree);
 		void RotateX(float _degree, glm::vec3 _axis);
 		void RotateY(int _degree);
-		void RotateY(float _degree, glm::vec3 _axis);
+		void RotateY(float _degree, glm::vec3 _axis);*/
 
-		virtual void Draw(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix);
-		virtual void DrawForColorPicking(glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix);
+		virtual void Draw(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix);
+		virtual void DrawForColorPicking(glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix);
 
-		virtual void SetUniforms(bool _highlight, bool _colorPicking, float _alpha, glm::mat4* _projectionMatrix, glm::mat4* _viewMatrix);
+		virtual void SetUniforms(bool _highlight, bool _colorPicking, float _alpha, glm::mat4& _projectionMatrix, glm::mat4& _viewMatrix);
 		virtual glm::mat4 CalculateModelMatrix();
 
 		virtual void ApplyTransformation(glm::mat4 _vertexTransformation, glm::mat4 _normalTransformation);
@@ -44,6 +47,7 @@ namespace InteractiveFusion {
 
 		glm::mat4 originTransform = glm::mat4(1.0f);
 
+		glm::quat quatRotation;
 		glm::mat4 xRotation;
 		glm::mat4 yRotation;
 		glm::mat4 zRotation;

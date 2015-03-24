@@ -14,7 +14,7 @@ namespace InteractiveFusion {
 	#define WM_UPDATESENSORSTATUS   (WM_USER + 1)
 
 	HWND parentHandle;
-
+	bool processorLocked = false;
 	int fusionTotalGpuMemory = 0;
 
 	float framesPerSecond = 0;
@@ -116,6 +116,7 @@ namespace InteractiveFusion {
 	
 	void KinectFusion::HandleCompletedFrame()
 	{
+		processorLocked = true;
 		//DebugUtility::DbgOut(L"KinectFusion::HandleCompletedFrame()::Beginning");
 		KinectFusionProcessorFrame const* pFrame = nullptr;
 
@@ -197,28 +198,43 @@ namespace InteractiveFusion {
 		m_bColorCaptured = pFrame->m_bColorCaptured;
 
 		m_processor.UnlockFrame();
+		
+		processorLocked = false;
 	}
 
 	void KinectFusion::PrepareMeshSave()
 	{
 		m_bSavingMesh = true;
 		m_params.m_bPauseIntegration = true;
-		m_processor.SetParams(m_params);
+		//m_processor.SetParams(m_params);
+		m_processor.PauseProcessing(true);
 	}
-
+	bool KinectFusion::IsReconstructionReady()
+	{
+		return reconstructionReady;
+	}
 	void KinectFusion::FinishMeshSave()
 	{
+		DebugUtility::DbgOut(L"FinishMeshSave BEGIN");
+		if (scannedVertices.size() > 0)
+			scannedVertices.clear();
+		if (scannedTriangles.size() > 0)
+			scannedTriangles.clear();
 		// Restore pause state of integration
-		m_processor.SetParams(m_params);
-		m_bSavingMesh = false;
-	}
-
-	std::shared_ptr<MeshContainer> KinectFusion::GetScannedMesh()
-	{
+		//m_processor.SetParams(m_params);
+		m_processor.LockMutex();
+		/*while (m_processor.IsProcessorLocked())
+		{
+		DebugUtility::DbgOut(L"Waiting for Processor Lock");
+		}*/
 		INuiFusionColorMesh *mesh = nullptr;
-		HRESULT hr = m_processor.CalculateMesh(&mesh, 2);
-		
-		
+		HRESULT hr = m_processor.CalculateMesh(&mesh,2);
+
+		if (mesh == nullptr)
+		{
+			DebugUtility::DbgOut(L"KinectFusion::FinishScan()::Mesh is nullptr");
+			return;
+		}
 
 		const Vector3 *scanVertices = NULL;
 		mesh->GetVertices(&scanVertices);
@@ -231,7 +247,7 @@ namespace InteractiveFusion {
 		const int *scanColors = NULL;
 		mesh->GetColors(&scanColors);
 		DebugUtility::DbgOut(L"KinectFusion::FinishScan()::Scanned Colors: ", (int)mesh->ColorCount());
-		vector<Vertex> meshVertices;
+		//vector<Vertex> meshVertices;
 
 		for (int i = 0; i < mesh->VertexCount(); i++)
 		{
@@ -246,27 +262,27 @@ namespace InteractiveFusion {
 			newVertex.g = (float)((scanColors[i] >> 8) & 255) / 255.0f;
 			newVertex.b = (float)(scanColors[i] & 255) / 255.0f;
 
-			meshVertices.push_back(newVertex);
+			scannedVertices.push_back(newVertex);
 
 		}
-		DebugUtility::DbgOut(L"KinectFusion::FinishScan()::I've got some vertices: ", (int)meshVertices.size());
+		DebugUtility::DbgOut(L"KinectFusion::FinishScan()::I've got some vertices: ", (int)scannedVertices.size());
 
 		const int *scanTriangleIndices = NULL;
 		mesh->GetTriangleIndices(&scanTriangleIndices);
 		DebugUtility::DbgOut(L"KinectFusion::FinishScan()::Scanned Triangles: ", (int)mesh->TriangleVertexIndexCount());
-		vector<Triangle> meshTriangles;
+		//vector<Triangle> meshTriangles;
 		if (mesh->TriangleVertexIndexCount() <= 0)
 		{
 			DebugUtility::DbgOut(L"No vertices in scanned mesh");
-			return std::shared_ptr<MeshContainer>(new MeshContainer());;
+			return;
 		}
-		for (int i = 0; i < mesh->TriangleVertexIndexCount()-2; i+=3)
+		for (int i = 0; i < mesh->TriangleVertexIndexCount() - 2; i += 3)
 		{
 			Triangle newTriangle;
 			newTriangle.v1 = scanTriangleIndices[i];
-			newTriangle.v2 = scanTriangleIndices[i+1];
-			newTriangle.v3 = scanTriangleIndices[i+2];
-			meshTriangles.push_back(newTriangle);
+			newTriangle.v2 = scanTriangleIndices[i + 1];
+			newTriangle.v3 = scanTriangleIndices[i + 2];
+			scannedTriangles.push_back(newTriangle);
 		}
 		if (SUCCEEDED(hr))
 		{
@@ -275,7 +291,7 @@ namespace InteractiveFusion {
 			//LPOLESTR fileString = W2OLE((wchar_t*)fileName.c_str());
 			//hr = WriteAsciiPlyMeshFile(mesh, fileString, true, m_bColorCaptured);
 
-			
+
 			hr = S_OK;
 			// Release the mesh
 			DebugUtility::DbgOut(L"KinectFusion::FinishScan()::Before SafeRelease");
@@ -283,7 +299,25 @@ namespace InteractiveFusion {
 			DebugUtility::DbgOut(L"KinectFusion::FinishScan()::After SafeRelease");
 		}
 
-		return std::shared_ptr<MeshContainer>(new MeshContainer(meshVertices, meshTriangles));
+		m_processor.UnlockMutex();
+
+
+		//scannedMesh = MeshContainer(meshVertices, meshTriangles);
+
+		m_bSavingMesh = false;
+		reconstructionReady = true;
+		DebugUtility::DbgOut(L"Setting ReconstructionReady");
+		//m_processor.PauseProcessing(false);
+	}
+
+	std::vector<Vertex>& KinectFusion::GetScannedVertices()
+	{
+		return scannedVertices;
+	}
+	
+	std::vector<Triangle>& KinectFusion::GetScannedTriangles()
+	{
+		return scannedTriangles;
 	}
 
 	void KinectFusion::UpdateSensorStatus(WPARAM _wParam)
@@ -351,6 +385,11 @@ namespace InteractiveFusion {
 		wstring outputStatus = currentStatus;
 		currentStatus = L"";
 		return outputStatus;
+	}
+
+	void KinectFusion::PauseProcessing(bool flag)
+	{
+		m_processor.PauseProcessing(flag);
 	}
 
 	void KinectFusion::PauseRendering()
