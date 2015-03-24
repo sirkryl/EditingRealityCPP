@@ -50,13 +50,13 @@ namespace InteractiveFusion {
 		SetWindowPos(hButtonStart, HWND_TOP, 0, 0, 0, 0, 0);
 		
 		buttonLayoutMap.emplace(hButtonStart, ButtonLayout());
-		buttonLayoutMap[hButtonStart].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InnerDefault));
+		buttonLayoutMap[hButtonStart].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InnerDefault));
 
 		scanSizeSlider.Initialize(windowHandle, _hInstance);
 		scanSizeSlider.SetLimits(64, 320);
 		scanSizeSlider.SetValue(128);
 		scanSizeSlider.SetStep(16);
-		scanSizeSlider.SetLayout(StyleSheet::GetInstance()->GetButtonLayoutParams(InnerDefault), StyleSheet::GetInstance()->GetButtonLayoutParams(InnerDefault));
+		scanSizeSlider.SetLayout(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InnerDefault), StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InnerDefault));
 		
 
 		hSliderText = CreateWindowEx(0, L"STATIC", L"0m", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTER | SS_CENTERIMAGE, 50, 50, 100, 50, windowHandle, (HMENU)IDC_PREPARE_SLIDER_TEXT, hInstance, 0);
@@ -180,7 +180,7 @@ namespace InteractiveFusion {
 			case PrepareWindowEvent::StateChange:
 				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::StateChange");
 				_parentWindow.ChangeScanVolumeSize(voxelsPerMeter);
-				_parentWindow.ChangeState(Scan);
+				_parentWindow.ChangeState(WindowState::Scan);
 				break;
 			case PrepareWindowEvent::Start:
 				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::Start");

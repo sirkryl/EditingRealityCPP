@@ -34,7 +34,7 @@ namespace InteractiveFusion {
 		sliderGui.Add(hSliderBackground);
 		sliderGui.Add(hSliderButton);
 
-		SetLayout(StyleSheet::GetInstance()->GetButtonLayoutParams(InnerDefault), StyleSheet::GetInstance()->GetButtonLayoutParams(InnerDefault));
+		SetLayout(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InnerDefault), StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InnerDefault));
 	}
 
 	void ButtonSlider::SetLayout(ButtonLayoutParams _sliderButtonLayout, ButtonLayoutParams _sliderBackgroundLayout)

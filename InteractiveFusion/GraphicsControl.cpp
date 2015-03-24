@@ -63,8 +63,9 @@ namespace InteractiveFusion {
 	std::unordered_map<WindowState, unique_ptr<IconData>>::const_iterator activeIcons = iconMap.end();
 
 	ModelData temporarySceneData;
-	InteractionMode interactionMode = None;
-	OpenGLCameraMode currentCameraMode = Free;
+	ModelData temporaryPlaneCutDataForReset;
+	InteractionMode interactionMode = InteractionMode::None;
+	OpenGLCameraMode currentCameraMode = OpenGLCameraMode::Free;
 	ObjectSegmentationType currentSegmentationType;
 
 	std::unordered_map<ObjectSegmentationType, unique_ptr<ObjectSegmenter>> segmenterMap;
@@ -128,29 +129,27 @@ namespace InteractiveFusion {
 		if (activeRenderer != rendererMap.end())
 		{
 			currentApplicationState = currentApplicationState;
-			if (currentApplicationState == PlaneSelection)
+			if (currentApplicationState == WindowState::PlaneSelection)
 				openGLWindow.SetMargins(0.07f, 0.042f, 0, 0);
 			else
 				openGLWindow.SetMargins(0.07f, 0.042f, 0.2f, 0);
 
 			if (!temporarySceneData.IsEmpty())
 			{
-				eventQueue.push(CopyTemporaryInNextStateModelData);
-				if (currentApplicationState == Segmentation)
-					eventQueue.push(UpdateSegmentation);
+				eventQueue.push(OpenGLControlEvent::CopyTemporaryInNextStateModelData);
+				if (currentApplicationState == WindowState::Segmentation)
+					eventQueue.push(OpenGLControlEvent::UpdateSegmentation);
 				//else 
 				//if (currentApplicationState == Processing)
 				//	eventQueue.push(UpdateHoleFilling);
 			}
-			if (currentApplicationState == PlaneCut)
-				eventQueue.push(UpdateCutPlane);
+			if (currentApplicationState == WindowState::PlaneCut)
+				eventQueue.push(OpenGLControlEvent::UpdateCutPlane);
 			SetCameraMode(activeRenderer->second->GetCameraMode());
 
-			DebugUtility::DbgOut(L"current Camera mode: ", currentCameraMode);
 			//sceneMap[currentApplicationState]->UnselectMesh();
 
 			openGLWindow.Show();
-			DebugUtility::DbgOut(L"after show: ", currentCameraMode);
 		}
 		else
 		{
@@ -162,7 +161,7 @@ namespace InteractiveFusion {
 	void GraphicsControl::UpdateApplicationState(WindowState _state)
 	{
 		currentApplicationState = _state;
-		eventQueue.push(StateUpdate);
+		eventQueue.push(OpenGLControlEvent::StateUpdate);
 	}
 
 	bool GraphicsControl::RequestsStateChange()
@@ -265,42 +264,41 @@ namespace InteractiveFusion {
 
 			switch (event)
 			{
-			case ResizeOpenGLViewport:
+			case OpenGLControlEvent::ResizeOpenGLViewport:
 				RECT parentRect;
 				GetClientRect(parentWindow, &parentRect);
 				ResizeOpenGLWindow(parentRect.right, parentRect.bottom);
 				break;
-			case ModelDataUpdated:
+			case OpenGLControlEvent::ModelDataUpdated:
 				activeScene->second->GenerateBuffers();
 				break;
-			case ModelHighlightsUpdated:
+			case OpenGLControlEvent::ModelHighlightsUpdated:
 				activeScene->second->SwapToHighlightBuffers();
 				break;
-			case RemoveModelHighlights:
+			case OpenGLControlEvent::RemoveModelHighlights:
 				activeScene->second->GenerateBuffers();
 				break;
-			case RemoveModelData:
+			case OpenGLControlEvent::RemoveModelData:
 				activeScene->second->CleanUp();
 				break;
-			case FillHolesInScene:
+			case OpenGLControlEvent::FillHolesInScene:
 			{
 				SetBusy(true);
 
 				int closedHoles = activeScene->second->FillHoles(holeSize);
-				eventQueue.push(ModelDataUpdated);
+				eventQueue.push(OpenGLControlEvent::ModelDataUpdated);
 				SetBusy(false);
 			}
 			break;
-			case InitialLoading:
+			case OpenGLControlEvent::InitialLoading:
 			{
 				SetBusy(true);
-				sceneMap[PlaneSelection]->CleanUp();
+				sceneMap[WindowState::PlaneSelection]->CleanUp();
 				//boost::thread(&GraphicsControl::LoadAndSegmentModelDataFromScan, this);
 				break;
 			}
-			case CopyTemporaryInNextStateModelData:
+			case OpenGLControlEvent::CopyTemporaryInNextStateModelData:
 				SetBusy(true);
-
 				activeScene->second->CleanUp();
 				activeScene->second->CopyFrom(temporarySceneData);
 				temporarySceneData.CleanUp();
@@ -308,34 +306,40 @@ namespace InteractiveFusion {
 
 				SetBusy(false);
 				break;
-			case ResetCurrentStateModelData:
+			case OpenGLControlEvent::ResetCurrentStateModelData:
 				SetBusy(true);
 				if (currentApplicationState > WindowState::PlaneSelection)
 				{
-					WindowState previousApplicationState = (WindowState)(currentApplicationState - 1);
+					WindowState previousApplicationState = (WindowState)((int)currentApplicationState - 1);
 					activeScene->second->CleanUp();
-					activeScene->second->CopyFrom(*sceneMap[previousApplicationState].get());
+					if (currentApplicationState == WindowState::PlaneCut)
+					{
+						activeScene->second->CopyFrom(temporaryPlaneCutDataForReset);
+						DebugUtility::DbgOut(L"YES I AM HERE");
+					}
+					else
+						activeScene->second->CopyFrom(*sceneMap[previousApplicationState].get());
 					activeScene->second->GenerateBuffers();
 				}
 				SetBusy(false);
 				break;
-			case StateUpdate:
+			case OpenGLControlEvent::StateUpdate:
 				SwitchToNewState();
 				break;
-			case ResetModelData:
+			case OpenGLControlEvent::ResetModelData:
 				activeScene->second->ResetToInitialState();
 				activeScene->second->GenerateBuffers();
 				break;
-			case UpdateSegmentation:
+			case OpenGLControlEvent::UpdateSegmentation:
 				boost::thread(&GraphicsControl::UpdateObjectSegmentation, this, EuclideanSegmentationParams());
 				break;
-			case UpdateHoleFilling:
+			case OpenGLControlEvent::UpdateHoleFilling:
 				boost::thread(&GraphicsControl::FillHoles, this, 100000);
 				break;
-			case UpdateCutPlane:
+			case OpenGLControlEvent::UpdateCutPlane:
 				SetupCutPlane();
 				break;
-			case SetupCutPlaneMode:
+			case OpenGLControlEvent::SetupCutPlaneMode:
 				SetupCutPlane();
 				planeSelector->ApplyModeChange();
 				PlaneCutPreview();
@@ -349,18 +353,18 @@ namespace InteractiveFusion {
 	{
 		if (KeyState::GetKeyStateOnce('C'))
 		{
-			if (currentCameraMode == Sensor)
-				SetCameraMode(Free);
+			if (currentCameraMode == OpenGLCameraMode::Sensor)
+				SetCameraMode(OpenGLCameraMode::Free);
 			else
-				SetCameraMode(Sensor);
+				SetCameraMode(OpenGLCameraMode::Sensor);
 		}
 		if (openGLWindow.IsCursorInWindow() && !isBusy && activeScene != sceneMap.end())
 		{
-			if (currentApplicationState == Interaction && currentCameraMode == Sensor)
+			if (currentApplicationState == WindowState::Interaction && currentCameraMode == OpenGLCameraMode::Sensor)
 				selectorMap[interactionMode]->HandleSelection(*this, *activeScene->second.get(), *activeIcons->second.get());
-			else if (currentApplicationState == Processing)
+			else if (currentApplicationState == WindowState::Processing)
 				colorSelector.HandleSelection(*this, *activeScene->second.get(), *activeIcons->second.get());
-			else if (currentApplicationState == PlaneCut && !isCameraMovementEnabled)
+			else if (currentApplicationState == WindowState::PlaneCut && !isCameraMovementEnabled)
 				planeSelector->HandleSelection(*this, *activeScene->second.get(), *activeIcons->second.get());
 		}
 	}
@@ -373,32 +377,32 @@ namespace InteractiveFusion {
 		GetClientRect(parentWindow, &parentRect);
 		ResizeOpenGLWindow(parentRect.right, parentRect.bottom);
 
-		rendererMap[PlaneSelection] = unique_ptr<PlaneSelectionRenderer>(new PlaneSelectionRenderer(Free));
-		rendererMap[PlaneSelection]->Initialize(*this);
-		rendererMap[Segmentation] = unique_ptr<SegmentationRenderer>(new SegmentationRenderer(Free));
-		rendererMap[Segmentation]->Initialize(*this);
-		rendererMap[PlaneCut] = unique_ptr<PlaneCutRenderer>(new PlaneCutRenderer(Free, cutPlane));
-		rendererMap[PlaneCut]->Initialize(*this);
-		rendererMap[Processing] = unique_ptr<ProcessingRenderer>(new ProcessingRenderer(Free));
-		rendererMap[Processing]->Initialize(*this);
-		rendererMap[Interaction] = unique_ptr<InteractionRenderer>(new InteractionRenderer(Sensor));
-		rendererMap[Interaction]->Initialize(*this);
+		rendererMap[WindowState::PlaneSelection] = unique_ptr<PlaneSelectionRenderer>(new PlaneSelectionRenderer(OpenGLCameraMode::Free));
+		rendererMap[WindowState::PlaneSelection]->Initialize(*this);
+		rendererMap[WindowState::Segmentation] = unique_ptr<SegmentationRenderer>(new SegmentationRenderer(OpenGLCameraMode::Free));
+		rendererMap[WindowState::Segmentation]->Initialize(*this);
+		rendererMap[WindowState::PlaneCut] = unique_ptr<PlaneCutRenderer>(new PlaneCutRenderer(OpenGLCameraMode::Free, cutPlane));
+		rendererMap[WindowState::PlaneCut]->Initialize(*this);
+		rendererMap[WindowState::Processing] = unique_ptr<ProcessingRenderer>(new ProcessingRenderer(OpenGLCameraMode::Free));
+		rendererMap[WindowState::Processing]->Initialize(*this);
+		rendererMap[WindowState::Interaction] = unique_ptr<InteractionRenderer>(new InteractionRenderer(OpenGLCameraMode::Sensor));
+		rendererMap[WindowState::Interaction]->Initialize(*this);
 
 
 	}
 
 	void GraphicsControl::SetupSceneData()
 	{
-		sceneMap[PlaneSelection] = unique_ptr<ModelData>(new ModelData());
-		sceneMap[PlaneSelection]->SetDefaultShaderProgram(shaderMap[Default]);
-		sceneMap[Segmentation] = unique_ptr<ModelData>(new ModelData());
-		sceneMap[Segmentation]->SetDefaultShaderProgram(shaderMap[Default]);
-		sceneMap[PlaneCut] = unique_ptr<ModelData>(new ModelData());
-		sceneMap[PlaneCut]->SetDefaultShaderProgram(shaderMap[Default]);
-		sceneMap[Processing] = unique_ptr<ModelData>(new ModelData());
-		sceneMap[Processing]->SetDefaultShaderProgram(shaderMap[Default]);
-		sceneMap[Interaction] = unique_ptr<ModelData>(new ModelData());
-		sceneMap[Interaction]->SetDefaultShaderProgram(shaderMap[Default]);
+		sceneMap[WindowState::PlaneSelection] = unique_ptr<ModelData>(new ModelData());
+		sceneMap[WindowState::PlaneSelection]->SetDefaultShaderProgram(shaderMap[OpenGLShaderProgramType::Default]);
+		sceneMap[WindowState::Segmentation] = unique_ptr<ModelData>(new ModelData());
+		sceneMap[WindowState::Segmentation]->SetDefaultShaderProgram(shaderMap[OpenGLShaderProgramType::Default]);
+		sceneMap[WindowState::PlaneCut] = unique_ptr<ModelData>(new ModelData());
+		sceneMap[WindowState::PlaneCut]->SetDefaultShaderProgram(shaderMap[OpenGLShaderProgramType::Default]);
+		sceneMap[WindowState::Processing] = unique_ptr<ModelData>(new ModelData());
+		sceneMap[WindowState::Processing]->SetDefaultShaderProgram(shaderMap[OpenGLShaderProgramType::Default]);
+		sceneMap[WindowState::Interaction] = unique_ptr<ModelData>(new ModelData());
+		sceneMap[WindowState::Interaction]->SetDefaultShaderProgram(shaderMap[OpenGLShaderProgramType::Default]);
 
 
 	}
@@ -410,10 +414,10 @@ namespace InteractiveFusion {
 		OpenGLShader colorFragmentShader;
 		colorFragmentShader.LoadShader("data\\shaders\\color.frag", GL_FRAGMENT_SHADER);
 
-		shaderMap[Default].CreateProgram();
-		shaderMap[Default].AddShaderToProgram(colorVertexShader);
-		shaderMap[Default].AddShaderToProgram(colorFragmentShader);
-		if (!shaderMap[Default].LinkProgram())
+		shaderMap[OpenGLShaderProgramType::Default].CreateProgram();
+		shaderMap[OpenGLShaderProgramType::Default].AddShaderToProgram(colorVertexShader);
+		shaderMap[OpenGLShaderProgramType::Default].AddShaderToProgram(colorFragmentShader);
+		if (!shaderMap[OpenGLShaderProgramType::Default].LinkProgram())
 			return false;
 
 		OpenGLShader vertexShader2d;
@@ -421,10 +425,10 @@ namespace InteractiveFusion {
 		OpenGLShader fragmentShader2d;
 		fragmentShader2d.LoadShader("data\\shaders\\shader2d.frag", GL_FRAGMENT_SHADER);
 
-		shaderMap[Orthographic].CreateProgram();
-		shaderMap[Orthographic].AddShaderToProgram(vertexShader2d);
-		shaderMap[Orthographic].AddShaderToProgram(fragmentShader2d);
-		if (!shaderMap[Orthographic].LinkProgram())
+		shaderMap[OpenGLShaderProgramType::Orthographic].CreateProgram();
+		shaderMap[OpenGLShaderProgramType::Orthographic].AddShaderToProgram(vertexShader2d);
+		shaderMap[OpenGLShaderProgramType::Orthographic].AddShaderToProgram(fragmentShader2d);
+		if (!shaderMap[OpenGLShaderProgramType::Orthographic].LinkProgram())
 			return false;
 
 		return true;
@@ -432,33 +436,33 @@ namespace InteractiveFusion {
 
 	void GraphicsControl::SetupSegmenter()
 	{
-		segmenterMap[Euclidean] = unique_ptr<EuclideanSegmenter>(new EuclideanSegmenter());
-		segmenterMap[RegionGrowth] = unique_ptr<RegionGrowthSegmenter>(new RegionGrowthSegmenter());
+		segmenterMap[ObjectSegmentationType::Euclidean] = unique_ptr<EuclideanSegmenter>(new EuclideanSegmenter());
+		segmenterMap[ObjectSegmentationType::RegionGrowth] = unique_ptr<RegionGrowthSegmenter>(new RegionGrowthSegmenter());
 		//planeSegmenter = new PlaneSegmenter();
 	}
 
 	void GraphicsControl::SetupSelectors()
 	{
-		selectorMap[Transformation] = unique_ptr<TransformSelector>(new TransformSelector());
-		selectorMap[Duplication] = unique_ptr<DuplicateSelector>(new DuplicateSelector());
-		selectorMap[None] = unique_ptr<ManipulationSelector>(new ManipulationSelector());
+		selectorMap[InteractionMode::Transformation] = unique_ptr<TransformSelector>(new TransformSelector());
+		selectorMap[InteractionMode::Duplication] = unique_ptr<DuplicateSelector>(new DuplicateSelector());
+		selectorMap[InteractionMode::None] = unique_ptr<ManipulationSelector>(new ManipulationSelector());
 		planeSelector = unique_ptr<PlaneSelector>(new PlaneSelector(cutPlane));
 	}
 
 	void GraphicsControl::SetupIconData()
 	{
-		iconMap[PlaneSelection] = unique_ptr<IconData>(new IconData());
-		iconMap[PlaneSelection]->SetDefaultShaderProgram(shaderMap[Orthographic]);
-		iconMap[Segmentation] = unique_ptr<IconData>(new IconData());
-		iconMap[Segmentation]->SetDefaultShaderProgram(shaderMap[Orthographic]);
-		iconMap[PlaneCut] = unique_ptr<IconData>(new IconData());
-		iconMap[PlaneCut]->SetDefaultShaderProgram(shaderMap[Orthographic]);
-		iconMap[Processing] = unique_ptr<IconData>(new IconData());
-		iconMap[Processing]->SetDefaultShaderProgram(shaderMap[Orthographic]);
-		iconMap[Interaction] = unique_ptr<IconData>(new IconData());
-		iconMap[Interaction]->SetDefaultShaderProgram(shaderMap[Orthographic]);
-		iconMap[Interaction]->LoadFromFile("data\\models\\trash.ply", "data\\models\\trash_open.ply", TRASH_BIN);
-		iconMap[Interaction]->GenerateBuffers();
+		iconMap[WindowState::PlaneSelection] = unique_ptr<IconData>(new IconData());
+		iconMap[WindowState::PlaneSelection]->SetDefaultShaderProgram(shaderMap[OpenGLShaderProgramType::Orthographic]);
+		iconMap[WindowState::Segmentation] = unique_ptr<IconData>(new IconData());
+		iconMap[WindowState::Segmentation]->SetDefaultShaderProgram(shaderMap[OpenGLShaderProgramType::Orthographic]);
+		iconMap[WindowState::PlaneCut] = unique_ptr<IconData>(new IconData());
+		iconMap[WindowState::PlaneCut]->SetDefaultShaderProgram(shaderMap[OpenGLShaderProgramType::Orthographic]);
+		iconMap[WindowState::Processing] = unique_ptr<IconData>(new IconData());
+		iconMap[WindowState::Processing]->SetDefaultShaderProgram(shaderMap[OpenGLShaderProgramType::Orthographic]);
+		iconMap[WindowState::Interaction] = unique_ptr<IconData>(new IconData());
+		iconMap[WindowState::Interaction]->SetDefaultShaderProgram(shaderMap[OpenGLShaderProgramType::Orthographic]);
+		iconMap[WindowState::Interaction]->LoadFromFile("data\\models\\trash.ply", "data\\models\\trash_open.ply", TRASH_BIN);
+		iconMap[WindowState::Interaction]->GenerateBuffers();
 	}
 
 	void GraphicsControl::SetupCutPlane()
@@ -502,7 +506,7 @@ namespace InteractiveFusion {
 		planeVertices.push_back(vertex4);
 
 		cutPlane->SetVertices(planeVertices);
-		cutPlane->SetShaderProgram(shaderMap[Default]);
+		cutPlane->SetShaderProgram(shaderMap[OpenGLShaderProgramType::Default]);
 
 		cutPlane->UpdateEssentials();
 		cutPlane->ApplyTransformation(activeScene->second->GetNegativeGroundAlignmentRotation(), glm::mat4(1.0f));
@@ -532,7 +536,7 @@ namespace InteractiveFusion {
 	void GraphicsControl::SetCameraMovementEnabled(bool _flag)
 	{
 		isCameraMovementEnabled = _flag;
-		if (currentApplicationState == PlaneCut)
+		if (currentApplicationState == WindowState::PlaneCut)
 		{
 			planeSelector->ResetPlaneRotation();
 			PlaneCutPreview();
@@ -547,7 +551,7 @@ namespace InteractiveFusion {
 
 	void GraphicsControl::PrepareViewportResize()
 	{
-		eventQueue.push(ResizeOpenGLViewport);
+		eventQueue.push(OpenGLControlEvent::ResizeOpenGLViewport);
 	}
 
 	HWND GraphicsControl::GetOpenGLWindowHandle()
@@ -645,7 +649,7 @@ namespace InteractiveFusion {
 
 			planeCutSegmenter.CleanUp();
 
-			eventQueue.push(ModelDataUpdated);
+			eventQueue.push(OpenGLControlEvent::ModelDataUpdated);
 			SetBusy(false);
 		}
 	}
@@ -658,7 +662,7 @@ namespace InteractiveFusion {
 		if (activeScene->second->GetCurrentlySelectedMeshIndex() != -1)
 		{
 			activeScene->second->PlaneCutPreview(activeScene->second->GetCurrentlySelectedMeshIndex(), cutPlane->GetPlaneParameters());
-			eventQueue.push(ModelHighlightsUpdated);
+			eventQueue.push(OpenGLControlEvent::ModelHighlightsUpdated);
 		}
 		SetBusy(false);
 	}
@@ -704,7 +708,7 @@ namespace InteractiveFusion {
 
 	glm::mat4& GraphicsControl::GetViewMatrix()
 	{
-		if (currentCameraMode == Sensor)
+		if (currentCameraMode == OpenGLCameraMode::Sensor)
 			return mView;
 		else
 			return glCamera.GetViewMatrix();
@@ -730,13 +734,13 @@ namespace InteractiveFusion {
 	void GraphicsControl::ChangePlaneCutAxis(PlaneCutAxis _axis)
 	{
 		planeSelector->ChangeAxis(_axis);
-		eventQueue.push(SetupCutPlaneMode);
+		eventQueue.push(OpenGLControlEvent::SetupCutPlaneMode);
 	}
 
 	void GraphicsControl::SetCameraMode(OpenGLCameraMode _cameraMode)
 	{
 		currentCameraMode = _cameraMode;
-		if (currentApplicationState == PlaneCut)
+		if (currentApplicationState == WindowState::PlaneCut)
 			isCameraMovementEnabled = false;
 		else
 			isCameraMovementEnabled = true;
@@ -744,7 +748,7 @@ namespace InteractiveFusion {
 		if (activeRenderer != rendererMap.end())
 			activeRenderer->second->SetCameraMode(currentCameraMode);
 
-		if (currentCameraMode == Free)
+		if (currentCameraMode == OpenGLCameraMode::Free)
 			openGLWindow.ShowButtons();
 		else
 			openGLWindow.HideButtons();
@@ -757,12 +761,12 @@ namespace InteractiveFusion {
 
 	void GraphicsControl::ResetModel()
 	{
-		eventQueue.push(ResetModelData);
+		eventQueue.push(OpenGLControlEvent::ResetModelData);
 	}
 
 	void GraphicsControl::ReloadCurrentState()
 	{
-		eventQueue.push(ResetCurrentStateModelData);
+		eventQueue.push(OpenGLControlEvent::ResetCurrentStateModelData);
 	}
 
 	int GraphicsControl::FillHoles(int _holeSize)
@@ -776,7 +780,7 @@ namespace InteractiveFusion {
 		activeScene->second.get()->Lock();
 		int closedHoles = activeScene->second->FillHoles(_holeSize);
 		activeScene->second.get()->Unlock();
-		eventQueue.push(ModelDataUpdated);
+		eventQueue.push(OpenGLControlEvent::ModelDataUpdated);
 		//eventQueue.push(FillHolesInScene);
 		//int closedHoles = sceneMap[currentApplicationState]->FillHoles(_holeSize);
 		//eventQueue.push(ModelDataUpdated);
@@ -795,7 +799,7 @@ namespace InteractiveFusion {
 		activeScene->second.get()->Lock();
 		int removedComponents = activeScene->second->RemoveConnectedComponents(_maxComponentSize);
 		activeScene->second.get()->Unlock();
-		eventQueue.push(ModelDataUpdated);
+		eventQueue.push(OpenGLControlEvent::ModelDataUpdated);
 
 		SetBusy(false);
 		return removedComponents;
@@ -809,7 +813,7 @@ namespace InteractiveFusion {
 		SetStatusMessage(L"Exporting");
 		SetBusy(true);
 
-		if (currentCameraMode == Free)
+		if (currentCameraMode == OpenGLCameraMode::Free)
 		{
 			DebugUtility::DbgOut(L"GraphicsControl::ExportModel::Scenario Exporter");
 			ScenarioExporter exporter;
@@ -883,7 +887,7 @@ namespace InteractiveFusion {
 		scannedVertices = _scannedVertices;
 		scannedTriangles = _scannedTriangles;
 		//loadedMesh = _scannedMesh;
-		eventQueue.push(InitialLoading);
+		eventQueue.push(OpenGLControlEvent::InitialLoading);
 	}
 
 	int GraphicsControl::LoadAndSegmentModelDataFromScan(std::vector<Vertex>& _scannedVertices, std::vector<Triangle>& _scannedTriangles)
@@ -898,17 +902,17 @@ namespace InteractiveFusion {
 		stopWatch.Start();
 
 
-		sceneMap[PlaneSelection]->LoadFromFile("data\\models\\lowPolyTest.ply");
+		//activeScene->second->LoadFromFile("data\\models\\lowPolyTest.ply");
 
-		//sceneMap[PlaneSelection]->LoadFromFile("data\\models\\testScene.ply");
-		//sceneMap[PlaneSelection]->LoadFromData(_scannedVertices, _scannedTriangles);
+		//activeScene->second->LoadFromFile("data\\models\\testScene.ply");
+		activeScene->second->LoadFromData(_scannedVertices, _scannedTriangles);
 
 		DebugUtility::DbgOut(L"Initialized scene in  ", stopWatch.Stop());
-		eventQueue.push(ModelDataUpdated);
+		eventQueue.push(OpenGLControlEvent::ModelDataUpdated);
 
 		glCamera.ResetCameraPosition();
-		glCamera.SetRotationPoint(sceneMap[PlaneSelection]->GetCenterPoint());
-		currentCameraMode = Free;
+		glCamera.SetRotationPoint(activeScene->second->GetCenterPoint());
+		currentCameraMode = OpenGLCameraMode::Free;
 		
 
 		DebugUtility::DbgOut(L"GraphicsControl::LoadAndSegmentModelDataFromScan::Starting with segmentation");
@@ -919,7 +923,7 @@ namespace InteractiveFusion {
 			segmenter.second->CleanUp();
 		planeSegmenter.CleanUp();
 		planeSegmenter.SetSegmentationParameters(PlaneSegmentationParams());
-		planeSegmenter.UpdateSegmentation(*this, *sceneMap[PlaneSelection].get());
+		planeSegmenter.UpdateSegmentation(*this, *activeScene->second.get());
 		
 		DebugUtility::DbgOut(L"End of Loading Mesh");
 		SetBusy(false);
@@ -943,7 +947,7 @@ namespace InteractiveFusion {
 
 	}
 
-	void GraphicsControl::UpdatePlaneSegmentation(PlaneSegmentationParams _params)
+	void GraphicsControl::UpdatePlaneSegmentation(PlaneSegmentationParams& _params)
 	{
 		SetStatusMessage(L"Updating segmentation");
 		SetBusy(true);
@@ -955,26 +959,36 @@ namespace InteractiveFusion {
 		SetBusy(false);
 	}
 
-	void GraphicsControl::ConfirmSegmentedPlane(PlaneSegmentationParams _params)
+	void GraphicsControl::ResetPlaneSegmentation()
+	{
+		SetStatusMessage(L"Resetting");
+		SetBusy(true);
+		planeSegmenter.CleanUp();
+		planeSegmenter.SetSegmentationParameters(PlaneSegmentationParams());
+		planeSegmenter.UpdateSegmentation(*this, *activeScene->second.get());
+		SetBusy(false);
+	}
+
+	void GraphicsControl::ConfirmSegmentedPlane(PlaneSegmentationParams& _params)
 	{
 
 		SetStatusMessage(L"Updating plane segmentation");
 		SetBusy(true);
 		planeSegmenter.ConfirmLastSegment();
 
-		boost::thread(&GraphicsControl::PlaneSelectionThread, this, _params);
+		boost::thread(&GraphicsControl::PlaneSelectionThread, this, boost::ref(_params));
 
 	}
 
-	void GraphicsControl::RejectSegmentedPlane(PlaneSegmentationParams _params)
+	void GraphicsControl::RejectSegmentedPlane(PlaneSegmentationParams& _params)
 	{
 		SetStatusMessage(L"Updating plane segmentation");
 		SetBusy(true);
 		planeSegmenter.RejectLastSegment();
-		boost::thread(&GraphicsControl::PlaneSelectionThread, this, _params);
+		boost::thread(&GraphicsControl::PlaneSelectionThread, this, boost::ref(_params));
 	}
 
-	int GraphicsControl::PlaneSelectionThread(PlaneSegmentationParams _params)
+	int GraphicsControl::PlaneSelectionThread(PlaneSegmentationParams& _params)
 	{
 		SetBusy(true);
 
@@ -994,7 +1008,7 @@ namespace InteractiveFusion {
 		SetBusy(true);
 
 		segmenterMap[currentSegmentationType]->FinishSegmentation(*activeScene->second.get(), temporarySceneData);
-
+		temporaryPlaneCutDataForReset.CopyFrom(temporarySceneData);
 		SetBusy(false);
 
 	}
@@ -1050,6 +1064,7 @@ namespace InteractiveFusion {
 			model.second->CleanUp();
 		sceneMap.clear();
 		temporarySceneData.CleanUp();
+		temporaryPlaneCutDataForReset.CleanUp();
 		cutPlane->CleanUp();
 	}
 

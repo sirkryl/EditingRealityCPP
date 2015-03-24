@@ -37,7 +37,7 @@ namespace InteractiveFusion {
 		SetWindowPos(hButtonOk, HWND_TOP, 0, 0, 0, 0, 0);
 
 		buttonLayoutMap.emplace(hButtonOk, ButtonLayout());
-		buttonLayoutMap[hButtonOk].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayoutMap[hButtonOk].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonLayoutMap[hButtonOk].SetFontSize(30);
 		//hTextHelp = CreateWindowEx(0, L"STATIC", L"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ut tempus odio, congue molestie dolor. Aliquam sollicitudin venenatis dui, sed malesuada lectus iaculis vitae.", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, windowHandle, (HMENU)IDC_HELP_TEXT, hInstance, 0);
 		//hTextHelp = CreateWindowEx(0, L"STATIC", L"", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | SS_CENTER, 250, 50, 150, 50, windowHandle, (HMENU)IDC_HELP_TEXT, hInstance, 0);

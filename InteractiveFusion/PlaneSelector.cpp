@@ -33,7 +33,7 @@ namespace InteractiveFusion {
 		{
 			_modelData.RemoveTemporaryTriangleColor(_selectedIndex);
 			_modelData.RemoveTemporaryMeshColor(_selectedIndex);
-			_glControl.PushEvent(RemoveModelHighlights);
+			_glControl.PushEvent(OpenGLControlEvent::RemoveModelHighlights);
 			_modelData.UnselectMesh();
 
 			_modelData.MarkMeshAsSelected(newIndex);
@@ -84,13 +84,13 @@ namespace InteractiveFusion {
 		glm::vec3 centerPoint = plane->GetCenterPoint();
 		switch (currentAxis)
 		{
-			case AxisX:
+			case PlaneCutAxis::AxisX:
 				plane->SetTranslation(glm::vec3(-centerPoint.x + currentCursorToMeshHitpoint.x, 0.0f, 0.0f));
 				break;
-			case AxisY:
+			case PlaneCutAxis::AxisY:
 				plane->SetTranslation(glm::vec3(0.0f, -centerPoint.y + currentCursorToMeshHitpoint.y, 0.0f));
 				break;
-			case AxisZ:
+			case PlaneCutAxis::AxisZ:
 				plane->SetTranslation(glm::vec3(0.0f, 0.0f, -centerPoint.z + currentCursorToMeshHitpoint.z));
 				break;
 		}
@@ -100,13 +100,13 @@ namespace InteractiveFusion {
 	{
 		switch (currentAxis)
 		{
-			case AxisX:
+		case PlaneCutAxis::AxisX:
 				currentCursorToMeshHitpoint.x += _offSet;
 				break;
-			case AxisY:
+		case PlaneCutAxis::AxisY:
 				currentCursorToMeshHitpoint.y -= _offSet;
 				break;
-			case AxisZ:
+		case PlaneCutAxis::AxisZ:
 				currentCursorToMeshHitpoint.z += _offSet;
 				break;
 		}	
@@ -119,20 +119,20 @@ namespace InteractiveFusion {
 			glm::mat4 cameraMatrix = _glControl.GetViewMatrix();
 			switch (currentAxis)
 			{
-				case AxisX:
+			case PlaneCutAxis::AxisX:
 					//horizontalRotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
 					verticalRotationAxis = glm::vec3(cameraMatrix[2][0], cameraMatrix[2][1], cameraMatrix[2][2]);
 					horizontalRotationAxis = glm::vec3(cameraMatrix[1][0], cameraMatrix[1][1], cameraMatrix[1][2]);
 					//rotationAxis = glm::vec3(cameraMatrix[1][0], cameraMatrix[1][1], cameraMatrix[1][2]);
 					break;
-				case AxisY:
+			case PlaneCutAxis::AxisY:
 					horizontalRotationAxis = glm::vec3(cameraMatrix[2][0], cameraMatrix[2][1], cameraMatrix[2][2]);
 					verticalRotationAxis = glm::vec3(cameraMatrix[0][0], cameraMatrix[0][1], cameraMatrix[0][2]);
 					//_offSetX = -_offSetX;
 					/*glm::vec3 horizontalRotation = glm::vec3(cameraMatrix[0][0], cameraMatrix[0][1], cameraMatrix[0][2]);
 					glm::vec3 verticalRotation = glm::vec3(cameraMatrix[1][0], cameraMatrix[1][1], cameraMatrix[1][2]);*/
 					break;
-				case AxisZ:
+			case PlaneCutAxis::AxisZ:
 					verticalRotationAxis = glm::vec3(cameraMatrix[0][0], cameraMatrix[0][1], cameraMatrix[0][2]);
 					horizontalRotationAxis = glm::vec3(cameraMatrix[1][0], cameraMatrix[1][1], cameraMatrix[1][2]);
 					//horizontalRotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -141,7 +141,7 @@ namespace InteractiveFusion {
 			}
 			if (CheckRotationLimitsX(_offSetX))
 			{
-				if (currentAxis == AxisY)
+				if (currentAxis == PlaneCutAxis::AxisY)
 					_offSetX = -_offSetX;
 				plane->AddRotation(_offSetX, horizontalRotationAxis);
 			
@@ -193,7 +193,7 @@ namespace InteractiveFusion {
 		float translationOffSet = 0.0f;
 		float rotationOffSetX = 0.0f;
 		float rotationOffSetY = 0.0f;
-		if (currentAxis == AxisX)
+		if (currentAxis == PlaneCutAxis::AxisX)
 		{
 			translationOffSet = (float)((pCur.x - oldPosX)*0.0025f);
 			rotationOffSetX = (float)((pCur.x - oldPosX)*0.05f);
@@ -222,9 +222,9 @@ namespace InteractiveFusion {
 	{
 		ResetPlaneRotation();
 		plane->SetTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
-		if (currentAxis == AxisX)
+		if (currentAxis == PlaneCutAxis::AxisX)
 			plane->ApplyTransformation(glm::rotate(glm::mat4(1.0), 90.0f, glm::vec3(0.0f, 0.0f, 1.0f)), glm::mat4());
-		else if (currentAxis == AxisZ)
+		else if (currentAxis == PlaneCutAxis::AxisZ)
 			plane->ApplyTransformation(glm::rotate(glm::mat4(1.0), 90.0f, glm::vec3(1.0f, 0.0f, 0.0f)), glm::mat4());
 
 		//plane->GenerateBuffers();

@@ -3,7 +3,7 @@
 #include <string>
 namespace InteractiveFusion {
 
-	enum ButtonLayoutType { GlobalDefault, InnerDefault, InactiveMode, ActiveMode, Green, Red, Blue, AlternativeDefault };
+	enum class ButtonLayoutType { GlobalDefault, InnerDefault, InactiveMode, ActiveMode, Green, Red, Blue, AlternativeDefault };
 
 	class StyleSheet
 	{

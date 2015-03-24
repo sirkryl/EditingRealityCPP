@@ -60,8 +60,9 @@ namespace InteractiveFusion {
 
 		resetCameraButton = CreateWindowEx(0, L"BUTTON", L"Reset", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | BS_ICON | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_OPENGL_RESETCAMERA, hInstance, 0);
 		SetWindowPos(resetCameraButton, HWND_TOP, 0, 0, 0, 0, 0);
-		buttonLayoutMap[resetCameraButton] = StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault);
+		buttonLayoutMap[resetCameraButton] = StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault);
 		buttonLayoutMap[resetCameraButton].SetIcon(L"camera_icon.ico");
+
 
 		Hide();
 
@@ -121,16 +122,13 @@ namespace InteractiveFusion {
 			break;
 		case WM_LBUTTONDOWN:
 			KeyState::SetMouseDown(true);
-			DebugUtility::DbgOut(L"OpenGLWindow::ProcessUI::Mouse Button Down");
 			
 			break;
 		case WM_LBUTTONUP:
 			//KeyState::SetMouseDown(false);
-			DebugUtility::DbgOut(L"OpenGLWindow::ProcessUI::Mouse Button Up");
 
 			break;
 		case WM_MOUSEWHEEL:
-			DebugUtility::DbgOut(L"OpenGLWindow::ProcessUI::Mouse Wheel");
 			mouseWheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 			break;
 		}
@@ -194,7 +192,7 @@ namespace InteractiveFusion {
 		glViewport(0, 0, width, height);
 
 		MoveWindow(resetCameraButton, width - (int)(0.12f*height), (int)(0.88f*height), (int)(0.1f*height), (int)(0.1f*height), true);
-
+		
 		//DebugUtility::DbgOut(L"OpenGLWindow::RESIZE::lower left X:", xPosition);
 		//DebugUtility::DbgOut(L"OpenGLWindow::RESIZE::lower left Y:", marginBottom);
 		//DebugUtility::DbgOut(L"OpenGLWindow::RESIZE::lower left Y:", marginBottom);

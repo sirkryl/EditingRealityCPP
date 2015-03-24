@@ -32,8 +32,8 @@ namespace InteractiveFusion {
 
 	private:
 
-		InteractionMode interactionMode = None;
-		OpenGLCameraMode cameraMode = Sensor;
+		InteractionMode interactionMode = InteractionMode::None;
+		OpenGLCameraMode cameraMode = OpenGLCameraMode::Sensor;
 		virtual void ProcessUI(WPARAM wParam, LPARAM lParam);
 
 		void ChangeInteractionMode(InteractionMode _interactionMode);

@@ -30,7 +30,7 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void PlaneSegmenter::SetSegmentationParameters(PlaneSegmentationParams _segmentationParams)
+	void PlaneSegmenter::SetSegmentationParameters(PlaneSegmentationParams& _segmentationParams)
 	{
 		DebugUtility::DbgOut(L"PlaneSegmenter::SetSegmentationParameters");
 

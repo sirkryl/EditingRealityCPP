@@ -47,11 +47,11 @@ namespace InteractiveFusion {
 		buttonScanDone = CreateWindowEx(0, L"Button", L"DONE", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, windowHandle, (HMENU)IDC_SCAN_BUTTON_DONE, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonScanDone, ButtonLayout());
-		buttonLayoutMap[buttonScanDone].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Green));
+		buttonLayoutMap[buttonScanDone].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Green));
 		buttonScanReset = CreateWindowEx(0, L"Button", L"RESET", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 500, 150, 50, windowHandle, (HMENU)IDC_SCAN_BUTTON_RESET, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonScanReset, ButtonLayout());
-		buttonLayoutMap[buttonScanReset].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Red));
+		buttonLayoutMap[buttonScanReset].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Red));
 
 		scanUi.Add(buttonScanDone);
 		scanUi.Add(buttonScanReset);
@@ -149,7 +149,7 @@ namespace InteractiveFusion {
 			{
 			case ScanWindowEvent::StateChange:
 				pauseFusion = true;
-				_parentWindow.ChangeState(PlaneSelection);
+				_parentWindow.ChangeState(WindowState::PlaneSelection);
 				_parentWindow.SetAndShowHelpMessage(HelpMessage::PlaneSelectionHelp);
 				scanner->PrepareMeshSave();
 				//kinectFusionScanner.PrepareMeshSave();

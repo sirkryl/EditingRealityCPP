@@ -35,7 +35,7 @@ namespace InteractiveFusion {
 	EuclideanSegmentationParams euclideanParams;
 	RegionGrowthSegmentationParams regionGrowthParams;
 
-	ObjectSegmentationType selectedSegmentationType = Euclidean;
+	ObjectSegmentationType selectedSegmentationType = ObjectSegmentationType::Euclidean;
 
 	SegmentationWindow::SegmentationWindow()
 	{
@@ -60,12 +60,12 @@ namespace InteractiveFusion {
 		buttonSegmentationFinish = CreateWindowEx(0, L"Button", L"DONE", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_BUTTON_DONE, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonSegmentationFinish, ButtonLayout());
-		buttonLayoutMap[buttonSegmentationFinish].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Green));
+		buttonLayoutMap[buttonSegmentationFinish].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Green));
 		buttonSegmentationBegin = CreateWindowEx(0, L"Button", L"SEGMENT", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_BUTTON_UPDATE, hInstance, 0);
 
 		
 		buttonLayoutMap.emplace(buttonSegmentationBegin, ButtonLayout());
-		buttonLayoutMap[buttonSegmentationBegin].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayoutMap[buttonSegmentationBegin].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonLayoutMap[buttonSegmentationBegin].SetFontSize(30);
 		textClusterTolerance = CreateWindowEx(0, L"STATIC", std::to_wstring((int)(euclideanParams.clusterTolerance*1000.0f)).c_str(), WS_CHILD | WS_VISIBLE | SS_RIGHT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE, hInstance, 0);
 
@@ -77,12 +77,12 @@ namespace InteractiveFusion {
 		buttonRegionGrowthSegmentation = CreateWindowEx(0, L"Button", L"RG", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_REGIONGROWTH, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonRegionGrowthSegmentation, ButtonLayout());
-		buttonLayoutMap[buttonRegionGrowthSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+		buttonLayoutMap[buttonRegionGrowthSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 		//buttonLayoutMap[buttonRegionGrowthSegmentation].SetFontSize(30);
 		buttonEuclideanSegmentation = CreateWindowEx(0, L"Button", L"EUCLIDEAN", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_EUCLIDEAN, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonEuclideanSegmentation, ButtonLayout());
-		buttonLayoutMap[buttonEuclideanSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+		buttonLayoutMap[buttonEuclideanSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 
 		textRGSmoothness = CreateWindowEx(0, L"STATIC", std::to_wstring((int)regionGrowthParams.smoothnessThreshold).c_str(), WS_CHILD | WS_VISIBLE | SS_RIGHT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_RG_TEXT_SMOOTHNESS, hInstance, 0);
 
@@ -129,7 +129,7 @@ namespace InteractiveFusion {
 		for (auto& slider : sliderMap)
 		{
 			slider.second.Initialize(windowHandle, _hInstance);
-			slider.second.SetLayout(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault), StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+			slider.second.SetLayout(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault), StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 			slider.second.SetLimits(1, 100);
 			slider.second.SetStep(1);
 		}
@@ -174,7 +174,7 @@ namespace InteractiveFusion {
 		euclideanSegmentationUi.Add(textEuclideanMinSize);
 		euclideanSegmentationUi.Add(textEuclideanMinSizeLabel);
 
-		selectedSegmentationType = Euclidean;
+		selectedSegmentationType = ObjectSegmentationType::Euclidean;
 		UpdateSegmentationPreviewValues();
 		UpdateSegmentationUI();
 	}
@@ -184,16 +184,16 @@ namespace InteractiveFusion {
 	{
 		switch (selectedSegmentationType)
 		{
-		case Euclidean:
+		case ObjectSegmentationType::Euclidean:
 			regionSegmentationUi.Hide();
-			buttonLayoutMap[buttonEuclideanSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ActiveMode));
-			buttonLayoutMap[buttonRegionGrowthSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+			buttonLayoutMap[buttonEuclideanSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::ActiveMode));
+			buttonLayoutMap[buttonRegionGrowthSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 			euclideanSegmentationUi.Show();
 			break;
-		case RegionGrowth:
+		case ObjectSegmentationType::RegionGrowth:
 			euclideanSegmentationUi.Hide();
-			buttonLayoutMap[buttonRegionGrowthSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ActiveMode));
-			buttonLayoutMap[buttonEuclideanSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+			buttonLayoutMap[buttonRegionGrowthSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::ActiveMode));
+			buttonLayoutMap[buttonEuclideanSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 			regionSegmentationUi.Show();
 			break;
 		}
@@ -315,13 +315,13 @@ namespace InteractiveFusion {
 		if (IDC_SEGMENTATION_EUCLIDEAN == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			DebugUtility::DbgOut(L"SegmentationWindow::ProcessUI::Euclidean");
-			selectedSegmentationType = Euclidean;
+			selectedSegmentationType = ObjectSegmentationType::Euclidean;
 			UpdateSegmentationUI();
 		}
 		if (IDC_SEGMENTATION_REGIONGROWTH == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			DebugUtility::DbgOut(L"SegmentationWindow::ProcessUI::RG");
-			selectedSegmentationType = RegionGrowth;
+			selectedSegmentationType = ObjectSegmentationType::RegionGrowth;
 			UpdateSegmentationUI();
 
 		}
@@ -337,7 +337,7 @@ namespace InteractiveFusion {
 			{
 			case SegmentationWindowEvent::StateChange:
 				_parentWindow.FinishObjectSegmentation();
-				_parentWindow.ChangeState(PlaneCut);
+				_parentWindow.ChangeState(WindowState::PlaneCut);
 				_parentWindow.SetAndShowHelpMessage(HelpMessage::PlaneCutHelp);
 				break;
 			case SegmentationWindowEvent::SegmentationFinished:
@@ -346,10 +346,10 @@ namespace InteractiveFusion {
 			case SegmentationWindowEvent::UpdateSegmentation:
 				switch (selectedSegmentationType)
 				{
-				case Euclidean:
+				case ObjectSegmentationType::Euclidean:
 					_parentWindow.UpdateObjectSegmentation(euclideanParams);
 					break;
-				case RegionGrowth:
+				case ObjectSegmentationType::RegionGrowth:
 					_parentWindow.UpdateObjectSegmentation(regionGrowthParams);
 					break;
 				}

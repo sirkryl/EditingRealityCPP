@@ -68,14 +68,14 @@ namespace InteractiveFusion {
 		
 		void ExportModel();
 
-		void UpdatePlaneSegmentation(PlaneSegmentationParams _params);
+		void UpdatePlaneSegmentation(PlaneSegmentationParams& _params);
 		void UpdateObjectSegmentation(ObjectSegmentationParams& _params);
 
-		
+		void ResetPlaneSegmentation();
 
-		void ConfirmSegmentedPlane(PlaneSegmentationParams _params);
+		void ConfirmSegmentedPlane(PlaneSegmentationParams& _params);
 
-		void RejectSegmentedPlane(PlaneSegmentationParams _params);
+		void RejectSegmentedPlane(PlaneSegmentationParams& _params);
 
 		void FinishObjectSegmentation();
 
@@ -93,6 +93,7 @@ namespace InteractiveFusion {
 		void PlaneCutPreview();
 		std::wstring GetStatusMessage();
 
+		
 		
 		int GetNumberOfVertices();
 		int GetNumberOfTriangles();
@@ -139,7 +140,7 @@ namespace InteractiveFusion {
 		int OpenGLThreadMessageLoop();
 
 
-		int PlaneSelectionThread(PlaneSegmentationParams _params);
+		int PlaneSelectionThread(PlaneSegmentationParams& _params);
 		
 		int SetupOpenGL();
 		void SetupRenderer();

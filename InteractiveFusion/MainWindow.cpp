@@ -46,12 +46,12 @@ namespace InteractiveFusion {
 	
 	GraphicsControl glControl;
 
-	std::unordered_map<WindowState, unique_ptr<SubWindow>, std::hash<std::underlying_type<WindowState>::type>> subWindowMap;
+	std::unordered_map<WindowState, unique_ptr<SubWindow>> subWindowMap;
 	std::unordered_map<WindowState, unique_ptr<SubWindow>>::const_iterator currentWindow = subWindowMap.end();
 	std::unordered_map<WindowState, unique_ptr<SubWindow>>::const_iterator scanWindow = subWindowMap.end();
 	HelpWindow helpWindow;
 
-	std::unordered_map<WindowState, HWND, std::hash<std::underlying_type<WindowState>::type>> modeButtonMap;
+	std::unordered_map<WindowState, HWND> modeButtonMap;
 
 	bool setupComplete = false;
 
@@ -130,23 +130,23 @@ namespace InteractiveFusion {
 		hModePrepare = CreateWindowEx(0, L"BUTTON", L"PREPARE", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, hWndMain, (HMENU)IDC_MODE_BUTTON_PREPARE, NULL, 0);
 
 		buttonLayout.emplace(hModePrepare, ButtonLayout());
-		buttonLayout[hModePrepare].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+		buttonLayout[hModePrepare].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 		hModeSegmentation = CreateWindowEx(0, L"BUTTON", L"SEGMENT", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, hWndMain, (HMENU)IDC_MODE_BUTTON_SEGMENTATION, NULL, 0);
 
 		buttonLayout.emplace(hModeSegmentation, ButtonLayout());
-		buttonLayout[hModeSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+		buttonLayout[hModeSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 
 		hModeScan = CreateWindowEx(0, L"BUTTON", L"SCAN", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, hWndMain, (HMENU)IDC_MODE_BUTTON_SCAN, NULL, 0);
 		buttonLayout.emplace(hModeScan, ButtonLayout());
-		buttonLayout[hModeScan].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+		buttonLayout[hModeScan].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 
 		hModeProcessing = CreateWindowEx(0, L"BUTTON", L"PROCESS", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, hWndMain, (HMENU)IDC_MODE_BUTTON_PROCESSING, NULL, 0);
 		buttonLayout.emplace(hModeProcessing, ButtonLayout());
-		buttonLayout[hModeProcessing].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+		buttonLayout[hModeProcessing].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 
 		hModeInteraction = CreateWindowEx(0, L"BUTTON", L"MANIPULATE", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, hWndMain, (HMENU)IDC_MODE_BUTTON_INTERACTION, NULL, 0);
 		buttonLayout.emplace(hModeInteraction, ButtonLayout());
-		buttonLayout[hModeInteraction].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+		buttonLayout[hModeInteraction].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 
 		statusHandle = CreateWindowEx(WS_EX_TOPMOST, L"STATIC", L"", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | SS_CENTERIMAGE, 250, 50, 150, 50, hWndMain, (HMENU)IDC_STATUS, NULL, 0);
 
@@ -156,7 +156,7 @@ namespace InteractiveFusion {
 		
 		helpButton = CreateWindowEx(0, L"BUTTON", L"?", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, hWndMain, (HMENU)IDC_BUTTON_HELP, NULL, 0);
 		buttonLayout.emplace(helpButton, ButtonLayout());
-		buttonLayout[helpButton].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayout[helpButton].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonLayout[helpButton].SetFontSize(50);
 
 		fpsText = CreateWindowEx(0, L"STATIC", L"FPS:", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_CENTERIMAGE, 250, 50, 150, 50, hWndMain, (HMENU)IDC_FRAMES_PER_SECOND_TEXT, NULL, 0);
@@ -185,17 +185,17 @@ namespace InteractiveFusion {
 		hSubModePlaneSegmentation = CreateWindowEx(0, L"BUTTON", L"", WS_CHILD | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, hSubModeBackground, (HMENU)IDC_MODE_BUTTON_SEG_PLANE, NULL, 0);
 
 		buttonLayout.emplace(hSubModePlaneSegmentation, ButtonLayout());
-		buttonLayout[hSubModePlaneSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+		buttonLayout[hSubModePlaneSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 
 		hSubModeObjectSegmentation = CreateWindowEx(0, L"BUTTON", L"", WS_CHILD | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, hSubModeBackground, (HMENU)IDC_MODE_BUTTON_SEG_OBJECT, NULL, 0);
 
 		buttonLayout.emplace(hSubModeObjectSegmentation, ButtonLayout());
-		buttonLayout[hSubModeObjectSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+		buttonLayout[hSubModeObjectSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 
 		hSubModePlaneCut = CreateWindowEx(0, L"BUTTON", L"", WS_CHILD | WS_CLIPSIBLINGS | BS_OWNERDRAW, 250, 50, 150, 50, hSubModeBackground, (HMENU)IDC_MODE_BUTTON_SEG_PLANECUT, NULL, 0);
 
 		buttonLayout.emplace(hSubModePlaneCut, ButtonLayout());
-		buttonLayout[hSubModePlaneCut].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+		buttonLayout[hSubModePlaneCut].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 
 		
 
@@ -211,30 +211,30 @@ namespace InteractiveFusion {
 		modeUi.Add(hModeInteraction);
 		modeUi.Add(helpButton);
 
-		modeButtonMap[Prepare] = hModePrepare;
-		modeButtonMap[Scan] = hModeScan;
-		modeButtonMap[PlaneSelection] = hModeSegmentation;
-		modeButtonMap[Segmentation] = hModeSegmentation;
-		modeButtonMap[PlaneCut] = hModeSegmentation;
-		modeButtonMap[Processing] = hModeProcessing;
-		modeButtonMap[Interaction] = hModeInteraction;
+		modeButtonMap[WindowState::Prepare] = hModePrepare;
+		modeButtonMap[WindowState::Scan] = hModeScan;
+		modeButtonMap[WindowState::PlaneSelection] = hModeSegmentation;
+		modeButtonMap[WindowState::Segmentation] = hModeSegmentation;
+		modeButtonMap[WindowState::PlaneCut] = hModeSegmentation;
+		modeButtonMap[WindowState::Processing] = hModeProcessing;
+		modeButtonMap[WindowState::Interaction] = hModeInteraction;
 
-		subWindowMap[Prepare] = unique_ptr<PrepareWindow>(new PrepareWindow());
-		subWindowMap[Prepare]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0, L"Prepare", StyleSheet::GetInstance()->GetInnerBackgroundColor());
-		subWindowMap[Scan] = unique_ptr<ScanWindow>(new ScanWindow());
-		subWindowMap[Scan]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0, L"Scan", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
-		subWindowMap[PlaneSelection] = unique_ptr<PlaneSelectionWindow>(new PlaneSelectionWindow());
-		subWindowMap[PlaneSelection]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0.0f, 0.0f, L"PlaneSelection", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
-		subWindowMap[Segmentation] = unique_ptr<SegmentationWindow>(new SegmentationWindow());
-		subWindowMap[Segmentation]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0.8f, L"Segmentation", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
-		subWindowMap[PlaneCut] = unique_ptr<PlaneCutWindow>(new PlaneCutWindow());
-		subWindowMap[PlaneCut]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0.8f, L"PlaneCut", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
-		subWindowMap[Processing] = unique_ptr<ProcessingWindow>(new ProcessingWindow());
-		subWindowMap[Processing]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0.8f, L"Processing", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
-		subWindowMap[Interaction] = unique_ptr<InteractionWindow>(new InteractionWindow());
-		subWindowMap[Interaction]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0.8f, L"Interaction", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
+		subWindowMap[WindowState::Prepare] = unique_ptr<PrepareWindow>(new PrepareWindow());
+		subWindowMap[WindowState::Prepare]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0, L"Prepare", StyleSheet::GetInstance()->GetInnerBackgroundColor());
+		subWindowMap[WindowState::Scan] = unique_ptr<ScanWindow>(new ScanWindow());
+		subWindowMap[WindowState::Scan]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0, L"Scan", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
+		subWindowMap[WindowState::PlaneSelection] = unique_ptr<PlaneSelectionWindow>(new PlaneSelectionWindow());
+		subWindowMap[WindowState::PlaneSelection]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0.0f, 0.0f, L"PlaneSelection", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
+		subWindowMap[WindowState::Segmentation] = unique_ptr<SegmentationWindow>(new SegmentationWindow());
+		subWindowMap[WindowState::Segmentation]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0.8f, L"Segmentation", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
+		subWindowMap[WindowState::PlaneCut] = unique_ptr<PlaneCutWindow>(new PlaneCutWindow());
+		subWindowMap[WindowState::PlaneCut]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0.8f, L"PlaneCut", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
+		subWindowMap[WindowState::Processing] = unique_ptr<ProcessingWindow>(new ProcessingWindow());
+		subWindowMap[WindowState::Processing]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0.8f, L"Processing", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
+		subWindowMap[WindowState::Interaction] = unique_ptr<InteractionWindow>(new InteractionWindow());
+		subWindowMap[WindowState::Interaction]->Initialize(hWndMain, hInstance, 0.07f, 0.042f, 0, 0.8f, L"Interaction", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
 
-		scanWindow = subWindowMap.find(Scan);
+		scanWindow = subWindowMap.find(WindowState::Scan);
 
 		helpWindow.Initialize(hWndMain, hInstance, 0.35f, 0.35f, 0.225f, 0.225f, L"Help", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
 		
@@ -242,7 +242,7 @@ namespace InteractiveFusion {
 		glControl.Initialize(hWndMain, hInstance);
 		glControl.RunOpenGLThread();
 
-		ChangeState(Prepare);
+		ChangeState(WindowState::Prepare);
 		SetAndShowHelpMessage(HelpMessage::PrepareHelp);
 
 		ShowWindow(hWndMain, SW_MAXIMIZE);
@@ -261,7 +261,7 @@ namespace InteractiveFusion {
 				UpdateUIActivation();
 			}
 
-			if (currentState == Interaction)
+			if (currentState == WindowState::Interaction)
 				scanWindow->second->HandleEvents(*this);
 			
 			//UpdateStatusBarMessage();
@@ -281,7 +281,6 @@ namespace InteractiveFusion {
 
 	void MainWindow::ChangeState(WindowState _state)
 	{
-		DebugUtility::DbgOut(L"ChangeState ", currentState);
 		if (!IsValidState(_state))
 			return;
 		if (currentWindow != subWindowMap.end())
@@ -304,14 +303,13 @@ namespace InteractiveFusion {
 		}
 		glControl.UpdateApplicationState(currentState);
 		
-		if (currentState == Prepare || currentState == Scan || currentState == Interaction && scanWindow != subWindowMap.end())
+		if (currentState == WindowState::Prepare || currentState == WindowState::Scan || currentState == WindowState::Interaction && scanWindow != subWindowMap.end())
 			dynamic_cast<ScanWindow*>(scanWindow->second.get())->UnpauseScan();
 		else
 			dynamic_cast<ScanWindow*>(scanWindow->second.get())->PauseScan();
 
 		MainWindowProc(hWndMain, WM_SIZE, 0, MAKELPARAM(rRect.right, rRect.bottom));
 
-		DebugUtility::DbgOut(L"End ChangeState ", currentState);
 	}
 
 	void MainWindow::SetAndShowHelpMessage(HelpMessage _state)
@@ -344,7 +342,7 @@ namespace InteractiveFusion {
 				//buttonLayout[modeButton.second].CleanUp();
 				//DebugUtility::DbgOut(L"modeButtonGettingActive");
 				//buttonLayout[modeButton.second].CleanUp();
-				buttonLayout[modeButton.second].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ActiveMode));
+				buttonLayout[modeButton.second].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::ActiveMode));
 				activeHandle = modeButton.second;
 				
 				//EnableWindow(modeButton.second, false);
@@ -353,27 +351,27 @@ namespace InteractiveFusion {
 			{
 				//buttonLayout[modeButton.second].CleanUp();
 				//buttonLayout[modeButton.second].CleanUp();
-				buttonLayout[modeButton.second].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+				buttonLayout[modeButton.second].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 				//buttonLayout[modeButton.second] = modeLayout;
 				//EnableWindow(modeButton.second, true);
 			}
 		}
-		if (currentState >= PlaneSelection & currentState <= PlaneCut)
+		if (currentState >= WindowState::PlaneSelection & currentState <= WindowState::PlaneCut)
 		{
 			segmentationModes.Show();
-			buttonLayout[hSubModePlaneSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-			buttonLayout[hSubModeObjectSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-			buttonLayout[hSubModePlaneCut].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+			buttonLayout[hSubModePlaneSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
+			buttonLayout[hSubModeObjectSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
+			buttonLayout[hSubModePlaneCut].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 			switch (currentState)
 			{
-			case PlaneSelection:
-				buttonLayout[hSubModePlaneSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+			case WindowState::PlaneSelection:
+				buttonLayout[hSubModePlaneSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 				break;
-			case Segmentation:
-				buttonLayout[hSubModeObjectSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+			case WindowState::Segmentation:
+				buttonLayout[hSubModeObjectSegmentation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 				break;
-			case PlaneCut:
-				buttonLayout[hSubModePlaneCut].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+			case WindowState::PlaneCut:
+				buttonLayout[hSubModePlaneCut].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 				break;
 			}
 			segmentationModes.Redraw();
@@ -448,20 +446,25 @@ namespace InteractiveFusion {
 		//glControl.UpdateObjectSegmentation(_params);
 	}
 
-	void MainWindow::UpdatePlaneSegmentation(PlaneSegmentationParams _params)
+	void MainWindow::ResetPlaneSegmentation()
+	{
+		glControl.ResetPlaneSegmentation();
+	}
+
+	void MainWindow::UpdatePlaneSegmentation(PlaneSegmentationParams& _params)
 	{
 		SetStatusBarMessage(L"Updating plane segmentation...");
 		boost::thread(&GraphicsControl::UpdatePlaneSegmentation, &glControl, _params);
 		//glControl.UpdatePlaneSegmentation(_params);
 	}
 
-	void MainWindow::ConfirmSegmentedPlane(PlaneSegmentationParams _params)
+	void MainWindow::ConfirmSegmentedPlane(PlaneSegmentationParams& _params)
 	{
 		SetStatusBarMessage(L"Confirmed plane, looking for more...");
 		glControl.ConfirmSegmentedPlane(_params);
 	}
 
-	void MainWindow::RejectSegmentedPlane(PlaneSegmentationParams _params)
+	void MainWindow::RejectSegmentedPlane(PlaneSegmentationParams& _params)
 	{
 		SetStatusBarMessage(L"Rejected plane, looking for more...");
 		glControl.RejectSegmentedPlane(_params);
@@ -589,9 +592,9 @@ namespace InteractiveFusion {
 
 		if (glControl.RequestsStateChange())
 		{
-			if ((int)currentState+1 <= Interaction)
-				ChangeState((WindowState)((int)currentState + 1));
-			if (currentState == Segmentation)
+			if ((int)currentState+1 <= (int)WindowState::Interaction)
+				ChangeState((WindowState)((int)currentState+1));
+			if (currentState == WindowState::Segmentation)
 				SetAndShowHelpMessage(HelpMessage::SegmentationHelp);
 			
 		}
@@ -678,45 +681,45 @@ namespace InteractiveFusion {
 	{
 		if (IDC_MODE_BUTTON_PREPARE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (currentState != Prepare)
-				ChangeState(Prepare);
+			if (currentState != WindowState::Prepare)
+				ChangeState(WindowState::Prepare);
 		}
 		if (IDC_MODE_BUTTON_SCAN == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (currentState != Scan)
-				ChangeState(Scan);
+			if (currentState != WindowState::Scan)
+				ChangeState(WindowState::Scan);
 		}
 		if (IDC_MODE_BUTTON_SEGMENTATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (currentState < PlaneSelection || currentState > PlaneCut)
-				ChangeState(Segmentation);
+			if (currentState < WindowState::PlaneSelection || currentState > WindowState::PlaneCut)
+				ChangeState(WindowState::Segmentation);
 
 			segmentationModes.Show();
 		}
 		if (IDC_MODE_BUTTON_SEG_OBJECT == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (currentState != Segmentation)
-				ChangeState(Segmentation);
+			if (currentState != WindowState::Segmentation)
+				ChangeState(WindowState::Segmentation);
 		}
 		if (IDC_MODE_BUTTON_SEG_PLANE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (currentState != PlaneSelection)
-				ChangeState(PlaneSelection);
+			if (currentState != WindowState::PlaneSelection)
+				ChangeState(WindowState::PlaneSelection);
 		}
 		if (IDC_MODE_BUTTON_SEG_PLANECUT == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (currentState != PlaneCut)
-				ChangeState(PlaneCut);
+			if (currentState != WindowState::PlaneCut)
+				ChangeState(WindowState::PlaneCut);
 		}
 		if (IDC_MODE_BUTTON_PROCESSING == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (currentState != Processing)
-				ChangeState(Processing);
+			if (currentState != WindowState::Processing)
+				ChangeState(WindowState::Processing);
 		}
 		if (IDC_MODE_BUTTON_INTERACTION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (currentState != Interaction)
-				ChangeState(Interaction);
+			if (currentState != WindowState::Interaction)
+				ChangeState(WindowState::Interaction);
 		}
 		if (IDC_BUTTON_HELP == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{

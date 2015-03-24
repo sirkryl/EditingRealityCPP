@@ -40,7 +40,7 @@ namespace InteractiveFusion {
 		int oldPosX;
 		int oldPosY;
 		bool firstClick = false;
-		PlaneCutAxis currentAxis = AxisY;
+		PlaneCutAxis currentAxis = PlaneCutAxis::AxisY;
 		PlaneCutTransformation currentTransformation = PlaneCutTransformation::Translate;
 		bool rotationEnabled = false;
 		

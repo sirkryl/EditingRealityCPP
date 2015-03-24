@@ -36,25 +36,25 @@ namespace InteractiveFusion {
 		buttonExport = CreateWindowEx(0, L"BUTTON", L"Export", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_INTERACTION_BUTTON_EXPORT, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonExport, ButtonLayout());
-		buttonLayoutMap[buttonExport].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Green));
+		buttonLayoutMap[buttonExport].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Green));
 		buttonDuplicate = CreateWindowEx(0, L"BUTTON", L"Duplicate", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_INTERACTION_BUTTON_DUPLICATE, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonDuplicate, ButtonLayout());
-		buttonLayoutMap[buttonDuplicate].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayoutMap[buttonDuplicate].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonReset = CreateWindowEx(0, L"BUTTON", L"Reset", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_INTERACTION_BUTTON_RESET, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonReset, ButtonLayout());
-		buttonLayoutMap[buttonReset].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Red));
+		buttonLayoutMap[buttonReset].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Red));
 		deleteIcon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_INTERACTION_TRASH), IMAGE_ICON, 100, 100, NULL);
 
 		buttonTransformation = CreateWindowEx(0, L"BUTTON", L"Transform", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_INTERACTION_BUTTON_TRANSFORMATION, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonTransformation, ButtonLayout());
-		buttonLayoutMap[buttonTransformation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayoutMap[buttonTransformation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonFreeCamera = CreateWindowEx(0, L"BUTTON", L"Free Camera", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | BS_OWNERDRAW | BS_MULTILINE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_INTERACTION_BUTTON_FREE_CAMERA, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonFreeCamera, ButtonLayout());
-		buttonLayoutMap[buttonFreeCamera].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayoutMap[buttonFreeCamera].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonLayoutMap[buttonFreeCamera].SetFontSize(30);
 
 		interactionSubUi.Add(buttonTransformation);
@@ -81,7 +81,7 @@ namespace InteractiveFusion {
 			{
 			case InteractionWindowEvent::StateChange:
 				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::StateChange");
-				_parentWindow.ChangeState(Scan);
+				_parentWindow.ChangeState(WindowState::Scan);
 				break;
 			case InteractionWindowEvent::ExportModel:
 				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::ExportModel");
@@ -108,29 +108,29 @@ namespace InteractiveFusion {
 	{
 		if (IDC_INTERACTION_BUTTON_TRANSFORMATION == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (cameraMode == Sensor)
+			if (cameraMode == OpenGLCameraMode::Sensor)
 			{
-				if (interactionMode == Transformation)
-					ChangeInteractionMode(None);
+				if (interactionMode == InteractionMode::Transformation)
+					ChangeInteractionMode(InteractionMode::None);
 				else
-					ChangeInteractionMode(Transformation);
+					ChangeInteractionMode(InteractionMode::Transformation);
 			}
 		}
 		if (IDC_INTERACTION_BUTTON_FREE_CAMERA == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (cameraMode == Free)
+			if (cameraMode == OpenGLCameraMode::Free)
 			{
-				buttonLayoutMap[buttonFreeCamera].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+				buttonLayoutMap[buttonFreeCamera].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 				buttonLayoutMap[buttonFreeCamera].SetFontSize(30);
-				cameraMode = Sensor;
+				cameraMode = OpenGLCameraMode::Sensor;
 			}
 			else
 			{
-				if (interactionMode != None)
-					ChangeInteractionMode(None);
-				buttonLayoutMap[buttonFreeCamera].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Blue));
+				if (interactionMode != InteractionMode::None)
+					ChangeInteractionMode(InteractionMode::None);
+				buttonLayoutMap[buttonFreeCamera].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Blue));
 				buttonLayoutMap[buttonFreeCamera].SetFontSize(30);
-				cameraMode = Free;
+				cameraMode = OpenGLCameraMode::Free;
 			}
 			eventQueue.push(InteractionWindowEvent::ChangeCameraMode);
 		}
@@ -143,12 +143,12 @@ namespace InteractiveFusion {
 		}
 		if (IDC_INTERACTION_BUTTON_DUPLICATE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (cameraMode == Sensor)
+			if (cameraMode == OpenGLCameraMode::Sensor)
 			{
-				if (interactionMode == Duplication)
-					ChangeInteractionMode(None);
+				if (interactionMode == InteractionMode::Duplication)
+					ChangeInteractionMode(InteractionMode::None);
 				else
-					ChangeInteractionMode(Duplication);
+					ChangeInteractionMode(InteractionMode::Duplication);
 			}
 		}
 		if (IDC_INTERACTION_BUTTON_EXPORT == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
@@ -170,20 +170,20 @@ namespace InteractiveFusion {
 	{
 		interactionMode = _interactionMode;
 
-		if (interactionMode == Transformation)
+		if (interactionMode == InteractionMode::Transformation)
 		{
-			buttonLayoutMap[buttonTransformation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Blue));
-			buttonLayoutMap[buttonDuplicate].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+			buttonLayoutMap[buttonTransformation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Blue));
+			buttonLayoutMap[buttonDuplicate].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		}
-		else if (interactionMode == Duplication)
+		else if (interactionMode == InteractionMode::Duplication)
 		{
-			buttonLayoutMap[buttonTransformation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-			buttonLayoutMap[buttonDuplicate].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Blue));
+			buttonLayoutMap[buttonTransformation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
+			buttonLayoutMap[buttonDuplicate].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Blue));
 		}
-		else if (interactionMode == None)
+		else if (interactionMode == InteractionMode::None)
 		{
-			buttonLayoutMap[buttonTransformation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
-			buttonLayoutMap[buttonDuplicate].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+			buttonLayoutMap[buttonTransformation].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
+			buttonLayoutMap[buttonDuplicate].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		}
 
 		interactionSubUi.Redraw();

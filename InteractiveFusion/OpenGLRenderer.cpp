@@ -20,7 +20,7 @@ namespace InteractiveFusion {
 
 	OpenGLRenderer::OpenGLRenderer()
 	{
-		cameraMode = Free;
+		cameraMode = OpenGLCameraMode::Free;
 	}
 
 	OpenGLRenderer::OpenGLRenderer(OpenGLCameraMode _cameraMode)
@@ -87,7 +87,7 @@ namespace InteractiveFusion {
 		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::22");
 		statusMessageBackground = unique_ptr<MeshContainer2D>(new MeshContainer2D(statusMessageBackgroundVertices));
 		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::33");
-		statusMessageBackground->SetShaderProgram(_glControl.GetShader(Orthographic));
+		statusMessageBackground->SetShaderProgram(_glControl.GetShader(OpenGLShaderProgramType::Orthographic));
 		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::44");
 		statusMessageBackground->SetAlpha(0.5f);
 		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::55");
@@ -115,7 +115,7 @@ namespace InteractiveFusion {
 			0.0f, 0.0f, 0.0f));
 
 		alphaOverlay = unique_ptr<MeshContainer2D>(new MeshContainer2D(overlayVertices));
-		alphaOverlay->SetShaderProgram(_glControl.GetShader(Orthographic));
+		alphaOverlay->SetShaderProgram(_glControl.GetShader(OpenGLShaderProgramType::Orthographic));
 		alphaOverlay->SetAlpha(0.5f);
 		alphaOverlay->GenerateBuffers();
 
@@ -186,7 +186,7 @@ namespace InteractiveFusion {
 			colorTop, colorTop, colorTop,
 			0.0f, 0.0f, 0.0f));
 		backgroundGradient = unique_ptr<MeshContainer2D>(new MeshContainer2D(backgroundGradientVertices));
-		backgroundGradient->SetShaderProgram(_glControl.GetShader(Orthographic));
+		backgroundGradient->SetShaderProgram(_glControl.GetShader(OpenGLShaderProgramType::Orthographic));
 		backgroundGradient->SetAlpha(1.0f);
 		backgroundGradient->GenerateBuffers();
 
@@ -198,7 +198,7 @@ namespace InteractiveFusion {
 
 		if (_modelData.IsReadyForRendering())
 			_modelData.Draw(_glControl.GetProjectionMatrix(), _glControl.GetViewMatrix());
-		if (_iconData.IsReadyForRendering() && cameraMode == Sensor)
+		if (_iconData.IsReadyForRendering() && cameraMode == OpenGLCameraMode::Sensor)
 			_iconData.Draw(_glControl.GetViewportWidth(), _glControl.GetViewportHeight());
 	}
 

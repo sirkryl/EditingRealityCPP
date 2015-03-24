@@ -42,10 +42,11 @@ namespace InteractiveFusion {
 		int FillHoles(int _holeSize);
 		int RemoveConnectedComponents(int _maxComponentSize);
 		
+		void ResetPlaneSegmentation();
 		void UpdateObjectSegmentation(ObjectSegmentationParams& _params);
-		void UpdatePlaneSegmentation(PlaneSegmentationParams _params);
-		void ConfirmSegmentedPlane(PlaneSegmentationParams _params);
-		void RejectSegmentedPlane(PlaneSegmentationParams _params);
+		void UpdatePlaneSegmentation(PlaneSegmentationParams& _params);
+		void ConfirmSegmentedPlane(PlaneSegmentationParams& _params);
+		void RejectSegmentedPlane(PlaneSegmentationParams& _params);
 		
 		void FinishObjectSegmentation();
 		

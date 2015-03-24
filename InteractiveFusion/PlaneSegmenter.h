@@ -9,7 +9,7 @@ namespace InteractiveFusion {
 		PlaneSegmenter();
 		~PlaneSegmenter();
 
-		virtual void SetSegmentationParameters(PlaneSegmentationParams _segmentationParams);
+		virtual void SetSegmentationParameters(PlaneSegmentationParams& _segmentationParams);
 
 		void ConfirmLastSegment();
 		void RejectLastSegment();

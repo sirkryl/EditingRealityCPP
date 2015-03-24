@@ -18,12 +18,13 @@ namespace InteractiveFusion {
 	HWND textWalls;
 	HWND helpText1, helpText2;
 	HWND buttonYes, buttonNo;
-
+	HWND buttonStartOver;
 	HWND propertiesWindow;
 	HWND propertiesButton;
 
 	HWND yesWindow;
 	HWND noWindow;
+	HWND resetWindow;
 	HBRUSH propertyBackground;
 	PlaneSelectionWindow::PlaneSelectionWindow()
 	{
@@ -73,6 +74,11 @@ namespace InteractiveFusion {
 			NULL, hInstance, this);
 		SetWindowPos(propertiesWindow, noWindow, 0, 0, 0, 0, 0);
 
+		resetWindow = CreateWindowExW(0, (LPCTSTR)MAKELONG(propertyClass, 0), 0, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN,
+			0, 0, 0, 0, parentHandle,
+			NULL, hInstance, this);
+		SetWindowPos(resetWindow, noWindow, 0, 0, 0, 0, 0);
+
 		Hide();
 
 		planeParams.planeThickness = 0.1f;
@@ -87,22 +93,22 @@ namespace InteractiveFusion {
 		buttonSizePlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, propertiesWindow, (HMENU)IDC_PLANE_BUTTON_WALLSIZE_PLUS, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonSizePlus, ButtonLayout());
-		buttonLayoutMap[buttonSizePlus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayoutMap[buttonSizePlus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonLayoutMap[buttonSizePlus].SetFontSize(60);
 		buttonSizeMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, propertiesWindow, (HMENU)IDC_PLANE_BUTTON_WALLSIZE_MINUS, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonSizeMinus, ButtonLayout());
-		buttonLayoutMap[buttonSizeMinus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayoutMap[buttonSizeMinus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonLayoutMap[buttonSizeMinus].SetFontSize(60);
 		buttonSmoothnessPlus = CreateWindowEx(0, L"Button", L"+", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW , 250, 50, 150, 50, propertiesWindow, (HMENU)IDC_PLANE_BUTTON_WALLSMOOTHNESS_PLUS, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonSmoothnessPlus, ButtonLayout());
-		buttonLayoutMap[buttonSmoothnessPlus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayoutMap[buttonSmoothnessPlus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonLayoutMap[buttonSmoothnessPlus].SetFontSize(60);
 		buttonSmoothnessMinus = CreateWindowEx(0, L"Button", L"-", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, propertiesWindow, (HMENU)IDC_PLANE_BUTTON_WALLSMOOTHNESS_MINUS, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonSmoothnessMinus, ButtonLayout());
-		buttonLayoutMap[buttonSmoothnessMinus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayoutMap[buttonSmoothnessMinus].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonLayoutMap[buttonSmoothnessMinus].SetFontSize(60);
 
 		textWalls = CreateWindowEx(0, L"STATIC", L"Is the highlighted area (part of) a wall, floor or ceiling?", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PLANE_TEXT_ISWALL, hInstance, 0);
@@ -137,11 +143,17 @@ namespace InteractiveFusion {
 		buttonYes = CreateWindowEx(0, L"Button", L"YES", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, yesWindow, (HMENU)IDC_PLANE_BUTTON_YES, hInstance, 0);
 
 		buttonLayoutMap[buttonYes] = ButtonLayout();
-		buttonLayoutMap[buttonYes].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Green));
+		buttonLayoutMap[buttonYes].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Green));
 		buttonNo = CreateWindowEx(0, L"Button", L"NO", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, noWindow, (HMENU)IDC_PLANE_BUTTON_NO, hInstance, 0);
 
 		buttonLayoutMap[buttonNo] = ButtonLayout();
-		buttonLayoutMap[buttonNo].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Red));
+		buttonLayoutMap[buttonNo].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Red));
+
+		buttonStartOver = CreateWindowEx(0, L"Button", L"Start over", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, resetWindow, (HMENU)IDC_PLANE_BUTTON_RESET, hInstance, 0);
+
+		buttonLayoutMap[buttonStartOver] = ButtonLayout();
+		buttonLayoutMap[buttonStartOver].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Red));
+		buttonLayoutMap[buttonStartOver].SetFontSize(20);
 
 		wallUi.Add(textWalls);
 		wallUi.Add(textSize);
@@ -156,6 +168,7 @@ namespace InteractiveFusion {
 		wallUi.Add(buttonSizePlus);
 		wallUi.Add(buttonSmoothnessPlus);
 		wallUi.Add(buttonSmoothnessMinus);
+		wallUi.Add(buttonStartOver);
 
 	}
 
@@ -209,6 +222,12 @@ namespace InteractiveFusion {
 
 			ShowWindow(textWalls, SW_HIDE);
 			eventQueue.push(PlaneSelectionWindowEvent::PlaneRejected);
+		}
+		if (IDC_PLANE_BUTTON_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			DebugUtility::DbgOut(L"PlaneSelectionWindow::ProcessUI::RESET");
+
+			eventQueue.push(PlaneSelectionWindowEvent::Reset);
 		}
 		if (IDC_PLANE_BUTTON_WALLSIZE_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
@@ -304,7 +323,7 @@ namespace InteractiveFusion {
 			switch (event)
 			{
 			case PlaneSelectionWindowEvent::StateChange:
-				_parentWindow.ChangeState(Segmentation);
+				_parentWindow.ChangeState(WindowState::Segmentation);
 				_parentWindow.SetAndShowHelpMessage(HelpMessage::SegmentationHelp);
 				_parentWindow.UpdateObjectSegmentation(EuclideanSegmentationParams());
 				break;
@@ -316,6 +335,9 @@ namespace InteractiveFusion {
 				break;
 			case PlaneSelectionWindowEvent::UpdateSegmentation:
 				_parentWindow.UpdatePlaneSegmentation(planeParams);
+				break;
+			case PlaneSelectionWindowEvent::Reset:
+				_parentWindow.ResetPlaneSegmentation();
 				break;
 			}
 
@@ -339,6 +361,8 @@ namespace InteractiveFusion {
 		MoveWindow(noWindow, noX, noY, noWidth, noHeight, true);
 
 		MoveWindow(buttonNo, 0, 0, noWidth, noWidth, true);
+
+		
 		//MoveWindow(buttonNo, (int)(0.025*noWidth), (int)(0.025*noHeight), (int)(0.95*noWidth), (int)(0.95*noWidth), true);
 
 		int yesX = (int)(parentWidth - 0.125f*parentWidth);
@@ -351,7 +375,14 @@ namespace InteractiveFusion {
 		MoveWindow(buttonYes, 0, 0, yesWidth, yesWidth, true);
 		//MoveWindow(buttonYes, (int)(0.025*yesWidth), (int)(0.025*yesHeight), (int)(0.95*yesWidth), (int)(0.95*yesWidth), true);
 		
+		int resetX = (int)(parentWidth - 0.1f*parentWidth);
+		int resetY = (int)(0.08*parentHeight);
+		int resetWidth = (int)(0.095*parentWidth);
+		int resetHeight = (int)(0.035*parentWidth);
 
+		MoveWindow(resetWindow, resetX, resetY, resetWidth, resetHeight, true);
+
+		MoveWindow(buttonStartOver, 0, 0, resetWidth, resetHeight, true);
 		//	MoveWindow(hTextWalls, 0, 48, width, 40, true);
 
 
@@ -414,6 +445,7 @@ namespace InteractiveFusion {
 		EnableWindow(propertiesWindow, true);
 		EnableWindow(yesWindow, true);
 		EnableWindow(noWindow, true);
+		EnableWindow(resetWindow, true);
 	}
 
 	void PlaneSelectionWindow::Deactivate()
@@ -422,6 +454,7 @@ namespace InteractiveFusion {
 		EnableWindow(propertiesWindow, false);
 		EnableWindow(yesWindow, false);
 		EnableWindow(noWindow, false);
+		EnableWindow(resetWindow, false);
 	}
 
 	void PlaneSelectionWindow::Show()
@@ -430,6 +463,8 @@ namespace InteractiveFusion {
 		ShowWindow(propertiesWindow, SW_SHOW);
 		ShowWindow(yesWindow, SW_SHOW);
 		ShowWindow(noWindow, SW_SHOW);
+		ShowWindow(resetWindow, SW_SHOW);
+
 	}
 
 	void PlaneSelectionWindow::Hide()
@@ -438,6 +473,7 @@ namespace InteractiveFusion {
 		ShowWindow(propertiesWindow, SW_HIDE);
 		ShowWindow(yesWindow, SW_HIDE);
 		ShowWindow(noWindow, SW_HIDE);
+		ShowWindow(resetWindow, SW_HIDE);
 	}
 
 	void PlaneSelectionWindow::CleanUp()

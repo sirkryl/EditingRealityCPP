@@ -9,6 +9,7 @@ namespace InteractiveFusion {
 			PlaneConfirmed = SubWindowEvent::Last,
 			PlaneRejected,
 			UpdateSegmentation,
+			Reset,
 			Last
 		};
 	};

@@ -49,24 +49,24 @@ namespace InteractiveFusion {
 
 		buttonLayoutMap.emplace(buttonRemoveComponents, ButtonLayout());
 
-		buttonLayoutMap[buttonRemoveComponents].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayoutMap[buttonRemoveComponents].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonLayoutMap[buttonRemoveComponents].SetFontSize(30);
 		buttonFillHoles = CreateWindowEx(0, L"Button", L"Fill Holes", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PROCESSING_BUTTON_FILLHOLES, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonFillHoles, ButtonLayout());
 
-		buttonLayoutMap[buttonFillHoles].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault));
+		buttonLayoutMap[buttonFillHoles].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonLayoutMap[buttonFillHoles].SetFontSize(30);
 		buttonProcessingDone = CreateWindowEx(0, L"Button", L"DONE", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PROCESSING_BUTTON_DONE, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonProcessingDone, ButtonLayout());
 
-		buttonLayoutMap[buttonProcessingDone].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Green));
+		buttonLayoutMap[buttonProcessingDone].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Green));
 
 		buttonProcessingReset = CreateWindowEx(0, L"BUTTON", L"Reset", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PROCESSING_RESET, hInstance, 0);
 
 		buttonLayoutMap.emplace(buttonProcessingReset, ButtonLayout());
-		buttonLayoutMap[buttonProcessingReset].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(Red));
+		buttonLayoutMap[buttonProcessingReset].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Red));
 
 		sliderMap.emplace(HoleSize, ButtonSlider());
 		sliderMap.emplace(ComponentSize, ButtonSlider());
@@ -74,7 +74,7 @@ namespace InteractiveFusion {
 		for (auto& slider : sliderMap)
 		{
 			slider.second.Initialize(windowHandle, _hInstance);
-			slider.second.SetLayout(StyleSheet::GetInstance()->GetButtonLayoutParams(GlobalDefault), StyleSheet::GetInstance()->GetButtonLayoutParams(InactiveMode));
+			slider.second.SetLayout(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault), StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::InactiveMode));
 			slider.second.SetStep(1);
 		}
 
@@ -173,7 +173,7 @@ namespace InteractiveFusion {
 			{
 			case ProcessingWindowEvent::StateChange:
 				_parentWindow.FinishProcessing();
-				_parentWindow.ChangeState(Interaction);
+				_parentWindow.ChangeState(WindowState::Interaction);
 				_parentWindow.SetAndShowHelpMessage(HelpMessage::InteractionHelp);
 				break;
 			case ProcessingWindowEvent::FillHoles:

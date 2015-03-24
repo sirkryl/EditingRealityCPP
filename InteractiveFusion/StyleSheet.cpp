@@ -153,117 +153,117 @@ namespace InteractiveFusion {
 			{ 0, 0, 110 } };
 
 
-		styleSheetMap[InactiveMode].fontSize = modeTextSize;
-		styleSheetMap[InactiveMode].backgroundColor = globalBackgroundColor;
-		styleSheetMap[InactiveMode].activeGradient = inactiveModeGradient;
-		styleSheetMap[InactiveMode].inactiveGradient = inactiveGradient;
-		styleSheetMap[InactiveMode].pressedGradient = pressedGradient;
-		styleSheetMap[InactiveMode].activeTextColor = inactiveModeTextColor;
-		styleSheetMap[InactiveMode].inactiveTextColor = inactiveTextColor;
-		styleSheetMap[InactiveMode].activePenColor = defaultPenColor;
-		styleSheetMap[InactiveMode].inactivePenColor = inactivePenColor;
-		styleSheetMap[InactiveMode].pressedPenColor = pressedPenColor;
-		styleSheetMap[InactiveMode].edgeRounding = 0;
+		styleSheetMap[ButtonLayoutType::InactiveMode].fontSize = modeTextSize;
+		styleSheetMap[ButtonLayoutType::InactiveMode].backgroundColor = globalBackgroundColor;
+		styleSheetMap[ButtonLayoutType::InactiveMode].activeGradient = inactiveModeGradient;
+		styleSheetMap[ButtonLayoutType::InactiveMode].inactiveGradient = inactiveGradient;
+		styleSheetMap[ButtonLayoutType::InactiveMode].pressedGradient = pressedGradient;
+		styleSheetMap[ButtonLayoutType::InactiveMode].activeTextColor = inactiveModeTextColor;
+		styleSheetMap[ButtonLayoutType::InactiveMode].inactiveTextColor = inactiveTextColor;
+		styleSheetMap[ButtonLayoutType::InactiveMode].activePenColor = defaultPenColor;
+		styleSheetMap[ButtonLayoutType::InactiveMode].inactivePenColor = inactivePenColor;
+		styleSheetMap[ButtonLayoutType::InactiveMode].pressedPenColor = pressedPenColor;
+		styleSheetMap[ButtonLayoutType::InactiveMode].edgeRounding = 0;
 
-		//styleSheetMap[InactiveMode] = inactiveModeParams;
-
-
-		styleSheetMap[ActiveMode].fontSize = modeTextSize;
-		styleSheetMap[ActiveMode].backgroundColor = globalBackgroundColor;
-		styleSheetMap[ActiveMode].activeGradient = activeModeGradient;
-		styleSheetMap[ActiveMode].inactiveGradient = inactiveGradient;
-		styleSheetMap[ActiveMode].pressedGradient = pressedGradient;
-		styleSheetMap[ActiveMode].activeTextColor = defaultTextColor;
-		styleSheetMap[ActiveMode].inactiveTextColor = inactiveTextColor;
-		styleSheetMap[ActiveMode].activePenColor = activeModePenColor;
-		styleSheetMap[ActiveMode].inactivePenColor = activeModePenColor;
-		styleSheetMap[ActiveMode].pressedPenColor = activeModePressedPenColor;
-		styleSheetMap[ActiveMode].edgeRounding = 0;
-
-		//styleSheetMap[ActiveMode] = activeModeParams;
-
-		styleSheetMap[GlobalDefault].fontSize = defaultTextSize;
-		styleSheetMap[GlobalDefault].backgroundColor = globalBackgroundColor;
-		styleSheetMap[GlobalDefault].activeGradient = defaultGradient;
-		styleSheetMap[GlobalDefault].inactiveGradient = inactiveGradient;
-		styleSheetMap[GlobalDefault].pressedGradient = pressedGradient;
-		styleSheetMap[GlobalDefault].activeTextColor = defaultTextColor;
-		styleSheetMap[GlobalDefault].inactiveTextColor = inactiveTextColor;
-		styleSheetMap[GlobalDefault].activePenColor = defaultPenColor;
-		styleSheetMap[GlobalDefault].inactivePenColor = inactivePenColor;
-		styleSheetMap[GlobalDefault].pressedPenColor = pressedPenColor;
-		styleSheetMap[GlobalDefault].edgeRounding = 0;
+		//styleSheetMap[ButtonLayoutType::InactiveMode] = inactiveModeParams;
 
 
-		styleSheetMap[AlternativeDefault].fontSize = defaultTextSize;
-		styleSheetMap[AlternativeDefault].backgroundColor = globalBackgroundColor;
-		styleSheetMap[AlternativeDefault].activeGradient = alternativeGradient;
-		styleSheetMap[AlternativeDefault].inactiveGradient = inactiveGradient;
-		styleSheetMap[AlternativeDefault].pressedGradient = pressedGradient;
-		styleSheetMap[AlternativeDefault].activeTextColor = defaultTextColor;
-		styleSheetMap[AlternativeDefault].inactiveTextColor = inactiveTextColor;
-		styleSheetMap[AlternativeDefault].activePenColor = defaultPenColor;
-		styleSheetMap[AlternativeDefault].inactivePenColor = inactivePenColor;
-		styleSheetMap[AlternativeDefault].pressedPenColor = pressedPenColor;
-		styleSheetMap[AlternativeDefault].edgeRounding = 0;
+		styleSheetMap[ButtonLayoutType::ActiveMode].fontSize = modeTextSize;
+		styleSheetMap[ButtonLayoutType::ActiveMode].backgroundColor = globalBackgroundColor;
+		styleSheetMap[ButtonLayoutType::ActiveMode].activeGradient = activeModeGradient;
+		styleSheetMap[ButtonLayoutType::ActiveMode].inactiveGradient = inactiveGradient;
+		styleSheetMap[ButtonLayoutType::ActiveMode].pressedGradient = pressedGradient;
+		styleSheetMap[ButtonLayoutType::ActiveMode].activeTextColor = defaultTextColor;
+		styleSheetMap[ButtonLayoutType::ActiveMode].inactiveTextColor = inactiveTextColor;
+		styleSheetMap[ButtonLayoutType::ActiveMode].activePenColor = activeModePenColor;
+		styleSheetMap[ButtonLayoutType::ActiveMode].inactivePenColor = activeModePenColor;
+		styleSheetMap[ButtonLayoutType::ActiveMode].pressedPenColor = activeModePressedPenColor;
+		styleSheetMap[ButtonLayoutType::ActiveMode].edgeRounding = 0;
 
-		//styleSheetMap[GlobalDefault] = defaultParams;
+		//styleSheetMap[ButtonLayoutType::ActiveMode] = activeModeParams;
 
-		styleSheetMap[InnerDefault].fontSize = bigTextSize;
-		styleSheetMap[InnerDefault].backgroundColor = innerElementBackgroundColor;
-		styleSheetMap[InnerDefault].activeGradient = innerGradient;
-		styleSheetMap[InnerDefault].inactiveGradient = innerInactiveGradient;
-		styleSheetMap[InnerDefault].pressedGradient = innerPressedGradient;
-		styleSheetMap[InnerDefault].activeTextColor = defaultTextColor;
-		styleSheetMap[InnerDefault].inactiveTextColor = inactiveTextColor;
-		styleSheetMap[InnerDefault].activePenColor = innerPenColor;
-		styleSheetMap[InnerDefault].inactivePenColor = innerPenColor;
-		styleSheetMap[InnerDefault].pressedPenColor = innerPenColor;
-		styleSheetMap[InnerDefault].edgeRounding = 0;
+		styleSheetMap[ButtonLayoutType::GlobalDefault].fontSize = defaultTextSize;
+		styleSheetMap[ButtonLayoutType::GlobalDefault].backgroundColor = globalBackgroundColor;
+		styleSheetMap[ButtonLayoutType::GlobalDefault].activeGradient = defaultGradient;
+		styleSheetMap[ButtonLayoutType::GlobalDefault].inactiveGradient = inactiveGradient;
+		styleSheetMap[ButtonLayoutType::GlobalDefault].pressedGradient = pressedGradient;
+		styleSheetMap[ButtonLayoutType::GlobalDefault].activeTextColor = defaultTextColor;
+		styleSheetMap[ButtonLayoutType::GlobalDefault].inactiveTextColor = inactiveTextColor;
+		styleSheetMap[ButtonLayoutType::GlobalDefault].activePenColor = defaultPenColor;
+		styleSheetMap[ButtonLayoutType::GlobalDefault].inactivePenColor = inactivePenColor;
+		styleSheetMap[ButtonLayoutType::GlobalDefault].pressedPenColor = pressedPenColor;
+		styleSheetMap[ButtonLayoutType::GlobalDefault].edgeRounding = 0;
 
-		//styleSheetMap[InnerDefault] = innerDefaultParams;
 
-		styleSheetMap[Green].fontSize = bigTextSize;
-		styleSheetMap[Green].backgroundColor = globalBackgroundColor;
-		styleSheetMap[Green].activeGradient = greenGradient;
-		styleSheetMap[Green].inactiveGradient = inactiveGradient;
-		styleSheetMap[Green].pressedGradient = greenPressedGradient;
-		styleSheetMap[Green].activeTextColor = defaultTextColor;
-		styleSheetMap[Green].inactiveTextColor = inactiveTextColor;
-		styleSheetMap[Green].activePenColor = defaultPenColor;
-		styleSheetMap[Green].inactivePenColor = inactivePenColor;
-		styleSheetMap[Green].pressedPenColor = pressedPenColor;
-		styleSheetMap[Green].edgeRounding = 0;
+		styleSheetMap[ButtonLayoutType::AlternativeDefault].fontSize = defaultTextSize;
+		styleSheetMap[ButtonLayoutType::AlternativeDefault].backgroundColor = globalBackgroundColor;
+		styleSheetMap[ButtonLayoutType::AlternativeDefault].activeGradient = alternativeGradient;
+		styleSheetMap[ButtonLayoutType::AlternativeDefault].inactiveGradient = inactiveGradient;
+		styleSheetMap[ButtonLayoutType::AlternativeDefault].pressedGradient = pressedGradient;
+		styleSheetMap[ButtonLayoutType::AlternativeDefault].activeTextColor = defaultTextColor;
+		styleSheetMap[ButtonLayoutType::AlternativeDefault].inactiveTextColor = inactiveTextColor;
+		styleSheetMap[ButtonLayoutType::AlternativeDefault].activePenColor = defaultPenColor;
+		styleSheetMap[ButtonLayoutType::AlternativeDefault].inactivePenColor = inactivePenColor;
+		styleSheetMap[ButtonLayoutType::AlternativeDefault].pressedPenColor = pressedPenColor;
+		styleSheetMap[ButtonLayoutType::AlternativeDefault].edgeRounding = 0;
 
-		//styleSheetMap[Green] = greenParams;
+		//styleSheetMap[ButtonLayoutType::GlobalDefault] = defaultParams;
 
-		styleSheetMap[Red].fontSize = bigTextSize;
-		styleSheetMap[Red].backgroundColor = globalBackgroundColor;
-		styleSheetMap[Red].activeGradient = redGradient;
-		styleSheetMap[Red].inactiveGradient = inactiveGradient;
-		styleSheetMap[Red].pressedGradient = redPressedGradient;
-		styleSheetMap[Red].activeTextColor = defaultTextColor;
-		styleSheetMap[Red].inactiveTextColor = inactiveTextColor;
-		styleSheetMap[Red].activePenColor = defaultPenColor;
-		styleSheetMap[Red].inactivePenColor = inactivePenColor;
-		styleSheetMap[Red].pressedPenColor = pressedPenColor;
-		styleSheetMap[Red].edgeRounding = 0;
+		styleSheetMap[ButtonLayoutType::InnerDefault].fontSize = bigTextSize;
+		styleSheetMap[ButtonLayoutType::InnerDefault].backgroundColor = innerElementBackgroundColor;
+		styleSheetMap[ButtonLayoutType::InnerDefault].activeGradient = innerGradient;
+		styleSheetMap[ButtonLayoutType::InnerDefault].inactiveGradient = innerInactiveGradient;
+		styleSheetMap[ButtonLayoutType::InnerDefault].pressedGradient = innerPressedGradient;
+		styleSheetMap[ButtonLayoutType::InnerDefault].activeTextColor = defaultTextColor;
+		styleSheetMap[ButtonLayoutType::InnerDefault].inactiveTextColor = inactiveTextColor;
+		styleSheetMap[ButtonLayoutType::InnerDefault].activePenColor = innerPenColor;
+		styleSheetMap[ButtonLayoutType::InnerDefault].inactivePenColor = innerPenColor;
+		styleSheetMap[ButtonLayoutType::InnerDefault].pressedPenColor = innerPenColor;
+		styleSheetMap[ButtonLayoutType::InnerDefault].edgeRounding = 0;
 
-		//styleSheetMap[Red] = redParams;
+		//styleSheetMap[ButtonLayoutType::InnerDefault] = innerDefaultParams;
 
-		styleSheetMap[Blue].fontSize = defaultTextSize;
-		styleSheetMap[Blue].backgroundColor = globalBackgroundColor;
-		styleSheetMap[Blue].activeGradient = blueGradient;
-		styleSheetMap[Blue].inactiveGradient = inactiveGradient;
-		styleSheetMap[Blue].pressedGradient = bluePressedGradient;
-		styleSheetMap[Blue].activeTextColor = defaultTextColor;
-		styleSheetMap[Blue].inactiveTextColor = inactiveTextColor;
-		styleSheetMap[Blue].activePenColor = defaultPenColor;
-		styleSheetMap[Blue].inactivePenColor = inactivePenColor;
-		styleSheetMap[Blue].pressedPenColor = pressedPenColor;
-		styleSheetMap[Blue].edgeRounding = 0;
+		styleSheetMap[ButtonLayoutType::Green].fontSize = bigTextSize;
+		styleSheetMap[ButtonLayoutType::Green].backgroundColor = globalBackgroundColor;
+		styleSheetMap[ButtonLayoutType::Green].activeGradient = greenGradient;
+		styleSheetMap[ButtonLayoutType::Green].inactiveGradient = inactiveGradient;
+		styleSheetMap[ButtonLayoutType::Green].pressedGradient = greenPressedGradient;
+		styleSheetMap[ButtonLayoutType::Green].activeTextColor = defaultTextColor;
+		styleSheetMap[ButtonLayoutType::Green].inactiveTextColor = inactiveTextColor;
+		styleSheetMap[ButtonLayoutType::Green].activePenColor = defaultPenColor;
+		styleSheetMap[ButtonLayoutType::Green].inactivePenColor = inactivePenColor;
+		styleSheetMap[ButtonLayoutType::Green].pressedPenColor = pressedPenColor;
+		styleSheetMap[ButtonLayoutType::Green].edgeRounding = 0;
 
-		//styleSheetMap[Blue] = blueParams;
+		//styleSheetMap[ButtonLayoutType::Green] = greenParams;
+
+		styleSheetMap[ButtonLayoutType::Red].fontSize = bigTextSize;
+		styleSheetMap[ButtonLayoutType::Red].backgroundColor = globalBackgroundColor;
+		styleSheetMap[ButtonLayoutType::Red].activeGradient = redGradient;
+		styleSheetMap[ButtonLayoutType::Red].inactiveGradient = inactiveGradient;
+		styleSheetMap[ButtonLayoutType::Red].pressedGradient = redPressedGradient;
+		styleSheetMap[ButtonLayoutType::Red].activeTextColor = defaultTextColor;
+		styleSheetMap[ButtonLayoutType::Red].inactiveTextColor = inactiveTextColor;
+		styleSheetMap[ButtonLayoutType::Red].activePenColor = defaultPenColor;
+		styleSheetMap[ButtonLayoutType::Red].inactivePenColor = inactivePenColor;
+		styleSheetMap[ButtonLayoutType::Red].pressedPenColor = pressedPenColor;
+		styleSheetMap[ButtonLayoutType::Red].edgeRounding = 0;
+
+		//styleSheetMap[ButtonLayoutType::Red] = redParams;
+
+		styleSheetMap[ButtonLayoutType::Blue].fontSize = defaultTextSize;
+		styleSheetMap[ButtonLayoutType::Blue].backgroundColor = globalBackgroundColor;
+		styleSheetMap[ButtonLayoutType::Blue].activeGradient = blueGradient;
+		styleSheetMap[ButtonLayoutType::Blue].inactiveGradient = inactiveGradient;
+		styleSheetMap[ButtonLayoutType::Blue].pressedGradient = bluePressedGradient;
+		styleSheetMap[ButtonLayoutType::Blue].activeTextColor = defaultTextColor;
+		styleSheetMap[ButtonLayoutType::Blue].inactiveTextColor = inactiveTextColor;
+		styleSheetMap[ButtonLayoutType::Blue].activePenColor = defaultPenColor;
+		styleSheetMap[ButtonLayoutType::Blue].inactivePenColor = inactivePenColor;
+		styleSheetMap[ButtonLayoutType::Blue].pressedPenColor = pressedPenColor;
+		styleSheetMap[ButtonLayoutType::Blue].edgeRounding = 0;
+
+		//styleSheetMap[ButtonLayoutType::Blue] = blueParams;
 
 		DebugUtility::DbgOut(L"layout duration: ", stopWatch.Stop());
 	}
