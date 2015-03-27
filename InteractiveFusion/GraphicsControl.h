@@ -84,7 +84,7 @@ namespace InteractiveFusion {
 		void SetScannedMesh(std::vector<Vertex>& _scannedVertices, std::vector<Triangle>& _scannedTriangles);
 		
 
-		void PushEvent(OpenGLControlEvent _event);
+		void PushEvent(GraphicsControlEvent _event);
 
 		bool IsBusy();
 		
@@ -116,7 +116,7 @@ namespace InteractiveFusion {
 
 		bool isCameraMovementEnabled = true;
 		bool isBusy = false;
-
+		bool firstRelease = true;
 		int fpsCount, currentFps;
 		clock_t tLastSecond;
 

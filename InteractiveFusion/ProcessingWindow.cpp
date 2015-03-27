@@ -227,23 +227,23 @@ namespace InteractiveFusion {
 		int controlX = (int)(0.02f*width);
 		int controlWidth = (int)(0.96f*width);
 		int buttonHeight = (int)(0.08f*height);
-		int componentsY = (int)(0.35f*height);
-		int holeSizeY = componentsY + buttonHeight + 115;
+		int componentsY = (int)(0.27f*height);
+		int holeSizeY = componentsY + buttonHeight + 105;
 
 		//Remove Components Group
-		MoveWindow(buttonProcessingReset, controlX, (int)(0.05f*height), controlWidth, (int)(0.2f*height), true);
+		MoveWindow(buttonProcessingReset, controlX, (int)(0.025f*height), controlWidth, (int)(0.2f*height), true);
 		MoveWindow(textRemoveComponentsLabel, controlX, componentsY, controlWidth / 2, 25, true);
 		MoveWindow(textRemoveComponents, controlX + controlWidth / 2, componentsY, controlWidth / 2, 25, true);
-		sliderMap[ComponentSize].Resize(controlX, componentsY + 30, controlWidth, 50);
-		MoveWindow(buttonRemoveComponents, controlX, componentsY + 90, controlWidth, buttonHeight, true);
+		sliderMap[ComponentSize].Resize(controlX, componentsY + 30, controlWidth, 40);
+		MoveWindow(buttonRemoveComponents, controlX, componentsY + 80, controlWidth, buttonHeight, true);
 
 		MoveWindow(textHoleSizeLabel, controlX, holeSizeY, controlWidth / 2, 25, true);
 		MoveWindow(textHoleSize, controlX + controlWidth / 2, holeSizeY, controlWidth / 2, 25, true);
-		sliderMap[HoleSize].Resize(controlX, holeSizeY + 30, controlWidth, 50);
+		sliderMap[HoleSize].Resize(controlX, holeSizeY + 30, controlWidth, 40);
 		MoveWindow(buttonFillHoles, controlX, holeSizeY + 90, controlWidth, buttonHeight, true);
 
 
-		MoveWindow(buttonProcessingDone, controlX, (int)(0.75f*height), controlWidth, (int)(0.2f*height), true);
+		MoveWindow(buttonProcessingDone, controlX, (int)(0.775f*height), controlWidth, (int)(0.2f*height), true);
 	}
 
 

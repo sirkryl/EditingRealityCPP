@@ -1,10 +1,12 @@
 #include "KeyState.h"
 #include <windows.h>
+#include <boost/thread.hpp>
 namespace InteractiveFusion {
 
 	void KeyState::SetMouseDown(bool _flag)
 	{
 		KeyState::leftMouseDown = _flag;
+		KeyState::firstDown = _flag;
 	}
 
 	int KeyState::GetKeyState(int _key)
@@ -26,14 +28,20 @@ namespace InteractiveFusion {
 		return 0;
 	}
 
-	bool KeyState::LeftMouseDownTouchCheck()
+	bool KeyState::LeftMouseFirstDownTouchCheck()
 	{
-		if (KeyState::leftMouseDown)
+		if (KeyState::leftMouseDown && KeyState::firstDown)
 		{
-			KeyState::leftMouseDown = false;
+			KeyState::firstDown = false;
+			//KeyState::leftMouseDown = false;
 			return true;
 		}
 		else
 			return false;
+	}
+
+	bool KeyState::LeftMouseDownTouchCheck()
+	{
+		return KeyState::leftMouseDown;
 	}
 }

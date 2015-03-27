@@ -23,7 +23,7 @@ namespace InteractiveFusion {
 		_selectedIndex = GetIndexOfMeshUnderCursor(_glControl, _modelData, _overlayHelper, _glControl.GetOpenGLWindowHandle());
 
 		_modelData.MarkMeshAsSelected(_modelData.DuplicateMeshAndGetItsIndex(_selectedIndex));
-		_glControl.PushEvent(OpenGLControlEvent::ModelDataUpdated);
+		_glControl.PushEvent(GraphicsControlEvent::ModelDataUpdated);
 	}
 
 }

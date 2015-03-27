@@ -67,7 +67,7 @@ namespace InteractiveFusion {
 		buttonLayoutMap.emplace(buttonSegmentationBegin, ButtonLayout());
 		buttonLayoutMap[buttonSegmentationBegin].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::GlobalDefault));
 		buttonLayoutMap[buttonSegmentationBegin].SetFontSize(30);
-		textClusterTolerance = CreateWindowEx(0, L"STATIC", std::to_wstring((int)(euclideanParams.clusterTolerance*1000.0f)).c_str(), WS_CHILD | WS_VISIBLE | SS_RIGHT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE, hInstance, 0);
+		textClusterTolerance = CreateWindowEx(0, L"STATIC", (std::to_wstring((int)(euclideanParams.clusterTolerance*1000.0f)) + L"cm").c_str(), WS_CHILD | WS_VISIBLE | SS_RIGHT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE, hInstance, 0);
 
 		SendMessage(textClusterTolerance, WM_SETFONT, (WPARAM)uiFontMedium, TRUE);
 		textClusterToleranceLabel = CreateWindowEx(0, L"STATIC", L"TOLERANCE", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE_LABEL, hInstance, 0);

@@ -25,6 +25,7 @@ namespace InteractiveFusion {
 
 		void SetAndShowHelpMessage(HelpMessage _state);
 		bool IsHelpVisible();
+		bool IsHelpEnabled();
 		void ChangeScanVolumeSize(int _voxelsPerMeter);
 
 		void InitializeOpenGLScene(std::vector<Vertex>& scannedVertices, std::vector<Triangle>& scannedTriangles);

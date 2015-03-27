@@ -21,17 +21,20 @@ namespace InteractiveFusion {
 	void Selector::HandleSelection(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper)
 	{
 		int currentlySelectedMeshIndex = _modelData.GetCurrentlySelectedMeshIndex();
-		if (KeyState::LeftMouseDownTouchCheck())
+		if (KeyState::LeftMouseFirstDownTouchCheck())
 		{
 			HandleLeftMouseClick(_glControl, _modelData, _overlayHelper, currentlySelectedMeshIndex);
+			releaseHandled = false;
 		}
-		else if (KeyState::GetKeyState(VK_LBUTTON))
+		else if (KeyState::GetKeyState(VK_LBUTTON) || KeyState::LeftMouseDownTouchCheck())
 		{
 			HandleLeftMouseDown(_glControl, _modelData, _overlayHelper, currentlySelectedMeshIndex);
+			releaseHandled = false;
 		}
-		else if (currentlySelectedMeshIndex != -1)
+		else if (currentlySelectedMeshIndex != -1 && !releaseHandled)
 		{
 			HandleLeftMouseRelease(_glControl, _modelData, _overlayHelper, currentlySelectedMeshIndex);
+			releaseHandled = true;
 		}
 	}
 
@@ -92,8 +95,7 @@ namespace InteractiveFusion {
 		Ray outputRay;
 		outputRay.startPoint = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 0.0f), _viewMatrix, _projectionMatrix, viewport);
 		outputRay.endPoint = glm::unProject(glm::vec3(float(cursorPos.x), float(cursorPos.y), 1.0f), _viewMatrix, _projectionMatrix, viewport);
-		DebugUtility::DbgOut(L"outputRay start", outputRay.startPoint.x);
-		DebugUtility::DbgOut(L"outputRay end", outputRay.endPoint.x);
+
 		return outputRay;
 	}
 

@@ -33,7 +33,7 @@ namespace InteractiveFusion {
 		{
 			_modelData.RemoveTemporaryTriangleColor(_selectedIndex);
 			_modelData.RemoveTemporaryMeshColor(_selectedIndex);
-			_glControl.PushEvent(OpenGLControlEvent::RemoveModelHighlights);
+			_glControl.PushEvent(GraphicsControlEvent::RemoveModelHighlights);
 			_modelData.UnselectMesh();
 
 			_modelData.MarkMeshAsSelected(newIndex);
@@ -49,6 +49,8 @@ namespace InteractiveFusion {
 			Vertex hitPoint = _modelData.GetHitpoint(_selectedIndex, cursorToFarPlaneRay);
 			currentCursorToMeshHitpoint = hitPoint;
 			UpdatePlaneTranslation();
+
+			UpdatePreview(_glControl, _modelData, _selectedIndex);
 		}
 		
 	}
@@ -66,16 +68,22 @@ namespace InteractiveFusion {
 	void PlaneSelector::HandleLeftMouseRelease(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		if (_selectedIndex != -1 && firstClick)
-		{
+		{		
+			UpdatePreview(_glControl, _modelData, _selectedIndex);
 			//ApplyPlaneRotation();
-			_modelData.RemoveTemporaryTriangleColor(_selectedIndex);
-			_modelData.RemoveTemporaryMeshColor(_selectedIndex);
-			_glControl.PlaneCutPreview();
+			
 			//_modelData.RemoveTemporaryMeshColor(_selectedIndex);
 			//_modelData.UnselectMesh();
 			//currentCursorToMeshHitpoint.Clear();
 			firstClick = false;
 		}
+	}
+
+	void PlaneSelector::UpdatePreview(GraphicsControl& _glControl, ModelData& _modelData, int _selectedIndex)
+	{
+		_modelData.RemoveTemporaryTriangleColor(_selectedIndex);
+		_modelData.RemoveTemporaryMeshColor(_selectedIndex);
+		_glControl.PlaneCutPreview();
 	}
 
 	void PlaneSelector::UpdatePlaneTranslation()

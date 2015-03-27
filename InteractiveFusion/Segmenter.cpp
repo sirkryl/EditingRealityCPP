@@ -52,7 +52,7 @@ namespace InteractiveFusion {
 		_modelData.RemoveTemporaryTriangleColor();
 
 		UpdateHighlights(_modelData);
-		_glControl.PushEvent(OpenGLControlEvent::ModelHighlightsUpdated);
+		_glControl.PushEvent(GraphicsControlEvent::ModelHighlightsUpdated);
 		return true;
 	}
 

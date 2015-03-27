@@ -29,11 +29,13 @@ namespace InteractiveFusion {
 
 		void SetHelpState(HelpMessage state);
 		void SetDefaultMessage(WindowState state);
+		void UpdateLineCount();
 		virtual void CleanUp();
 		virtual LRESULT CALLBACK SubWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	protected:
 		void NextHelpMessage();
+		void UpdateMessageCount();
 		virtual void ProcessUI(WPARAM wParam, LPARAM lParam);
 
 	private:

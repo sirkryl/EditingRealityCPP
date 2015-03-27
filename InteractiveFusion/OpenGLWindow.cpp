@@ -125,7 +125,8 @@ namespace InteractiveFusion {
 			
 			break;
 		case WM_LBUTTONUP:
-			//KeyState::SetMouseDown(false);
+			KeyState::SetMouseDown(false);
+			
 
 			break;
 		case WM_MOUSEWHEEL:

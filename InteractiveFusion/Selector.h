@@ -33,6 +33,8 @@ namespace InteractiveFusion {
 
 		int GetColorCodeUnderCursor(HWND _windowHandle);
 		
+	private:
+		bool releaseHandled = true;
 	};
 }
 

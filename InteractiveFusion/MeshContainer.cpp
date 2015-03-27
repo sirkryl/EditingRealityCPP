@@ -532,13 +532,6 @@ namespace InteractiveFusion {
 		hitPoint.normal_z = vertices[i].normal_z;
 		}
 		}*/
-		DebugUtility::DbgOut(L"ray far", _ray.startPoint.x);
-		DebugUtility::DbgOut(L"ray end", _ray.endPoint.x);
-		DebugUtility::DbgOut(L"Vertex count: ", (int)vertices.size());
-		DebugUtility::DbgOut(L"hitPoint x", hitPoint.x);
-		DebugUtility::DbgOut(L"hitPoint x", hitPoint.x);
-		DebugUtility::DbgOut(L"hitPoint y", hitPoint.y);
-		DebugUtility::DbgOut(L"hitPoint z", hitPoint.z);
 		return hitPoint;
 
 	}

@@ -185,7 +185,6 @@ namespace InteractiveFusion {
 	{
 		try
 		{
-			DebugUtility::DbgOut(L"Renderable::UpdateIndexBuffer()::Begin");
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, triangles.size() * sizeof(Triangle), &triangles[0], GL_STATIC_DRAW);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

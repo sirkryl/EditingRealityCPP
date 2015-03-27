@@ -28,6 +28,7 @@ namespace InteractiveFusion {
 	HWND hSliderText, hSliderDescription;
 	bool startCountDown = false;
 	bool countdownFinished = false;
+	bool checkForHelpWindowVisibility = false;
 
 	//map << shared_ptr<ButtonLayout>, HWND > layoutTry;
 
@@ -162,15 +163,7 @@ namespace InteractiveFusion {
 
 	void PrepareWindow::HandleEvents(MainWindow& _parentWindow)
 	{
-		if (!_parentWindow.IsHelpVisible())
-		{
-			startCountDown = true;
-		}
-		if (countdownFinished)
-		{
-			eventQueue.push(PrepareWindowEvent::StateChange);
-			countdownFinished = false;
-		}
+		UpdateCountdown(_parentWindow);
 		while (!eventQueue.empty())
 		{
 			int event = eventQueue.front();
@@ -185,6 +178,8 @@ namespace InteractiveFusion {
 			case PrepareWindowEvent::Start:
 				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::Start");
 				_parentWindow.SetAndShowHelpMessage(HelpMessage::ScanHelp);
+				if (!_parentWindow.IsHelpEnabled())
+					startCountDown = true;
 				boost::thread(&PrepareWindow::CountdownThread, this);
 				
 				break;
@@ -196,6 +191,23 @@ namespace InteractiveFusion {
 			}
 
 			eventQueue.pop();
+		}
+	}
+
+	void PrepareWindow::UpdateCountdown(MainWindow& _parentWindow)
+	{
+		if (checkForHelpWindowVisibility)
+		{
+			if (!_parentWindow.IsHelpEnabled() || !_parentWindow.IsHelpVisible())
+			{
+				startCountDown = true;
+				checkForHelpWindowVisibility = false;
+			}
+		}
+		if (countdownFinished)
+		{
+			eventQueue.push(PrepareWindowEvent::StateChange);
+			countdownFinished = false;
 		}
 	}
 
@@ -348,6 +360,7 @@ namespace InteractiveFusion {
 
 	int PrepareWindow::CountdownThread()
 	{
+		checkForHelpWindowVisibility = true;
 		while (!startCountDown)
 		{
 			boost::this_thread::sleep(boost::posix_time::milliseconds(1000));

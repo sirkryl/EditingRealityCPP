@@ -22,7 +22,7 @@ namespace InteractiveFusion
 
 	enum class HelpMessage { IntroHelp, PrepareHelp, ScanHelp, PlaneSelectionHelp, SegmentationHelp, PlaneCutHelp, ProcessingHelp, InteractionHelp };
 
-	enum class OpenGLControlEvent {InitialLoading, StateUpdate, ModelDataUpdated, CopyTemporaryInModelData, CopyTemporaryInNextStateModelData, ResetCurrentStateModelData, ModelHighlightsUpdated, RemoveModelHighlights, FillHolesInScene, RemoveModelData, ResizeOpenGLViewport, ResetModelData, UpdateSegmentation, UpdateHoleFilling, UpdateCutPlane, SetupCutPlaneMode };
+	enum class GraphicsControlEvent {InitialLoading, StateUpdate, ModelDataUpdated, CopyTemporaryInModelData, FinishSegmentation, CopyTemporaryInNextStateModelData, ResetCurrentStateModelData, ModelHighlightsUpdated, RemoveModelHighlights, FillHolesInScene, RemoveModelData, ResizeOpenGLViewport, ResetModelData, UpdateSegmentation, UpdateHoleFilling, UpdateCutPlane, SetupCutPlaneMode };
 
 	enum class OpenGLCameraMode { Free, Sensor };
 

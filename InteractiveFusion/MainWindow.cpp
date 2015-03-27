@@ -57,6 +57,7 @@ namespace InteractiveFusion {
 
 	TCHAR KeyState::keysPressed[256] = { 0 };
 	bool KeyState::leftMouseDown = false;
+	bool KeyState::firstDown = false;
 	//STATUS BAR
 	HWND statusHandle;
 
@@ -236,7 +237,7 @@ namespace InteractiveFusion {
 
 		scanWindow = subWindowMap.find(WindowState::Scan);
 
-		helpWindow.Initialize(hWndMain, hInstance, 0.35f, 0.35f, 0.225f, 0.225f, L"Help", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
+		helpWindow.Initialize(hWndMain, hInstance, 0.15f, 0.15f, 0.15f, 0.15f, L"Help", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
 		
 
 		glControl.Initialize(hWndMain, hInstance);
@@ -315,21 +316,24 @@ namespace InteractiveFusion {
 	void MainWindow::SetAndShowHelpMessage(HelpMessage _state)
 	{
 		helpWindow.SetHelpState(_state);
-		ShowHelp();
+		if (isHelpEnabled)
+			ShowHelp();
 	}
 	void MainWindow::ShowHelp()
 	{
-		if (isHelpEnabled)
-		{
-			helpWindow.Show();
-			RECT rRect;
-			GetClientRect(hWndMain, &rRect);
-			helpWindow.Resize(rRect.right, rRect.bottom);
-		}
+		helpWindow.Show();
+		RECT rRect;
+		GetClientRect(hWndMain, &rRect);
+		helpWindow.Resize(rRect.right, rRect.bottom);
 	}
 	bool MainWindow::IsHelpVisible()
 	{
 		return helpWindow.IsVisible();
+	}
+
+	bool MainWindow::IsHelpEnabled()
+	{
+		return isHelpEnabled;
 	}
 
 	void MainWindow::UpdateModeButtons()

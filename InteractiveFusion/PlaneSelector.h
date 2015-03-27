@@ -31,6 +31,7 @@ namespace InteractiveFusion {
 		
 
 		void UpdatePlaneTranslation();
+		void UpdatePreview(GraphicsControl& _glControl, ModelData& _modelData, int _selectedIndex);
 		void ApplyPlaneRotation(GraphicsControl& _glControl, float _offSetX, float _offsetY);
 		void ApplyPlaneTranslation(float _offSet);
 
