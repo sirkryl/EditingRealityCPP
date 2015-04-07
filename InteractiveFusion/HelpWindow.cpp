@@ -181,7 +181,24 @@ namespace InteractiveFusion {
 		
 		ss << "You can always switch to a free camera to review your changes by clicking ''Free Camera'', although you wont be able to manipulate the scene during that.\r\n\r\n";
 		ss << "If you want to reset all your changes, simply press ''Reset''. When you are happy with your scene, click on ''Export'' to save your final creation as a 3D model that can be imported in other applications for further use.\r\n\r\n";
-		ss << "Thank you for trying out this little project!\r\n\r\n";
+		helpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
+		ss.str(std::string());
+		ss.clear();
+
+		//SCENARIO BOWLING
+
+		ss << "In this scenario, your goal is to prepare a typical bowling setup with about ten bowling pins.\r\n\r\n";
+		ss << "To achieve that, you should first remove everything but the bowling pin from the scene. After that, duplicate the pin as often as you like and place them somewhere in the marked area.\r\n\r\n";
+		ss << "You can make the pins bigger by scaling if you want, they don't even have to be uniformly scaled. When you are finished, press ''Export''.\r\n\r\n";
+		helpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
+		ss.str(std::string());
+		ss.clear();
+
+		//SCENARIO RACE
+
+		ss << "In this scenario, your goal is to prepare a little track for a small matchbox-sized car.\r\n\r\n";
+		ss << "You can translate, rotate, scale, duplicate and/or remove boxes, jumps and other objects as parts of the track.\r\n\r\n";
+		ss << "The red ((object)), however, represents a score point and should be duplicated and placed at different reachable places, as they will have to be collected by the car.\r\n\r\n";
 		helpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
