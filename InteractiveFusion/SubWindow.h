@@ -4,6 +4,7 @@
 #include <Windows.h>
 #include <string>
 #include <unordered_map>
+#include "EnumDeclarations.h"
 namespace InteractiveFusion {
 
 	class SubWindowEvent {

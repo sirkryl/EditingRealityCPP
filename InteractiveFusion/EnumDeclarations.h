@@ -27,4 +27,6 @@ namespace InteractiveFusion
 	enum class OpenGLCameraMode { Free, Sensor };
 
 	enum class OpenGLShaderProgramType { Default, Orthographic};
+
+	enum class ScenarioType { None, Basic, Bowling};
 }

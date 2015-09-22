@@ -48,6 +48,9 @@ namespace InteractiveFusion {
 		isBusy = true;
 		CleanUp();
 
+		DebugUtility::DbgOut(L"ModelData::LoadFromData::Vertices before preparing mesh: ", (int)_vertices.size());
+		DebugUtility::DbgOut(L"ModelData::LoadFromData::Triangles before preparing mesh: ", (int)_triangles.size());
+
 		currentMeshData.push_back(shared_ptr<MeshContainer>(new MeshContainer(_vertices, _triangles)));
 		currentMeshData[currentMeshData.size() - 1]->SetColorCode(GetNextColorCode());
 		currentMeshData[currentMeshData.size() - 1]->CopyVisibleToInternalData();
@@ -56,6 +59,9 @@ namespace InteractiveFusion {
 		currentMeshData[currentMeshData.size() - 1]->CopyInternalToVisibleData();
 		currentMeshData[currentMeshData.size() - 1]->UpdateEssentials();
 		currentMeshData[currentMeshData.size() - 1]->SetShaderProgram(defaultShaderProgram);
+
+		DebugUtility::DbgOut(L"ModelData::LoadFromData::Vertices after preparing mesh: ", currentMeshData[currentMeshData.size() - 1]->GetNumberOfVertices());
+		DebugUtility::DbgOut(L"ModelData::LoadFromData::Triangles after preparing mesh: ", currentMeshData[currentMeshData.size() - 1]->GetNumberOfTriangles());
 		isBusy = false;
 	}
 

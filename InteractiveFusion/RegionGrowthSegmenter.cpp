@@ -54,6 +54,12 @@ namespace InteractiveFusion {
 		}
 		pcl::RegionGrowing<pcl::PointXYZRGBNormal, pcl::Normal> reg;
 		//reg.setMinClusterSize(openGLWin.minClusterSize);
+
+		Logger::WriteToLog(L"Performing Region Growth Segmentation with MinComponentSize = " + std::to_wstring(segmentationParameters.minComponentSize), Logger::info);
+		Logger::WriteToLog(L"...numberOfNeighbors = " + std::to_wstring(segmentationParameters.numberOfNeighbors), Logger::info);
+		Logger::WriteToLog(L"...smoothnessThreshold = " + std::to_wstring(segmentationParameters.smoothnessThreshold), Logger::info);
+		Logger::WriteToLog(L"...curvatureThreshold = " + std::to_wstring(segmentationParameters.curvatureThreshold), Logger::info);
+
 		reg.setMinClusterSize(segmentationParameters.minComponentSize);
 		reg.setMaxClusterSize(1000000);
 

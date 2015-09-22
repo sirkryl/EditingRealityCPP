@@ -95,8 +95,22 @@ namespace InteractiveFusion {
 
 		segmentation.segment(*inlierIndices, *coefficients);
 
-		if (inlierIndices->indices.size() <= mainCloud->points.size() / 15)
+		float threshold = mainCloud->points.size() / 7;
+
+		std::wstring axis = L"x";
+		if (axisUsedForSegmentation == Eigen::Vector3f(1,0,0))
+			axis = L"x";
+		else if (axisUsedForSegmentation == Eigen::Vector3f(0, 1, 0))
+			axis = L"y";
+		else if (axisUsedForSegmentation == Eigen::Vector3f(0, 0, 1))
+			axis = L"z";
+		Logger::WriteToLog(L"Current Plane Segmentation Axis: " + axis, Logger::info);
+		Logger::WriteToLog(L"Plane Vertex Count: " + std::to_wstring((float)inlierIndices->indices.size()), Logger::info);
+		Logger::WriteToLog(L"Minimum size for recognition: " + std::to_wstring(threshold), Logger::info);
+
+		if (inlierIndices->indices.size() <= threshold)
 		{
+			Logger::WriteToLog(L"Plane recognized: #" + temporarySegmentationClusterIndices.size(), Logger::info);
 			if (axisChangedCount == 0)
 			{
 				axisChangedCount++;
@@ -130,7 +144,8 @@ namespace InteractiveFusion {
 		temporarySegmentationClusterIndices.push_back(*inlierIndices);
 		planeCoefficients.push_back(coefficients);
 
-		if (axisChangedCount == 0 && indexOfGroundPlane == -1)
+		//if (axisChangedCount == 0 && indexOfGroundPlane == -1)
+		if (indexOfGroundPlane == -1)
 		{
 			indexOfGroundPlane = temporarySegmentationClusterIndices.size() - 1;
 			DebugUtility::DbgOut(L"axisChangedCount:: 0, this is ground plane ", indexOfGroundPlane);

@@ -47,7 +47,6 @@ namespace InteractiveFusion {
 		EstimateIndices();
 		if (!segmentationResult)
 		{
-			DebugUtility::DbgOut(L"So i guess you are here.. ", (int)GetClusterCount());
 			return false;
 		}
 		return true;
@@ -74,6 +73,12 @@ namespace InteractiveFusion {
 
 		pcl::PointIndices verticesAbove;
 		pcl::PointIndices verticesBelow;
+
+		Logger::WriteToLog(L"PlaneCutSegmentation with Parameters...", Logger::info);
+		Logger::WriteToLog(L"X.. " + std::to_wstring(segmentationParameters.planeParameters.x), Logger::info);
+		Logger::WriteToLog(L"Y.. " + std::to_wstring(segmentationParameters.planeParameters.y), Logger::info);
+		Logger::WriteToLog(L"Z.. " + std::to_wstring(segmentationParameters.planeParameters.z), Logger::info);
+		Logger::WriteToLog(L"D.. " + std::to_wstring(segmentationParameters.planeParameters.d), Logger::info);
 
 		int index = 0;
 		for (auto& vertex : mainCloud->points)

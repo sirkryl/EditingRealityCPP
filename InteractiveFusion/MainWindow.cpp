@@ -8,6 +8,8 @@
 #include "DebugUtility.h"
 #include "KeyState.h"
 #include "StyleSheet.h"
+#include "Logger.h"
+#include "StopWatch.h"
 
 #include "GraphicsControl.h"
 #include "StringConverter.h"
@@ -25,6 +27,7 @@
 #include "PlaneCutWindow.h"
 #include <ctime>
 #include <unordered_map>
+
 using namespace std;
 
 namespace InteractiveFusion {
@@ -43,8 +46,10 @@ namespace InteractiveFusion {
 	HWND hWndMain;
 	HINSTANCE appInstance;
 	WindowState currentState;
-	
+	ScenarioType scenarioType = ScenarioType::None;
+	StopWatch stateWatch;
 	GraphicsControl glControl;
+
 
 	std::unordered_map<WindowState, unique_ptr<SubWindow>> subWindowMap;
 	std::unordered_map<WindowState, unique_ptr<SubWindow>>::const_iterator currentWindow = subWindowMap.end();
@@ -81,7 +86,7 @@ namespace InteractiveFusion {
 	DWORD tickLastFpsUpdate;
 	float fFrameInterval;
 	clock_t tLastFrame;
-
+	
 	std::wstring nextStatusBarMessage;
 	std::wstring currentStatusBarMessage;
 
@@ -125,6 +130,7 @@ namespace InteractiveFusion {
 			0, 0, 960, 545, 0,
 			NULL, hInstance, this);
 
+		Logger::Initialize();
 
 		ShowWindow(hWndMain, SW_SHOW);
 
@@ -288,6 +294,11 @@ namespace InteractiveFusion {
 			currentWindow->second->Hide();
 
 		
+		Logger::WriteToLog(L"Leaving state " + std::to_wstring((int)currentState), Logger::info);
+		Logger::WriteToLog(L"Time spent in state: " + std::to_wstring(stateWatch.Stop()), Logger::info);
+		Logger::WriteToLog(L"Switching to state " + std::to_wstring((int)_state), Logger::info);
+		stateWatch.Start();
+		
 		currentState = _state;
 		
 		RECT rRect;
@@ -317,7 +328,10 @@ namespace InteractiveFusion {
 	{
 		helpWindow.SetHelpState(_state);
 		if (isHelpEnabled)
+		{
+			Logger::WriteToLog(L"Showing Help Message with number" + std::to_wstring((int)_state), Logger::info);
 			ShowHelp();
+		}
 	}
 	void MainWindow::ShowHelp()
 	{
@@ -388,21 +402,26 @@ namespace InteractiveFusion {
 
 	void MainWindow::ChangeScanVolumeSize(int _voxelsPerMeter)
 	{
+		Logger::WriteToLog(L"Changing scan volume size to VPM: " + std::to_wstring(_voxelsPerMeter), Logger::info);
 		scanVolumeVoxelsPerMeter = _voxelsPerMeter;
 	}
 
 	void MainWindow::ChangeInteractionMode(InteractionMode _interactionMode)
 	{
+		Logger::WriteToLog(L"Changing interaction mode to: " + std::to_wstring((int)_interactionMode), Logger::info);
+
 		glControl.ChangeInteractionMode(_interactionMode);
 	}
 
 	void MainWindow::ChangePlaneCutAxis(PlaneCutAxis _axis)
 	{
+		Logger::WriteToLog(L"Changing plane cut axis to: " + std::to_wstring((int)_axis), Logger::info);
 		glControl.ChangePlaneCutAxis(_axis);
 	}
 
 	void MainWindow::SetCameraMode(OpenGLCameraMode _cameraMode)
 	{
+		Logger::WriteToLog(L"Changing camera mode: " + std::to_wstring((int)_cameraMode), Logger::info);
 		glControl.SetCameraMode(_cameraMode);
 	}
 
@@ -419,6 +438,7 @@ namespace InteractiveFusion {
 
 	void MainWindow::ResetModel()
 	{
+		Logger::WriteToLog(L"Reset Model", Logger::info);
 		glControl.ResetModel();
 		SetStatusBarMessage(L"Model reset.");
 	}
@@ -427,6 +447,7 @@ namespace InteractiveFusion {
 	{
 		int closedHoles = glControl.FillHoles(_holeSize);
 		SetStatusBarMessage(to_wstring(closedHoles) + L" holes have been closed.");
+		Logger::WriteToLog(L"Closed holes: " + std::to_wstring(closedHoles), Logger::info);
 		return closedHoles;
 	}
 
@@ -434,18 +455,21 @@ namespace InteractiveFusion {
 	{
 		int removedComponents = glControl.RemoveConnectedComponents(_maxComponentSize);
 		SetStatusBarMessage(to_wstring(removedComponents) + L" components have been removed.");
+		Logger::WriteToLog(L"Removed components: " + std::to_wstring(removedComponents), Logger::info);
 		return removedComponents;
 	}
 
 	void MainWindow::ExportModel()
 	{
 		SetStatusBarMessage(L"Exporting model...");
+		Logger::WriteToLog(L"Exporting model", Logger::info);
 		glControl.ExportModel();
 	}
 
 	void MainWindow::UpdateObjectSegmentation(ObjectSegmentationParams& _params)
 	{
 		SetStatusBarMessage(L"Updating object segmentation...");
+		Logger::WriteToLog(L"Updating object segmentation", Logger::info);
 		boost::thread(&GraphicsControl::UpdateObjectSegmentation, &glControl, boost::ref(_params));
 		//glControl.UpdateObjectSegmentation(_params);
 	}
@@ -458,30 +482,38 @@ namespace InteractiveFusion {
 	void MainWindow::UpdatePlaneSegmentation(PlaneSegmentationParams& _params)
 	{
 		SetStatusBarMessage(L"Updating plane segmentation...");
+		Logger::WriteToLog(L"Updating plane segmentation", Logger::info);
+		Logger::WriteToLog(L"...Thickness:"+std::to_wstring(_params.planeThickness), Logger::info);
+		Logger::WriteToLog(L"...Smoothness:" + std::to_wstring(_params.planeSmoothness), Logger::info);
 		boost::thread(&GraphicsControl::UpdatePlaneSegmentation, &glControl, _params);
 		//glControl.UpdatePlaneSegmentation(_params);
 	}
 
 	void MainWindow::ConfirmSegmentedPlane(PlaneSegmentationParams& _params)
 	{
+		Logger::WriteToLog(L"Confirmed plane", Logger::info);
 		SetStatusBarMessage(L"Confirmed plane, looking for more...");
 		glControl.ConfirmSegmentedPlane(_params);
 	}
 
 	void MainWindow::RejectSegmentedPlane(PlaneSegmentationParams& _params)
 	{
+		Logger::WriteToLog(L"Rejected plane", Logger::info);
 		SetStatusBarMessage(L"Rejected plane, looking for more...");
 		glControl.RejectSegmentedPlane(_params);
 	}
 
 	void MainWindow::FinishObjectSegmentation()
 	{
+		Logger::WriteToLog(L"Object segmentation finished", Logger::info);
 		SetStatusBarMessage(L"Finishing object segmentation...");
 		glControl.FinishObjectSegmentation();
 	}
 
 	void MainWindow::FinishProcessing()
 	{
+		Logger::WriteToLog(L"Processing finished.", Logger::info);
+
 		SetStatusBarMessage(L"Finishing processing...");
 		glControl.FinishProcessing();
 	}
@@ -779,7 +811,17 @@ namespace InteractiveFusion {
 
 	void MainWindow::ToggleHelp(bool flag)
 	{
+		if (flag)
+			Logger::WriteToLog(L"Help messsages activated", Logger::info);
+		else
+			Logger::WriteToLog(L"Help messsages deactivated", Logger::info);
 		isHelpEnabled = flag;
+	}
+
+	void MainWindow::SetScenarioType(ScenarioType type)
+	{
+		Logger::WriteToLog(L"Changing scenario type to: " + std::to_wstring((int)type), Logger::info);
+		scenarioType = type;
 	}
 
 	void MainWindow::UpdateUIActivation()
@@ -840,6 +882,5 @@ namespace InteractiveFusion {
 			style.second.CleanUp();
 		buttonLayout.clear();
 	}
-
 #pragma endregion Parent Window Thread
 }

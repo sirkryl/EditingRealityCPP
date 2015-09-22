@@ -43,7 +43,8 @@ namespace InteractiveFusion {
 
 		pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
 
-
+		Logger::WriteToLog(L"Performing Euclidean Segmentation with ClusterTolerance = " + std::to_wstring(segmentationParameters.clusterTolerance), Logger::info);
+		Logger::WriteToLog(L"...MinComponentSize = " + std::to_wstring(segmentationParameters.minComponentSize), Logger::info);
 		ec.setClusterTolerance(segmentationParameters.clusterTolerance);
 
 		ec.setMinClusterSize(segmentationParameters.minComponentSize);

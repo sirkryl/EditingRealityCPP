@@ -16,7 +16,7 @@ namespace InteractiveFusion {
 		if (IsInitialized())
 			return;
 
-		DebugUtility::DbgOut(L"OpenGLText::INitialize()::");
+		DebugUtility::DbgOut(L"OpenGLText::Initialize()::");
 		if (FT_Init_FreeType(&ft_lib) != 0) {
 			MessageBox(NULL, L"Couldn't initialize FreeType library", L"Error", MB_ICONERROR);
 		}

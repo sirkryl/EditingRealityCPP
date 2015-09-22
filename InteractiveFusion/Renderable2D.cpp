@@ -23,7 +23,6 @@ namespace InteractiveFusion {
 		Renderable(_vertices)
 	{
 		//Renderable::Renderable(_vertices);
-		DebugUtility::DbgOut(L"Renderable2D::Renderable2D()::_vertices size ", (int)_vertices.size());
 	}
 
 	void Renderable2D::SetAlpha(float _alpha)

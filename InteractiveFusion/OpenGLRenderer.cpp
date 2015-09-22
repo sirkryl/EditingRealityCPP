@@ -61,11 +61,9 @@ namespace InteractiveFusion {
 
 	void OpenGLRenderer::InitializeOverlays(GraphicsControl& _glControl)
 	{
-		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::Begin");
 		vector<Vertex> statusMessageBackgroundVertices;
 
 		ColorIF backgroundColor{ (float)StyleSheet::GetInstance()->GetInnerBackgroundColor().r / 255.0f, (float)StyleSheet::GetInstance()->GetInnerBackgroundColor().g / 255.0f, (float)StyleSheet::GetInstance()->GetInnerBackgroundColor().b / 255.0f };
-		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::11");
 		statusMessageBackgroundVertices.push_back(Vertex(-1.0f, -0.15f, 0.0f,
 			backgroundColor.r, backgroundColor.g, backgroundColor.b,
 			0.0f, 0.0f, 0.0f));
@@ -84,15 +82,10 @@ namespace InteractiveFusion {
 		statusMessageBackgroundVertices.push_back(Vertex(1.0f, 0.15f, 0.0f,
 			backgroundColor.r, backgroundColor.g, backgroundColor.b,
 			0.0f, 0.0f, 0.0f));
-		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::22");
 		statusMessageBackground = unique_ptr<MeshContainer2D>(new MeshContainer2D(statusMessageBackgroundVertices));
-		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::33");
 		statusMessageBackground->SetShaderProgram(_glControl.GetShader(OpenGLShaderProgramType::Orthographic));
-		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::44");
 		statusMessageBackground->SetAlpha(0.5f);
-		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::55");
 		statusMessageBackground->GenerateBuffers();
-		DebugUtility::DbgOut(L"OpenGLRenderer::InitializeOverlays::66");
 		vector<Vertex> overlayVertices;
 
 		overlayVertices.push_back(Vertex(-1.0f, -1.0f, 0.0f,

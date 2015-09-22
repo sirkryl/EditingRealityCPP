@@ -12,7 +12,7 @@
 namespace InteractiveFusion {
 
 	ButtonSlider scanSizeSlider;
-
+	
 	//PREPARE UI
 	GUIContainer prepareUi;
 	HWND hButtonStart;
@@ -188,7 +188,13 @@ namespace InteractiveFusion {
 				_parentWindow.ToggleHelp(helpActive);
 
 				break;
+			case PrepareWindowEvent::ScenarioChanged:
+				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::ScenarioChanged");
+				_parentWindow.SetScenarioType(scenarioType);
+				break;
 			}
+		
+
 
 			eventQueue.pop();
 		}
@@ -239,14 +245,17 @@ namespace InteractiveFusion {
 				{
 					CheckDlgButton(windowHandle, IDC_PREPARE_CHECK_SCENARIO_TWO, BST_UNCHECKED);
 				}
+				scenarioType = ScenarioType::Bowling;
 				//stateManager.SetScenarioType(IF_SCENARIO_BOWLING);
-				DebugUtility::DbgOut(L"SCENARIO ONE checked");
+				DebugUtility::DbgOut(L"SCENARIO Bowling checked");
 			}
 			else
 			{
+				scenarioType = ScenarioType::None;
 				//stateManager.SetScenarioType(IF_SCENARIO_NONE);
-				DebugUtility::DbgOut(L"SCENARIO ONE unchecked");
+				DebugUtility::DbgOut(L"SCENARIO Bowling unchecked");
 			}
+			eventQueue.push(PrepareWindowEvent::ScenarioChanged);
 		}
 
 		if (IDC_PREPARE_CHECK_SCENARIO_TWO == LOWORD(wParam))
@@ -257,14 +266,17 @@ namespace InteractiveFusion {
 				{
 					CheckDlgButton(windowHandle, IDC_PREPARE_CHECK_SCENARIO_ONE, BST_UNCHECKED);
 				}
+				scenarioType = ScenarioType::Basic;
 				//stateManager.SetScenarioType(IF_SCENARIO_TWO);
-				DebugUtility::DbgOut(L"SCENARIO TWO checked");
+				DebugUtility::DbgOut(L"SCENARIO Basic checked");
 			}
 			else
 			{
+				scenarioType = ScenarioType::None;
 				//stateManager.SetScenarioType(IF_SCENARIO_NONE);
-				DebugUtility::DbgOut(L"SCENARIO TWO unchecked");
+				DebugUtility::DbgOut(L"SCENARIO Basic unchecked");
 			}
+			eventQueue.push(PrepareWindowEvent::ScenarioChanged);
 		}
 
 		if (IDC_PREPARE_BUTTON_START == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))

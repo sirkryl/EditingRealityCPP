@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <Shlobj.h>
+#include <codecvt>
 namespace InteractiveFusion {
 
 	namespace StringConverter {
@@ -14,6 +15,14 @@ namespace InteractiveFusion {
 			std::wstring r(buf);
 			delete[] buf;
 			return r;
+		}
+
+		static std::string WStringToString(const std::wstring& wstr)
+		{
+			typedef std::codecvt_utf8<wchar_t> convert_typeX;
+			std::wstring_convert<convert_typeX, wchar_t> converterX;
+
+			return converterX.to_bytes(wstr);
 		}
 	}
 

@@ -27,7 +27,6 @@ namespace InteractiveFusion
 	MeshContainer2D::MeshContainer2D(vector<Vertex> _vertices) :
 		Renderable2D(_vertices)
 	{
-		DebugUtility::DbgOut(L"MeshContainer2D::MeshContainer2D()::_vertices size ", (int)_vertices.size());
 		//Renderable2D::Renderable2D(_vertices);
 	}
 

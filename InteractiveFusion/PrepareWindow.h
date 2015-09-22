@@ -7,6 +7,7 @@ namespace InteractiveFusion {
 	public:
 		enum Type {
 			ChangeSize = SubWindowEvent::Last,
+			ScenarioChanged,
 			Last
 		};
 	};
@@ -33,7 +34,7 @@ namespace InteractiveFusion {
 		//const SubWindowEvent ChangeSize;
 
 		HFONT countdownFont;
-
+		ScenarioType scenarioType;
 		virtual void ProcessUI(WPARAM wParam, LPARAM lParam);
 
 		void UpdateCountdown(MainWindow& _parentWindow);

@@ -54,5 +54,8 @@ namespace InteractiveFusion {
 		void Orbit();
 		void Zoom();
 		void Strafe();
+
+		glm::vec3 CalculateCameraPosition();
+		glm::vec3 CalculateCameraLookAt();
 	};
 }

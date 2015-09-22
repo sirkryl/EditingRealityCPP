@@ -53,6 +53,9 @@ namespace InteractiveFusion {
 		
 		void FinishProcessing();
 		void ToggleHelp(bool flag);
+
+		void SetScenarioType(ScenarioType type);
+
 		int GetScanVolumeSize();
 		int GetGpuMemory();
 

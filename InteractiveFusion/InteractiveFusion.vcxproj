@@ -88,8 +88,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
     <CodeAnalysisRuleSet>CodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -158,7 +156,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <Profile>true</Profile>
     </Link>
@@ -197,6 +194,7 @@
     <ClInclude Include="InteractionWindow.h" />
     <ClInclude Include="IScanner.h" />
     <ClInclude Include="KinectFusion.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="ManipulationSelector.h" />
     <ClInclude Include="MeshContainer2D.h" />
     <ClInclude Include="ModelData.h" />
@@ -290,6 +288,7 @@
     <ClCompile Include="InteractionRenderer.cpp" />
     <ClCompile Include="InteractionWindow.cpp" />
     <ClCompile Include="KinectFusion.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ManipulationSelector.cpp" />
     <ClCompile Include="MeshContainer2D.cpp" />

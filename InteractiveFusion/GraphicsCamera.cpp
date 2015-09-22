@@ -156,6 +156,16 @@ namespace InteractiveFusion {
 
 		camLookAt = rotationPoint;
 
-		return glm::lookAt(camPosition + (camDirection * zoomFactor) + (camRight * completeStrafeX) + (camUpDirection * completeStrafeY), camLookAt + (camRight * completeStrafeX) + (camUpDirection * completeStrafeY), camUpDirection);
+		return glm::lookAt(CalculateCameraPosition(), CalculateCameraLookAt(), camUpDirection);
+	}
+
+	glm::vec3 GraphicsCamera::CalculateCameraPosition()
+	{
+		return camPosition + (camDirection * zoomFactor) + (camRight * completeStrafeX) + (camUpDirection * completeStrafeY);
+	}
+
+	glm::vec3 GraphicsCamera::CalculateCameraLookAt()
+	{
+		return camLookAt + (camRight * completeStrafeX) + (camUpDirection * completeStrafeY);
 	}
 }
