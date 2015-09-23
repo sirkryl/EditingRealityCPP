@@ -39,7 +39,7 @@ namespace InteractiveFusion {
 
 		void UpdateCountdown(MainWindow& _parentWindow);
 	//	bool IsMouseInHandle(HWND handle);
-
+		void DetermineMeshQuality();
 		void UpdateScanVolumeSize();
 
 		int CountdownThread();

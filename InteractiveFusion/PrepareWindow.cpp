@@ -290,13 +290,20 @@ namespace InteractiveFusion {
 
 	}
 
-	
+	void PrepareWindow::DetermineMeshQuality()
+	{
+		if (voxelsPerMeter >= 300)
+			SetDlgItemText(windowHandle, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: HIGH");
+		else if (voxelsPerMeter >= 200)
+			SetDlgItemText(windowHandle, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: MEDIUM");
+		else
+			SetDlgItemText(windowHandle, IDC_PREPARE_TEXT_MESHQUALITY, L"Mesh Quality: LOW");
+	}
 
 	void PrepareWindow::UpdateScanVolumeSize()
 	{
 		voxelsPerMeter = 416 - scanSizeSlider.GetValue();
 		DebugUtility::DbgOut(L"VoxelsPerMeter: ", voxelsPerMeter);
-
 
 		float volumeWidth = 800.0f / (float)voxelsPerMeter;
 		float volumeHeight = 512.0f / (float)voxelsPerMeter;
@@ -309,6 +316,9 @@ namespace InteractiveFusion {
 		s.assign(buffer, slen);
 
 		SetDlgItemText(windowHandle, IDC_PREPARE_SLIDER_TEXT, s.c_str());
+
+		DetermineMeshQuality();
+
 		eventQueue.push(PrepareWindowEvent::ChangeSize);
 	}
 
