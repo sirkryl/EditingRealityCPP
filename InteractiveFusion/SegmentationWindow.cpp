@@ -337,8 +337,16 @@ namespace InteractiveFusion {
 			{
 			case SegmentationWindowEvent::StateChange:
 				_parentWindow.FinishObjectSegmentation();
-				_parentWindow.ChangeState(WindowState::PlaneCut);
-				_parentWindow.SetAndShowHelpMessage(HelpMessage::PlaneCutHelp);
+				if (_parentWindow.GetScenarioType() == ScenarioType::Bowling)
+				{
+					_parentWindow.ChangeState(WindowState::Processing);
+					_parentWindow.SetAndShowHelpMessage(HelpMessage::ProcessingHelp);
+				}
+				else
+				{
+					_parentWindow.ChangeState(WindowState::PlaneCut);
+					_parentWindow.SetAndShowHelpMessage(HelpMessage::PlaneCutHelp);
+				}
 				break;
 			case SegmentationWindowEvent::SegmentationFinished:
 				//do stuff

@@ -58,7 +58,7 @@ namespace InteractiveFusion {
 
 		int GetScanVolumeSize();
 		int GetGpuMemory();
-
+		ScenarioType GetScenarioType();
 		void SetGpuMemory(int _gpuMemory);
 
 

@@ -85,4 +85,9 @@ namespace InteractiveFusion {
 		boost::log::sources::wseverity_logger_mt<severity_level>& lg = my_logger::get();
 		BOOST_LOG_SEV(lg, level) << label;
 	}
+
+	void Logger::CloseLog()
+	{
+		logging::core::get()->remove_all_sinks();
+	}
 }

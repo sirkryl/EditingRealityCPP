@@ -23,5 +23,6 @@ namespace InteractiveFusion {
 		static void Initialize();
 		static void WriteToLog(std::wstring label);
 		static void WriteToLog(std::wstring label, severity_level level);
+		static void CloseLog();
 	};
 }

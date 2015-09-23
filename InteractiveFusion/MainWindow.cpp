@@ -298,7 +298,7 @@ namespace InteractiveFusion {
 		Logger::WriteToLog(L"Time spent in state: " + std::to_wstring(stateWatch.Stop()), Logger::info);
 		Logger::WriteToLog(L"Switching to state " + std::to_wstring((int)_state), Logger::info);
 		stateWatch.Start();
-		
+
 		currentState = _state;
 		
 		RECT rRect;
@@ -822,6 +822,7 @@ namespace InteractiveFusion {
 	{
 		Logger::WriteToLog(L"Changing scenario type to: " + std::to_wstring((int)type), Logger::info);
 		scenarioType = type;
+		helpWindow.SetScenarioType(type);
 	}
 
 	void MainWindow::UpdateUIActivation()
@@ -844,6 +845,11 @@ namespace InteractiveFusion {
 	int MainWindow::GetGpuMemory()
 	{
 		return totalGpuMemory;
+	}
+
+	ScenarioType MainWindow::GetScenarioType()
+	{
+		return scenarioType;
 	}
 
 	void MainWindow::SetGpuMemory(int _gpuMemory)
@@ -881,6 +887,8 @@ namespace InteractiveFusion {
 		for (auto style : buttonLayout)
 			style.second.CleanUp();
 		buttonLayout.clear();
+
+		Logger::CloseLog();
 	}
 #pragma endregion Parent Window Thread
 }

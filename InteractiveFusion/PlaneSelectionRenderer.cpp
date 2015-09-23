@@ -58,21 +58,17 @@ namespace InteractiveFusion {
 
 	void PlaneSelectionRenderer::ShowPlaneSelectionOverlay()
 	{
-		//glDisable(GL_DEPTH_TEST);
+		glDisable(GL_DEPTH_TEST);
 
-		////if (stateManager.GetDeviceClass() == IF_DEVICE_PC)
-		////	gl2DHelper.DrawRectangle(0.7f, 0.8f, 0.2f);
-		////else if (stateManager.GetDeviceClass() == IF_DEVICE_TABLET)
-		//planeSelectionQuestionOverlay->Draw(viewportWidth, viewportHeight);
-		////OpenGLRenderer::gl2dHelper.DrawRectangle(0.88f, 0.8f, 0.25f);
+		planeSelectionQuestionOverlay->Draw(viewportWidth, viewportHeight);
 
-		//const std::wstring wallMessage = L"Is the highlighted area (part of) a wall, floor or ceiling?";
+		const std::wstring wallMessage = L"Is the highlighted area (part of) a wall, floor or ceiling?";
 
-		//float xPos = 0.0f - wallMessage.length() * 0.008f;
+		float xPos = 0.0f - wallMessage.length() * 0.007f;
 
-		//OpenGLRenderer::glText.PrepareForRender();
-		//OpenGLRenderer::glText.RenderText(wallMessage, 28, xPos, 0.77f, 2.0f / viewportWidth, 2.0f / viewportHeight);
-		//glEnable(GL_DEPTH_TEST);
+		OpenGLRenderer::glText.PrepareForRender();
+		OpenGLRenderer::glText.RenderText(wallMessage, 28, xPos, 0.77f, 2.0f / viewportWidth, 2.0f / viewportHeight);
+		glEnable(GL_DEPTH_TEST);
 	}
 
 	void PlaneSelectionRenderer::Render(GraphicsControl& _glControl, ModelData& _modelData, IconData& _iconData)
@@ -83,8 +79,6 @@ namespace InteractiveFusion {
 		ShowPlaneSelectionOverlay();
 
 		OpenGLRenderer::FinishRender(_glControl);
-
-		
 	}
 
 	void PlaneSelectionRenderer::CleanUp()

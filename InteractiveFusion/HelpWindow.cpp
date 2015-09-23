@@ -13,8 +13,11 @@ namespace InteractiveFusion {
 	//map << shared_ptr<ButtonLayout>, HWND > layoutTry;
 	HelpMessage currentHelpState;
 	int currentIndex = 0;
-
+	std::unordered_map<ScenarioType, std::unordered_map<HelpMessage, std::vector<std::wstring>>> metaMap;
 	std::unordered_map<HelpMessage, std::vector<std::wstring>> helpTextMap;
+	std::unordered_map<HelpMessage, std::vector<std::wstring>> bowlingHelpTextMap;
+	std::unordered_map<HelpMessage, std::vector<std::wstring>> basicHelpTextMap;
+
 	std::unordered_map<WindowState, HelpMessage> standardMessageMap;
 	HWND hButtonOk;
 	HWND hTextHelp;
@@ -62,11 +65,54 @@ namespace InteractiveFusion {
 		helpTextMap.emplace(HelpMessage::PlaneCutHelp, std::vector<std::wstring>());
 		helpTextMap.emplace(HelpMessage::ProcessingHelp, std::vector<std::wstring>());
 		helpTextMap.emplace(HelpMessage::InteractionHelp, std::vector<std::wstring>());
+
+		bowlingHelpTextMap = std::unordered_map < HelpMessage, std::vector<std::wstring> >();
+		bowlingHelpTextMap.emplace(HelpMessage::PrepareHelp, std::vector<std::wstring>());
+		bowlingHelpTextMap.emplace(HelpMessage::ScanHelp, std::vector<std::wstring>());
+
+		bowlingHelpTextMap.emplace(HelpMessage::PlaneSelectionHelp, std::vector<std::wstring>());
+		bowlingHelpTextMap.emplace(HelpMessage::SegmentationHelp, std::vector<std::wstring>());
+		bowlingHelpTextMap.emplace(HelpMessage::PlaneCutHelp, std::vector<std::wstring>());
+		bowlingHelpTextMap.emplace(HelpMessage::ProcessingHelp, std::vector<std::wstring>());
+		bowlingHelpTextMap.emplace(HelpMessage::InteractionHelp, std::vector<std::wstring>());
+
+		basicHelpTextMap = std::unordered_map < HelpMessage, std::vector<std::wstring> >();
+		basicHelpTextMap.emplace(HelpMessage::PrepareHelp, std::vector<std::wstring>());
+		basicHelpTextMap.emplace(HelpMessage::ScanHelp, std::vector<std::wstring>());
+
+		basicHelpTextMap.emplace(HelpMessage::PlaneSelectionHelp, std::vector<std::wstring>());
+		basicHelpTextMap.emplace(HelpMessage::SegmentationHelp, std::vector<std::wstring>());
+		basicHelpTextMap.emplace(HelpMessage::PlaneCutHelp, std::vector<std::wstring>());
+		basicHelpTextMap.emplace(HelpMessage::ProcessingHelp, std::vector<std::wstring>());
+		basicHelpTextMap.emplace(HelpMessage::InteractionHelp, std::vector<std::wstring>());
+
 		std::stringstream ss;
+
+
+
+
+		//PREPARE BOWLING 
+		ss << "In this scenario, your goal is to prepare a typical bowling setup with about ten bowling pins.\r\n\r\n";
+		ss << "To do that, you will first need to scan the single bowling pin on the highlighted area to virtually reconstruct it. Afterwards, scene segmentation has to be performed in order to separate the pin from the floor. Finally, the pin must be duplicated ten times and positioned in a way that resembles the typical bowling pin setup. \r\n\r\n";
+		ss << "The application will display help messages and give hints at the beginning of every stage.\r\n\r\n";
+		bowlingHelpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
+		ss.str(std::string());
+		ss.clear();
+
+		//PREPARE BASIC 
+		ss << "In this scenario, your goal is to scan and reconstruct the area containing the items placed on the highlighted area in the middle of the room. Afterwards, each of the differently colored objects should be segmented into a distinct object. \r\n\r\n";
+		ss << "Start by scanning the scene in order to virtually reconstruct it. Afterwards, several segmentation stages will have to be performed to first identify the ground floor and subsequently each of the unique boxes placed on it.\r\n\r\n";
+		ss << "The application will display help messages and give hints at the beginning of every stage.\r\n\r\n";
+		basicHelpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
+		ss.str(std::string());
+		ss.clear();
+
 
 		//PREPARE
 		ss << "This application let's you scan and virtually reconstruct a three-dimensional scene, subsequently segment it into planes and moveable objects and process it by filling holes or removing unwanted components.\r\n\r\n";
 		ss << "Afterwards, you will be able to navigate and manipulate the scene by physically moving around and interacting with the touchpad.\r\n\r\n";
+		bowlingHelpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
+		basicHelpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
 		helpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
@@ -76,7 +122,8 @@ namespace InteractiveFusion {
 		ss << "If you want to change these settings later on, you can do so by changing back to this screen (click ''PREPARE'' in the upper navigation bar). By doing so, however, you will lose all progress on your current reconstruction.\r\n\r\n";
 		ss << "If you don't want any more automatic help messages, just uncheck the ''Show Help'' checkbox. You can always look at the currently available help by selecting the ''?'' in the top left corner.\r\n\r\n";
 		ss << "Press ''START'' when you are ready to scan your scene. ";
-
+		bowlingHelpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
+		basicHelpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
 		helpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
@@ -88,7 +135,9 @@ namespace InteractiveFusion {
 		ss << "2. As the camera does not recognize objects more than 50cm away from it, try to keep a short distance to any physical objects to stabilize positional tracking.\r\n";
 		ss << "3. For better results, it is also advised to hold the camera in an angle that is parallel to the ground when the scan starts.\r\n";
 		ss << "4. While scanning, please move slowly around the object/scene and try to capture it from as many different angles as possible.";
-		
+		bowlingHelpTextMap[HelpMessage::ScanHelp].push_back(StringConverter::StringToWString(ss.str()));
+		basicHelpTextMap[HelpMessage::ScanHelp].push_back(StringConverter::StringToWString(ss.str()));
+
 		helpTextMap[HelpMessage::ScanHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
@@ -96,6 +145,9 @@ namespace InteractiveFusion {
 		ss << "If you don't get it right the first time or feel like the scan is going nowhere, you can always press the ''RESET''-Button on the left to restart the scanning process.\r\n\r\n";
 		ss << "When you are finished, press ''DONE''.\r\n\r\n";
 		ss << "After a short countdown, the scanning process will start.";
+		bowlingHelpTextMap[HelpMessage::ScanHelp].push_back(StringConverter::StringToWString(ss.str()));
+		basicHelpTextMap[HelpMessage::ScanHelp].push_back(StringConverter::StringToWString(ss.str()));
+
 		helpTextMap[HelpMessage::ScanHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
@@ -107,6 +159,9 @@ namespace InteractiveFusion {
 		ss << "Here we will try to find major static planes in your scene like the ground, walls and/or the ceiling. The segments you select as planes will remain immovable during the scene manipulation later on and will also be used to segment movable objects in the next stage.\r\n\r\n";
 		ss << "If you want to start the plane segmentation process over at any point, press ''Start over'' in the top right corner.\r\n\r\n";
 		ss << "You can orbit the camera around freely by sliding your finger over the scene. You can also zoom in and out with the respective touch gestures.";
+		bowlingHelpTextMap[HelpMessage::PlaneSelectionHelp].push_back(StringConverter::StringToWString(ss.str()));
+		basicHelpTextMap[HelpMessage::PlaneSelectionHelp].push_back(StringConverter::StringToWString(ss.str()));
+
 		helpTextMap[HelpMessage::PlaneSelectionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
@@ -116,6 +171,8 @@ namespace InteractiveFusion {
 		ss << "If the highlighted area is too thick or too thin (i.e. only a part of the wall is highlighted), change the wall thickness on the bottom of the screen.\r\n\r\n";
 		ss << "If the highlighted area has gaps, decrease the smoothness; if it is not flat enough (i.e.contains movable objects placed on it), increase it.\r\n\r\n";
 		ss << "Note that you should try to at least find the floor and major walls, if present, as the subsequent segmentation of movable objects heavily relies on the presence of at least one static ground plane.";
+		bowlingHelpTextMap[HelpMessage::PlaneSelectionHelp].push_back(StringConverter::StringToWString(ss.str()));
+		basicHelpTextMap[HelpMessage::PlaneSelectionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		helpTextMap[HelpMessage::PlaneSelectionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
@@ -125,7 +182,9 @@ namespace InteractiveFusion {
 		ss << "This is the second part of the SEGMENT screen.\r\n\r\n";
 		ss << "Here we will try to segment the parts not selected in the previous plane selection into distinct movable objects.\r\n\r\n";
 		ss << "You can choose between Euclidean and Region Growth Segmentation and adjust respective parameters on the right side.\r\n\r\n";
-		
+		bowlingHelpTextMap[HelpMessage::SegmentationHelp].push_back(StringConverter::StringToWString(ss.str()));
+		basicHelpTextMap[HelpMessage::SegmentationHelp].push_back(StringConverter::StringToWString(ss.str()));
+
 		helpTextMap[HelpMessage::SegmentationHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
@@ -135,6 +194,9 @@ namespace InteractiveFusion {
 		ss << "In a few cases, however, you might need to adjust the ""TOLERANCE"", which is the maximum euclidean distance between two unconnected parts wherein they are still considered to be part of the same object.\r\n\r\n";
 		ss << "When you are happy with the current preview, press ''DONE'' to continue.\r\n\r\n";
 		ss << "(NOTE: You can reset the camera position by pressing the button with the camera icon on the lower right corner.)";
+		bowlingHelpTextMap[HelpMessage::SegmentationHelp].push_back(StringConverter::StringToWString(ss.str()));
+		basicHelpTextMap[HelpMessage::SegmentationHelp].push_back(StringConverter::StringToWString(ss.str()));
+
 		helpTextMap[HelpMessage::SegmentationHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
@@ -143,6 +205,8 @@ namespace InteractiveFusion {
 		ss << "This is the last part of the SEGMENT screen.\r\n\r\n";
 		ss << "Here you can refine certain object segmentations by cutting them in two with a plane. You can only cut movable objects, not static planes.\r\n\r\n";
 		ss << "You can select an object that you want to cut and simultaneously translate the plane to a position by simply clicking on it. If you want to better position the plane, just ''drag'' it in the desired direction.\r\n\r\n";
+		bowlingHelpTextMap[HelpMessage::PlaneCutHelp].push_back(StringConverter::StringToWString(ss.str()));
+		basicHelpTextMap[HelpMessage::PlaneCutHelp].push_back(StringConverter::StringToWString(ss.str()));
 
 		helpTextMap[HelpMessage::PlaneCutHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
@@ -152,6 +216,9 @@ namespace InteractiveFusion {
 		ss << "Whenever you move the plane, you will see an updated segmentation preview of the currently selected object, where green and blue regions represent the two segments that would be created by cutting it with the current plane.\r\n\r\n";
 		ss << "If you want to perform a plane cut, press ''Cut''. You can also switch in and out of free camera movement by clicking on ''Free Camera'', although you wont be able to position the plane while navigating.\r\n\r\n";
 		ss << "You can start this whole section over by pressing ''Reset''.\r\n When you are finished, click ''DONE''";
+		bowlingHelpTextMap[HelpMessage::PlaneCutHelp].push_back(StringConverter::StringToWString(ss.str()));
+		basicHelpTextMap[HelpMessage::PlaneCutHelp].push_back(StringConverter::StringToWString(ss.str()));
+
 		helpTextMap[HelpMessage::PlaneCutHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
@@ -162,6 +229,8 @@ namespace InteractiveFusion {
 		ss << "It is also possible (and recommended) to fill holes that were created during segmentation or might have been left open during the scanning process by adjusting the ''Hole Size'' and pressing ''Fill Holes''.\r\n\r\n";
 		ss << "You can also select a specific segment in your scene (which will be highlighted in red) and perform hole filling to only fill holes in that object.\r\n\r\n";
 		ss << "You can reset all processing changes at any time by pressing ''Reset''.\r\nWhen you are finished, click ''DONE''.";
+		bowlingHelpTextMap[HelpMessage::ProcessingHelp].push_back(StringConverter::StringToWString(ss.str()));
+		basicHelpTextMap[HelpMessage::ProcessingHelp].push_back(StringConverter::StringToWString(ss.str()));
 
 		helpTextMap[HelpMessage::ProcessingHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
@@ -174,34 +243,43 @@ namespace InteractiveFusion {
 		ss << "By switching into ''Transform'' mode on the right side, you can rotate an object by simply dragging it in the desired rotational direction, as well as scale it by using scrolling touch input.\r\n\r\n";
 		ss << "When ''Duplicate' is active, you will always pick up a duplicate of an object instead of the real one, so you can place multiple models of the same object in the scene.\r\n\r\n";
 		ss << "To delete an object, simply drag and drop it onto the trash can in the lower right corner.\r\n\r\n";
-		
+		basicHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
+		bowlingHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		helpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
 		
 		ss << "You can always switch to a free camera to review your changes by clicking ''Free Camera'', although you wont be able to manipulate the scene during that.\r\n\r\n";
 		ss << "If you want to reset all your changes, simply press ''Reset''. When you are happy with your scene, click on ''Export'' to save your final creation as a 3D model that can be imported in other applications for further use.\r\n\r\n";
+		basicHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
+		bowlingHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		helpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
 
 		//SCENARIO BOWLING
 
-		ss << "In this scenario, your goal is to prepare a typical bowling setup with about ten bowling pins.\r\n\r\n";
-		ss << "To achieve that, you should first remove everything but the bowling pin from the scene. After that, duplicate the pin as often as you like and place them somewhere in the marked area.\r\n\r\n";
+		ss << "As a reminder: In this scenario, your goal is to prepare a typical bowling setup with about ten bowling pins.\r\n\r\n";
+		ss << "To achieve that, you should first remove everything but the bowling pin and the ground floor from the scene. After that, duplicate the pin as often as you like and place them somewhere in the marked area.\r\n\r\n";
 		ss << "You can make the pins bigger by scaling if you want, they don't even have to be uniformly scaled. When you are finished, press ''Export''.\r\n\r\n";
-		helpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
+		bowlingHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
 
-		//SCENARIO RACE
+		//SCENARIO BASIC
 
-		ss << "In this scenario, your goal is to prepare a little track for a small matchbox-sized car.\r\n\r\n";
+		ss << "As a reminder: In this scenario, your goal is to prepare a little track for a small matchbox-sized car.\r\n\r\n";
 		ss << "You can translate, rotate, scale, duplicate and/or remove boxes, jumps and other objects as parts of the track.\r\n\r\n";
 		ss << "The red ((object)), however, represents a score point and should be duplicated and placed at different reachable places, as they will have to be collected by the car.\r\n\r\n";
-		helpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
+		basicHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
+
+		metaMap = std::unordered_map<ScenarioType, std::unordered_map<HelpMessage, std::vector<std::wstring>>>();
+		metaMap.emplace(ScenarioType::None, helpTextMap);
+		metaMap.emplace(ScenarioType::Bowling, bowlingHelpTextMap);
+		metaMap.emplace(ScenarioType::Basic, basicHelpTextMap);
+
 
 		currentHelpState = HelpMessage::PlaneSelectionHelp;
 		currentIndex = 0;
@@ -249,7 +327,7 @@ namespace InteractiveFusion {
 		DebugUtility::DbgOut(L"HelpWindow::ProcessUI");
 		if (IDC_HELP_BUTTON_OK == LOWORD(wParam))
 		{
-			if (currentIndex < helpTextMap[currentHelpState].size() - 1)
+			if (currentIndex < metaMap[scenarioType][currentHelpState].size() - 1)
 				NextHelpMessage();
 			else
 			{
@@ -261,7 +339,7 @@ namespace InteractiveFusion {
 
 	void HelpWindow::UpdateMessageCount()
 	{
-		std::wstring countString = std::to_wstring(currentIndex+1) + L"/" + std::to_wstring(helpTextMap[currentHelpState].size());
+		std::wstring countString = std::to_wstring(currentIndex + 1) + L"/" + std::to_wstring(metaMap[scenarioType][currentHelpState].size());
 		SetDlgItemText(windowHandle, IDC_HELP_COUNT, countString.c_str());
 	}
 
@@ -269,7 +347,7 @@ namespace InteractiveFusion {
 	{
 		currentIndex++;
 		UpdateLineCount();
-		SetDlgItemText(windowHandle, IDC_HELP_TEXT, helpTextMap[currentHelpState][currentIndex].c_str());
+		SetDlgItemText(windowHandle, IDC_HELP_TEXT, metaMap[scenarioType][currentHelpState][currentIndex].c_str());
 		UpdateMessageCount();
 	}
 
@@ -290,10 +368,8 @@ namespace InteractiveFusion {
 	void HelpWindow::SetHelpState(HelpMessage state)
 	{
 		currentHelpState = state;
-		currentIndex = 0;
-		SetDlgItemText(windowHandle, IDC_HELP_TEXT, helpTextMap[currentHelpState][currentIndex].c_str());
-		UpdateMessageCount();
-		UpdateLineCount();
+		currentIndex = -1;
+		NextHelpMessage();
 	}
 
 	void HelpWindow::SetDefaultMessage(WindowState state)
@@ -303,6 +379,11 @@ namespace InteractiveFusion {
 		{
 			SetHelpState(it->second);
 		}
+	}
+
+	void HelpWindow::SetScenarioType(ScenarioType type)
+	{
+		scenarioType = type;
 	}
 
 	void HelpWindow::UpdateLineCount()
