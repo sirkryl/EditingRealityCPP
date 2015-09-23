@@ -303,7 +303,7 @@ namespace InteractiveFusion {
 	void PrepareWindow::UpdateScanVolumeSize()
 	{
 		voxelsPerMeter = 416 - scanSizeSlider.GetValue();
-		DebugUtility::DbgOut(L"VoxelsPerMeter: ", voxelsPerMeter);
+		DebugUtility::DbgOut(L"Changed voxelsPerMeter to: ", voxelsPerMeter);
 
 		float volumeWidth = 800.0f / (float)voxelsPerMeter;
 		float volumeHeight = 512.0f / (float)voxelsPerMeter;

@@ -879,7 +879,6 @@ namespace InteractiveFusion {
 
 		for (auto &subWindow : subWindowMap)
 		{
-			DebugUtility::DbgOut(L"MainWindow::CleanUp::SubWindowCleanUp");
 			subWindow.second->CleanUp();
 		}
 		subWindowMap.clear();
@@ -888,6 +887,7 @@ namespace InteractiveFusion {
 			style.second.CleanUp();
 		buttonLayout.clear();
 
+		Logger::WriteToLog(L"Closing logger..", Logger::info);
 		Logger::CloseLog();
 	}
 #pragma endregion Parent Window Thread
