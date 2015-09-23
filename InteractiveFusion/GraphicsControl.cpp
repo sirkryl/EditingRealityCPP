@@ -228,8 +228,6 @@ namespace InteractiveFusion {
 			{
 				openGLWindow.HandleEvents(*this);
 				UpdateFrame();
-				if (KeyState::leftMouseDown)
-					DebugUtility::DbgOut(L"Handling input");
 				HandleInput();
 				CountFPS();
 				UpdateSceneInformation();

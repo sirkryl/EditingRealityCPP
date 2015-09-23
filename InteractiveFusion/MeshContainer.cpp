@@ -27,8 +27,6 @@ namespace InteractiveFusion {
 
 	MeshContainer::~MeshContainer()
 	{
-		DebugUtility::DbgOut(L"MeshContainer::DESTRUCTOR");
-		//CleanUp();
 	}
 
 	MeshContainer::MeshContainer(const MeshContainer& _meshContainer)
