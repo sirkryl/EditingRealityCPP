@@ -64,7 +64,7 @@ namespace InteractiveFusion {
 
 		const std::wstring wallMessage = L"Is the highlighted area (part of) a wall, floor or ceiling?";
 
-		float xPos = 0.0f - wallMessage.length() * 0.005f;
+		float xPos = 0.0f - wallMessage.length() * 0.009f;
 
 		OpenGLRenderer::glText.PrepareForRender();
 		OpenGLRenderer::glText.RenderText(wallMessage, 28, xPos, 0.77f, 2.0f / viewportWidth, 2.0f / viewportHeight);

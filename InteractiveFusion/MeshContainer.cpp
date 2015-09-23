@@ -31,7 +31,6 @@ namespace InteractiveFusion {
 
 	MeshContainer::MeshContainer(const MeshContainer& _meshContainer)
 	{
-		DebugUtility::DbgOut(L"MeshContainer::CopyConstructor");
 		vertices = _meshContainer.vertices;
 		triangles = _meshContainer.triangles;
 		orientation = _meshContainer.orientation;
