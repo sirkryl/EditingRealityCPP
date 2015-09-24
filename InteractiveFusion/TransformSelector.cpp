@@ -88,11 +88,11 @@ namespace InteractiveFusion {
 
 	void TransformSelector::HandleScale(GraphicsControl& _glControl, ModelData& _modelData, int _selectedIndex)
 	{
-		if (_glControl.GetMouseWheelDelta() < 0)
+		if (_glControl.GetMouseWheelDelta() > 0)
 		{
 			_modelData.ScaleMeshDown(_selectedIndex);
 		}
-		else if (_glControl.GetMouseWheelDelta() > 0)
+		else if (_glControl.GetMouseWheelDelta() < 0)
 		{
 			_modelData.ScaleMeshUp(_selectedIndex);
 		}

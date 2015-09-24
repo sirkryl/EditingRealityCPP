@@ -159,7 +159,7 @@ namespace InteractiveFusion {
 			const int Mebi = 1024 * 1024;
 			
 			fusionTotalGpuMemory = (int)(pFrame->m_deviceMemory / 1024);
-			DebugUtility::DbgOut(L"DEVICE MEMORY:", (int)(pFrame->m_deviceMemory / 1024));
+			DebugUtility::DbgOut(L"Detected GPU Memory:", (int)(pFrame->m_deviceMemory / 1024));
 			// We now create both a color and depth volume, doubling the required memory, so we restrict
 			// which resolution settings the user can choose when the graphics card is limited in memory.
 			if (pFrame->m_deviceMemory <= 1 * Mebi)  // 1GB

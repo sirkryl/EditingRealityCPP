@@ -25,8 +25,8 @@ class KinectFusionProcessor
     static const int            cResetOnTimeStampSkippedMillisecondsGPU = 2000;
     static const int            cResetOnTimeStampSkippedMillisecondsCPU = 6000;
     static const int            cResetOnNumberOfLostFrames = 100;
-    static const int            cTimeDisplayInterval = 1;
-    static const int            cRenderIntervalMilliseconds = 50; // Render every 100ms
+    static const int            cTimeDisplayInterval = 4;
+    static const int            cRenderIntervalMilliseconds = 100; // Render every 100ms
     static const int            cMinTimestampDifferenceForFrameReSync = 17; // The minimum timestamp difference between depth and color (in ms) at which they are considered un-synchronized. 
 
 public:

@@ -58,11 +58,12 @@ namespace InteractiveFusion {
 
 		reconstructionView = CreateWindowEx(0, L"Static", 0, WS_CHILD | WS_VISIBLE | SS_BLACKFRAME | WS_CLIPSIBLINGS, 0, 0, 758, 532, windowHandle, (HMENU)IDC_SCAN_RECONSTRUCTION_VIEW, hInstance, 0);
 
-		//depthView = CreateWindowEx(0, L"Static", 0, WS_THICKFRAME | WS_CHILD | WS_VISIBLE | SS_BLACKFRAME, 7, 7, 320, 215, windowHandle, (HMENU)IDC_SCAN_DEPTH_VIEW, hInstance, 0);
-		//SetWindowPos(depthView, HWND_TOP, 0, 0, 0, 0, 0);
-		//residualsView = CreateWindowEx(0, L"Static", 0, WS_BORDER | WS_CHILD | WS_VISIBLE | SS_BLACKFRAME | WS_CLIPSIBLINGS, 7, 222, 320, 215, windowHandle, (HMENU)IDC_SCAN_TRACKING_RESIDUALS_VIEW, hInstance, 0);
-		//SetWindowPos(residualsView, HWND_TOP, 0, 0, 0, 0, 0);
-		//SetWindowPos(depthView, HWND_TOP, 0, 0.11*parentWidth, 0.11*parentWidth, 0.11*parentWidth, 0);
+
+		/*depthView = CreateWindowEx(0, L"Static", 0, WS_CHILD | WS_VISIBLE | SS_BLACKFRAME | WS_CLIPSIBLINGS, 7, 7, 320, 215, windowHandle, (HMENU)IDC_SCAN_DEPTH_VIEW, hInstance, 0);
+		SetWindowPos(depthView, HWND_TOP, 0, 0, 0, 0, 0);
+		residualsView = CreateWindowEx(0, L"Static", 0, WS_CHILD | WS_VISIBLE | SS_BLACKFRAME | WS_CLIPSIBLINGS, 7, 222, 320, 215, windowHandle, (HMENU)IDC_SCAN_TRACKING_RESIDUALS_VIEW, hInstance, 0);
+		SetWindowPos(residualsView, HWND_TOP, 0, 0, 0, 0, 0);*/
+
 		scanUi.Add(reconstructionView);
 		scanUi.Add(depthView);
 		scanUi.Add(residualsView);
@@ -209,8 +210,8 @@ namespace InteractiveFusion {
 		//MoveWindow(reconstructionView, (int)(0.15f*parentWidth), 0, (int)(0.7f*parentWidth), parentHeight - 70, true);
 		MoveWindow(reconstructionView, width/2 - reconstructionWidth/2, 0, reconstructionWidth, reconstructionHeight, true);
 		MoveWindow(buttonScanReset, (int)(0.015f*parentWidth), (int)(height / 2 - (int)(0.12*parentWidth) / 2) - 28, (int)(0.12*parentWidth), (int)(0.12*parentWidth), true);
-		//MoveWindow(residualsView, 0, 0, 0.11*parentWidth, 0.11*parentWidth, true);
-		//MoveWindow(depthView, 0, 0.11*parentWidth, 0.11*parentWidth, 0.11*parentWidth, true);
+		/*MoveWindow(residualsView, 0, 0, 0.11*parentWidth, 0.11*parentWidth, true);
+		MoveWindow(depthView, 0, 0.11*parentWidth, 0.11*parentWidth, 0.11*parentWidth, true);*/
 	}
 
 	glm::mat4 ScanWindow::GetCameraMatrix()
