@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-
+#include "EnumDeclarations.h"
 
 namespace InteractiveFusion {
 
@@ -24,5 +24,8 @@ namespace InteractiveFusion {
 		static void WriteToLog(std::wstring label);
 		static void WriteToLog(std::wstring label, severity_level level);
 		static void CloseLog();
+		static void SetState(WindowState state);
+	private:
+		static WindowState currentState;
 	};
 }

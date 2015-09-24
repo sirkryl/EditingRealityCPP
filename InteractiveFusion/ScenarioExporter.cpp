@@ -14,11 +14,35 @@ namespace InteractiveFusion {
 
 	void ScenarioExporter::Export(ModelData& _modelData)
 	{
+		Export(_modelData, ScenarioType::None);
+	}
+
+	void ScenarioExporter::Export(ModelData& _modelData, ScenarioType type)
+	{
+		std::string path = "data\\output\\";
+
+		switch (type)
+		{
+			case ScenarioType::Basic:
+				path += "basic\\";
+				break;
+			case ScenarioType::Bowling:
+				path += "bowling\\";
+				break;
+			default:
+				break;
+		}
+
 		namespace fs = boost::filesystem;
-		fs::path path_to_remove("data\\output\\");
+		fs::path path_to_remove(path);
 		for (fs::directory_iterator end_dir_it, it(path_to_remove); it != end_dir_it; ++it) {
 			remove_all(it->path());
 		}
+
+		VCGMesh combinedMesh;
+		_modelData.CombineAndAlignModelData(combinedMesh);
+		SaveMeshToFile(combinedMesh, path + "combinedMesh.ply");
+
 		std::vector<int> planeIndices = _modelData.GetPlaneIndices();
 		std::vector<int> objectIndices = _modelData.GetObjectIndices();
 		int objectCount = 0;
@@ -31,7 +55,7 @@ namespace InteractiveFusion {
 				VCGMesh outputMesh;
 				if (!_modelData.GetAlignedVcgMesh(index, outputMesh))
 					continue;
-				SaveMeshToFile(outputMesh, "data\\output\\object_" + std::to_string(objectCount) + ".obj");
+				SaveMeshToFile(outputMesh, path + "object_" + std::to_string(objectCount) + ".obj");
 				objectCount++;
 				continue;
 			}
@@ -41,7 +65,7 @@ namespace InteractiveFusion {
 				VCGMesh outputMesh;
 				if (!_modelData.GetAlignedVcgMesh(index, outputMesh))
 					continue;
-				SaveMeshToFile(outputMesh, "data\\output\\plane_" + std::to_string(planeCount) + ".obj");
+				SaveMeshToFile(outputMesh, path + "plane_" + std::to_string(planeCount) + ".obj");
 				planeCount++;
 				continue;
 			}

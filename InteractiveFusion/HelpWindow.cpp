@@ -89,8 +89,6 @@ namespace InteractiveFusion {
 		std::stringstream ss;
 
 
-
-
 		//PREPARE BOWLING 
 		ss << "In this scenario, your goal is to prepare a typical bowling setup with about ten bowling pins.\r\n\r\n";
 		ss << "To do that, you will first need to scan the single bowling pin on the highlighted area to virtually reconstruct it. Afterwards, scene segmentation has to be performed in order to separate the pin from the floor. Finally, the pin must be duplicated ten times and positioned in a way that resembles the typical bowling pin setup. \r\n\r\n";
@@ -192,7 +190,7 @@ namespace InteractiveFusion {
 		ss << "By pressing ''SEGMENT'', you will be shown a preview of a segmentation with your currently selected parameters, where each distinct object is highlighted in a different color.\r\n\r\n";
 		ss << "Right now, a segmentation preview using the default parameters is shown. For most purposes, the currently selected Euclidean Segmentation with the default parameters is the best choice.\r\n\r\n";
 		ss << "In a few cases, however, you might need to adjust the ""TOLERANCE"", which is the maximum euclidean distance between two unconnected parts wherein they are still considered to be part of the same object.\r\n\r\n";
-		ss << "When you are happy with the current preview, press ''DONE'' to continue.\r\n\r\n";
+		ss << "When you are happy with the current preview (even without adjusting anything), press ''DONE'' to continue.\r\n\r\n";
 		ss << "(NOTE: You can reset the camera position by pressing the button with the camera icon on the lower right corner.)";
 		bowlingHelpTextMap[HelpMessage::SegmentationHelp].push_back(StringConverter::StringToWString(ss.str()));
 		basicHelpTextMap[HelpMessage::SegmentationHelp].push_back(StringConverter::StringToWString(ss.str()));

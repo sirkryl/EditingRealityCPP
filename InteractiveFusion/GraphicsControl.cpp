@@ -823,17 +823,17 @@ namespace InteractiveFusion {
 
 
 
-	void GraphicsControl::ExportModel()
+	void GraphicsControl::ExportModel(ScenarioType type)
 	{
 		activeScene->second.get()->Lock();
 		SetStatusMessage(L"Exporting");
 		SetBusy(true);
 
-		if (currentCameraMode == OpenGLCameraMode::Free)
+		if (type != ScenarioType::None)
 		{
 			DebugUtility::DbgOut(L"GraphicsControl::ExportModel::Scenario Exporter");
 			ScenarioExporter exporter;
-			exporter.Export(*activeScene->second.get());
+			exporter.Export(*activeScene->second.get(), type);
 		}
 		else
 		{

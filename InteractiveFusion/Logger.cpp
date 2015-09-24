@@ -21,6 +21,8 @@ namespace InteractiveFusion {
 
 #define NUM_SEVERITY_LEVELS 6
 
+	WindowState Logger::currentState;
+
 	const char* severity_level_str[NUM_SEVERITY_LEVELS] = {
 		"debug",
 		"info",
@@ -28,6 +30,18 @@ namespace InteractiveFusion {
 		"warning",
 		"error",
 		"critical"
+	};
+
+	#define NUM_MODES 7
+
+	const char* window_state_str[NUM_MODES] = {
+		"Prepare",
+		"Scan",
+		"PlaneSelection",
+		"Segmentation",
+		"PlaneCut",
+		"Processing",
+		"Interaction"
 	};
 
 	template< typename CharT, typename TraitsT >
@@ -75,6 +89,12 @@ namespace InteractiveFusion {
 		boost::log::add_common_attributes();
 	}
 
+	void Logger::SetState(WindowState state)
+	{
+		Logger::currentState = state;
+		WriteToLog(L"Changed state", Logger::info);
+	}
+
 	void Logger::WriteToLog(std::wstring label)
 	{
 		WriteToLog(label, debug);
@@ -83,7 +103,7 @@ namespace InteractiveFusion {
 	void Logger::WriteToLog(std::wstring label, severity_level level)
 	{
 		boost::log::sources::wseverity_logger_mt<severity_level>& lg = my_logger::get();
-		BOOST_LOG_SEV(lg, level) << label;
+		BOOST_LOG_SEV(lg, level) << "[" << window_state_str[(int)currentState] << "] " << label;
 	}
 
 	void Logger::CloseLog()

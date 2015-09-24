@@ -66,7 +66,7 @@ namespace InteractiveFusion {
 		int FillHoles(int _holeSize);
 		int RemoveConnectedComponents(int _maxComponentSize);
 		
-		void ExportModel();
+		void ExportModel(ScenarioType type);
 
 		void UpdatePlaneSegmentation(PlaneSegmentationParams& _params);
 		void UpdateObjectSegmentation(ObjectSegmentationParams& _params);

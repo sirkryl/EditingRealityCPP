@@ -1,5 +1,7 @@
 #pragma once
 
+
+
 namespace InteractiveFusion
 {
 	enum class ObjectSegmentationType { Euclidean, RegionGrowth };

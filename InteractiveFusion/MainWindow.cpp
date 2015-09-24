@@ -301,6 +301,8 @@ namespace InteractiveFusion {
 
 		currentState = _state;
 		
+		Logger::SetState(currentState);
+
 		RECT rRect;
 		GetClientRect(hWndMain, &rRect);
 		
@@ -463,7 +465,7 @@ namespace InteractiveFusion {
 	{
 		SetStatusBarMessage(L"Exporting model...");
 		Logger::WriteToLog(L"Exporting model", Logger::info);
-		glControl.ExportModel();
+		glControl.ExportModel(scenarioType);
 	}
 
 	void MainWindow::UpdateObjectSegmentation(ObjectSegmentationParams& _params)
