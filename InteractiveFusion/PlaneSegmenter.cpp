@@ -53,11 +53,7 @@ namespace InteractiveFusion {
 
 	bool PlaneSegmenter::Segment()
 	{
-		//temporarySegmentationClusterIndices.clear();
-
-		DebugUtility::DbgOut(L"Before segmentation");
-		DebugUtility::DbgOut(L"MainCloudWithoutNormals size: ", (int)mainCloudWithoutNormals->points.size());
-		DebugUtility::DbgOut(L"mainCloudNormals size: ", (int)mainCloudNormals->points.size());
+		//temporarySegmentationClusterIndices.clear()
 
 		//pcl::search::KdTree<pcl::PointXYZRGB>::Ptr	search(new pcl::search::KdTree<pcl::PointXYZRGB>);
 		// Object for storing the plane model coefficients.
@@ -69,6 +65,10 @@ namespace InteractiveFusion {
 		segmentation.setInputNormals(mainCloudNormals);
 		segmentation.setProbability(0.99);
 		segmentation.setMaxIterations(300);
+
+		Logger::WriteToLog(L"Performing plane segmentation with smoothness = " + std::to_wstring(segmentationParameters.planeSmoothness)
+			+ L" and thickness = " + std::to_wstring(segmentationParameters.planeThickness));
+
 
 		if (indicesUsedForNextPlaneSegmentation->indices.size() > 0)
 			segmentation.setIndices(indicesUsedForNextPlaneSegmentation);
@@ -110,7 +110,7 @@ namespace InteractiveFusion {
 
 		if (inlierIndices->indices.size() <= threshold)
 		{
-			Logger::WriteToLog(L"Plane recognized: #" + temporarySegmentationClusterIndices.size(), Logger::info);
+			Logger::WriteToLog(L"Plane recognized: #" + std::to_wstring((int)temporarySegmentationClusterIndices.size()), Logger::info);
 			if (axisChangedCount == 0)
 			{
 				axisChangedCount++;

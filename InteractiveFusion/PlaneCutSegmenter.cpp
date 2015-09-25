@@ -74,12 +74,10 @@ namespace InteractiveFusion {
 		pcl::PointIndices verticesAbove;
 		pcl::PointIndices verticesBelow;
 
-		Logger::WriteToLog(L"PlaneCutSegmentation with Parameters...", Logger::info);
-		Logger::WriteToLog(L"X.. " + std::to_wstring(segmentationParameters.planeParameters.x), Logger::info);
-		Logger::WriteToLog(L"Y.. " + std::to_wstring(segmentationParameters.planeParameters.y), Logger::info);
-		Logger::WriteToLog(L"Z.. " + std::to_wstring(segmentationParameters.planeParameters.z), Logger::info);
-		Logger::WriteToLog(L"D.. " + std::to_wstring(segmentationParameters.planeParameters.d), Logger::info);
-
+		Logger::WriteToLog(L"PlaneCutSegmentation with Parameters X = " + std::to_wstring(segmentationParameters.planeParameters.x)
+			+ L", Y = " + std::to_wstring(segmentationParameters.planeParameters.y)
+			+ L", Z = " + std::to_wstring(segmentationParameters.planeParameters.z)
+			+ L", D = " + std::to_wstring(segmentationParameters.planeParameters.d), Logger::info);
 		int index = 0;
 		for (auto& vertex : mainCloud->points)
 		{
@@ -93,8 +91,8 @@ namespace InteractiveFusion {
 		temporarySegmentationClusterIndices.push_back(verticesAbove);
 		temporarySegmentationClusterIndices.push_back(verticesBelow);
 
-		DebugUtility::DbgOut(L"PlaneCutSegmenter::Segment()::verticesAbove: ", (int)verticesAbove.indices.size());
-		DebugUtility::DbgOut(L"PlaneCutSegmenter::Segment()::verticesBelow: ", (int)verticesBelow.indices.size());
+		Logger::WriteToLog(L"Plane cut segmentation produced " + std::to_wstring((int)verticesAbove.indices.size()) + L" above and "
+			+ std::to_wstring((int)verticesAbove.indices.size()) + L"below.", Logger::info);
 
 		return true;
 	}
@@ -103,7 +101,7 @@ namespace InteractiveFusion {
 	{
 		if (GetClusterCount() == 0)
 			return;
-		DebugUtility::DbgOut(L"UpdatePlaneCutSegmenterHighlights:: ", GetClusterCount() - 1);
+		DebugUtility::DbgOut(L"UpdatePlaneCutSegmenterHighlights:: Cluster Count: ", GetClusterCount() - 1);
 		std::vector<int> trianglesToBeColored = GetClusterIndices(GetClusterCount() - 1);
 
 		_modelData.TemporarilyColorTriangles(0, trianglesToBeColored, ColorIF{ 0.5f, 0.0f, 0.0f }, true);
@@ -111,7 +109,7 @@ namespace InteractiveFusion {
 
 	void PlaneCutSegmenter::FinishSegmentation(ModelData& _inputModelData, ModelData& _outputModelData)
 	{
-		DebugUtility::DbgOut(L"PlaneCutSegmenter::FinishSegmentation:: ", GetClusterCount());
+		DebugUtility::DbgOut(L"PlaneCutSegmenter::FinishSegmentation:: Cluster Count: ", GetClusterCount());
 
 		_outputModelData.SetMeshAsDeleted(_outputModelData.GetCurrentlySelectedMeshIndex());
 		for (int i = 0; i < GetClusterCount(); i++)
@@ -122,7 +120,6 @@ namespace InteractiveFusion {
 
 	void PlaneCutSegmenter::CleanUp()
 	{
-		DebugUtility::DbgOut(L"PlaneCutSegmenter::CleanUp()");
 		Segmenter::CleanUp();
 	}
 }

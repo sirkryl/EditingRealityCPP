@@ -118,11 +118,6 @@ namespace InteractiveFusion {
 
 	void SubWindow::CleanUp()
 	{
-		//if (windowHandle)
-			//DestroyWindow(windowHandle);
-		//if (parentWindow)
-		//	parentWindow = NULL;
-		DebugUtility::DbgOut(L"SubWindow::CleanUp()");
 		for (auto style : buttonLayoutMap)
 			style.second.CleanUp();
 		buttonLayoutMap.clear();
@@ -162,7 +157,6 @@ namespace InteractiveFusion {
 		switch (message)
 		{
 		case WM_DESTROY:
-			DebugUtility::DbgOut(L"SubWindowProc::WM_DESTROY");
 			CleanUp();
 			return DefWindowProc(hWnd, message, wParam, lParam);
 			break;

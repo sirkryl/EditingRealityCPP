@@ -331,8 +331,7 @@ namespace InteractiveFusion {
 
 		SubWindow::Resize(parentWidth, parentHeight);
 		
-		DebugUtility::DbgOut(L"width: ", width);
-		DebugUtility::DbgOut(L"height: ", height);
+		Logger::WriteToLog(L"Resizing application window to " + std::to_wstring(width) + L"x" + std::to_wstring(height));
 
 		MoveWindow(hCheckBoxHelp, width / 2 - 50, (int)(0.78*height) - 30, 100, 30, true);
 

@@ -769,7 +769,6 @@ namespace InteractiveFusion {
 
 	void MainWindow::MoveModeButtonsOnResize(int width, int height)
 	{
-		DebugUtility::DbgOut(L"MainWindow::MoveModeButtonsOnResize()");
 		MoveWindow(hModePrepare, width / 2 - 380, 8, 130, (int)(0.07f*height) - 8, true);
 		MoveWindow(hModeScan, width / 2 - 250, 8, 110, (int)(0.07f*height) - 8, true);
 		

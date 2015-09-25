@@ -103,7 +103,8 @@ namespace InteractiveFusion {
 		Clean();
 		if (currentMesh.vn > 100)
 		{
-			RemoveSmallComponents(currentMesh.vn / 100);
+			int removed = RemoveSmallComponents(currentMesh.vn / 80);
+			Logger::WriteToLog(L"Removed " + std::to_wstring(removed) + L" components from mesh");
 		}
 		else
 		{
