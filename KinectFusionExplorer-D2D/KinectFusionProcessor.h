@@ -110,7 +110,7 @@ public:
 	void UnlockMutex();
 	void PauseProcessing(bool flag);
 	Matrix4 GetWorldToCameraTransform();
-
+	bool hardStopIntegration = false;
 private:
     KinectFusionParams          m_paramsNext;
     KinectFusionParams          m_paramsCurrent;
@@ -141,6 +141,7 @@ private:
     KinectFusionProcessorFrame  m_frame;
     CRITICAL_SECTION            m_lockFrame;
 
+	
 	bool processingPaused = false;
 	std::mutex processor_mutex;
     /// <summary>

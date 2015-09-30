@@ -245,6 +245,7 @@ namespace InteractiveFusion {
 
 		helpWindow.Initialize(hWndMain, hInstance, 0.15f, 0.15f, 0.15f, 0.15f, L"Help", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
 		
+		SetScenarioType(ScenarioType::Bowling);
 
 		glControl.Initialize(hWndMain, hInstance);
 		glControl.RunOpenGLThread();
@@ -252,6 +253,7 @@ namespace InteractiveFusion {
 		ChangeState(WindowState::Prepare);
 		SetAndShowHelpMessage(HelpMessage::PrepareHelp);
 
+		SetWindowLong(hWndMain, GWL_STYLE, 0);
 		ShowWindow(hWndMain, SW_MAXIMIZE);
 		MSG       msg = { 0 };
 		while (WM_QUIT != msg.message)
@@ -299,6 +301,8 @@ namespace InteractiveFusion {
 		Logger::WriteToLog(L"Switching to state " + std::to_wstring((int)_state), Logger::info);
 		stateWatch.Start();
 
+		WindowState previousState = currentState;
+
 		currentState = _state;
 		
 		Logger::SetState(currentState);
@@ -321,6 +325,9 @@ namespace InteractiveFusion {
 			dynamic_cast<ScanWindow*>(scanWindow->second.get())->UnpauseScan();
 		else
 			dynamic_cast<ScanWindow*>(scanWindow->second.get())->PauseScan();
+
+		if (previousState == WindowState::Prepare)
+			dynamic_cast<ScanWindow*>(scanWindow->second.get())->ResetScan();
 
 		MainWindowProc(hWndMain, WM_SIZE, 0, MAKELPARAM(rRect.right, rRect.bottom));
 

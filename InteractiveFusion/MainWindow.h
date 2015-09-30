@@ -78,7 +78,7 @@ namespace InteractiveFusion {
 		
 
 		static const DWORD          statusTimeOutInMilliSeconds = 5000;
-		bool isHelpEnabled = false;
+		bool isHelpEnabled = true;
 		bool IsValidState(WindowState _state);
 
 		void ShowHelp();

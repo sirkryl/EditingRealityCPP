@@ -141,18 +141,20 @@ namespace InteractiveFusion {
 			framesPerSecond = pFrame->m_fFramesPerSecond;
 		}
 
-		if (pFrame->m_bIntegrationResumed)
-		{
-			m_params.m_bPauseIntegration = false;
-			//CheckDlgButton(m_hWnd, IDC_SDEBUG_CHECK_PAUSE_INTEGRATION, BST_UNCHECKED);
-			m_processor.SetParams(m_params);
-		}
-		else if (m_processor.IsCameraPoseFinderAvailable() && !m_params.m_bPauseIntegration)
-		{
-			m_params.m_bPauseIntegration = true;
-			//CheckDlgButton(m_hWnd, IDC_SDEBUG_CHECK_PAUSE_INTEGRATION, BST_CHECKED);
-			m_processor.SetParams(m_params);
-		}
+		//if (pFrame->m_bIntegrationResumed)
+		//{
+		//	DebugUtility::DbgOut(L"Integration resumed!?");
+
+		//	m_params.m_bPauseIntegration = false;
+		//	//CheckDlgButton(m_hWnd, IDC_SDEBUG_CHECK_PAUSE_INTEGRATION, BST_UNCHECKED);
+		//	m_processor.SetParams(m_params);
+		//}
+		//else if (m_processor.IsCameraPoseFinderAvailable() && !m_params.m_bPauseIntegration)
+		//{
+		//	m_params.m_bPauseIntegration = true;
+		//	//CheckDlgButton(m_hWnd, IDC_SDEBUG_CHECK_PAUSE_INTEGRATION, BST_CHECKED);
+		//	m_processor.SetParams(m_params);
+		//}
 
 		if (!m_bUIUpdated && m_processor.IsVolumeInitialized())
 		{
@@ -373,6 +375,8 @@ namespace InteractiveFusion {
 	void KinectFusion::ResetScan()
 	{
 		m_processor.ResetReconstruction();
+		m_params.m_bPauseIntegration = false;
+		m_processor.hardStopIntegration = false;
 	}
 
 	void KinectFusion::SetStatus(wstring _status)
@@ -387,6 +391,7 @@ namespace InteractiveFusion {
 		return outputStatus;
 	}
 
+
 	void KinectFusion::PauseProcessing(bool flag)
 	{
 		m_processor.PauseProcessing(flag);
@@ -396,12 +401,22 @@ namespace InteractiveFusion {
 	{
 		pauseRendering = true;
 		m_params.m_bPauseIntegration = true;
+		DebugUtility::DbgOut(L"Pause Rendering");
+	}
+
+	void KinectFusion::PauseIntegration()
+	{
+		m_params.m_bPauseIntegration = true;
+		m_processor.hardStopIntegration = true;
+		DebugUtility::DbgOut(L"Pause Integration");
+
 	}
 
 	void KinectFusion::ResumeRendering()
 	{
 		pauseRendering = false;
 		m_params.m_bPauseIntegration = false;
+		DebugUtility::DbgOut(L"Resume Rendering");
 	}
 
 	void KinectFusion::CleanUp()

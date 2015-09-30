@@ -28,7 +28,7 @@ namespace InteractiveFusion {
 		virtual void Hide();
 		void PauseScan();
 		void UnpauseScan();
-		
+		void ResetScan();
 
 		glm::mat4 GetCameraMatrix();
 

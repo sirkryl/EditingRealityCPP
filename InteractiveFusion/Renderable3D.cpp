@@ -111,6 +111,7 @@ namespace InteractiveFusion {
 
 		scaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(scaleFactor, scaleFactor, scaleFactor));
 	}
+
 	void Renderable3D::AddRotation(float _angle, glm::vec3 _axis)
 	{
 		quatRotation = glm::angleAxis(_angle, _axis) * quatRotation;

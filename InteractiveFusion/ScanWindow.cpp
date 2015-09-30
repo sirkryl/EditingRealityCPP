@@ -237,13 +237,22 @@ namespace InteractiveFusion {
 	void ScanWindow::PauseScan()
 	{
 		scanner->PauseProcessing(true);
+		scanner->PauseIntegration();
 		pauseFusion = true;
+		DebugUtility::DbgOut(L"Pause Scanning");
 	}
 
 	void ScanWindow::UnpauseScan()
 	{
 		scanner->PauseProcessing(false);
+		scanner->PauseIntegration();
 		pauseFusion = false;
+		DebugUtility::DbgOut(L"Unpause Scanning");
+	}
+
+	void ScanWindow::ResetScan()
+	{
+		scanner->ResetScan();
 	}
 
 	bool ScanWindow::HasVolumeSizeChanged(int _voxelsPerMeter)

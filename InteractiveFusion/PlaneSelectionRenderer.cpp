@@ -62,7 +62,7 @@ namespace InteractiveFusion {
 
 		planeSelectionQuestionOverlay->Draw(viewportWidth, viewportHeight);
 
-		const std::wstring wallMessage = L"Is the highlighted area (part of) a wall, floor or ceiling?";
+		const std::wstring wallMessage = L"Is the highlighted area an entire wall, floor or ceiling?";
 
 		float xPos = 0.0f - wallMessage.length() * 0.009f;
 

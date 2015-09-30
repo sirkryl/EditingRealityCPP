@@ -149,7 +149,7 @@ namespace InteractiveFusion {
 		buttonLayoutMap[buttonNo] = ButtonLayout();
 		buttonLayoutMap[buttonNo].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Red));
 
-		buttonStartOver = CreateWindowEx(0, L"Button", L"Start over", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, resetWindow, (HMENU)IDC_PLANE_BUTTON_RESET, hInstance, 0);
+		buttonStartOver = CreateWindowEx(0, L"Button", L"RESET", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 250, 50, 150, 50, resetWindow, (HMENU)IDC_PLANE_BUTTON_RESET, hInstance, 0);
 
 		buttonLayoutMap[buttonStartOver] = ButtonLayout();
 		buttonLayoutMap[buttonStartOver].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Red));

@@ -39,6 +39,7 @@ namespace InteractiveFusion {
 		void ResetScan();
 
 		void PauseRendering();
+		void PauseIntegration();
 		void PauseProcessing(bool flag);
 		void ResumeRendering();
 

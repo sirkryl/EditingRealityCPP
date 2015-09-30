@@ -1825,7 +1825,7 @@ void KinectFusionProcessor::ProcessDepth()
     bool integrateData = !m_bTrackingFailed && ((!cameraPoseFinderAvailable && !m_paramsCurrent.m_bPauseIntegration) 
         || (cameraPoseFinderAvailable && !(m_bTrackingHasFailedPreviously && m_cSuccessfulFrameCounter < m_paramsCurrent.m_cMinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure)));
 
-    if (integrateData)
+	if (integrateData && !hardStopIntegration)
     {
         if (cameraPoseFinderAvailable)
         {

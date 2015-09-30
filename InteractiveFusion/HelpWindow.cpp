@@ -90,9 +90,12 @@ namespace InteractiveFusion {
 		std::stringstream ss;
 
 
-		//PREPARE BOWLING 
-		ss << "In this scenario, your goal is to prepare a typical bowling setup with about ten bowling pins.\r\n\r\n";
-		ss << "To do that, you will first need to scan the single bowling pin on the highlighted area to virtually reconstruct it. Afterwards, scene segmentation has to be performed in order to separate the pin from the floor. Finally, the pin must be duplicated ten times and positioned in a way that resembles the typical bowling pin setup. \r\n\r\n";
+		ss << "In this scenario, your goal is to prepare a bowling setup with about ten bowling pins.\r\n\r\n";
+		ss << "To achieve that, you have to do the following:\r\n\r\n";
+		ss << "1. Scan the single bowling pin on the highlighted (yellow) area.\r\n\r\n";
+		ss << "2. Segment the scene in order to separate the pin from the floor.\r\n\r\n";
+		ss << "3. Remove unnecessary parts of the scene and fill holes.\r\n\r\n";
+		ss << "4. Duplicate and enlargen the pin and place them in a custom bowling setup.\r\n\r\n\r\n";
 		ss << "The application will display help messages and give hints at the beginning of every stage.\r\n\r\n";
 		bowlingHelpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
@@ -109,7 +112,7 @@ namespace InteractiveFusion {
 
 		//PREPARE
 		ss << "This application let's you scan and virtually reconstruct a three-dimensional scene, subsequently segment it into planes and moveable objects and process it by filling holes or removing unwanted components.\r\n\r\n";
-		ss << "Afterwards, you will be able to navigate and manipulate the scene by physically moving around and interacting with the touchpad.\r\n\r\n";
+		ss << "Afterwards, you will be able to navigate and manipulate the scene by physically moving around and interacting with the touchscreen.\r\n\r\n";
 		bowlingHelpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
 		basicHelpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
 		helpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
@@ -117,8 +120,7 @@ namespace InteractiveFusion {
 		ss.clear();
 
 		ss << "This is the PREPARE screen.\r\n\r\n";
-		ss << "Here, you can adjust the size of the area (width x height x depth, starting 30cm in front of your initial position) that you want to scan by adjusting the slider handle. The smaller the area, the higher the quality of the reconstruction.\r\n\r\n";
-		ss << "If you want to change these settings later on, you can do so by changing back to this screen (click ''PREPARE'' in the upper navigation bar). By doing so, however, you will lose all progress on your current reconstruction.\r\n\r\n";
+		ss << "Select the right size for the space you want to scan. The smaller the space, the higher the quality of the reconstruction.\r\n\r\n";
 		ss << "If you don't want any more automatic help messages, just uncheck the ''Show Help'' checkbox. You can always look at the currently available help by selecting the ''?'' in the top left corner.\r\n\r\n";
 		ss << "Press ''START'' when you are ready to scan your scene. ";
 		bowlingHelpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
@@ -128,21 +130,23 @@ namespace InteractiveFusion {
 		ss.clear();
 
 		//SCAN
-		
-		ss << "Before we start scanning, here are some general instructions that should be followed:\r\n\r\n";
-		ss << "1. Be sure to position the tablet/camera about one meter away from the object you want to scan while facing in its general direction.\r\n";
-		ss << "2. As the camera does not recognize objects more than 50cm away from it, try to keep a short distance to any physical objects to stabilize positional tracking.\r\n";
-		ss << "3. For better results, it is also advised to hold the camera in an angle that is parallel to the ground when the scan starts.\r\n";
-		ss << "4. While scanning, please move slowly around the object/scene and try to capture it from as many different angles as possible to fill all the gaps in it's reconstructed surface.";
+
+		ss << "Here are some general instructions for the scanning procedure that is about to start.\r\n\r\n";
+		ss << "At the beginning of the scan:\r\n\r\n";
+		ss << "1. Position the tablet about 50cm away from the scene.\r\n\r\n";
+		ss << "2. Hold the tablet perpendicular to the floor and point it at the center of the scene.\r\n\r\n";
+		ss << "During the scan:\r\n\r\n";
+		ss << "1. Keep the camera at a minimum distance of 50cm from any physical objects to stabilize positional tracking.\r\n\r\n";
+		ss << "2. Move slowly around the object/scene and try to capture it from as many different angles as possible to fill all the gaps in it's reconstructed surface.";
 		bowlingHelpTextMap[HelpMessage::ScanHelp].push_back(StringConverter::StringToWString(ss.str()));
 		basicHelpTextMap[HelpMessage::ScanHelp].push_back(StringConverter::StringToWString(ss.str()));
 
 		helpTextMap[HelpMessage::ScanHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
-		
-		ss << "If you don't get it right the first time or feel like the scan is going nowhere, you can always press the ''RESET''-Button on the left to restart the scanning process.\r\n\r\n";
-		ss << "When you are finished, press ''DONE''.\r\n\r\n";
+
+		ss << "You can reset the scan by pressing the ''RESET'' button.\r\n\r\n";
+		ss << "When you are finished, press ''DONE'' to proceed to the next screen.\r\n\r\n";
 		ss << "After a short countdown, the scanning process will start.";
 		bowlingHelpTextMap[HelpMessage::ScanHelp].push_back(StringConverter::StringToWString(ss.str()));
 		basicHelpTextMap[HelpMessage::ScanHelp].push_back(StringConverter::StringToWString(ss.str()));
@@ -155,32 +159,21 @@ namespace InteractiveFusion {
 		//PLANE SELECTION
 		ss << "This is the first part of the SEGMENT screen.\r\n";
 		ss << "You are now working with the virtual reconstruction of your scan.\r\n\r\n";
-		ss << "Here we will try to find major static planes in your scene like the ground, walls and/or the ceiling. The segments you select as planes will remain immovable during the scene manipulation later on and will also be used to segment movable objects in the next stage.\r\n\r\n";
-		ss << "If you want to start the plane segmentation process over at any point, press ''Start over'' in the top right corner.\r\n\r\n";
-		ss << "You can orbit the camera around freely by sliding your finger over the scene. You can also zoom in and out with the respective touch gestures.";
-		bowlingHelpTextMap[HelpMessage::PlaneSelectionHelp].push_back(StringConverter::StringToWString(ss.str()));
-		basicHelpTextMap[HelpMessage::PlaneSelectionHelp].push_back(StringConverter::StringToWString(ss.str()));
-
-		helpTextMap[HelpMessage::PlaneSelectionHelp].push_back(StringConverter::StringToWString(ss.str()));
-		ss.str(std::string());
-		ss.clear();
-
-		ss << "One after another, possible planes that have been found in your scene will be highlighted in red.\r\n\r\n";
-		ss << "If the highlighted area is indeed a static part of your scene, press ''YES'', otherwise press ''NO''.\r\n\r\n";
-		ss << "If the highlighted area is too thick or too thin (i.e. only a part of the wall is highlighted), change the wall thickness on the bottom of the screen.\r\n\r\n";
-		ss << "If the highlighted area has gaps, decrease the smoothness; if it is not flat enough (i.e.contains movable objects placed on it), increase it.\r\n\r\n";
+		ss << "The application will propose major planes like the floor and walls as static to keep them immovable during the scene manipulation. Select ''YES'' only if the area highlighted in red contains the entire static plane and as little of the other objects as possible. Try to improve the highlighted area by adjusting thickness and smoothness. If you cannot achieve the desired results, press ''NO'' to get a new suggestion.\r\n\r\n";
+		ss << "You can orbit the camera around freely by sliding your finger over the scene. You can also zoom in and out by scrolling up and down.\r\n\r\n";
 		ss << "Note that you should try to at least find the floor and major walls, if present, as the subsequent segmentation of movable objects heavily relies on the presence of at least one static ground plane.";
 		bowlingHelpTextMap[HelpMessage::PlaneSelectionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		basicHelpTextMap[HelpMessage::PlaneSelectionHelp].push_back(StringConverter::StringToWString(ss.str()));
+
 		helpTextMap[HelpMessage::PlaneSelectionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
 
-		
+
 		//SEGMENTATION
 		ss << "This is the second part of the SEGMENT screen.\r\n\r\n";
-		ss << "Here we will try to segment the parts not selected in the previous plane selection into distinct movable objects.\r\n\r\n";
-		ss << "You can choose between Euclidean and Region Growth Segmentation and adjust respective parameters on the right side.\r\n\r\n";
+		ss << "The non-static parts will now be segmented into distinct movable objects.\r\n\r\n";
+		ss << "You can choose between two different methods of segmentation (Euclidean and Region Growth Segmentation) and adjust respective parameters on the right.\r\n\r\n";
 		bowlingHelpTextMap[HelpMessage::SegmentationHelp].push_back(StringConverter::StringToWString(ss.str()));
 		basicHelpTextMap[HelpMessage::SegmentationHelp].push_back(StringConverter::StringToWString(ss.str()));
 
@@ -188,10 +181,10 @@ namespace InteractiveFusion {
 		ss.str(std::string());
 		ss.clear();
 
-		ss << "By pressing ''SEGMENT'', you will be shown a preview of a segmentation with your currently selected parameters, where each distinct object is highlighted in a different color.\r\n\r\n";
-		ss << "Right now, a segmentation preview using the default parameters is shown. For most purposes, the currently selected Euclidean Segmentation with the default parameters is the best choice.\r\n\r\n";
-		ss << "In a few cases, however, you might need to adjust the ""TOLERANCE"", which is the maximum euclidean distance between two unconnected parts wherein they are still considered to be part of the same object.\r\n\r\n";
-		ss << "When you are happy with the current preview (even without adjusting anything), press ''DONE'' to continue.\r\n";
+		ss << "Right now, a segmentation preview using Euclidean Segmentation with default parameters is shown. For most purposes, this preset is the best choice.\r\n\r\n";
+		ss << "In a few cases, however, you might need to adjust the ""TOLERANCE"" (the maximum euclidean distance between two unconnected parts wherein they are still considered to be part of the same object).\r\n\r\n";
+		ss << "Press ''PREVIEW'' to get a preview of a segmentation with your currently selected parameters, where each distinct object is highlighted in a different color.\r\n\r\n";
+		ss << "Press ''DONE'' to continue to the next stage.\r\n\r\n";
 		ss << "(NOTE: You can reset the camera position by pressing the button with the camera icon on the lower right corner.)";
 		bowlingHelpTextMap[HelpMessage::SegmentationHelp].push_back(StringConverter::StringToWString(ss.str()));
 		basicHelpTextMap[HelpMessage::SegmentationHelp].push_back(StringConverter::StringToWString(ss.str()));
@@ -224,10 +217,10 @@ namespace InteractiveFusion {
 
 		//PROCESSING
 		ss << "This is the PROCESS screen.\r\n\r\n";
-		ss << "You can remove components that contain less than a certain number of vertices by adjusting the ''Component Size'' and clicking ''Remove Components'' on the right side.\r\n\r\n";
-		ss << "It is also possible (and recommended) to fill holes that were created during segmentation or might have been left open during the scanning process by adjusting the ''Hole Size'' and pressing ''Fill Holes''.\r\n\r\n";
+		ss << "During segmentation, the non-visible touching surfaces of two separated objects result in holes in the reconstruction. It is recommended to fill these holes as well as those that might have been left open during the scanning process. This can be done by adjusting the ''Hole Size'' and selecting ''Fill Holes''.\r\n\r\n";
+		ss << "It is also possible to remove components that contain less than a certain number of vertices by adjusting the ''Component Size'' and clicking ''Remove Components'' on the right side.\r\n\r\n";
 		ss << "You can also select a specific segment in your scene (which will be highlighted in red) and perform hole filling to only fill holes in that object.\r\n\r\n";
-		ss << "You can reset all processing changes at any time by pressing ''Reset''.\r\nWhen you are finished, click ''DONE''.";
+		ss << "Press ''DONE'' to proceed to the next stage.";
 		bowlingHelpTextMap[HelpMessage::ProcessingHelp].push_back(StringConverter::StringToWString(ss.str()));
 		basicHelpTextMap[HelpMessage::ProcessingHelp].push_back(StringConverter::StringToWString(ss.str()));
 
@@ -237,9 +230,9 @@ namespace InteractiveFusion {
 
 		//INTERACTION
 		ss << "This is the MANIPULATE screen.\r\n\r\n";
-		ss << "Here you can navigate the scene by using the camera and the tablet as a ''window'' into the virtual world. This means that you can physically move around in the scene by pointing the camera at previously scanned objects.\r\n\r\n";
-		ss << "You are also able to pick movable objects up (by clicking on them), carry them around (by keeping your finger on the touch screen and moving) and reposition them by simply dropping them in another place.\r\n\r\n";
-		ss << "By switching into ''Transform'' mode on the right side, you can rotate an object by simply dragging it in the desired rotational direction, as well as scale it by using scrolling touch input.\r\n\r\n";
+		ss << "You can navigate the scene by using the tablet with the Kinect camera as a ''window'' into the virtual world. This means that you can physically move around in the scene by pointing the tablet at previously scanned real objects.\r\n\r\n";
+		ss << "You are also able to pick movable objects up by clicking on them, carry them around by keeping your finger on the touch screen and moving and reposition them by dropping them in another place.\r\n\r\n";
+		ss << "By switching into ''Transform'' mode on the right side, you can rotate an object by dragging it in the desired rotational direction, as well as scale it by using scrolling touch input.\r\n\r\n";
 		basicHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		bowlingHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		helpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
@@ -247,9 +240,9 @@ namespace InteractiveFusion {
 		ss.clear();
 
 		ss << "When ''Duplicate' is active, you will always pick up a duplicate of an object instead of the real one, so you can place multiple models of the same object in the scene.\r\n\r\n";
-		ss << "To delete an object, simply drag and drop it onto the trash can in the lower right corner.\r\n\r\n";
-		ss << "You can always switch to a free camera to review your changes by clicking ''Free Camera'', although you wont be able to manipulate the scene during that.\r\n\r\n";
-		ss << "If you want to reset all your changes, simply press ''Reset''. When you are happy with your scene, click on ''Export'' to save your final creation as a 3D model that can be imported in other applications for further use.\r\n\r\n";
+		ss << "To delete an object, drag and drop it onto the trash can in the lower right corner.\r\n\r\n";
+		ss << "You can always switch to a free camera to review your changes by clicking ''Free Camera'', although you wont be able to manipulate the scene while doing this.\r\n\r\n";
+		ss << "When you are satisfied with your scene, click on ''Export'' to save your final creation as a 3D model that can be imported in other applications for further use.\r\n\r\n";
 		basicHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		bowlingHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		helpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
@@ -258,9 +251,9 @@ namespace InteractiveFusion {
 
 		//SCENARIO BOWLING
 
-		ss << "As a reminder: In this scenario, your goal is to prepare a typical bowling setup with about ten bowling pins.\r\n\r\n";
+		ss << "As a reminder: In this scenario, your goal is to prepare a bowling setup with about ten bowling pins.\r\n\r\n";
 		ss << "To achieve that, you should first remove everything but the bowling pin and the ground floor from the scene. After that, duplicate the pin as often as you like and place them somewhere in the marked area.\r\n\r\n";
-		ss << "Try to make (some of) the pins bigger by scaling them with 'Transform'. They don't have to be uniformly scaled. When you are finished, press ''Export''.\r\n\r\n";
+		ss << "Try to make (some of) the pins bigger by scaling them with 'Transform'. They don't have to be uniformly scaled. You also don't have to place them in a typical triangle setup.\r\n\r\n";
 		bowlingHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();

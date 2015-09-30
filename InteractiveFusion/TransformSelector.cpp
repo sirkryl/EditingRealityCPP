@@ -38,9 +38,10 @@ namespace InteractiveFusion {
 			}
 			_modelData.TranslateMeshToPoint(_selectedIndex, transformationBasePoint, { 0, 1, 0 });
 
-			HandleRotation(_glControl, _modelData, _selectedIndex);
-			HandleScale(_glControl, _modelData, _selectedIndex);
-			
+			if (_glControl.GetMouseWheelDelta() != 0)
+				HandleScale(_glControl, _modelData, _selectedIndex);
+			else
+				HandleRotation(_glControl, _modelData, _selectedIndex);
 		}
 	}
 
@@ -70,7 +71,7 @@ namespace InteractiveFusion {
 		GetCursorPos(&pCur);
 		float offSetX = (float)((pCur.y - oldPosY)*0.2f);
 		float offSetY = (float)((pCur.x - oldPosX)*0.2f);
-
+		
 		if (firstClick)
 		{
 			glm::mat4 cameraMatrix = _glControl.GetViewMatrix();

@@ -61,7 +61,7 @@ namespace InteractiveFusion {
 
 		buttonLayoutMap.emplace(buttonSegmentationFinish, ButtonLayout());
 		buttonLayoutMap[buttonSegmentationFinish].SetLayoutParams(StyleSheet::GetInstance()->GetButtonLayoutParams(ButtonLayoutType::Green));
-		buttonSegmentationBegin = CreateWindowEx(0, L"Button", L"SEGMENT", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_BUTTON_UPDATE, hInstance, 0);
+		buttonSegmentationBegin = CreateWindowEx(0, L"Button", L"PREVIEW", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 50, 50, 150, 50, windowHandle, (HMENU)IDC_SEGMENTATION_BUTTON_UPDATE, hInstance, 0);
 
 		
 		buttonLayoutMap.emplace(buttonSegmentationBegin, ButtonLayout());

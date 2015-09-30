@@ -29,6 +29,7 @@ namespace InteractiveFusion {
 		virtual void ResetScan() = 0;
 		virtual void ResumeRendering() = 0;
 		virtual void CleanUp() = 0;
+		virtual void PauseIntegration() = 0;
 		virtual void PauseProcessing(bool flag) = 0;
 		virtual bool IsReconstructionReady() = 0;
 		
