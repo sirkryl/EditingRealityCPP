@@ -21,7 +21,12 @@ namespace InteractiveFusion {
 	void Selector::HandleSelection(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper)
 	{
 		int currentlySelectedMeshIndex = _modelData.GetCurrentlySelectedMeshIndex();
-		if (KeyState::LeftMouseFirstDownTouchCheck())
+		if (_glControl.GetMouseWheelDelta() != 0)
+		{
+			HandleMouseScroll(_glControl, _modelData, _overlayHelper, currentlySelectedMeshIndex);
+			releaseHandled = false;
+		}
+		else if (KeyState::LeftMouseFirstDownTouchCheck())
 		{
 			HandleLeftMouseClick(_glControl, _modelData, _overlayHelper, currentlySelectedMeshIndex);
 			releaseHandled = false;
@@ -47,6 +52,10 @@ namespace InteractiveFusion {
 	}
 
 	void Selector::HandleLeftMouseRelease(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	{
+	}
+
+	void Selector::HandleMouseScroll(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 	}
 

@@ -37,17 +37,29 @@ namespace InteractiveFusion {
 				InitializeTransformationBasePoint(_modelData, _selectedIndex);
 			}
 			_modelData.TranslateMeshToPoint(_selectedIndex, transformationBasePoint, { 0, 1, 0 });
-
-			if (_glControl.GetMouseWheelDelta() != 0)
-				HandleScale(_glControl, _modelData, _selectedIndex);
-			else
-				HandleRotation(_glControl, _modelData, _selectedIndex);
+			
+			HandleRotation(_glControl, _modelData, _selectedIndex);
 		}
 	}
 
 	void TransformSelector::HandleLeftMouseRelease(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		ResetTransformationBasePoint();
+	}
+
+	void TransformSelector::HandleMouseScroll(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	{
+		DebugUtility::DbgOut(L"Mouse Scroll");
+		if (_selectedIndex != -1)
+		{
+			if (!transformationBasePointInitialized)
+			{
+				InitializeTransformationBasePoint(_modelData, _selectedIndex);
+			}
+			_modelData.TranslateMeshToPoint(_selectedIndex, transformationBasePoint, { 0, 1, 0 });
+
+			HandleScale(_glControl, _modelData, _selectedIndex);
+		}			
 	}
 
 	bool TransformSelector::InitializeTransformationBasePoint(ModelData& _modelData, int _selectedIndex)
@@ -58,6 +70,8 @@ namespace InteractiveFusion {
 		transformationBasePoint = *_modelData.GetBasePoint(_selectedIndex);
 		return true;
 	}
+
+	
 
 	void TransformSelector::ResetTransformationBasePoint()
 	{

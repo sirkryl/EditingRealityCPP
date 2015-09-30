@@ -14,7 +14,7 @@ namespace InteractiveFusion {
 		virtual void HandleLeftMouseClick(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
 		virtual void HandleLeftMouseDown(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
 		virtual void HandleLeftMouseRelease(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
-
+		virtual void HandleMouseScroll(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
 		bool InitializeTransformationBasePoint(ModelData& _modelData, int _selectedIndex);
 
 		void ResetTransformationBasePoint();
