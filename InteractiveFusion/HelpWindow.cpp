@@ -195,8 +195,8 @@ namespace InteractiveFusion {
 
 		//PLANECUT
 		ss << "This is the last part of the SEGMENT screen.\r\n\r\n";
-		ss << "Here you can refine certain object segmentations by cutting them in two with a plane. You can only cut movable objects, not static planes.\r\n\r\n";
-		ss << "You can select an object that you want to cut and simultaneously translate the plane to a position by simply clicking on it. If you want to better position the plane, just ''drag'' it in the desired direction.\r\n\r\n";
+		ss << "If there are still objects that have not yet been separated from each other, you can refine the segmentation by cutting them in two with a plane. You can only cut movable objects, not static planes.\r\n\r\n";
+		ss << "Select an object that you want to cut by simply clicking on it. You can then drag the plane to reposition it.\r\n\r\n";
 		bowlingHelpTextMap[HelpMessage::PlaneCutHelp].push_back(StringConverter::StringToWString(ss.str()));
 		basicHelpTextMap[HelpMessage::PlaneCutHelp].push_back(StringConverter::StringToWString(ss.str()));
 
@@ -204,10 +204,10 @@ namespace InteractiveFusion {
 		ss.str(std::string());
 		ss.clear();
 
-		ss << "By switching to the ''Rotate'' mode on the right side, you can also adjust the plane's rotation up to a certain point. You can adjust the general orientation of the plane by selecting it's perpendicular axis (''X'', ''Y'' or ''Z'').\r\n\r\n";
-		ss << "Whenever you move the plane, you will see an updated segmentation preview of the currently selected object, where green and blue regions represent the two segments that would be created by cutting it with the current plane.\r\n\r\n";
-		ss << "If you want to perform a plane cut, press ''Cut''. You can also switch in and out of free camera movement by clicking on ''Free Camera'', although you wont be able to position the plane while navigating.\r\n\r\n";
-		ss << "You can start this whole section over by pressing ''Reset''.\r\n When you are finished, click ''DONE''";
+		ss << "By switching to the ''Rotate'' mode on the right side, you can adjust the plane's rotation up to a certain point. The general orientation of the plane can be changed by selecting it's perpendicular axis (''X'', ''Y'' or ''Z'').\r\n\r\n";
+		ss << "Whenever you move the plane, you will see an updated segmentation preview of the currently selected object, where green and blue regions represent the two resulting segments.\r\n\r\n";
+		ss << "Press ''Cut'' to perform a plane cut. You can also switch in and out of free camera movement by clicking on ''Free Camera'', although you wont be able to position the plane while navigating.\r\n\r\n";
+		ss << "Press ''DONE'' to proceed to the next step.";
 		bowlingHelpTextMap[HelpMessage::PlaneCutHelp].push_back(StringConverter::StringToWString(ss.str()));
 		basicHelpTextMap[HelpMessage::PlaneCutHelp].push_back(StringConverter::StringToWString(ss.str()));
 

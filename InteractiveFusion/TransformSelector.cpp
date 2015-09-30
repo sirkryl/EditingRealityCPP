@@ -49,7 +49,6 @@ namespace InteractiveFusion {
 
 	void TransformSelector::HandleMouseScroll(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
-		DebugUtility::DbgOut(L"Mouse Scroll");
 		if (_selectedIndex != -1)
 		{
 			if (!transformationBasePointInitialized)
@@ -59,6 +58,8 @@ namespace InteractiveFusion {
 			_modelData.TranslateMeshToPoint(_selectedIndex, transformationBasePoint, { 0, 1, 0 });
 
 			HandleScale(_glControl, _modelData, _selectedIndex);
+
+			firstClick = false;
 		}			
 	}
 

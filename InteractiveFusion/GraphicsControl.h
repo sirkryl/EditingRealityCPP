@@ -20,7 +20,7 @@ namespace InteractiveFusion {
 
 		void SwitchToNewState();
 		void UpdateApplicationState(WindowState _state);
-
+		void SetScenarioType(ScenarioType type);
 		bool RequestsStateChange();
 
 		glm::mat4& GetProjectionMatrix();

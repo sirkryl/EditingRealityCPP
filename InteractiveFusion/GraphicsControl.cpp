@@ -53,6 +53,7 @@ namespace InteractiveFusion {
 	
 
 	WindowState currentApplicationState;
+	ScenarioType currentScenarioType;
 
 	std::unordered_map<WindowState, unique_ptr<OpenGLRenderer>> rendererMap;
 	std::unordered_map<WindowState, unique_ptr<OpenGLRenderer>>::const_iterator activeRenderer = rendererMap.end();
@@ -162,6 +163,11 @@ namespace InteractiveFusion {
 	{
 		currentApplicationState = _state;
 		eventQueue.push(GraphicsControlEvent::StateUpdate);
+	}
+
+	void GraphicsControl::SetScenarioType(ScenarioType type)
+	{
+		currentScenarioType = type;
 	}
 
 	bool GraphicsControl::RequestsStateChange()
@@ -331,10 +337,15 @@ namespace InteractiveFusion {
 					if (currentApplicationState == WindowState::PlaneCut)
 					{
 						activeScene->second->CopyFrom(temporaryPlaneCutDataForReset);
-						DebugUtility::DbgOut(L"YES I AM HERE");
+					}
+					else if (currentApplicationState == WindowState::Processing && currentScenarioType == ScenarioType::Bowling)
+					{
+						activeScene->second->CopyFrom(*sceneMap[WindowState::Segmentation].get());
 					}
 					else
+					{
 						activeScene->second->CopyFrom(*sceneMap[previousApplicationState].get());
+					}
 					activeScene->second->GenerateBuffers();
 				}
 				SetBusy(false);
@@ -920,8 +931,8 @@ namespace InteractiveFusion {
 
 		//activeScene->second->LoadFromFile("data\\models\\lowPolyTest.ply");
 
-		//activeScene->second->LoadFromFile("data\\models\\testScene.ply");
-		activeScene->second->LoadFromData(_scannedVertices, _scannedTriangles);
+		activeScene->second->LoadFromFile("data\\models\\testScene.ply");
+		//activeScene->second->LoadFromData(_scannedVertices, _scannedTriangles);
 
 		DebugUtility::DbgOut(L"Initialized scene in  ", stopWatch.Stop());
 		eventQueue.push(GraphicsControlEvent::ModelDataUpdated);

@@ -831,6 +831,7 @@ namespace InteractiveFusion {
 		Logger::WriteToLog(L"Changing scenario type to: " + std::to_wstring((int)type), Logger::info);
 		scenarioType = type;
 		helpWindow.SetScenarioType(type);
+		glControl.SetScenarioType(type);
 	}
 
 	void MainWindow::UpdateUIActivation()
