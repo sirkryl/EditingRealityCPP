@@ -209,7 +209,7 @@ namespace InteractiveFusion {
 		SetupSceneData();
 		SetupSegmenter();
 		SetupSelectors();
-		DebugUtility::DbgOut(L"GraphicsControl::OpenGLThreadMessageLoop::After SETUP");
+		DebugUtility::DbgOut(L"Setup in Graphics Control completed.");
 		MSG       msg = { 0 };
 		while (WM_QUIT != msg.message && !quitMessageLoop)
 		{
@@ -920,7 +920,7 @@ namespace InteractiveFusion {
 	int GraphicsControl::LoadAndSegmentModelDataFromScan(std::vector<Vertex>& _scannedVertices, std::vector<Triangle>& _scannedTriangles)
 	{
 		activeScene->second.get()->Lock();
-		DebugUtility::DbgOut(L"GraphicsControl::LoadAndSegmentModelDataFromScan::Starting with Reconstruction");
+		DebugUtility::DbgOut(L"GraphicsControl::LoadAndSegmentModelDataFromScan::Cleaning and converting reconstruction...");
 		SetStatusMessage(L"Reconstructing model");
 		SetBusy(true);
 		//DebugUtility::DbgOut(L"GraphicsControl::LoadStuff:: ", _scannedMesh->GetNumberOfVertices());
@@ -931,8 +931,8 @@ namespace InteractiveFusion {
 
 		//activeScene->second->LoadFromFile("data\\models\\lowPolyTest.ply");
 
-		activeScene->second->LoadFromFile("data\\models\\testScene.ply");
-		//activeScene->second->LoadFromData(_scannedVertices, _scannedTriangles);
+		//activeScene->second->LoadFromFile("data\\models\\testScene.ply");
+		activeScene->second->LoadFromData(_scannedVertices, _scannedTriangles);
 
 		DebugUtility::DbgOut(L"Initialized scene in  ", stopWatch.Stop());
 		eventQueue.push(GraphicsControlEvent::ModelDataUpdated);

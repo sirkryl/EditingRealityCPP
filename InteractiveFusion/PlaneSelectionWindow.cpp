@@ -181,10 +181,6 @@ namespace InteractiveFusion {
 		switch (message)
 		{
 		case WM_LBUTTONDOWN:
-			if (_windowHandle == windowHandle)
-				DebugUtility::DbgOut(L"down it is");
-			if (_windowHandle == propertiesWindow)
-				DebugUtility::DbgOut(L"PROPERTIES DOWN");
 			break;
 		case WM_CTLCOLORSTATIC:
 		{
@@ -203,7 +199,7 @@ namespace InteractiveFusion {
 	{
 		if (IDC_PLANE_BUTTON_YES == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			DebugUtility::DbgOut(L"PlaneSelectionWindow::ProcessUI::YES");
+			DebugUtility::DbgOut(L"YES pressed");
 			
 			//parentWindow->ChangeState(Segmentation);
 			
@@ -215,7 +211,7 @@ namespace InteractiveFusion {
 		}
 		if (IDC_PLANE_BUTTON_NO == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			DebugUtility::DbgOut(L"PlaneSelectionWindow::ProcessUI::NO");
+			DebugUtility::DbgOut(L"NO pressed.");
 			
 			planeParams.planeThickness = 0.1f;
 			planeParams.planeSmoothness = 0.05f;
@@ -225,7 +221,7 @@ namespace InteractiveFusion {
 		}
 		if (IDC_PLANE_BUTTON_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			DebugUtility::DbgOut(L"PlaneSelectionWindow::ProcessUI::RESET");
+			DebugUtility::DbgOut(L"Resetting plane selection...");
 
 			eventQueue.push(PlaneSelectionWindowEvent::Reset);
 		}
@@ -239,7 +235,7 @@ namespace InteractiveFusion {
 			else
 				step = 0.01f;
 			planeParams.planeThickness += step;
-			DebugUtility::DbgOut(L"PLUS: ", planeParams.planeThickness);
+			DebugUtility::DbgOut(L"Thickness increased to ", planeParams.planeThickness);
 			//meshHelper.RemoveAllHighlights();
 
 			UpdatePlaneSelectionValues();
@@ -258,7 +254,7 @@ namespace InteractiveFusion {
 				step = 0.01f;
 
 			planeParams.planeThickness -= step;
-			DebugUtility::DbgOut(L"MINUS: ", planeParams.planeThickness);
+			DebugUtility::DbgOut(L"Thickness decreased to ", planeParams.planeThickness);
 			//meshHelper.RemoveAllHighlights();
 
 			UpdatePlaneSelectionValues();
@@ -267,7 +263,6 @@ namespace InteractiveFusion {
 		if (IDC_PLANE_BUTTON_WALLSMOOTHNESS_PLUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 
-			DebugUtility::DbgOut(L"BEGINNING: ", planeParams.planeSmoothness);
 
 			if (planeParams.planeSmoothness >= 1.00f)
 				return;
@@ -279,10 +274,9 @@ namespace InteractiveFusion {
 			else
 				step = 0.01f;
 			planeParams.planeSmoothness += step;
-			DebugUtility::DbgOut(L"PLUS: ", planeParams.planeSmoothness);
+			DebugUtility::DbgOut(L"Smoothness increased to: ", planeParams.planeSmoothness);
 			//meshHelper.RemoveAllHighlights();
 			UpdatePlaneSelectionValues();
-			DebugUtility::DbgOut(L"UPDATED: ", planeParams.planeSmoothness);
 			eventQueue.push(PlaneSelectionWindowEvent::UpdateSegmentation);
 		}
 		if (IDC_PLANE_BUTTON_WALLSMOOTHNESS_MINUS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
@@ -297,9 +291,8 @@ namespace InteractiveFusion {
 			else
 				step = 0.01f;
 			planeParams.planeSmoothness -= step;
-			DebugUtility::DbgOut(L"MINUS: ", planeParams.planeSmoothness);
 			//meshHelper.RemoveAllHighlights();
-
+			DebugUtility::DbgOut(L"Smoothness decreased to: ", planeParams.planeSmoothness);
 			UpdatePlaneSelectionValues();
 			eventQueue.push(PlaneSelectionWindowEvent::UpdateSegmentation);
 		}
@@ -347,7 +340,6 @@ namespace InteractiveFusion {
 
 	void PlaneSelectionWindow::Resize(int parentWidth, int parentHeight)
 	{
-		DebugUtility::DbgOut(L"PrepareWindow::RESIZE");
 		//RECT rRect;
 		//GetClientRect(parentHandle, &rRect);
 

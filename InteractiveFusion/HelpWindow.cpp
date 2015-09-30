@@ -316,7 +316,6 @@ namespace InteractiveFusion {
 
 	void HelpWindow::ProcessUI(WPARAM wParam, LPARAM lParam)
 	{
-		DebugUtility::DbgOut(L"HelpWindow::ProcessUI");
 		if (IDC_HELP_BUTTON_OK == LOWORD(wParam))
 		{
 			if (currentIndex < metaMap[scenarioType][currentHelpState].size() - 1)

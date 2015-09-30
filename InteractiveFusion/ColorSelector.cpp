@@ -16,7 +16,6 @@ namespace InteractiveFusion {
 
 	void ColorSelector::HandleLeftMouseClick(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
-		DebugUtility::DbgOut(L"ColorSelector::HandleLeftMouseClick");
 		if (_selectedIndex != -1)
 		{
 			_modelData.RemoveTemporaryMeshColor(_selectedIndex);

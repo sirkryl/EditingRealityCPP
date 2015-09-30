@@ -338,7 +338,7 @@ namespace InteractiveFusion {
 		helpWindow.SetHelpState(_state);
 		if (isHelpEnabled)
 		{
-			Logger::WriteToLog(L"Showing Help Message with number" + std::to_wstring((int)_state), Logger::info);
+			Logger::WriteToLog(L"Showing help message with number " + std::to_wstring((int)_state), Logger::info);
 			ShowHelp();
 		}
 	}
@@ -601,7 +601,6 @@ namespace InteractiveFusion {
 
 		if (WM_CREATE == uMsg)
 		{
-			DebugUtility::DbgOut(L"Setting 'this'");
 			pThis = reinterpret_cast<MainWindow*>(lParam);
 			SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 		}

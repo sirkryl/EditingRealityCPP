@@ -415,7 +415,6 @@ namespace InteractiveFusion {
 
 	void Segmenter::CleanUp()
 	{
-		DebugUtility::DbgOut(L"Segmenter::CleanUp()");
 		mainCloud->clear();
 		indexMap.clear();
 		vertexMap.clear();

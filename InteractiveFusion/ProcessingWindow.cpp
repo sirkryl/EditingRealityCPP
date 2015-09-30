@@ -177,17 +177,17 @@ namespace InteractiveFusion {
 				_parentWindow.SetAndShowHelpMessage(HelpMessage::InteractionHelp);
 				break;
 			case ProcessingWindowEvent::FillHoles:
-				DebugUtility::DbgOut(L"ProcessingWindow::HandleEvents::FillHoles");
+				DebugUtility::DbgOut(L"Filling holes...");
 				boost::thread(&MainWindow::FillHoles, _parentWindow, maxHoleSizeToBeClosed);
 				//_parentWindow.FillHoles(maxHoleSizeToBeClosed);
 				break;
 			case ProcessingWindowEvent::RemoveComponents:
-				DebugUtility::DbgOut(L"ProcessingWindow::HandleEvents::RemoveComponents");
+				DebugUtility::DbgOut(L"Removing components...");
 				_parentWindow.RemoveConnectedComponents(maxComponentSizeToBeRemoved);
 				//do stuff
 				break;
 			case ProcessingWindowEvent::Reset:
-				DebugUtility::DbgOut(L"ProcessingWindow::HandleEvents::Reset");
+				DebugUtility::DbgOut(L"Resetting processing procedure...");
 				_parentWindow.ReloadModel();
 				break;
 			}
@@ -208,7 +208,6 @@ namespace InteractiveFusion {
 		}
 		if (IDC_PROCESSING_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			DebugUtility::DbgOut(L"ProcessingWindowEvent::ProcessUI::Reset");
 			eventQueue.push(ProcessingWindowEvent::Reset);
 		}
 		if (IDC_PROCESSING_BUTTON_DONE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))

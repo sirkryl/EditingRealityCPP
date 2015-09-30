@@ -161,7 +161,7 @@ namespace InteractiveFusion {
 			const int Mebi = 1024 * 1024;
 			
 			fusionTotalGpuMemory = (int)(pFrame->m_deviceMemory / 1024);
-			DebugUtility::DbgOut(L"Detected GPU Memory:", (int)(pFrame->m_deviceMemory / 1024));
+			Logger::WriteToLog(L"Detected GPU Memory in MB:" + std::to_wstring((int)(pFrame->m_deviceMemory / 1024)), Logger::info);
 			// We now create both a color and depth volume, doubling the required memory, so we restrict
 			// which resolution settings the user can choose when the graphics card is limited in memory.
 			if (pFrame->m_deviceMemory <= 1 * Mebi)  // 1GB
@@ -217,7 +217,7 @@ namespace InteractiveFusion {
 	}
 	void KinectFusion::FinishMeshSave()
 	{
-		DebugUtility::DbgOut(L"FinishMeshSave BEGIN");
+		DebugUtility::DbgOut(L"Exporting scanned reconstruction...");
 		if (scannedVertices.size() > 0)
 			scannedVertices.clear();
 		if (scannedTriangles.size() > 0)
@@ -240,15 +240,15 @@ namespace InteractiveFusion {
 
 		const Vector3 *scanVertices = NULL;
 		mesh->GetVertices(&scanVertices);
-		DebugUtility::DbgOut(L"KinectFusion::FinishScan()::Scanned Vertices: ", (int)mesh->VertexCount());
+		DebugUtility::DbgOut(L"Scanned Vertices: ", (int)mesh->VertexCount());
 
 		const Vector3 *scanNormals = NULL;
 		mesh->GetVertices(&scanNormals);
-		DebugUtility::DbgOut(L"KinectFusion::FinishScan()::Scanned Normals: ", (int)mesh->NormalCount());
+		DebugUtility::DbgOut(L"Scanned Normals: ", (int)mesh->NormalCount());
 
 		const int *scanColors = NULL;
 		mesh->GetColors(&scanColors);
-		DebugUtility::DbgOut(L"KinectFusion::FinishScan()::Scanned Colors: ", (int)mesh->ColorCount());
+		DebugUtility::DbgOut(L"Scanned Colors: ", (int)mesh->ColorCount());
 		//vector<Vertex> meshVertices;
 
 		for (int i = 0; i < mesh->VertexCount(); i++)
@@ -267,11 +267,9 @@ namespace InteractiveFusion {
 			scannedVertices.push_back(newVertex);
 
 		}
-		DebugUtility::DbgOut(L"KinectFusion::FinishScan()::I've got some vertices: ", (int)scannedVertices.size());
 
 		const int *scanTriangleIndices = NULL;
 		mesh->GetTriangleIndices(&scanTriangleIndices);
-		DebugUtility::DbgOut(L"KinectFusion::FinishScan()::Scanned Triangles: ", (int)mesh->TriangleVertexIndexCount());
 		//vector<Triangle> meshTriangles;
 		if (mesh->TriangleVertexIndexCount() <= 0)
 		{
@@ -296,9 +294,8 @@ namespace InteractiveFusion {
 
 			hr = S_OK;
 			// Release the mesh
-			DebugUtility::DbgOut(L"KinectFusion::FinishScan()::Before SafeRelease");
 			SafeRelease(mesh);
-			DebugUtility::DbgOut(L"KinectFusion::FinishScan()::After SafeRelease");
+			
 		}
 
 		m_processor.UnlockMutex();
@@ -308,7 +305,7 @@ namespace InteractiveFusion {
 
 		m_bSavingMesh = false;
 		reconstructionReady = true;
-		DebugUtility::DbgOut(L"Setting ReconstructionReady");
+		DebugUtility::DbgOut(L"Reconstruction complete.");
 		//m_processor.PauseProcessing(false);
 	}
 

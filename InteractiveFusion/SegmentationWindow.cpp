@@ -207,14 +207,14 @@ namespace InteractiveFusion {
 			euclideanParams.clusterTolerance = (float)sliderMap[Tolerance].GetValue() / 1000.0f;
 			wstring clusterToleranceString = to_wstring(sliderMap[Tolerance].GetValue()) + L"cm";
 			SetDlgItemText(windowHandle, IDC_SEGMENTATION_E_TEXT_CLUSTERTOLERANCE, clusterToleranceString.c_str());
-			DebugUtility::DbgOut(L"euclideanParams.clusterTolerance = ", euclideanParams.clusterTolerance);
+			DebugUtility::DbgOut(L"euclideanParams.clusterTolerance changed to ", euclideanParams.clusterTolerance);
 		}
 		if (euclideanParams.minComponentSize != sliderMap[EuclideanMinSize].GetValue())
 		{
 			euclideanParams.minComponentSize = sliderMap[EuclideanMinSize].GetValue();
 			wstring minComponentsString = to_wstring(euclideanParams.minComponentSize) + L"";
 			SetDlgItemText(windowHandle, IDC_SEGMENTATION_EUCLIDEAN_TEXT_MINSIZE, minComponentsString.c_str());
-			DebugUtility::DbgOut(L"euclideanParams.minComponentSize = ", euclideanParams.minComponentSize);
+			DebugUtility::DbgOut(L"euclideanParams.minComponentSize changed to ", euclideanParams.minComponentSize);
 		}
 
 		if (regionGrowthParams.smoothnessThreshold != sliderMap[Smoothness].GetValue())
@@ -222,7 +222,7 @@ namespace InteractiveFusion {
 			regionGrowthParams.smoothnessThreshold = sliderMap[Smoothness].GetValue();
 			wstring smoothnessString = to_wstring((int)regionGrowthParams.smoothnessThreshold) + L"";
 			SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_SMOOTHNESS, smoothnessString.c_str());
-			DebugUtility::DbgOut(L"regionGrowthParams.smoothnessThreshold = ", regionGrowthParams.smoothnessThreshold);
+			DebugUtility::DbgOut(L"regionGrowthParams.smoothnessThreshold changed to ", regionGrowthParams.smoothnessThreshold);
 		}
 
 		if (regionGrowthParams.curvatureThreshold != (float)sliderMap[Curvature].GetValue() / 10.0f)
@@ -233,7 +233,7 @@ namespace InteractiveFusion {
 			curvatureString << std::setprecision(2) << (float)sliderMap[Curvature].GetValue() / 10.0f;
 			//wstring curvatureString = to_wstring(regionGrowthParams.curvatureThreshold) + L"";
 			SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_CURVATURE, curvatureString.str().c_str());
-			DebugUtility::DbgOut(L"regionGrowthParams.curvatureThreshold = ", regionGrowthParams.curvatureThreshold);
+			DebugUtility::DbgOut(L"regionGrowthParams.curvatureThreshold changed to ", regionGrowthParams.curvatureThreshold);
 		}
 
 		if (regionGrowthParams.numberOfNeighbors != sliderMap[Neighbors].GetValue())
@@ -241,7 +241,7 @@ namespace InteractiveFusion {
 			regionGrowthParams.numberOfNeighbors = sliderMap[Neighbors].GetValue();
 			wstring neighborsString = to_wstring(regionGrowthParams.numberOfNeighbors) + L"";
 			SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_NEIGHBORS, neighborsString.c_str());
-			DebugUtility::DbgOut(L"regionGrowthParams.numberOfNeighbors = ", regionGrowthParams.numberOfNeighbors);
+			DebugUtility::DbgOut(L"regionGrowthParams.numberOfNeighbors changed to ", regionGrowthParams.numberOfNeighbors);
 		}
 
 		if (regionGrowthParams.minComponentSize != sliderMap[RGMinSize].GetValue())
@@ -249,7 +249,7 @@ namespace InteractiveFusion {
 			regionGrowthParams.minComponentSize = sliderMap[RGMinSize].GetValue();
 			wstring minComponentsString = to_wstring(regionGrowthParams.minComponentSize) + L"";
 			SetDlgItemText(windowHandle, IDC_SEGMENTATION_RG_TEXT_SIZE, minComponentsString.c_str());
-			DebugUtility::DbgOut(L"regionGrowthParams.minComponentSize = ", regionGrowthParams.minComponentSize);
+			DebugUtility::DbgOut(L"regionGrowthParams.minComponentSize changed to ", regionGrowthParams.minComponentSize);
 		}
 	}
 

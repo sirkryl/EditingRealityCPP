@@ -80,7 +80,6 @@ namespace InteractiveFusion {
 			switch (event)
 			{
 			case InteractionWindowEvent::StateChange:
-				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::StateChange");
 				_parentWindow.ChangeState(WindowState::Scan);
 				break;
 			case InteractionWindowEvent::ExportModel:

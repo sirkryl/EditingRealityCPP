@@ -179,11 +179,10 @@ namespace InteractiveFusion {
 
 	void ScanWindow::ProcessUI(WPARAM wParam, LPARAM lParam)
 	{
-		DebugUtility::DbgOut(L"ScanWindow::ProcessUI");
 		// If it was the reset button clicked, clear the volume
 		if (IDC_SCAN_BUTTON_RESET == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			DebugUtility::DbgOut(L"RESET");
+			DebugUtility::DbgOut(L"Resetting scan...");
 			scanner->ResetScan();
 			//kinectFusionScanner.ResetScan();
 			//m_processor->ResetReconstruction();
@@ -192,7 +191,7 @@ namespace InteractiveFusion {
 
 		if (IDC_SCAN_BUTTON_DONE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			DebugUtility::DbgOut(L"DONE");
+			DebugUtility::DbgOut(L"Scanning done.");
 			eventQueue.push(ScanWindowEvent::StateChange);
 			//parentWindow->ChangeState(PlaneSelection);
 			//FinishScan(0);

@@ -171,12 +171,10 @@ namespace InteractiveFusion {
 			switch (event)
 			{
 			case PrepareWindowEvent::StateChange:
-				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::StateChange");
 				_parentWindow.ChangeScanVolumeSize(voxelsPerMeter);
 				_parentWindow.ChangeState(WindowState::Scan);
 				break;
 			case PrepareWindowEvent::Start:
-				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::Start");
 				_parentWindow.SetAndShowHelpMessage(HelpMessage::ScanHelp);
 				if (!_parentWindow.IsHelpEnabled())
 					startCountDown = true;
@@ -184,12 +182,10 @@ namespace InteractiveFusion {
 				
 				break;
 			case PrepareWindowEvent::HelpChanged:
-				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::HelpChanged");
 				_parentWindow.ToggleHelp(helpActive);
 
 				break;
 			case PrepareWindowEvent::ScenarioChanged:
-				DebugUtility::DbgOut(L"PrepareWindow::HandleEvents::ScenarioChanged");
 				_parentWindow.SetScenarioType(scenarioType);
 				break;
 			}
@@ -219,7 +215,6 @@ namespace InteractiveFusion {
 
 	void PrepareWindow::ProcessUI(WPARAM wParam, LPARAM lParam)
 	{
-		DebugUtility::DbgOut(L"PrepareWindow::ProcessUI");
 		if (IDC_PREPARE_CHECK_HELP == LOWORD(wParam))
 		{
 			if (IsDlgButtonChecked(windowHandle, IDC_PREPARE_CHECK_HELP))
@@ -281,7 +276,7 @@ namespace InteractiveFusion {
 
 		if (IDC_PREPARE_BUTTON_START == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			DebugUtility::DbgOut(L"START");
+			Logger::WriteToLog(L"START button was pressed.", Logger::info);
 			eventQueue.push(PrepareWindowEvent::Start);
 			//StartScan();
 
@@ -385,7 +380,6 @@ namespace InteractiveFusion {
 		while (!startCountDown)
 		{
 			boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-			DebugUtility::DbgOut(L"still checking");
 		}
 		startCountDown = false;
 		int secondTimer = 3;
@@ -407,7 +401,7 @@ namespace InteractiveFusion {
 			secondTimer--;
 		}
 		//OutputDebugString(L"wel")
-		DebugUtility::DbgOut(L"CountdownFinished");
+		Logger::WriteToLog(L"Finished countdown.", Logger::info);
 		countdownFinished = true;
 		//_parentWindow.ChangeState(Scan);
 		countdownUi.Hide();

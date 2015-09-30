@@ -32,7 +32,6 @@ namespace InteractiveFusion {
 
 	void PlaneSegmenter::SetSegmentationParameters(PlaneSegmentationParams& _segmentationParams)
 	{
-		DebugUtility::DbgOut(L"PlaneSegmenter::SetSegmentationParameters");
 
 		segmentationParameters = _segmentationParams;
 	}
@@ -244,7 +243,7 @@ namespace InteractiveFusion {
 	{
 		if (GetClusterCount() == 0)
 			return;
-		DebugUtility::DbgOut(L"UpdatePlaneSegmentationHighlights:: ", GetClusterCount() - 1);
+		DebugUtility::DbgOut(L"Updating plane segmentation highlights for number of clusters: ", GetClusterCount() - 1);
 		std::vector<int> trianglesToBeColored = GetClusterIndices(GetClusterCount() - 1);
 
 		_modelData.TemporarilyColorTriangles(0, trianglesToBeColored, ColorIF{ 0.5f, 0.0f, 0.0f }, true);
