@@ -206,6 +206,7 @@ namespace InteractiveFusion {
 			planeParams.planeThickness = 0.1f;
 			planeParams.planeSmoothness = 0.05f;
 
+			UpdatePlaneSelectionValues();
 			ShowWindow(textWalls, SW_HIDE);
 			eventQueue.push(PlaneSelectionWindowEvent::PlaneConfirmed);
 		}
@@ -216,6 +217,7 @@ namespace InteractiveFusion {
 			planeParams.planeThickness = 0.1f;
 			planeParams.planeSmoothness = 0.05f;
 
+			UpdatePlaneSelectionValues();
 			ShowWindow(textWalls, SW_HIDE);
 			eventQueue.push(PlaneSelectionWindowEvent::PlaneRejected);
 		}

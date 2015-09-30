@@ -67,7 +67,7 @@ namespace InteractiveFusion {
 		hSliderDescription = CreateWindowEx(0, L"STATIC", L"Size", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | WS_CLIPSIBLINGS, 50, 50, 100, 50, windowHandle, (HMENU)IDC_PREPARE_SLIDER_LABEL, hInstance, 0);
 		SendMessage(hSliderDescription, WM_SETFONT, (WPARAM)uiFontBig, TRUE);
 		SetWindowPos(hSliderDescription, HWND_TOP, 0, 0, 0, 0, 0);
-		hStartTextBig = CreateWindowEx(0, L"STATIC", L"Let's start with scanning your scene.", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PREPARE_STATUS_BIG, hInstance, 0);
+		hStartTextBig = CreateWindowEx(0, L"STATIC", L"Start by scanning your scene.", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PREPARE_STATUS_BIG, hInstance, 0);
 
 		SendMessage(hStartTextBig, WM_SETFONT, (WPARAM)uiFontBig, TRUE);
 
@@ -99,12 +99,12 @@ namespace InteractiveFusion {
 
 		CheckDlgButton(windowHandle, IDC_PREPARE_CHECK_HELP, BST_CHECKED);
 
-		hCheckBoxScenarioOne = CreateWindowEx(0, L"Button", L"Scenario BOWLING", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | SS_CENTER | BS_AUTOCHECKBOX, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PREPARE_CHECK_SCENARIO_ONE, hInstance, 0);
+		hCheckBoxScenarioOne = CreateWindowEx(0, L"Button", L"Scenario BOWLING", WS_CHILD | WS_CLIPSIBLINGS | SS_CENTER | BS_AUTOCHECKBOX, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PREPARE_CHECK_SCENARIO_ONE, hInstance, 0);
 
 		SendMessage(hCheckBoxScenarioOne, WM_SETFONT, (WPARAM)uiFontSmall, TRUE);
 		SetWindowTheme(hCheckBoxScenarioOne, L"wstr", L"wstr");
 
-		hCheckBoxScenarioTwo = CreateWindowEx(0, L"Button", L"Scenario TWO", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | SS_CENTER | BS_AUTOCHECKBOX, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PREPARE_CHECK_SCENARIO_TWO, hInstance, 0);
+		hCheckBoxScenarioTwo = CreateWindowEx(0, L"Button", L"Scenario TWO", WS_CHILD | WS_CLIPSIBLINGS | SS_CENTER | BS_AUTOCHECKBOX, 250, 50, 150, 50, windowHandle, (HMENU)IDC_PREPARE_CHECK_SCENARIO_TWO, hInstance, 0);
 
 		SendMessage(hCheckBoxScenarioTwo, WM_SETFONT, (WPARAM)uiFontSmall, TRUE);
 		SetWindowTheme(hCheckBoxScenarioTwo, L"wstr", L"wstr");
