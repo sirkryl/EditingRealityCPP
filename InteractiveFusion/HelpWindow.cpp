@@ -102,8 +102,11 @@ namespace InteractiveFusion {
 		ss.clear();
 
 		//PREPARE BASIC 
-		ss << "In this scenario, your goal is to scan and reconstruct the area containing the items placed on the highlighted area in the middle of the room. Afterwards, each of the differently colored objects should be segmented into a distinct object. \r\n\r\n";
-		ss << "Start by scanning the scene in order to virtually reconstruct it. Afterwards, several segmentation stages will have to be performed to first identify the ground floor and subsequently each of the unique boxes placed on it.\r\n\r\n";
+		ss << "In this scenario, you have to perform the following steps:\r\n\r\n";
+		ss << "1. Scan the highlighted (yellow) area with all the differently colored items placed on it.\r\n\r\n"; 
+		ss << "2. Separate the ground plane from movable objects.\r\n\r\n";
+		ss << "3. Use object segmentation to roughly seperate different object groups.\r\n\r\n"; 
+		ss << "4. Use plane cut segmentation to separate objects that are still connected as cleanly as possible.\r\n\r\n";
 		ss << "The application will display help messages and give hints at the beginning of every stage.\r\n\r\n";
 		basicHelpTextMap[HelpMessage::PrepareHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
@@ -215,6 +218,12 @@ namespace InteractiveFusion {
 		ss.str(std::string());
 		ss.clear();
 
+		ss << "As a reminder: In this scenario, your goal is to seperate physically connected differently colored boxes.\r\n\r\n";
+		ss << "Use a plane parallel to the floor to cut boxes that are standing on top of each other into two distinct objects. It doesn't have to be perfect, but try to seperate them as cleanly as possible.\r\n\r\n";
+		basicHelpTextMap[HelpMessage::PlaneCutHelp].push_back(StringConverter::StringToWString(ss.str()));
+		ss.str(std::string());
+		ss.clear();
+
 		//PROCESSING
 		ss << "This is the PROCESS screen.\r\n\r\n";
 		ss << "During segmentation, the non-visible touching surfaces of two separated objects result in holes in the reconstruction. It is recommended to fill these holes as well as those that might have been left open during the scanning process. This can be done by adjusting the ''Hole Size'' and selecting ''Fill Holes''.\r\n\r\n";
@@ -260,9 +269,8 @@ namespace InteractiveFusion {
 
 		//SCENARIO BASIC
 
-		ss << "As a reminder: In this scenario, your goal is to prepare a little track for a small matchbox-sized car.\r\n\r\n";
-		ss << "You can translate, rotate, scale, duplicate and/or remove boxes, jumps and other objects as parts of the track.\r\n\r\n";
-		ss << "The red ((object)), however, represents a score point and should be duplicated and placed at different reachable places, as they will have to be collected by the car.\r\n\r\n";
+		ss << "As a reminder: In this scenario, your goal was to segment the scene into distinct objects. You don't have to manipulate the scene, but can instead press ''EXPORT'' to end this scenario.\r\n\r\n";
+		ss << "However, if you want to edit the scene, you can move, transform and/or duplicate items. Just make sure to have at least one copy of every original object in the scene when pressing ''EXPORT''.\r\n\r\n";
 		basicHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();

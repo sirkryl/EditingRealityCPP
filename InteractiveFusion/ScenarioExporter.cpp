@@ -35,6 +35,8 @@ namespace InteractiveFusion {
 
 		namespace fs = boost::filesystem;
 		fs::path path_to_remove(path);
+
+		Logger::WriteToLog(L"Path to export to: " + StringConverter::StringToWString(path_to_remove.string()));
 		for (fs::directory_iterator end_dir_it, it(path_to_remove); it != end_dir_it; ++it) {
 			remove_all(it->path());
 		}

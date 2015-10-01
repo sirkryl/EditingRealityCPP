@@ -340,7 +340,7 @@ namespace InteractiveFusion {
 					}
 					else if (currentApplicationState == WindowState::Processing && currentScenarioType == ScenarioType::Bowling)
 					{
-						activeScene->second->CopyFrom(*sceneMap[WindowState::Segmentation].get());
+						activeScene->second->CopyFrom(temporaryPlaneCutDataForReset);
 					}
 					else
 					{

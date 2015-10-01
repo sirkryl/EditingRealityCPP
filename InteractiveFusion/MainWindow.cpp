@@ -101,9 +101,39 @@ namespace InteractiveFusion {
 	HFONT uiFontMedium, uiFontSmall;
 #pragma endregion variables
 
-	void MainWindow::InitApplication(HINSTANCE hInstance)
+	void MainWindow::InitApplication(HINSTANCE hInstance, LPWSTR lpCmdLine)
 	{
 		appInstance = hInstance;
+
+		int argCount;
+		LPWSTR *szArgList;
+		szArgList = CommandLineToArgvW(GetCommandLine(), &argCount);
+		if (argCount > 1)
+		{
+			std::wstring argument = std::wstring(szArgList[1]);
+			Logger::WriteToLog(L"Console argument: "+argument, Logger::scenario);
+			if (argument == L"-bowling")
+			{
+				SetScenarioType(ScenarioType::Bowling);
+				Logger::WriteToLog(L"Setting scenario to ''BOWLING''", Logger::scenario);
+			}
+			else if (argument == L"-basic")
+			{
+				SetScenarioType(ScenarioType::Basic);
+				Logger::WriteToLog(L"Setting scenario to ''BASIC''", Logger::scenario);
+			}
+			else
+			{
+				SetScenarioType(ScenarioType::None);
+				Logger::WriteToLog(L"Setting scenario to ''NONE''", Logger::scenario);
+			}
+		}
+		else
+		{
+			SetScenarioType(ScenarioType::None);
+			Logger::WriteToLog(L"Setting scenario to ''NONE''", Logger::scenario);
+		}
+		LocalFree(szArgList);
 
 		StyleSheet::GetInstance()->CreateStyles();
 		uiFontMedium = CreateFont(30, 0, 0, 0, StyleSheet::GetInstance()->GetGlobalFontWeight(), 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, StyleSheet::GetInstance()->GetGlobalFontName().c_str());
@@ -245,7 +275,7 @@ namespace InteractiveFusion {
 
 		helpWindow.Initialize(hWndMain, hInstance, 0.15f, 0.15f, 0.15f, 0.15f, L"Help", StyleSheet::GetInstance()->GetGlobalBackgroundColor());
 		
-		SetScenarioType(ScenarioType::Bowling);
+		//SetScenarioType(ScenarioType::Bowling);
 
 		glControl.Initialize(hWndMain, hInstance);
 		glControl.RunOpenGLThread();
