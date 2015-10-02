@@ -148,7 +148,7 @@ namespace InteractiveFusion {
 		ss.str(std::string());
 		ss.clear();
 
-		ss << "You can reset the scan by pressing the ''RESET'' button.\r\n\r\n";
+		ss << "You can reset the scan by pressing the ''RESET'' button. Make sure to revert to your starting position before resetting. \r\n\r\n";
 		ss << "When you are finished, press ''DONE'' to proceed to the next screen.\r\n\r\n";
 		ss << "After a short countdown, the scanning process will start.";
 		bowlingHelpTextMap[HelpMessage::ScanHelp].push_back(StringConverter::StringToWString(ss.str()));
