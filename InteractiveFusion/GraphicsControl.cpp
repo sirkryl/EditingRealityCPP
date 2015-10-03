@@ -930,8 +930,8 @@ namespace InteractiveFusion {
 
 
 
-		activeScene->second->LoadFromFile("data\\models\\testScene.ply");
-		//activeScene->second->LoadFromData(_scannedVertices, _scannedTriangles);
+		//activeScene->second->LoadFromFile("data\\models\\testScene.ply");
+		activeScene->second->LoadFromData(_scannedVertices, _scannedTriangles);
 
 		DebugUtility::DbgOut(L"Initialized scene in  ", stopWatch.Stop());
 		eventQueue.push(GraphicsControlEvent::ModelDataUpdated);
