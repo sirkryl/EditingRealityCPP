@@ -44,7 +44,7 @@ namespace InteractiveFusion {
 
 	void TransformSelector::HandleLeftMouseRelease(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
-		ResetTransformationBasePoint();
+		firstClick = false;
 	}
 
 	void TransformSelector::HandleMouseScroll(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
@@ -67,7 +67,9 @@ namespace InteractiveFusion {
 	{
 		transformationBasePointInitialized = true;
 		if (_modelData.GetBasePoint(_selectedIndex) == nullptr)
+		{
 			return false;
+		}
 		transformationBasePoint = *_modelData.GetBasePoint(_selectedIndex);
 		return true;
 	}
