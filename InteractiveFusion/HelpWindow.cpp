@@ -240,6 +240,7 @@ namespace InteractiveFusion {
 		//INTERACTION
 		ss << "This is the MANIPULATE screen.\r\n\r\n";
 		ss << "You can navigate the scene by using the tablet with the Kinect camera as a ''window'' into the virtual world. This means that you can physically move around in the scene by pointing the tablet at previously scanned real objects.\r\n\r\n";
+		ss << "If the system has problems tracking your perspective, point the tablet away from the scene for a second, before focusing on the reconstruction again. \r\n\r\n";
 		ss << "You are also able to pick movable objects up by clicking on them, carry them around by keeping your finger on the touch screen and moving and reposition them by dropping them in another place.\r\n\r\n";
 		ss << "By switching into ''Transform'' mode on the right side, you can rotate an object by dragging it in the desired rotational direction, as well as scale it by using scrolling touch input.\r\n\r\n";
 		basicHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
