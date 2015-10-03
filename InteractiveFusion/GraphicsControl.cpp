@@ -929,6 +929,7 @@ namespace InteractiveFusion {
 		stopWatch.Start();
 
 
+		//activeScene->second->LoadFromFile("data\\models\\lowPolyTest.ply");
 
 		//activeScene->second->LoadFromFile("data\\models\\testScene.ply");
 		activeScene->second->LoadFromData(_scannedVertices, _scannedTriangles);

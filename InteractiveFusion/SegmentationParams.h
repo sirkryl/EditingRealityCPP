@@ -17,7 +17,7 @@ namespace InteractiveFusion {
 		EuclideanSegmentationParams() : 
 			ObjectSegmentationParams(ObjectSegmentationType::Euclidean), 
 			clusterTolerance(0.02f),
-			minComponentSize(100){};
+			minComponentSize(500){};
 		virtual ~EuclideanSegmentationParams() {};
 		float clusterTolerance;
 		int minComponentSize;
