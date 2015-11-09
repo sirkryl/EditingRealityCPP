@@ -11,8 +11,8 @@ namespace InteractiveFusion {
 		PlaneCutRenderer(OpenGLCameraMode _cameraMode, std::shared_ptr<SimplePlaneRenderable3D> _cutPlane);
 		virtual ~PlaneCutRenderer();
 
-		virtual void Initialize(GraphicsControl& _glControl);
-		virtual void Render(GraphicsControl& _glControl, ModelData& _modelData, IconData& _iconData);
+		virtual void Initialize(GraphicsController& _glControl);
+		virtual void Render(GraphicsController& _glControl, ModelData& _modelData, IconData& _iconData);
 
 		virtual void CleanUp();
 

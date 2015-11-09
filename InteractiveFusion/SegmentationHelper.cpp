@@ -1,6 +1,6 @@
 #include "SegmentationHelper.h"
 #include "StateManager.h"
-#include "GraphicsControl.h"
+#include "GraphicsController.h"
 #include "Parameters.h"
 #include "PointCloudProcessor.h"
 #include "MeshContainer.h"

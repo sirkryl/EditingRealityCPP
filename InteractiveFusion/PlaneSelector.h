@@ -19,20 +19,20 @@ namespace InteractiveFusion {
 		void ChangeTransformation(PlaneCutTransformation _transformationMode);
 		void ResetPlaneRotation();
 	protected:
-		virtual void HandleLeftMouseClick(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
-		virtual void HandleLeftMouseDown(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
-		virtual void HandleLeftMouseRelease(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
-		virtual void DrawForColorPicking(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper);
+		virtual void HandleLeftMouseClick(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
+		virtual void HandleLeftMouseDown(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
+		virtual void HandleLeftMouseRelease(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex);
+		virtual void DrawForColorPicking(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper);
 		virtual void CleanUp();
 
 		bool CheckRotationLimitsX(float _offSetX);
 		bool CheckRotationLimitsY(float _offSetY);
-		void HandlePlaneTransformation(GraphicsControl& _glControl);
+		void HandlePlaneTransformation(GraphicsController& _glControl);
 		
 
 		void UpdatePlaneTranslation();
-		void UpdatePreview(GraphicsControl& _glControl, ModelData& _modelData, int _selectedIndex);
-		void ApplyPlaneRotation(GraphicsControl& _glControl, float _offSetX, float _offsetY);
+		void UpdatePreview(GraphicsController& _glControl, ModelData& _modelData, int _selectedIndex);
+		void ApplyPlaneRotation(GraphicsController& _glControl, float _offSetX, float _offsetY);
 		void ApplyPlaneTranslation(float _offSet);
 
 	private:

@@ -11,7 +11,7 @@
 #include "Logger.h"
 #include "StopWatch.h"
 
-#include "GraphicsControl.h"
+#include "GraphicsController.h"
 #include "StringConverter.h"
 #include "ButtonLayout.h"
 #include "GUIContainer.h"
@@ -48,7 +48,7 @@ namespace InteractiveFusion {
 	WindowState currentState;
 	ScenarioType scenarioType = ScenarioType::None;
 	StopWatch stateWatch;
-	GraphicsControl glControl;
+	GraphicsController glControl;
 
 
 	std::unordered_map<WindowState, unique_ptr<SubWindow>> subWindowMap;
@@ -509,7 +509,7 @@ namespace InteractiveFusion {
 	{
 		SetStatusBarMessage(L"Updating object segmentation...");
 		Logger::WriteToLog(L"Updating object segmentation", Logger::info);
-		boost::thread(&GraphicsControl::UpdateObjectSegmentation, &glControl, boost::ref(_params));
+		boost::thread(&GraphicsController::UpdateObjectSegmentation, &glControl, boost::ref(_params));
 		//glControl.UpdateObjectSegmentation(_params);
 	}
 
@@ -524,7 +524,7 @@ namespace InteractiveFusion {
 		Logger::WriteToLog(L"Updating plane segmentation", Logger::info);
 		Logger::WriteToLog(L"...Thickness:"+std::to_wstring(_params.planeThickness), Logger::info);
 		Logger::WriteToLog(L"...Smoothness:" + std::to_wstring(_params.planeSmoothness), Logger::info);
-		boost::thread(&GraphicsControl::UpdatePlaneSegmentation, &glControl, _params);
+		boost::thread(&GraphicsController::UpdatePlaneSegmentation, &glControl, _params);
 		//glControl.UpdatePlaneSegmentation(_params);
 	}
 
@@ -565,7 +565,7 @@ namespace InteractiveFusion {
 		glControl.LoadAndSegmentModelDataFromScan(scannedVertices, scannedTriangles);
 
 		//glControl.LoadAndSegmentModelDataFromScan(_scannedMesh);
-		//boost::thread(&GraphicsControl::LoadAndSegmentModelDataFromScan, &glControl, _scannedMesh);
+		//boost::thread(&GraphicsController::LoadAndSegmentModelDataFromScan, &glControl, _scannedMesh);
 	}
 
 	void MainWindow::ChangePlaneCutTransformation(PlaneCutTransformation _transformationMode)
@@ -575,7 +575,7 @@ namespace InteractiveFusion {
 
 	void MainWindow::ExecutePlaneCut()
 	{
-		boost::thread(&GraphicsControl::ExecutePlaneCut, &glControl);
+		boost::thread(&GraphicsController::ExecutePlaneCut, &glControl);
 	}
 
 	int MainWindow::GetScanVolumeSize()

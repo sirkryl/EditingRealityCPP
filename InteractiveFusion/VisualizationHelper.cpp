@@ -2,7 +2,7 @@
 #include "GraphicsCamera.h"
 #include "SelectionHelper.h"
 #include "OpenGLShaderProgram.h"
-#include "GraphicsControl.h"
+#include "GraphicsController.h"
 
 namespace InteractiveFusion {
 	void VisualizationHelper::FillPointsToVisualize()

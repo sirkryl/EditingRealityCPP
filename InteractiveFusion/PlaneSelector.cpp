@@ -1,6 +1,6 @@
 #include "PlaneSelector.h"
 #include "DebugUtility.h"
-#include "GraphicsControl.h"
+#include "GraphicsController.h"
 #include "ModelData.h"
 #include "IconData.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -25,7 +25,7 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void PlaneSelector::HandleLeftMouseClick(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void PlaneSelector::HandleLeftMouseClick(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		
 		int newIndex = GetIndexOfMeshUnderCursor(_glControl, _modelData, _overlayHelper, _glControl.GetOpenGLWindowHandle());
@@ -55,7 +55,7 @@ namespace InteractiveFusion {
 		
 	}
 
-	void PlaneSelector::HandleLeftMouseDown(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void PlaneSelector::HandleLeftMouseDown(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		if (_selectedIndex != -1)
 		{
@@ -65,7 +65,7 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void PlaneSelector::HandleLeftMouseRelease(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void PlaneSelector::HandleLeftMouseRelease(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		if (_selectedIndex != -1 && firstClick)
 		{		
@@ -79,7 +79,7 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void PlaneSelector::UpdatePreview(GraphicsControl& _glControl, ModelData& _modelData, int _selectedIndex)
+	void PlaneSelector::UpdatePreview(GraphicsController& _glControl, ModelData& _modelData, int _selectedIndex)
 	{
 		_modelData.RemoveTemporaryTriangleColor(_selectedIndex);
 		_modelData.RemoveTemporaryMeshColor(_selectedIndex);
@@ -121,7 +121,7 @@ namespace InteractiveFusion {
 		UpdatePlaneTranslation();
 	}
 
-	void PlaneSelector::ApplyPlaneRotation(GraphicsControl& _glControl, float _offSetX, float _offSetY)
+	void PlaneSelector::ApplyPlaneRotation(GraphicsController& _glControl, float _offSetX, float _offSetY)
 	{
 		
 			glm::mat4 cameraMatrix = _glControl.GetViewMatrix();
@@ -194,7 +194,7 @@ namespace InteractiveFusion {
 	}
 
 
-	void PlaneSelector::HandlePlaneTransformation(GraphicsControl& _glControl)
+	void PlaneSelector::HandlePlaneTransformation(GraphicsController& _glControl)
 	{
 		POINT pCur;
 		GetCursorPos(&pCur);
@@ -255,7 +255,7 @@ namespace InteractiveFusion {
 		plane->ResetRotation();
 	}
 
-	void PlaneSelector::DrawForColorPicking(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper)
+	void PlaneSelector::DrawForColorPicking(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper)
 	{
 		_modelData.DrawNonStaticMeshWithAssignedColorCodes(_glControl.GetProjectionMatrix(), _glControl.GetViewMatrix());
 	}

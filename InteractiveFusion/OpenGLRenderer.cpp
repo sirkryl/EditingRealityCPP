@@ -1,7 +1,7 @@
 #include "OpenGLRenderer.h"
 #include "StyleSheet.h"
 #include "DebugUtility.h"
-#include "GraphicsControl.h"
+#include "GraphicsController.h"
 #include "ModelData.h"
 #include "IconData.h"
 #include "MeshContainer2D.h"
@@ -33,7 +33,7 @@ namespace InteractiveFusion {
 	}
 
 
-	void OpenGLRenderer::Initialize(GraphicsControl& _glControl)
+	void OpenGLRenderer::Initialize(GraphicsController& _glControl)
 	{
 		viewportWidth = _glControl.GetViewportWidth();
 		viewportHeight = _glControl.GetViewportHeight();
@@ -59,7 +59,7 @@ namespace InteractiveFusion {
 		OpenGLRenderer::initialized = true;
 	}
 
-	void OpenGLRenderer::InitializeOverlays(GraphicsControl& _glControl)
+	void OpenGLRenderer::InitializeOverlays(GraphicsController& _glControl)
 	{
 		vector<Vertex> statusMessageBackgroundVertices;
 
@@ -186,7 +186,7 @@ namespace InteractiveFusion {
 		
 	}
 
-	void OpenGLRenderer::Render(GraphicsControl& _glControl, ModelData& _modelData, IconData& _iconData)
+	void OpenGLRenderer::Render(GraphicsController& _glControl, ModelData& _modelData, IconData& _iconData)
 	{
 
 		if (_modelData.IsReadyForRendering())
@@ -195,7 +195,7 @@ namespace InteractiveFusion {
 			_iconData.Draw(_glControl.GetViewportWidth(), _glControl.GetViewportHeight());
 	}
 
-	void OpenGLRenderer::PrepareRender(GraphicsControl& _glControl)
+	void OpenGLRenderer::PrepareRender(GraphicsController& _glControl)
 	{
 		viewportWidth = _glControl.GetViewportWidth();
 		viewportHeight = _glControl.GetViewportHeight();
@@ -220,7 +220,7 @@ namespace InteractiveFusion {
 
 	}
 
-	void OpenGLRenderer::FinishRender(GraphicsControl& _glControl)
+	void OpenGLRenderer::FinishRender(GraphicsController& _glControl)
 	{
 		if (_glControl.IsBusy())
 			ShowStatusOverlay(_glControl);
@@ -229,7 +229,7 @@ namespace InteractiveFusion {
 		_glControl.SwapBuffers();
 	}
 
-	void OpenGLRenderer::ShowStatusOverlay(GraphicsControl& _glControl)
+	void OpenGLRenderer::ShowStatusOverlay(GraphicsController& _glControl)
 	{
 		glDisable(GL_DEPTH_TEST);
 

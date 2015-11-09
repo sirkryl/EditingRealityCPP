@@ -1,7 +1,7 @@
 #include "ManipulationSelector.h"
 #include "DebugUtility.h"
 #include "IFResources.h"
-#include "GraphicsControl.h"
+#include "GraphicsController.h"
 #include "ModelData.h"
 #include "IconData.h"
 
@@ -15,7 +15,7 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void ManipulationSelector::HandleLeftMouseClick(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void ManipulationSelector::HandleLeftMouseClick(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		if (_selectedIndex != -1)
 		{
@@ -25,7 +25,7 @@ namespace InteractiveFusion {
 		_modelData.MarkMeshAsSelected(_selectedIndex);
 	}
 
-	void ManipulationSelector::HandleLeftMouseDown(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void ManipulationSelector::HandleLeftMouseDown(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		if (_selectedIndex != -1)
 		{
@@ -53,7 +53,7 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void ManipulationSelector::HandleLeftMouseRelease(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void ManipulationSelector::HandleLeftMouseRelease(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		int indexOfMeshUnderCursor = GetIndexOfMeshUnderCursor(_glControl, _modelData, _overlayHelper, _glControl.GetOpenGLWindowHandle());
 
@@ -69,7 +69,7 @@ namespace InteractiveFusion {
 		_modelData.UnselectMesh();
 	}
 
-	void ManipulationSelector::DrawForColorPicking(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper)
+	void ManipulationSelector::DrawForColorPicking(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper)
 	{
 		
 		if (_modelData.GetCurrentlySelectedMeshIndex() == -1)

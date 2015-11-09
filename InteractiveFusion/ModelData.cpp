@@ -492,7 +492,7 @@ namespace InteractiveFusion {
 		if (!IsValidMeshDataIndex(_index))
 			return;
 
-		//DebugUtility::DbgOut(L"GraphicsControl::CutWithPlane ", _index);
+		//DebugUtility::DbgOut(L"GraphicsController::CutWithPlane ", _index);
 		std::vector<int> verticesAbove;
 		std::vector<int> verticesBelow;
 
@@ -516,7 +516,7 @@ namespace InteractiveFusion {
 //		if (!IsValidMeshDataIndex(_index))
 //			return;
 //
-//		DebugUtility::DbgOut(L"GraphicsControl::CutWithPlane ", _index);
+//		DebugUtility::DbgOut(L"GraphicsController::CutWithPlane ", _index);
 //
 ///*		VCGMesh mesh;
 //		VCGMesh outputMesh;
@@ -528,8 +528,8 @@ namespace InteractiveFusion {
 //		vcg::tri::GenericVertexInterpolator<VCGMesh> interp(mesh);
 //		vcg::tri::TriMeshClipper<VCGMesh>::Box(ClipBB, interp, mesh);
 //		
-//		DebugUtility::DbgOut(L"GraphicsControl::CutWithPlane::Clipped Mesh VN ", (int)mesh.vn);
-//		DebugUtility::DbgOut(L"GraphicsControl::CutWithPlane::Clipped Mesh FN ", (int)mesh.fn);
+//		DebugUtility::DbgOut(L"GraphicsController::CutWithPlane::Clipped Mesh VN ", (int)mesh.vn);
+//		DebugUtility::DbgOut(L"GraphicsController::CutWithPlane::Clipped Mesh FN ", (int)mesh.fn);
 //
 //		currentMeshData[_index]->SetDeleted(true);
 //		currentMeshData.erase(currentMeshData.begin() + _index);

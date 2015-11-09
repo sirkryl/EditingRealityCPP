@@ -1,5 +1,5 @@
 #include "Segmenter.h"
-#include "GraphicsControl.h"
+#include "GraphicsController.h"
 #include "ModelData.h"
 #include "MeshContainer.h"
 #include "StopWatch.h"
@@ -24,7 +24,7 @@ namespace InteractiveFusion {
 		std::shared_ptr<MeshContainer> remainingMesh = _modelData.GetFirstMeshThatIsNotPlane();
 		if (remainingMesh == nullptr)
 		{
-			DebugUtility::DbgOut(L"GraphicsControl::StartSegmentationThread::No Mesh found that is not a plane");
+			DebugUtility::DbgOut(L"GraphicsController::StartSegmentationThread::No Mesh found that is not a plane");
 			return false;
 		}
 		if (!ConvertToPointCloud(*remainingMesh))
@@ -33,7 +33,7 @@ namespace InteractiveFusion {
 		return true;
 	}
 
-	bool Segmenter::UpdateSegmentation(GraphicsControl& _glControl, ModelData& _modelData)
+	bool Segmenter::UpdateSegmentation(GraphicsController& _glControl, ModelData& _modelData)
 	{
 		if (!HasPointCloudData())
 		{

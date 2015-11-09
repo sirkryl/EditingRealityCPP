@@ -1,6 +1,6 @@
 #include "ProcessingRenderer.h"
 #include "DebugUtility.h"
-#include "GraphicsControl.h"
+#include "GraphicsController.h"
 #include "ModelData.h"
 #include "IconData.h"
 
@@ -19,12 +19,12 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void ProcessingRenderer::Initialize(GraphicsControl& _glControl)
+	void ProcessingRenderer::Initialize(GraphicsController& _glControl)
 	{
 		OpenGLRenderer::Initialize(_glControl);
 	}
 
-	void ProcessingRenderer::Render(GraphicsControl& _glControl, ModelData& _modelData, IconData& _iconData)
+	void ProcessingRenderer::Render(GraphicsController& _glControl, ModelData& _modelData, IconData& _iconData)
 	{
 		OpenGLRenderer::PrepareRender(_glControl);
 		OpenGLRenderer::Render(_glControl, _modelData, _iconData);

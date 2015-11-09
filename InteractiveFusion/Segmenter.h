@@ -13,14 +13,14 @@
 #include "MeshContainer.h"
 namespace InteractiveFusion {
 	class ModelData;
-	class GraphicsControl;
+	class GraphicsController;
 	class Segmenter
 	{
 	public:
 		Segmenter();
 		virtual ~Segmenter();
 
-		virtual bool UpdateSegmentation(GraphicsControl& _glControl, ModelData& _modelData);
+		virtual bool UpdateSegmentation(GraphicsController& _glControl, ModelData& _modelData);
 		
 		virtual void FinishSegmentation(ModelData& _inputModelData, ModelData& _outputModelData);
 		

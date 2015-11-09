@@ -4,7 +4,7 @@
 #include "ColorCoder.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include "DebugUtility.h"
-#include "GraphicsControl.h"
+#include "GraphicsController.h"
 #include "ModelData.h"
 #include "IconData.h"
 
@@ -18,7 +18,7 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void Selector::HandleSelection(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper)
+	void Selector::HandleSelection(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper)
 	{
 		int currentlySelectedMeshIndex = _modelData.GetCurrentlySelectedMeshIndex();
 		if (_glControl.GetMouseWheelDelta() != 0)
@@ -43,29 +43,29 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void Selector::HandleLeftMouseClick(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void Selector::HandleLeftMouseClick(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 	}
 
-	void Selector::HandleLeftMouseDown(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void Selector::HandleLeftMouseDown(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 	}
 
-	void Selector::HandleLeftMouseRelease(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void Selector::HandleLeftMouseRelease(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 	}
 
-	void Selector::HandleMouseScroll(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void Selector::HandleMouseScroll(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 	}
 
-	void Selector::DrawForColorPicking(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper)
+	void Selector::DrawForColorPicking(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper)
 	{
 		_modelData.DrawAllButIndexWithAssignedColorCodes(_modelData.GetCurrentlySelectedMeshIndex(), _glControl.GetProjectionMatrix(), _glControl.GetViewMatrix());
 		_overlayHelper.DrawForColorPicking(_glControl.GetViewportWidth(), _glControl.GetViewportHeight());
 	}
 
-	int Selector::GetIndexOfMeshUnderCursor(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, HWND _windowHandle)
+	int Selector::GetIndexOfMeshUnderCursor(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, HWND _windowHandle)
 	{
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClearDepth(1.0);

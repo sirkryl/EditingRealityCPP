@@ -11,7 +11,7 @@
 namespace InteractiveFusion {
 
 	class MeshContainer;
-	class GraphicsControl
+	class GraphicsController
 	{
 	public:
 		void Initialize(HWND _parentWindow, HINSTANCE _hInstance);
@@ -54,7 +54,7 @@ namespace InteractiveFusion {
 
 		void ResetCamera();
 
-		GraphicsControl();
+		GraphicsController();
 
 		bool IsRendering();
 

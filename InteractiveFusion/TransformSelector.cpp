@@ -1,7 +1,7 @@
 #include "TransformSelector.h"
 #include "KeyState.h"
 #include "DebugUtility.h"
-#include "GraphicsControl.h"
+#include "GraphicsController.h"
 #include "ModelData.h"
 #include "IconData.h"
 
@@ -22,13 +22,13 @@ namespace InteractiveFusion {
 	{
 	}
 
-	void TransformSelector::HandleLeftMouseClick(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void TransformSelector::HandleLeftMouseClick(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		ResetTransformationBasePoint();
 		ColorSelector::HandleLeftMouseClick(_glControl, _modelData, _overlayHelper, _selectedIndex);
 	}
 
-	void TransformSelector::HandleLeftMouseDown(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void TransformSelector::HandleLeftMouseDown(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		if (_selectedIndex != -1)
 		{
@@ -42,12 +42,12 @@ namespace InteractiveFusion {
 		}
 	}
 
-	void TransformSelector::HandleLeftMouseRelease(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void TransformSelector::HandleLeftMouseRelease(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		firstClick = false;
 	}
 
-	void TransformSelector::HandleMouseScroll(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
+	void TransformSelector::HandleMouseScroll(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper, int _selectedIndex)
 	{
 		if (_selectedIndex != -1)
 		{
@@ -82,7 +82,7 @@ namespace InteractiveFusion {
 		firstClick = false;
 	}
 
-	void TransformSelector::HandleRotation(GraphicsControl& _glControl, ModelData& _modelData, int _selectedIndex)
+	void TransformSelector::HandleRotation(GraphicsController& _glControl, ModelData& _modelData, int _selectedIndex)
 	{
 		POINT pCur;
 		GetCursorPos(&pCur);
@@ -104,7 +104,7 @@ namespace InteractiveFusion {
 		firstClick = true;
 	}
 
-	void TransformSelector::HandleScale(GraphicsControl& _glControl, ModelData& _modelData, int _selectedIndex)
+	void TransformSelector::HandleScale(GraphicsController& _glControl, ModelData& _modelData, int _selectedIndex)
 	{
 		if (_glControl.GetMouseWheelDelta() > 0)
 		{
@@ -117,7 +117,7 @@ namespace InteractiveFusion {
 		_glControl.SetMouseWheelDelta(0);
 	}
 
-	void TransformSelector::DrawForColorPicking(GraphicsControl& _glControl, ModelData& _modelData, IconData& _overlayHelper)
+	void TransformSelector::DrawForColorPicking(GraphicsController& _glControl, ModelData& _modelData, IconData& _overlayHelper)
 	{
 		_modelData.DrawNonStaticMeshWithAssignedColorCodes(_glControl.GetProjectionMatrix(), _glControl.GetViewMatrix());
 	}

@@ -263,7 +263,7 @@ namespace InteractiveFusion {
 
 		ss << "As a reminder: In this scenario, your goal is to prepare a bowling setup with about ten bowling pins.\r\n\r\n";
 		ss << "To achieve that, you should first remove everything but the bowling pin and the ground floor from the scene. After that, duplicate the pin as often as you like and place them somewhere in the marked area.\r\n\r\n";
-		ss << "Try to make (some of) the pins bigger by scaling them with 'Transform'. They don't have to be uniformly scaled. You also don't have to place them in a typical triangle setup.\r\n\r\n";
+		ss << "Try to make (some of) the pins bigger by scaling them with 'Transform'. Make sure that all the pins are standing upright and don't touch each other. They don't have to be uniformly scaled. You also don't have to place them in a typical triangle setup.\r\n\r\n";
 		bowlingHelpTextMap[HelpMessage::InteractionHelp].push_back(StringConverter::StringToWString(ss.str()));
 		ss.str(std::string());
 		ss.clear();
