@@ -71,14 +71,9 @@ namespace InteractiveFusion {
 		glEnable(GL_DEPTH_TEST);
 	}
 
-	void PlaneSelectionRenderer::Render(GraphicsController& _glControl, ModelData& _modelData, IconData& _iconData)
+	void PlaneSelectionRenderer::SubRender(GraphicsController& _glControl, ModelData& _modelData, IconData& _iconData)
 	{
-		OpenGLRenderer::PrepareRender(_glControl);
-		OpenGLRenderer::Render(_glControl, _modelData, _iconData);
-
 		ShowPlaneSelectionOverlay();
-
-		OpenGLRenderer::FinishRender(_glControl);
 	}
 
 	void PlaneSelectionRenderer::CleanUp()

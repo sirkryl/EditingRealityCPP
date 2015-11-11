@@ -21,11 +21,9 @@ namespace InteractiveFusion {
 		OpenGLRenderer(OpenGLCameraMode _cameraMode);
 		virtual ~OpenGLRenderer();
 
-		
-
 		virtual void Initialize(GraphicsController& _glControl);
 		virtual void Render(GraphicsController& _glControl, ModelData& _modelData, IconData& _iconData);
-
+		
 		OpenGLCameraMode GetCameraMode();
 		void SetCameraMode(OpenGLCameraMode _cameraMode);
 
@@ -45,6 +43,10 @@ namespace InteractiveFusion {
 		static bool initialized;
 
 		virtual void InitializeOverlays(GraphicsController& _glControl);
+
+		void RenderSceneInformation(GraphicsController& _glControl, ModelData& _modelData);
+
+		virtual void SubRender(GraphicsController& _glControl, ModelData& _modelData, IconData& _iconData);
 
 		virtual void PrepareRender(GraphicsController& _glControl);
 		virtual void FinishRender(GraphicsController& _glControl);

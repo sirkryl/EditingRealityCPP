@@ -12,7 +12,7 @@ namespace InteractiveFusion {
 		virtual ~SegmentationRenderer();
 
 		virtual void Initialize(GraphicsController& _glControl);
-		virtual void Render(GraphicsController& _glControl, ModelData& _modelData, IconData& _iconData);
+		virtual void SubRender(GraphicsController& _glControl, ModelData& _modelData, IconData& _iconData);
 
 		virtual void CleanUp();
 
