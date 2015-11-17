@@ -309,9 +309,6 @@
     <ClInclude Include="ButtonSlider.h">
       <Filter>Header Files\UI\Layout</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicsControl.h">
-      <Filter>Header Files\OpenGL</Filter>
-    </ClInclude>
     <ClInclude Include="GraphicsCamera.h">
       <Filter>Header Files\OpenGL</Filter>
     </ClInclude>
@@ -331,6 +328,12 @@
       <Filter>Header Files\Exceptions</Filter>
     </ClInclude>
     <ClInclude Include="Logger.h">
+      <Filter>Header Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexHasher.h">
       <Filter>Header Files\General</Filter>
     </ClInclude>
   </ItemGroup>
@@ -512,14 +515,14 @@
     <ClCompile Include="ButtonSlider.cpp">
       <Filter>Source Files\UI\Layout</Filter>
     </ClCompile>
-    <ClCompile Include="GraphicsControl.cpp">
-      <Filter>Source Files\OpenGL</Filter>
-    </ClCompile>
     <ClCompile Include="GraphicsCamera.cpp">
       <Filter>Source Files\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="Logger.cpp">
       <Filter>Source Files\General</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsController.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

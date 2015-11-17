@@ -79,6 +79,17 @@ namespace InteractiveFusion {
 
 		void Clear() { x = NOT_INITIALIZED; y = NOT_INITIALIZED; z = NOT_INITIALIZED; }
 
+		bool operator<(const Vertex & v) const {
+			return this->x < v.x;
+		}
+		bool operator==(const Vertex & v) const {
+			bool xSame = std::fabs(this->x - v.x) <= std::numeric_limits<float>::epsilon();
+			bool ySame = std::fabs(this->y - v.y) <= std::numeric_limits<float>::epsilon();
+			bool zSame = std::fabs(this->z - v.z) <= std::numeric_limits<float>::epsilon();
+			return (xSame && ySame && zSame);
+		}
+
+
 	};
 
 	struct Triangle

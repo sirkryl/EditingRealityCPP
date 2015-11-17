@@ -6,12 +6,15 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/ModelCoefficients.h>
 #include "SegmentationParams.h"
-
+#include "VertexHasher.h"
 #include "CommonStructs.h"
 #include <unordered_map>
 #include <vector>
 #include "MeshContainer.h"
+
 namespace InteractiveFusion {
+
+	
 	class ModelData;
 	class GraphicsController;
 	class Segmenter
@@ -31,7 +34,8 @@ namespace InteractiveFusion {
 	protected:
 		pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr mainCloud;
 		std::unordered_map<int, std::vector<int>> indexMap;
-		std::unordered_map<float, std::vector<float>> vertexMap;
+
+		std::unordered_map<Vertex, int, VertexHasher> vertexMap;
 		std::vector<pcl::PointIndices> temporarySegmentationClusterIndices;
 		std::vector<pcl::PointIndices> rejectedIndices;
 		std::vector<std::vector<int>> finalSegmentationClusterIndices;
@@ -45,6 +49,8 @@ namespace InteractiveFusion {
 
 		virtual bool Segment();
 		
+		int CalculateVertexHash(Vertex _vertex);
+
 		void EstimateIndices();
 
 		std::vector<int> CalculateIndicesForCluster(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud);

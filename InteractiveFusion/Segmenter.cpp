@@ -103,9 +103,10 @@ namespace InteractiveFusion {
 			cloud->points[i].normal_y = meshVertices[i].normal_y;
 			cloud->points[i].normal_z = meshVertices[i].normal_z;
 
-			vertexMap[meshVertices[i].x].push_back(i);
+			vertexMap.emplace(meshVertices[i],i);
+			/*vertexMap[meshVertices[i]].(i);
 			vertexMap[meshVertices[i].x].push_back(meshVertices[i].y);
-			vertexMap[meshVertices[i].x].push_back(meshVertices[i].z);
+			vertexMap[meshVertices[i].x].push_back(meshVertices[i].z);*/
 		}
 
 		vector<Triangle> meshTriangles = _mesh.GetTriangles();
@@ -165,8 +166,14 @@ namespace InteractiveFusion {
 
 		for (auto& vertex : cloud->points)
 		{
-			vector<float> savedVertexValues = vertexMap[vertex.x];
-			for (int j = 0; j < savedVertexValues.size(); j += 3)
+			Vertex convertedVertex;
+			convertedVertex.x = vertex.x;
+			convertedVertex.y = vertex.y;
+			convertedVertex.z = vertex.z;
+			int index = vertexMap[convertedVertex];
+			calculatedIndices.push_back(index);
+			//vector<float> savedVertexValues = vertexMap[vertex.x];
+			/*for (int j = 0; j < savedVertexValues.size(); j += 3)
 			{
 				if (savedVertexValues[j + 1] == vertex.y &&
 					savedVertexValues[j + 2] == vertex.z)
@@ -174,7 +181,7 @@ namespace InteractiveFusion {
 					calculatedIndices.push_back(savedVertexValues[j]);
 					break;
 				}
-			}
+			}*/
 		}
 		return calculatedIndices;
 	}

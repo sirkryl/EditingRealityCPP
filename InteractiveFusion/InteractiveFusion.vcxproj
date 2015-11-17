@@ -244,6 +244,7 @@
     <ClInclude Include="TransformSelector.h" />
     <ClInclude Include="VcgException.h" />
     <ClInclude Include="VcgTypes.h" />
+    <ClInclude Include="VertexHasher.h" />
     <ClInclude Include="VisualizationHelper.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
